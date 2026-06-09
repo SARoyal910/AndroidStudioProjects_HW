@@ -1,0 +1,80 @@
+# Continuous Integration.
+#
+# GitHub runs this automatically on every push to `main` and on every pull
+# request. It spins up a fresh Ubuntu machine per project and compiles that
+# project from scratch — so if anything stops building, the commit/PR gets a red
+# ❌ instead of the breakage going unnoticed.
+#
+# The `matrix` below lists every project. Each becomes its own parallel job, so
+# one project failing does NOT hide the others (fail-fast: false).
+name: CI
+
+# When to run.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:        # also lets you trigger it by hand from the Actions tab
+
+permissions:
+  contents: read
+
+# If you push twice quickly, cancel the older in-progress run for the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    name: compile ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false      # run every project even if one fails, so you see all results
+      matrix:
+        include:
+          # Most projects build from their own folder...
+          - { name: SingleActivity,    dir: SingleActivity }
+          - { name: Intent,            dir: Intent }
+          - { name: NavDetailList,     dir: NavDetailList }
+          # ...NavListDetail's buildable project lives in its app/ subfolder
+          # (its outer folder has an incomplete version catalog).
+          - { name: NavListDetail,     dir: NavListDetail/app }
+          - { name: NavThreeScreen,    dir: NavThreeScreen }
+          - { name: NavFourScreen,     dir: NavFourScreen }
+          - { name: NavDeepLinks,      dir: NavDeepLinks }
+          - { name: NavBottomTabs,     dir: NavBottomTabs }
+          - { name: NavNestedGraphs,   dir: NavNestedGraphs }
+          - { name: NavViewModelState, dir: NavViewModelState }
+          - { name: NavTransitions,    dir: NavTransitions }
+          - { name: NavDataLayer,      dir: NavDataLayer }
+
+    steps:
+      # 1. Grab the repository onto the runner.
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Install JDK 21 — every project's gradle-daemon-jvm.properties pins
+      #    toolchainVersion=21, and the Gradle 9.4.1 daemon runs on it.
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # 3. Install the Android SDK / command-line tools so the Android Gradle
+      #    Plugin can fetch the compileSdk platform + build-tools it needs.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 4. Configure Gradle with dependency/wrapper caching to speed up runs.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # 5. Compile this project. `compileDebugKotlin` (no leading colon) runs the
+      #    task wherever it lives — the root module for the single-module demos,
+      #    or the :app module for the standard projects.
+      - name: Compile ${{ matrix.name }}
+        working-directory: ${{ matrix.dir }}
+        run: |
+          chmod +x gradlew
+          ./gradlew compileDebugKotlin --console=plain --stacktrace

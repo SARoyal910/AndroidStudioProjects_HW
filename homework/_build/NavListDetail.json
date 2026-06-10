@@ -1,0 +1,120 @@
+{
+  "name": "NavListDetail",
+  "tagline": "A one-file Navigation 3 sample: tap a planet in a list to push a detail screen, then pop back.",
+  "whatItDoes": "On launch you see a scrolling list of five planets (Mercury through Jupiter), each row showing a bold title and a one-line blurb, separated by thin divider lines. Tapping any row navigates forward to a detail screen showing that planet's title as a large headline, its blurb as body text, and a 'Back to list' button. Pressing that button (or the system back gesture) returns you to the list. The data is a hardcoded in-memory list, so nothing is saved or fetched from a network.",
+  "mentalModel": "In Navigation 3 a screen is identified by a serializable 'key' on a back stack; pushing a key navigates forward, popping it navigates back, and NavDisplay just renders whatever key is on top.",
+  "domain": "planets",
+  "estTime": "15-25 min",
+  "screens": [
+    {
+      "name": "ListScreen",
+      "role": "Shows all five planets in a LazyColumn; tapping a row reports that item's id via the onOpen callback."
+    },
+    {
+      "name": "DetailScreen",
+      "role": "Shows one resolved planet's title, blurb, and a 'Back to list' button that pops the stack."
+    },
+    {
+      "name": "AppNavigation",
+      "role": "Owns the back stack and maps each key type (ListKey, DetailKey) to the screen it renders."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "NavKey",
+      "plain": "A marker interface every navigation destination implements. Here 'ListKey' and 'DetailKey' both implement NavKey so Nav3 can treat them as entries on the back stack."
+    },
+    {
+      "term": "Back stack",
+      "plain": "An ordered list of keys, bottom to top. 'rememberNavBackStack(ListKey)' seeds it with the list; 'backStack.add(...)' pushes forward and 'backStack.removeLastOrNull()' pops back."
+    },
+    {
+      "term": "Argument-carrying key",
+      "plain": "'DetailKey(val itemId: Int)' is a data class, so each instance carries which planet to show. Only the tiny id travels in the key, not the whole Item object."
+    },
+    {
+      "term": "data object vs data class key",
+      "plain": "'ListKey' is a 'data object' (one single list screen, so a shared singleton) while 'DetailKey' is a 'data class' (one instance per planet, distinguished by itemId)."
+    },
+    {
+      "term": "@Serializable keys",
+      "plain": "Nav3 keys are annotated '@Serializable' (via the kotlinx-serialization plugin) so the back stack can be saved and restored across process death."
+    },
+    {
+      "term": "entryProvider DSL",
+      "plain": "A builder where each 'entry<KeyType> { ... }' block defines the screen for one key type. Nav3 picks the block whose type matches the current top key; the DetailKey block receives the key instance so it can read 'key.itemId'."
+    },
+    {
+      "term": "Stateless screen composables",
+      "plain": "'ListScreen' and 'DetailScreen' know nothing about navigation. They render given data and report events through callbacks ('onOpen', 'onBack'), which keeps them reusable and previewable."
+    },
+    {
+      "term": "id-then-resolve pattern",
+      "plain": "The detail key carries only the id; 'itemById(key.itemId)' looks the full Item up from 'sampleItems' inside AppNavigation. This keeps the navigation key small and serializable."
+    }
+  ],
+  "files": [
+    {
+      "path": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
+      "role": "The entire app: sample planet data, the NavKey definitions, MainActivity, the AppNavigation host, and both screen composables."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The sample planet data and id lookup",
+      "file": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
+      "start": 89,
+      "end": 104,
+      "explain": "'sampleItems' is a hardcoded List<Item> of five planets whose ids 1..5 are what travel during navigation. 'itemById(id)' uses 'first { it.id == id }' to resolve an id back to a full Item. The id-only approach keeps the nav key tiny; the lookup throws if no match, which is safe here because every DetailKey comes from a real id."
+    },
+    {
+      "title": "The two navigation keys",
+      "file": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
+      "start": 117,
+      "end": 123,
+      "explain": "'ListKey' is a '@Serializable data object' implementing NavKey because there is only ever one list screen. 'DetailKey(val itemId: Int)' is a '@Serializable data class' because each detail instance differs by which planet it shows. The '@Serializable' annotation lets Nav3 save and restore the stack across process death."
+    },
+    {
+      "title": "Scaffold hands navigation the inset padding",
+      "file": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
+      "start": 144,
+      "end": 148,
+      "explain": "'Scaffold' provides the standard screen frame and gives back 'innerPadding' (the space taken by status/navigation bars). Passing 'Modifier.padding(innerPadding)' into 'AppNavigation' ensures every screen lays out inside the safe area instead of being drawn under the system bars."
+    },
+    {
+      "title": "Creating and remembering the back stack",
+      "file": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
+      "start": 168,
+      "end": 168,
+      "explain": "'rememberNavBackStack(ListKey)' creates the back stack seeded with the list screen and preserves it across recompositions and configuration changes. This single object is the source of truth for navigation: everything else just pushes to it or pops from it."
+    },
+    {
+      "title": "NavDisplay, onBack, and the entryProvider",
+      "file": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
+      "start": 176,
+      "end": 207,
+      "explain": "'NavDisplay' renders whatever key is on top of 'backStack'. 'onBack' pops the top key so system back returns to the previous screen. Inside 'entryProvider', the 'entry<ListKey>' block wires a row tap to 'backStack.add(DetailKey(id))' (navigate forward) and the 'entry<DetailKey> { key }' block reads 'key.itemId' to render the right planet. This block is the heart of the whole Nav3 setup."
+    },
+    {
+      "title": "The stateless list screen",
+      "file": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
+      "start": 221,
+      "end": 248,
+      "explain": "'ListScreen' renders items in a 'LazyColumn' (Compose's RecyclerView equivalent that only composes visible rows). Each row is a 'Column' made tappable by '.clickable { onOpen(item.id) }', so the whole row reports the id upward. The screen takes no navigation dependency, which is why it stays reusable and easy to preview."
+    }
+  ],
+  "newVsPrev": "NavDetailList already showed this same Nav3 wiring and the same list-first flow: 'rememberNavBackStack(ListKey)' seeds the list and tapping a row pushes a DetailKey on top. The navigation structure (the keys, NavDisplay, entryProvider, onBack, and the id-then-resolve pattern) is unchanged between the two. What NavListDetail adds is teaching scaffolding: far more explanatory comments, a 'Log.d' breadcrumb you can watch in Logcat, and the @Preview functions commented out so they do not render by default. It is the reference, fully-annotated version of the pattern.",
+  "tryThis": [
+    "Add a sixth planet (Saturn) to 'sampleItems' with id 6 and confirm it appears in the list and opens its own detail screen with no other code changes.",
+    "Uncomment the two '@Preview' functions at the bottom of the file and use Android Studio's design pane to render ListScreen and DetailScreen without launching the app.",
+    "On the detail screen, add a second Button (next to 'Back to list') whose onClick pushes ANOTHER detail screen with 'backStack.add(DetailKey(1))', then press Back twice to feel how the stack grows and pops. You will pass a new lambda into DetailScreen for this, since DetailScreen currently only exposes the 'onBack' callback.",
+    "Change 'backStack.removeLastOrNull()' in 'onBack' to print 'Log.d' the stack size before popping, then watch Logcat (filter 'LT') as you navigate to see the stack depth change."
+  ],
+  "gotchas": [
+    "The whole app is one file on purpose for teaching; in a real app DATA would come from Room/Retrofit/a repository, and the screens would live in separate files.",
+    "'itemById' uses 'first { ... }' which THROWS if no item matches the id. It is safe here only because every DetailKey is built from a real id in 'sampleItems'.",
+    "The private 'tag = \"LT\"' val is defined but never referenced; the 'Log.d' calls pass the literal string '\"LT\"' directly, so the val is dead code kept only for convenience.",
+    "Both the on-screen 'Back to list' button and the system back gesture do the exact same thing (pop the top key); there is no separate 'up' vs 'back' behavior in this sample."
+  ],
+  "runTest": "Open the project in Android Studio and run on an emulator or device, or from the project root run './gradlew installDebug' and launch the app. You should land on the planet list; tap any row (e.g. Earth) to push its detail screen, then tap 'Back to list' or use the system back gesture to pop back to the list. Filter Logcat by 'LT' to see the 'Entered AppNavigation' breadcrumb each time AppNavigation composes."
+}

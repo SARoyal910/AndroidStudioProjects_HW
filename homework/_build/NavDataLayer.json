@@ -1,0 +1,133 @@
+{
+  "name": "NavDataLayer",
+  "tagline": "Screens stop hardcoding data: they observe a repository through a ViewModel and render Loading/Empty/Error/Success.",
+  "whatItDoes": "You open the app to a planet list that first shows a centered spinner ('Loading planets...') for about 1.2 seconds, because the in-memory repository adds a fake delay. Then it fills with six planets (Mercury through Saturn), each row showing a title and a one-line blurb. Tapping a row opens a detail screen that briefly shows its OWN smaller spinner, then displays that planet's title, blurb, and a 'Fun fact', plus a 'Back to list' button. A teaching banner pinned to the top of the list reminds you the screen owns no data of its own. The list screen can also display Empty and Error states (with a Retry button), which the @Preview functions show off even though the live in-memory repo never actually produces them.",
+  "mentalModel": "Data lives behind a repository interface, and the UI just reacts to explicit states; you can swap the data source (memory to Room to Retrofit) without changing a single screen.",
+  "domain": "planets",
+  "estTime": "20-30 min",
+  "screens": [
+    {
+      "name": "PlanetListScreen",
+      "role": "Stateful wrapper that grabs PlanetsViewModel, observes its uiState StateFlow, and forwards the plain state down to the body."
+    },
+    {
+      "name": "PlanetListScreenBody",
+      "role": "Stateless body that renders purely from a PlanetsUiState via an exhaustive 'when' (Loading spinner, Empty note, Error+Retry, Success list)."
+    },
+    {
+      "name": "PlanetDetailScreen",
+      "role": "Loads one planet by id with a suspend repo call inside LaunchedEffect, showing its own spinner, then the title/blurb/fact or a 'not found' message."
+    },
+    {
+      "name": "DataLayerBanner",
+      "role": "A tinted Surface header pinned above the list that spells out the data-boundary lesson so it cannot be missed."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "Repository interface",
+      "plain": "'PlanetRepository' is a contract that names WHAT data exists ('planets()' and 'planet(id)') but hides HOW it is fetched. The ViewModel depends only on this interface, never on a concrete class."
+    },
+    {
+      "term": "Swappable implementation",
+      "plain": "'InMemoryPlanetRepository' is one concrete implementation backed by the hardcoded 'samplePlanets' list. Room or Retrofit versions would implement the same interface, so wiring one in is a one-line change."
+    },
+    {
+      "term": "Sealed UI state",
+      "plain": "'PlanetsUiState' is a sealed interface with exactly four subtypes: Loading, Empty, Error(message), Success(planets). Because the set is closed, a 'when' over it is exhaustive and the compiler forces the screen to handle every case."
+    },
+    {
+      "term": "StateFlow exposure",
+      "plain": "The ViewModel keeps a private '_uiState' (MutableStateFlow) and exposes a read-only 'uiState' via '.asStateFlow()', so the UI can read the current state but never write it."
+    },
+    {
+      "term": "Flow operators in viewModelScope",
+      "plain": "'observePlanets()' chains 'repo.planets().onEach { ... }.catch { ... }.launchIn(viewModelScope)' to map each emitted list into Empty/Success, turn upstream errors into Error, and auto-cancel when the ViewModel is cleared."
+    },
+    {
+      "term": "collectAsStateWithLifecycle",
+      "plain": "The list screen observes the StateFlow with 'collectAsStateWithLifecycle()', which pauses collection while the screen is stopped in the background; this is the lifecycle-aware alternative to plain 'collectAsState()'."
+    },
+    {
+      "term": "Stateful vs stateless split",
+      "plain": "'PlanetListScreen' (stateful: holds the ViewModel) feeds a plain state into 'PlanetListScreenBody' (stateless: no ViewModel, no Flow). The stateless body is what every @Preview drives directly, which makes it trivially previewable and testable."
+    },
+    {
+      "term": "suspend one-shot load",
+      "plain": "The detail screen calls the 'suspend' 'repo.planet(planetId)' inside a 'LaunchedEffect(planetId)', tracking 'loading' and a nullable 'planet' to show a spinner, the details, or a 'not found' message."
+    }
+  ],
+  "files": [
+    {
+      "path": "NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt",
+      "role": "The UI layer: nav keys, the Activity, the NavDisplay host, the list screen (stateful + stateless split), the detail screen, and the @Preview functions for every state."
+    },
+    {
+      "path": "NavDataLayer/src/main/java/com/example/navdatalayer/PlanetsViewModel.kt",
+      "role": "The UI-state layer: defines the sealed PlanetsUiState and the PlanetsViewModel that collects the repository Flow and maps it into state."
+    },
+    {
+      "path": "NavDataLayer/src/main/java/com/example/navdatalayer/Repository.kt",
+      "role": "The data layer: the Category/Item models, the sample planets, the PlanetRepository interface (the data boundary), and the InMemoryPlanetRepository implementation."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The data boundary: the repository interface",
+      "file": "NavDataLayer/src/main/java/com/example/navdatalayer/Repository.kt",
+      "start": 118,
+      "end": 137,
+      "explain": "'PlanetRepository' is the entire lesson in one declaration. 'planets()' returns a 'Flow<List<Item>>' (a stream that can re-emit when data changes), while 'planet(id)' is a one-shot 'suspend' read returning null when missing. The UI side depends only on this interface, so any class honoring this contract (memory, Room, Retrofit) drops in without touching a screen."
+    },
+    {
+      "title": "The in-memory implementation and its swap point",
+      "file": "NavDataLayer/src/main/java/com/example/navdatalayer/Repository.kt",
+      "start": 177,
+      "end": 184,
+      "explain": "'planets()' uses the 'flow { ... }' builder to make a COLD stream: 'delay(fakeLatencyMillis)' then 'emit(samplePlanets)' only run once a collector starts. The fake delay exists purely so the Loading state is visible. The comments mark this as the ONLY method a Room or Retrofit source would change, and show how to demo the Empty (emit emptyList) or Error (throw) states."
+    },
+    {
+      "title": "The sealed UI state",
+      "file": "NavDataLayer/src/main/java/com/example/navdatalayer/PlanetsViewModel.kt",
+      "start": 48,
+      "end": 67,
+      "explain": "'PlanetsUiState' is a 'sealed interface' with four subtypes: Loading and Empty are 'data object' singletons, while Error carries a 'message' and Success carries the 'planets' list. Because the subtype set is closed at compile time, a 'when' over this type is exhaustive, so the screen is forced to handle every state and cannot silently forget the spinner or the error case."
+    },
+    {
+      "title": "Mapping the repository Flow into state",
+      "file": "NavDataLayer/src/main/java/com/example/navdatalayer/PlanetsViewModel.kt",
+      "start": 118,
+      "end": 132,
+      "explain": "'observePlanets()' is the heart of the ViewModel. 'repo.planets()' supplies the Flow; '.onEach' publishes Empty or Success per emitted list; '.catch' converts any upstream exception into Error (since try/catch cannot wrap a Flow); '.launchIn(viewModelScope)' collects on a scope that auto-cancels when the ViewModel dies, so no coroutine leaks. Note that writes go to the private '_uiState'."
+    },
+    {
+      "title": "Observing state the lifecycle-aware way",
+      "file": "NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt",
+      "start": 214,
+      "end": 233,
+      "explain": "The stateful 'PlanetListScreen' obtains a lifecycle-scoped 'PlanetsViewModel' via 'viewModel()', then observes 'viewModel.uiState.collectAsStateWithLifecycle()' which pauses collection while the screen is backgrounded. It holds no data itself: it just forwards the plain 'uiState' and 'viewModel::retry' down to the stateless body. This stateful/stateless split is what makes the body previewable."
+    },
+    {
+      "title": "Exhaustive state rendering and row taps",
+      "file": "NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt",
+      "start": 262,
+      "end": 305,
+      "explain": "A single 'when (uiState)' renders each branch: Loading shows a spinner, Empty a note, Error smart-casts to read 'uiState.message' plus a Retry 'Button(onClick = onRetry)', and Success smart-casts to '.planets' and builds a LazyColumn. Each row is '.clickable { onOpen(planet.id) }', which pushes a DetailKey carrying only the id, so navigation never carries the whole object."
+    }
+  ],
+  "newVsPrev": "NavViewModelState introduced the ViewModel + StateFlow holding UI state that survives rotation. NavDataLayer adds a real DATA LAYER beneath that ViewModel: a 'PlanetRepository' interface (the data boundary) with a swappable 'InMemoryPlanetRepository', the data now arrives as a 'Flow' that is mapped with 'onEach'/'catch'/'launchIn', and the UI state grows into a full sealed 'PlanetsUiState' with Loading/Empty/Error/Success plus a Retry path. It also shows the detail screen re-fetching its own planet by id through a 'suspend' repo call, proving the repository (not the nav key) is the source of truth.",
+  "tryThis": [
+    "In Repository.kt's 'planets()' (around line 179), replace 'emit(samplePlanets)' with 'emit(emptyList())' and rerun to watch the list screen flip to the Empty state.",
+    "In that same 'planets()' method, add 'throw IllegalStateException(\"Simulated data-source failure\")' after the delay and rerun to see the Error state and the Retry button (then tap Retry to watch it loop back through Loading).",
+    "Change 'fakeLatencyMillis' (line 155) from 1200L to something like 4000L and notice the Loading spinner stays on screen much longer, since that delay is the only thing making Loading visible.",
+    "Add a seventh planet to 'samplePlanets' in Repository.kt and confirm it appears in the list and opens correctly in the detail screen with no other code changes.",
+    "Open the four @Preview functions at the bottom of MainActivity.kt in Android Studio's Design view and observe how each one freezes PlanetListScreenBody in a different state without ever running a ViewModel or coroutine."
+  ],
+  "gotchas": [
+    "The Room and Retrofit repositories are only commented SIGN-POSTS at the bottom of Repository.kt; this project ships no Room or Retrofit dependencies, so 'InMemoryPlanetRepository' is the only implementation actually wired up.",
+    "The Empty and Error states never occur during a normal run, because the in-memory repo always emits the full 'samplePlanets' list successfully. You only see those states by editing the repository (see tryThis) or in the @Previews.",
+    "The detail screen deliberately does NOT use a ViewModel: it runs an in-place 'suspend' load inside a 'LaunchedEffect' with local 'remember' state for brevity. Only the list screen demonstrates the full ViewModel + StateFlow path, so its state is the one that survives rotation.",
+    "The 'Category' model, 'sampleCategories', and 'categoryById()' exist in the data layer but are not actually shown on any screen in this project; only 'Item' (the planet) is rendered."
+  ],
+  "runTest": "Run './gradlew installDebug' from inside the NavDataLayer/ folder (or press Run in Android Studio) and launch the app. Watch the list screen show the 'Loading planets...' spinner for about 1.2 seconds, then a list of six planets under the 'Data-layer demo' banner. Tap any planet (for example Jupiter) and confirm the detail screen shows its own brief 'Loading planet...' spinner before displaying the title, blurb, and 'Fun fact', with a 'Back to list' button. Filter Logcat by the tag 'DataLayer' to see the 'Entered AppNavigation' breadcrumb. This project defines no deep links, so there is no adb command to run."
+}

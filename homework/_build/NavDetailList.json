@@ -1,0 +1,48 @@
+{
+  "name": "NavDetailList",
+  "tagline": "Tap a planet in a scrolling list to open its detail screen, then go back - all in-app with Navigation 3.",
+  "whatItDoes": "The app opens on a scrolling list of five planets, each row showing a title (like 'Mercury') and a one-line blurb. Tapping any row slides in a detail screen that shows that planet's title in a larger style, its full blurb, and a 'Back to list' button. Pressing the button (or the system back gesture) returns you to the list. Everything happens inside one Activity - no new screen is ever launched as a separate app window.",
+  "mentalModel": "Navigation is just a back stack of typed keys you push and pop: tapping pushes a DetailKey carrying an id, going back pops it - and the same NavDisplay redraws whatever key is on top.",
+  "domain": "planets",
+  "estTime": "15-25 min",
+  "screens": [
+    {"name": "ListScreen", "role": "A LazyColumn of planet rows; tapping a row calls onOpen with that planet's id to navigate forward."},
+    {"name": "DetailScreen", "role": "Shows the single planet resolved from the id in the key, plus a 'Back to list' button that pops the stack."},
+    {"name": "AppNavigation", "role": "Owns the back stack and maps each key (ListKey, DetailKey) to the screen that should be shown."}
+  ],
+  "concepts": [
+    {"term": "NavKey", "plain": "A small typed object that identifies a screen AND carries its arguments. Here 'ListKey' is a NavKey with no data and 'DetailKey(itemId)' is a NavKey that carries which planet's id to show."},
+    {"term": "Back stack", "plain": "A list of keys where the top one is the visible screen. 'rememberNavBackStack(ListKey)' creates it starting on the list; 'backStack.add(...)' pushes forward and 'backStack.removeLastOrNull()' pops back."},
+    {"term": "NavDisplay", "plain": "The single Composable that watches the back stack and draws whatever key is on top. It calls 'onBack' when the user goes back and uses 'entryProvider' to know how to render each key."},
+    {"term": "entryProvider / entry", "plain": "A registry that says 'for this key type, build this screen'. 'entry<ListKey>' builds the list and 'entry<DetailKey> { key -> ... }' builds the detail, where 'key' gives you the itemId argument."},
+    {"term": "Passing an argument via the key", "plain": "Instead of passing whole objects between screens, you put a small id inside the key: 'DetailKey(id)'. The detail screen reads 'key.itemId' and looks the full Item back up with 'itemById(...)'."},
+    {"term": "LazyColumn + items", "plain": "A scrolling column that only builds rows that are on screen. 'items(items) { item -> ... }' loops the planet list and draws one Column per planet, with 'HorizontalDivider()' between them."},
+    {"term": "clickable for navigation", "plain": "Modifier.clickable on a row turns the whole row into a tap target. Here 'clickable { onOpen(item.id) }' is what triggers the push to the detail screen."},
+    {"term": "@Serializable keys", "plain": "Both keys are marked '@Serializable' so Navigation 3 can save and restore the back stack across process death or config changes. That is why kotlinx.serialization is a dependency."}
+  ],
+  "files": [
+    {"path": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt", "role": "The entire app: sample data, the two NavKeys, the Activity, the NavDisplay wiring, and both list and detail Composables plus their @Preview functions."}
+  ],
+  "highlights": [
+    {"title": "The data and looking an item up by id", "file": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt", "start": 39, "end": 51, "explain": "'Item' is a simple data class and 'sampleItems' is a hardcoded in-memory list of planets. 'itemById(id)' finds the matching Item by its id. This matters because the detail screen never receives a whole Item - it only gets an id and rebuilds the full object here, which models how a real app would re-fetch from a database."},
+    {"title": "Typed navigation keys that carry arguments", "file": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt", "start": 59, "end": 63, "explain": "'ListKey' is a 'data object' (a single value, no arguments) and 'DetailKey' is a 'data class' carrying 'itemId'. Both implement 'NavKey' and are '@Serializable'. This is the core idea: a key is both the screen's identity and the container for the data that screen needs."},
+    {"title": "The back stack and NavDisplay wiring", "file": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt", "start": 87, "end": 112, "explain": "'rememberNavBackStack(ListKey)' starts the stack on the list. 'NavDisplay' draws the top key, calls 'onBack' to pop it, and uses 'entryProvider' to map keys to screens. Tapping a row runs 'backStack.add(DetailKey(id))' to push forward; the detail entry reads 'key.itemId' and resolves the Item. This single block is the whole navigation system."},
+    {"title": "A tappable list that triggers navigation", "file": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt", "start": 115, "end": 135, "explain": "'ListScreen' uses 'LazyColumn' with 'items(items)' to draw one row per planet. Each row is a 'Column' made tappable by 'Modifier.clickable { onOpen(item.id) }'. Notice the screen does not know about navigation - it just calls the 'onOpen' lambda passed in, keeping the Composable reusable and testable."},
+    {"title": "The detail screen with a back action", "file": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt", "start": 138, "end": 153, "explain": "'DetailScreen' receives an already-resolved 'item' and an 'onBack' lambda. It renders the title and blurb, then a Button whose 'onClick = onBack' pops the stack. Like ListScreen, it stays ignorant of the back stack - the wiring in AppNavigation supplies 'onBack' as 'backStack.removeLastOrNull()'."}
+  ],
+  "newVsPrev": "Intent moved between screens by launching a separate Activity and stuffing primitive extras into a Bundle. NavDetailList replaces that with Navigation 3: one single Activity, no Intents, and navigation done by pushing and popping typed @Serializable NavKeys on a back stack that NavDisplay renders. The argument (itemId) now rides inside a strongly-typed DetailKey instead of loose string-keyed Intent extras, and the whole app is Compose-first list-to-detail flow.",
+  "tryThis": [
+    "Add a sixth planet (for example Saturn) to 'sampleItems' and confirm it appears in the list and opens correctly - no other code needs to change.",
+    "Give 'DetailKey' a second argument such as 'val fromList: Boolean = true', pass it when you call 'backStack.add(DetailKey(id, true))', and show it on the detail screen to prove keys can carry more than one piece of data.",
+    "In the DetailScreen detail 'entry', replace 'itemById(key.itemId)' with a hardcoded item to see that the key is just data - the screen draws whatever Item you hand it.",
+    "Add a second 'Button' on the detail screen that pushes another DetailKey for a different planet, then press back twice to watch the stack pop one level at a time.",
+    "Remove the '@Serializable' annotations and rebuild to see why Navigation 3 needs serializable keys for state restoration."
+  ],
+  "gotchas": [
+    "The detail screen is NOT given the whole Item - it only gets 'key.itemId' and re-looks-it-up with 'itemById(...)'. Passing only a small id in the key is the intended pattern; do not try to cram big objects into a NavKey.",
+    "This is Navigation 3 (the 'androidx.navigation3' packages with NavDisplay/entryProvider/rememberNavBackStack), which is newer and different from the older Jetpack 'NavController'/'NavHost' API - the names will not match older tutorials.",
+    "'sampleItems' is hardcoded in memory, so 'itemById' assumes the id always exists and uses '.first { ... }', which would crash if you ever pushed a DetailKey with an unknown id. There is no database or network here on purpose.",
+    "Both 'onBack' on NavDisplay and the 'Back to list' button call 'removeLastOrNull()' - the system back gesture and the on-screen button do the same pop, which is why both behave identically."
+  ],
+  "runTest": "Open the project in Android Studio and Run, or build and install from the terminal with './gradlew installDebug' then launch the app. On the device you should see the planet list; tap 'Mars' (or any row) and the detail screen should slide in showing its title and blurb. Press 'Back to list' and also try the system back gesture - both should return you to the list. There are no deep links in this project, so no adb deep-link command applies; verify navigation purely by tapping rows and going back. The 'ListScreenPreview' and 'DetailScreenPreview' @Preview functions also let you eyeball both screens in the Android Studio preview pane without running the app."
+}

@@ -1,0 +1,121 @@
+{
+  "name": "Intent",
+  "tagline": "Replace Activity-and-Intent navigation with one Activity that swaps Compose screens via a Navigation 3 back stack.",
+  "whatItDoes": "When the app opens you see 'Hello Android!' and a button labeled 'Open Detail'. Tapping that button moves you to a second screen that displays the text 'Hello from Home!' along with a 'Back' button. Tapping 'Back' (or the system back gesture) returns you to the Home screen. Everything happens inside a single Activity; no new Activity is ever launched.",
+  "mentalModel": "A screen is just a 'key' on a list called the back stack: push a key to navigate forward, pop the top key to go back, and the arguments a screen needs ride along inside its key instead of inside an Intent.",
+  "domain": "none",
+  "estTime": "15-25 min",
+  "screens": [
+    {
+      "name": "HomeScreen",
+      "role": "Shows a greeting and an 'Open Detail' button whose tap pushes a DetailKey onto the back stack."
+    },
+    {
+      "name": "DetailScreen",
+      "role": "Displays the message it received from DetailKey plus a 'Back' button that pops the back stack."
+    },
+    {
+      "name": "AppNavigation",
+      "role": "Owns the back stack and maps each key type to the composable screen that should be drawn."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "NavKey",
+      "plain": "A marker interface every navigation destination implements. Both HomeKey and DetailKey are declared 'as NavKey' so the back stack can hold them as the items that identify each screen."
+    },
+    {
+      "term": "Back stack of keys",
+      "plain": "'rememberNavBackStack(HomeKey)' creates a remembered list of keys that starts with HomeKey. The top key is the visible screen; 'backStack.add(...)' goes forward and 'backStack.removeLastOrNull()' goes back."
+    },
+    {
+      "term": "Arguments live in the key",
+      "plain": "DetailKey is a 'data class DetailKey(val message: String)', so the data a screen needs travels inside its key. The entry reads it with 'key.message' instead of the old 'intent.getStringExtra(...)'."
+    },
+    {
+      "term": "NavDisplay",
+      "plain": "The composable that watches the back stack and renders whatever screen matches the top key. It also wires the system back button through its 'onBack' lambda."
+    },
+    {
+      "term": "entryProvider DSL",
+      "plain": "Inside NavDisplay, 'entryProvider { entry<HomeKey> { ... }; entry<DetailKey> { key -> ... } }' is the lookup table that says which composable to show for each key type."
+    },
+    {
+      "term": "@Serializable keys",
+      "plain": "Each key is annotated '@Serializable' so Nav3 can save and restore the back stack across rotation and process death. This needs the kotlin.serialization plugin and kotlinx-serialization-json in build.gradle.kts."
+    },
+    {
+      "term": "data object vs data class",
+      "plain": "HomeKey is a 'data object' because Home takes no arguments, so one shared instance is enough. DetailKey is a 'data class' because each visit can carry a different 'message'."
+    },
+    {
+      "term": "Single Activity",
+      "plain": "MainActivity is the only Activity (the manifest declares just one). Navigation swaps composables inside it rather than starting new Activities, so there are no Intents and no extra <activity> entries."
+    }
+  ],
+  "files": [
+    {
+      "path": "Intent/app/src/main/java/com/example/intent/MainActivity.kt",
+      "role": "The entire app: navigation key definitions, the single Activity, the AppNavigation back stack wiring, and the Home/Detail screen composables."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Navigation keys ARE the screens (and their arguments)",
+      "file": "Intent/app/src/main/java/com/example/intent/MainActivity.kt",
+      "start": 33,
+      "end": 37,
+      "explain": "HomeKey is a '@Serializable data object ... : NavKey' because Home needs no arguments, so one shared instance suffices. DetailKey is a '@Serializable data class DetailKey(val message: String) : NavKey' so its 'message' argument rides inside the key itself. This is the core mental shift: an Intent extra becomes a constructor parameter on a key."
+    },
+    {
+      "title": "One Activity hosts the whole navigation",
+      "file": "Intent/app/src/main/java/com/example/intent/MainActivity.kt",
+      "start": 48,
+      "end": 54,
+      "explain": "Inside 'setContent' the app wraps everything in 'IntentTheme' and a 'Scaffold' that hands back 'innerPadding' for the system bars. It then calls 'AppNavigation(modifier = Modifier.padding(innerPadding))' once. There is no startActivity here, and the manifest declares only this Activity, so all screen changes happen in Compose."
+    },
+    {
+      "title": "The back stack: forward = add, back = remove",
+      "file": "Intent/app/src/main/java/com/example/intent/MainActivity.kt",
+      "start": 63,
+      "end": 69,
+      "explain": "'rememberNavBackStack(HomeKey)' builds a remembered list of keys seeded with HomeKey, surviving recomposition and rotation. 'NavDisplay' observes that list and draws the top key's screen, while 'onBack = { backStack.removeLastOrNull() }' wires the system and predictive back gesture to pop one key."
+    },
+    {
+      "title": "entryProvider maps each key type to a screen",
+      "file": "Intent/app/src/main/java/com/example/intent/MainActivity.kt",
+      "start": 70,
+      "end": 82,
+      "explain": "'entryProvider { ... }' is the lookup table. 'entry<HomeKey>' draws HomeScreen and passes 'onOpenDetail = { backStack.add(DetailKey('Hello from Home!')) }' to push a new key (navigate forward). 'entry<DetailKey> { key -> ... }' receives the key and reads 'key.message' directly, replacing the old getStringExtra lookup."
+    },
+    {
+      "title": "HomeScreen is a plain Composable with a callback",
+      "file": "Intent/app/src/main/java/com/example/intent/MainActivity.kt",
+      "start": 88,
+      "end": 96,
+      "explain": "HomeScreen takes an 'onOpenDetail: () -> Unit' callback rather than knowing anything about navigation. Its Button calls 'onOpenDetail' on tap. Because the navigation logic lives up in AppNavigation, this screen stays reusable and previewable in isolation."
+    },
+    {
+      "title": "DetailScreen renders the key's argument",
+      "file": "Intent/app/src/main/java/com/example/intent/MainActivity.kt",
+      "start": 99,
+      "end": 107,
+      "explain": "DetailScreen takes a 'message: String' (the value that traveled inside DetailKey) plus an 'onBack: () -> Unit' callback. It just shows 'Text(text = message)' and a Back button. The screen never reaches into an Intent; it only knows about the plain data handed to it."
+    }
+  ],
+  "newVsPrev": "SingleActivity established one Activity hosting a Compose UI in a Scaffold. Intent adds real navigation on top of it: '@Serializable' NavKey types (HomeKey, DetailKey), a 'rememberNavBackStack' back stack, and a 'NavDisplay' + 'entryProvider' that swap between a Home and a Detail screen, with the screen's argument carried inside DetailKey instead of via an Intent extra.",
+  "tryThis": [
+    "Add a third key, e.g. 'data class ProfileKey(val name: String) : NavKey', register an 'entry<ProfileKey>' in entryProvider, and push it from a new button on DetailScreen to see a three-deep back stack.",
+    "Change the pushed value in 'backStack.add(DetailKey('Hello from Home!'))' to your own text and confirm DetailScreen shows the new message after rebuilding.",
+    "Give DetailKey a second field (like 'val count: Int'), update the entry to display it, and watch the compiler force you to pass it everywhere the key is created.",
+    "Watch Logcat for tag 'LT' (the 'In function AppNavigation' message), rotate the device, and observe whether the back stack survives the configuration change.",
+    "Temporarily comment out the '@Serializable' annotation on DetailKey and rebuild to see why Nav3 needs it for saving and restoring keys."
+  ],
+  "gotchas": [
+    "This is a deliberately minimal demo: there is no ViewModel, no StateFlow, and no real domain data. The 'message' is just a hard-coded string, so it teaches navigation mechanics, not data layering.",
+    "Despite the project name, there are no android.content.Intent objects in the navigation flow. The only intent in the codebase is the MAIN/LAUNCHER intent-filter in AndroidManifest.xml that makes the app launchable; the whole point is that screen-to-screen navigation no longer uses Intents.",
+    "The Log tag is inconsistent: there is a 'private const val tag = 'LT'' that is never used, while the actual Log.d call passes the literal string 'LT'. Both happen to be 'LT', so logs still work, but the named constant is dead code.",
+    "'backStack.removeLastOrNull()' is intentionally null-safe: it returns null (doing nothing) only when the stack is already empty, so the back action can never crash. Note it does NOT block popping the last (Home) key — on a one-item stack it removes HomeKey, emptying the stack, which is why pressing Back on Home exits the app."
+  ],
+  "runTest": "Build and install with './gradlew installDebug' (or press Run in Android Studio), then launch 'Intent' from the app drawer. You should see 'Hello Android!' and an 'Open Detail' button; tap it to reach the screen showing 'Hello from Home!' and 'Back', then tap Back to return Home. Confirm the system back gesture also returns you Home and that pressing back on Home exits the app. Filter Logcat by tag 'LT' to see the 'In function AppNavigation' message each time AppNavigation recomposes. This project defines no <data> deep-link intent-filter, so there is no adb deep-link command to run here."
+}

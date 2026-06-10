@@ -1,0 +1,53 @@
+{
+  "name": "ComposeModernUI",
+  "tagline": "A single-screen notes app that teaches Compose fundamentals: layout, Material 3 theming, and state hoisting.",
+  "whatItDoes": "You see one scrolling screen with a title input box, an 'Add note' button, a 'Favorited / Not a favorite' switch, and a list of note cards. Typing a title and tapping 'Add note' appends a new card to the list and clears the input. Flipping the switch toggles its label between 'Favorited' and 'Not a favorite'. Three seed notes (groceries, Compose study, dentist) are shown on first launch. There is no database, navigation, or network here at all; everything is in-memory and resets when the app process is killed beyond a rotation.",
+  "mentalModel": "State flows DOWN as parameters and events flow UP as callbacks; a stateless child renders what it is handed while one parent owns the single source of truth.",
+  "domain": "notes",
+  "estTime": "15-25 min",
+  "screens": [
+    {"name": "NotesScreen (stateful)", "role": "Thin wrapper that owns notes, newTitle, and isFavorite via rememberSaveable and forwards them into the stateless overload."},
+    {"name": "NotesScreen (stateless)", "role": "Pure UI that draws the header, hoisted text input, favorite toggle, and the LazyColumn of cards from its parameters."},
+    {"name": "NoteCard", "role": "A Material 3 Card showing one note's title and body using two typography roles."},
+    {"name": "FavoriteToggle", "role": "A stateless Row with a label and Switch whose checked value is owned by the parent."},
+    {"name": "SectionHeader / PrimaryButton", "role": "Tiny reusable building blocks for a themed heading and a filled button."}
+  ],
+  "concepts": [
+    {"term": "Composable function", "plain": "A function marked '@Composable' (like 'NoteCard' or 'SectionHeader') that DESCRIBES UI instead of mutating widgets; Compose re-runs it ('recomposes') when the data it reads changes."},
+    {"term": "State hoisting", "plain": "A child takes its current value as a parameter (state DOWN) and reports changes through a callback (event UP); the parent holds the real value. 'FavoriteToggle' takes 'isFavorite: Boolean' and 'onToggle: (Boolean) -> Unit' and stores nothing."},
+    {"term": "Stateless vs stateful overload", "plain": "'NotesScreen' exists twice: the stateless one is pure parameters plus callbacks, and the stateful one is the only place that calls 'rememberSaveable' and then forwards state into the stateless version. This is the 'state holder vs stateless content' split."},
+    {"term": "rememberSaveable + mutableStateOf", "plain": "'var notes by rememberSaveable { mutableStateOf(seedNotes) }' creates observable state that triggers recomposition on write AND survives screen rotation or low-memory recreation, unlike plain 'remember'."},
+    {"term": "Hoisted text input", "plain": "'OutlinedTextField' has no internal text: its 'value' is the hoisted 'newTitle' and 'onValueChange' sends every keystroke up to the owner, who is the single source of truth for the field."},
+    {"term": "Material 3 theming", "plain": "Components read 'MaterialTheme.typography' (e.g. titleSmall, bodyMedium) and 'MaterialTheme.colorScheme' (e.g. primary, onSurfaceVariant) instead of hardcoded sizes or hex, so light/dark and dynamic color work automatically."},
+    {"term": "Layout primitives", "plain": "'Column' stacks children vertically, 'Row' horizontally, 'Box' overlaps them, and spacing comes from 'Spacer', 'padding', and 'Arrangement.spacedBy' rather than manual gaps."},
+    {"term": "LazyColumn with keys", "plain": "'LazyColumn' only composes the rows on screen, and 'items(notes, key = { it.id })' gives each note a stable id so Compose can track items efficiently as the list grows."},
+    {"term": "@Preview", "plain": "'@Preview' renders a composable in Android Studio's design pane without an emulator. The previews call the STATELESS 'NotesScreen' with fake data and no-op callbacks, which is exactly why hoisting matters."}
+  ],
+  "files": [
+    {"path": "ComposeModernUI/src/main/java/com/example/composemodernui/MainActivity.kt", "role": "The entire lesson: the Note data class and seed data, reusable components (SectionHeader, PrimaryButton, NoteCard, FavoriteToggle), both NotesScreen overloads, MainActivity, and three @Preview functions."},
+    {"path": "ComposeModernUI/README.md", "role": "Plain-English walkthrough of the learning goals (composables, theming, layout, state hoisting, previews), the key files, what to inspect, and how to build/test."}
+  ],
+  "highlights": [
+    {"title": "The Note data class + seed list", "file": "ComposeModernUI/src/main/java/com/example/composemodernui/MainActivity.kt", "start": 106, "end": 119, "explain": "A plain 'data class Note(id, title, body)' is the whole model; its 'id' is the stable key LazyColumn uses to track rows. 'seedNotes' is a hardcoded 'listOf(...)' so the screen has content on first launch. There is deliberately no repository or database, because this lesson is about UI, not persistence."},
+    {"title": "FavoriteToggle: state down, event up", "file": "ComposeModernUI/src/main/java/com/example/composemodernui/MainActivity.kt", "start": 239, "end": 261, "explain": "This is the centerpiece. 'FavoriteToggle' takes 'isFavorite: Boolean' (state DOWN) and 'onToggle: (Boolean) -> Unit' (event UP) and stores nothing of its own. The 'Switch' shows 'checked = isFavorite' (the parent's value) and forwards changes via 'onCheckedChange = onToggle', and the label text is DERIVED from the hoisted value, so the same toggle can be reused and previewed in any state."},
+    {"title": "NoteCard: a reusable themed card", "file": "ComposeModernUI/src/main/java/com/example/composemodernui/MainActivity.kt", "start": 185, "end": 203, "explain": "'NoteCard' wraps a Material 3 'Card' around a 'Column' that stacks the title ('titleMedium') above the body ('bodyMedium', tinted 'onSurfaceVariant'). It is stateless: you hand it a 'Note' and it draws it. Pulling style and color from 'MaterialTheme' instead of hardcoding means every card updates when the theme changes."},
+    {"title": "Stateless NotesScreen wires the hoisted input", "file": "ComposeModernUI/src/main/java/com/example/composemodernui/MainActivity.kt", "start": 310, "end": 339, "explain": "The 'OutlinedTextField' has no internal text: 'value = newTitle' is the hoisted state DOWN and 'onValueChange = onTitleChange' sends each keystroke UP. Below it, 'PrimaryButton' bubbles taps via 'onAddNote', and 'LazyColumn' with 'items(notes, key = { it.id })' renders one 'NoteCard' per note. The whole screen is a pure function of its parameters."},
+    {"title": "Stateful NotesScreen owns the single source of truth", "file": "ComposeModernUI/src/main/java/com/example/composemodernui/MainActivity.kt", "start": 354, "end": 386, "explain": "This thin overload is the ONLY place that calls 'rememberSaveable { mutableStateOf(...) }', owning 'notes', 'newTitle', and 'isFavorite'. The 'onAddNote' lambda trims the title, computes the next id with 'notes.maxOfOrNull { it.id }', appends an immutable copy, and clears the field. All logic lives here in the owner; the stateless screen just renders what it is handed."},
+    {"title": "MainActivity installs Compose with a Scaffold", "file": "ComposeModernUI/src/main/java/com/example/composemodernui/MainActivity.kt", "start": 394, "end": 413, "explain": "'MainActivity' is the single entry point: in 'onCreate' it calls 'enableEdgeToEdge()' then 'setContent { ComposeModernUITheme { Scaffold(...) } }'. 'Scaffold' supplies 'innerPadding' for the system bars, which a 'Box' applies before calling the STATEFUL 'NotesScreen()'. This is how a Compose UI tree gets attached to Android."}
+  ],
+  "newVsPrev": "SingleActivity established the one-Activity-hosts-Compose pattern. ComposeModernUI goes deeper into the UI layer itself: it introduces the full Compose fundamentals toolkit on that single screen, layout primitives (Column/Row/Box, Spacer, Arrangement.spacedBy), Material 3 theming from colorScheme/typography, reusable component composables, a LazyColumn list, multiple @Preview functions, and above all explicit STATE HOISTING with a paired stateless/stateful NotesScreen and a rememberSaveable state owner. There is still no navigation, networking, or persistence; the focus is purely on how to structure declarative UI and where state should live.",
+  "tryThis": [
+    "Add a fourth 'Note' to 'seedNotes' and rerun a @Preview to watch a new card appear without touching any UI code.",
+    "Run the app, type a title, tap 'Add note', then rotate the device: the new note, the typed text, and the favorite flag survive because of 'rememberSaveable'. Now change one 'rememberSaveable' to plain 'remember' and rotate again to see that state get lost.",
+    "In 'NotesScreenFavoritedPreview' flip 'isFavorite = true' to 'false' and watch the Switch label change in the design pane, proving you can render any state just by passing a literal.",
+    "Change 'MaterialTheme.typography.titleMedium' in 'NoteCard' to 'titleLarge' and observe every card's title grow at once, demonstrating theme-driven styling.",
+    "Make 'onAddNote' allow blank titles by removing the 'if (trimmed.isNotEmpty())' guard, then try adding an empty note to see why the guard existed."
+  ],
+  "gotchas": [
+    "'NotesScreen' is OVERLOADED: same name, two signatures. The stateful one (no value parameters) owns state and is what 'MainActivity' calls; the stateless one (all parameters) is what the previews call. Don't confuse them.",
+    "All state is in-memory only. 'rememberSaveable' survives rotation and low-memory recreation, but added notes do NOT survive a full app restart; there is no database or file persistence by design.",
+    "Previews pass empty no-op callbacks like 'onAddNote = {}', so tapping or typing in a @Preview does nothing; previews render static UI and cannot run real state logic.",
+    "The 'Note.body' for added notes is always the hardcoded string 'Added just now.' because the screen only collects a title; there is no body input field in this simplified lesson."
+  ],
+  "runTest": "Build and install from the project root with './gradlew installDebug' (or './gradlew assembleDebug' to just build the APK), then launch the app and try typing a title, tapping 'Add note', toggling the favorite Switch, and rotating the device to confirm state persists. Run the example unit test with './gradlew testDebugUnitTest'. Fastest of all: open MainActivity.kt in Android Studio and view the three @Preview functions (Notes not favorite, Notes favorited, NoteCard) in the design pane without an emulator. There are no deep links in this project."
+}

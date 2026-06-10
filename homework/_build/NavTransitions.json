@@ -1,0 +1,125 @@
+{
+  "name": "NavTransitions",
+  "tagline": "A four-screen planet drill-down whose only new trick is custom animated slide+fade screen transitions in Nav3.",
+  "whatItDoes": "You see a list of two planet categories (Rocky Planets, Gas Giants). Tapping one slides the next screen IN from the right while the old one slides left and fades, revealing that category's planets. Tapping a planet drills further to a detail screen, and a 'View fun fact' button opens a fourth screen that rises UP from the bottom instead of sliding sideways. Tapping any 'Back' button (or the system back gesture) reverses the motion, sliding the previous screen back in from the left. A 'Start over' button on the fact screen clears the whole stack back to the categories list.",
+  "mentalModel": "When the top of the back stack changes, NavDisplay runs an AnimatedContent transition; YOU control that motion by handing it a forward spec, a pop spec, and a predictive-pop spec (and can override any single screen via entry metadata).",
+  "domain": "planets",
+  "estTime": "20-30 min",
+  "screens": [
+    {
+      "name": "CategoriesScreen",
+      "role": "LEVEL 1: a LazyColumn of the two planet categories; tapping a row pushes an ItemsKey (forward transition)."
+    },
+    {
+      "name": "ItemsScreen",
+      "role": "LEVEL 2: a header for the chosen category plus a scrolling list of its planets; rows push a DetailKey, the header button pops back."
+    },
+    {
+      "name": "DetailScreen",
+      "role": "LEVEL 3: one planet's title and blurb with a 'View fun fact' button (pushes FactKey) and a 'Back to list' button (pops)."
+    },
+    {
+      "name": "FactScreen",
+      "role": "LEVEL 4: one planet's fun fact; the screen whose per-entry metadata overrides the app-wide slide with a VERTICAL one. Has 'Back' and 'Start over'."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "ContentTransform",
+      "plain": "One transition bundled as an EnterTransition (how the incoming screen appears) plus an ExitTransition (how the outgoing screen leaves). Built here with the 'togetherWith' infix, e.g. slideInHorizontally(...) togetherWith slideOutHorizontally(...)."
+    },
+    {
+      "term": "Transition spec lambda",
+      "plain": "Each NavDisplay spec is a lambda with receiver 'AnimatedContentTransitionScope<Scene<NavKey>>', which is why inside it you can call bare builders like slideInHorizontally and fadeIn directly without a qualifier."
+    },
+    {
+      "term": "Forward vs pop vs predictive pop",
+      "plain": "NavDisplay diffs the back stack and picks one of three specs: transitionSpec on push (forwardSpec), popTransitionSpec on back (popSpec, the mirror image), and predictivePopTransitionSpec for the Android 14+ back-swipe peek (predictivePopSpec, a scale+fade)."
+    },
+    {
+      "term": "tween + easing",
+      "plain": "Every slide/fade takes an animationSpec of tween(TRANSITION_MS, easing = TRANSITION_EASING). TRANSITION_MS is 400ms and TRANSITION_EASING is FastOutSlowInEasing, the Material standard accelerate-then-decelerate curve."
+    },
+    {
+      "term": "offset lambdas",
+      "plain": "slideInHorizontally/slideOutHorizontally take a lambda over the screen size, e.g. initialOffsetX = { fullWidth -> fullWidth } to start one screen-width to the right, or targetOffsetX = { fullWidth -> -fullWidth / 3 } to only slide a third of the way off."
+    },
+    {
+      "term": "Per-entry metadata override",
+      "plain": "An individual entry can carry its own specs via 'metadata = NavDisplay.transitionSpec { ... } + NavDisplay.popTransitionSpec { ... }'. Each helper returns a Map you merge with '+'; entry metadata WINS over the NavDisplay-wide defaults. The FactKey entry uses this to slide vertically."
+    },
+    {
+      "term": "NavKey + @Serializable keys",
+      "plain": "Each screen is a key implementing NavKey: CategoriesKey is a 'data object' (a singleton, no args), while ItemsKey/DetailKey/FactKey are 'data class' types carrying ids. All are @Serializable so the stack survives process death."
+    },
+    {
+      "term": "rememberNavBackStack / NavDisplay",
+      "plain": "rememberNavBackStack(CategoriesKey) holds the list of keys; backStack.add pushes (forward), backStack.removeLastOrNull pops (back). NavDisplay renders whichever key is on top and animates the swap."
+    }
+  ],
+  "files": [
+    {
+      "path": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
+      "role": "The entire app: transition specs, planet data, nav keys, the NavDisplay wiring, and all four screen composables plus previews."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The FORWARD transition: slide-in-from-right + fade, paired with a partial slide-out",
+      "file": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
+      "start": 182,
+      "end": 198,
+      "explain": "forwardSpec returns the lambda handed to NavDisplay's transitionSpec, run on every push. The incoming screen starts one full screen-width to the right (initialOffsetX = { fullWidth -> fullWidth }) and fades in, joined by 'togetherWith' to the outgoing screen, which slides only a third of the way left (-fullWidth / 3) and fades out. This is the core 'going deeper' motion, and every number comes from TRANSITION_MS and TRANSITION_EASING so you can tune it in one place."
+    },
+    {
+      "title": "The POP transition is the exact mirror image of forward",
+      "file": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
+      "start": 208,
+      "end": 223,
+      "explain": "popSpec feeds NavDisplay's popTransitionSpec and runs on back navigation. Compare it to forwardSpec: the returning screen now enters from the LEFT (initialOffsetX = -fullWidth / 3) and the leaving screen exits fully to the RIGHT (targetOffsetX = fullWidth). Reversing every direction is what makes a pop read as 'walking back the way you came', and seeing the two functions side by side is the whole lesson."
+    },
+    {
+      "title": "Predictive-pop: a soft scale+fade driven by drag progress",
+      "file": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
+      "start": 234,
+      "end": 239,
+      "explain": "predictivePopSpec is the spec for the Android 14+ back-swipe. Its lambda also receives the swipe-edge Int (ignored here as '_'), and it uses scaleIn(0.9f)+fadeIn togetherWith scaleOut(0.9f)+fadeOut instead of slides. NavDisplay drives this one by the finger-drag PROGRESS rather than a fixed clock, so a gentle scale feels natural while the user peeks at the previous screen."
+    },
+    {
+      "title": "Wiring the three specs into NavDisplay",
+      "file": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
+      "start": 394,
+      "end": 407,
+      "explain": "This is the call site that makes the sample work: NavDisplay takes backStack, an onBack that pops, and the three params transitionSpec = forwardSpec(), popTransitionSpec = popSpec(), predictivePopTransitionSpec = predictivePopSpec(). NavDisplay decides forward-vs-pop by diffing the back stack and then invokes the matching spec. Without these three lines you would get NavDisplay's plain default cross-fade."
+    },
+    {
+      "title": "Per-entry override: the Fact screen slides vertically via metadata",
+      "file": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
+      "start": 453,
+      "end": 472,
+      "explain": "The FactKey entry passes 'metadata = NavDisplay.transitionSpec { ... } + NavDisplay.popTransitionSpec { ... }'. On push it uses slideInVertically(initialOffsetY = { fullHeight -> fullHeight }) so the screen rises up from the bottom; on pop it uses slideOutVertically downward. Because entry metadata beats the NavDisplay-wide defaults, this one screen visibly breaks the app's horizontal pattern, proving per-entry overrides work."
+    },
+    {
+      "title": "Serializable NavKeys: data object vs data class",
+      "file": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
+      "start": 322,
+      "end": 335,
+      "explain": "CategoriesKey is a 'data object' because there is only ever one categories screen (no arguments). ItemsKey, DetailKey and FactKey are 'data class' types because each instance differs by the id it carries (categoryId or itemId). All implement NavKey and are @Serializable so the back stack can be saved and restored across process death; the screens receive only the id and resolve the full object via the lookup helpers."
+    }
+  ],
+  "newVsPrev": "NavFourScreen built the same four-level planet drill-down but let NavDisplay use its plain default cross-fade. NavTransitions adds NOTHING to the data or screen chain; the entire new payload is custom animated transitions: a forwardSpec, a mirror-image popSpec, and a predictivePopSpec passed to NavDisplay, plus a per-entry metadata override on the Fact screen that swaps the app-wide horizontal slide for a vertical one. The lesson is purely HOW screens animate in and out.",
+  "tryThis": [
+    "Change TRANSITION_MS from 400 to 1500 and re-run; navigation slows to a crawl so you can clearly watch the enter and exit halves play out.",
+    "In forwardSpec, change targetOffsetX from { fullWidth -> -fullWidth / 3 } to { fullWidth -> -fullWidth } so the old screen slides ALL the way off-screen, then compare the feel to the partial 'left behind' slide.",
+    "Swap TRANSITION_EASING to a different curve (e.g. import LinearEasing) and notice how robotic linear motion feels versus FastOutSlowInEasing.",
+    "Delete the FactKey entry's whole 'metadata = ...' argument so it falls back to the app-wide horizontal slide, confirming the vertical motion came entirely from the per-entry override.",
+    "Follow the commented shared-element recipe near the bottom (lines 659-706): wrap NavDisplay in a SharedTransitionLayout and tag a planet's title with rememberSharedContentState to make it morph from row to headline."
+  ],
+  "gotchas": [
+    "Transitions are motion over TIME, so they do NOT play in Android Studio's static @Preview pane (each preview renders one frozen frame). You MUST run on a device or emulator and actually navigate to see the slide+fade.",
+    "The shared-element 'morph the title from list to detail' stretch goal is documented as a recipe in a big comment block (lines 659-706) but is intentionally NOT compiled, to keep the build green against this Compose BOM.",
+    "Per-entry metadata helper lambdas (NavDisplay.transitionSpec/popTransitionSpec on the Fact screen) use the star-projected receiver AnimatedContentTransitionScope<Scene<*>>, whereas the top-level forwardSpec/popSpec use Scene<NavKey>; both still let you call the bare slide/fade builders.",
+    "Nav keys carry only an id, not the whole object; each screen re-resolves the object via lookup helpers. The single-object lookups categoryById/itemById use 'first {}' and would throw if no match, while itemsInCategory uses 'filter' and returns a (possibly empty) list. The 'first {}' lookups are safe here because every key is built from a known id, but they would crash on a stale or invalid id."
+  ],
+  "runTest": "Open the project in Android Studio and run on a device/emulator, or from inside the NavTransitions/ folder run './gradlew installDebug', then launch the app. Tap a category and watch the next screen slide IN from the right while the old one slides left and fades (forward). Tap a planet, then 'View fun fact' and confirm the fourth screen rises UP from the bottom instead of sliding sideways (the per-entry vertical override). Tap any 'Back' button or use the system back gesture and confirm the motion reverses (pop slides in from the left). Filter Logcat by 'NavT' to see the 'Entered AppNavigation' breadcrumb."
+}

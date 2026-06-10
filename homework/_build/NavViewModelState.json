@@ -1,0 +1,133 @@
+{
+  "name": "NavViewModelState",
+  "tagline": "A 3-screen planet drill-down where 'favorite' state lives in a ViewModel and survives rotation and navigation.",
+  "whatItDoes": "The app drills from a Categories screen into a list of that category's planets (e.g. Rocky Planets shows Mercury, Venus, Earth, Mars), then into a planet Detail. On Detail you tap a star to favorite the planet; that star then shows next to it back in the list. A ViewModel holds the set of favorites (and the screens also keep a small local tap counter), so favorites survive rotation and navigating away and back — unlike plain 'remember' state, which would reset.",
+  "mentalModel": "Screen state and the logic that changes it belong in a ViewModel that all screens share, not inside composables: the UI only reads state flowing down and sends events up. Because the ViewModel is scoped to the Activity (not the composition), its state outlives rotation and navigation that a plain remember would lose.",
+  "domain": "planets",
+  "estTime": "20-30 min",
+  "screens": [
+    {
+      "name": "CategoriesScreen",
+      "role": "Level 1, stateless: a LazyColumn of categories (Rocky Planets, Gas Giants); tapping a row calls onOpen with its id to navigate forward."
+    },
+    {
+      "name": "ItemsScreen",
+      "role": "Level 2, stateless: a header for the chosen category plus a list of its planets, drawing a star next to any planet whose id is in the favoriteIds set."
+    },
+    {
+      "name": "DetailScreen",
+      "role": "Level 3, stateless: one planet's title and blurb, a star/unstar toggle button wired to the ViewModel, and a rememberSaveable 'Local taps' counter for contrast."
+    },
+    {
+      "name": "ItemsRoute / DetailRoute",
+      "role": "Thin stateful wrappers that collect the ViewModel's favorites StateFlow and forward plain values plus event lambdas down to the stateless screens."
+    },
+    {
+      "name": "AppNavigation",
+      "role": "Owns the Nav3 back stack, obtains the one shared FavoritesViewModel, and maps each NavKey to its screen via NavDisplay + entryProvider."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "ViewModel",
+      "plain": "'FavoritesViewModel : ViewModel()' is a state holder that lives outside any composable. Because it is scoped to the Activity (a ViewModelStoreOwner), the framework re-attaches the SAME instance after a rotation instead of rebuilding it, so its favorites set survives."
+    },
+    {
+      "term": "StateFlow + MutableStateFlow",
+      "plain": "Inside the ViewModel, a private '_favorites = MutableStateFlow<Set<Int>>(emptySet())' is the writable source of truth, and the public 'val favorites: StateFlow<Set<Int>>' (via 'asStateFlow()') is the read-only view the UI observes. Encapsulation means only 'toggleFavorite' can change the set."
+    },
+    {
+      "term": "collectAsStateWithLifecycle",
+      "plain": "'favoritesViewModel.favorites.collectAsStateWithLifecycle()' subscribes the composable to the StateFlow and turns its latest value into Compose State, so the screen recomposes when favorites change. Unlike plain collectAsState, it pauses collection when the UI drops below STARTED (e.g. backgrounded) and resumes on return."
+    },
+    {
+      "term": "Unidirectional Data Flow (UDF)",
+      "plain": "State flows DOWN (the ViewModel exposes 'favorites' which the UI reads) and events flow UP (the button calls 'onToggleFavorite', which the Route forwards to 'favoritesViewModel.toggleFavorite(item.id)'). The ViewModel updates its StateFlow, which re-emits and recomposes the UI, closing the loop."
+    },
+    {
+      "term": "Stateful Route vs stateless Screen",
+      "plain": "Each level splits into a 'Route' composable that talks to the ViewModel (e.g. 'ItemsRoute', 'DetailRoute') and a dumb 'Screen' composable that takes plain values and lambdas (e.g. 'ItemsScreen', 'DetailScreen'). The stateless screens never touch a ViewModel, which is why @Preview can render them with hand-supplied values."
+    },
+    {
+      "term": "viewModel() scoping",
+      "plain": "'val favoritesViewModel: FavoritesViewModel = viewModel()' in AppNavigation grabs ONE instance scoped to the nearest ViewModelStoreOwner (the Activity) and passes it to all three screens, so every screen reads and writes the same single source of truth."
+    },
+    {
+      "term": "remember vs rememberSaveable vs ViewModel",
+      "plain": "remember survives only recomposition; rememberSaveable (used for the Detail 'count') also survives rotation and process death via the saved-instance Bundle but is local and Bundle-limited; a ViewModel survives rotation and navigation and is shared and holds logic, but loses state on process death unless backed by a SavedStateHandle."
+    },
+    {
+      "term": "Nav3 keys and back stack",
+      "plain": "Each screen is named by a @Serializable NavKey: 'CategoriesKey' (a data object, no args), 'ItemsKey(categoryId)' and 'DetailKey(itemId)' (data classes carrying tiny ids). 'rememberNavBackStack(CategoriesKey)' holds the stack; 'backStack.add(...)' pushes forward and 'removeLastOrNull()' pops back."
+    }
+  ],
+  "files": [
+    {
+      "path": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
+      "role": "Data model (Category/Item planet lists), Nav3 keys, the Activity, the AppNavigation host, the Route/Screen composables for all three levels, and the @Preview functions."
+    },
+    {
+      "path": "NavViewModelState/src/main/java/com/example/navviewmodelstate/FavoritesViewModel.kt",
+      "role": "The star of the sample: the ViewModel that owns the favorites Set<Int> as a StateFlow and the toggleFavorite event, plus extensive comments on remember vs rememberSaveable vs ViewModel and on SavedStateHandle for process-death survival."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The ViewModel owns state as a read-only StateFlow",
+      "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/FavoritesViewModel.kt",
+      "start": 114,
+      "end": 124,
+      "explain": "'_favorites' is a private MutableStateFlow seeded with 'emptySet()', the only thing allowed to be written. The public 'favorites' exposes it via 'asStateFlow()' as a read-only StateFlow, so the UI can collect it but cannot mutate it. This encapsulation is the whole point: the ViewModel stays the single source of truth and the UI must go through 'toggleFavorite'."
+    },
+    {
+      "title": "toggleFavorite: the one event that mutates state, immutably",
+      "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/FavoritesViewModel.kt",
+      "start": 138,
+      "end": 142,
+      "explain": "'update { current -> if (id in current) current - id else current + id }' atomically reads the current set and stores the next one, adding the id if absent or removing it if present. Producing a brand-new Set each time keeps state immutable so Compose reliably detects the change and recomposes. This is the only place the favorites set is ever written."
+    },
+    {
+      "title": "Obtaining ONE shared ViewModel for all screens",
+      "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
+      "start": 238,
+      "end": 248,
+      "explain": "'rememberNavBackStack(CategoriesKey)' seeds and preserves the Nav3 back stack. 'viewModel()' returns the FavoritesViewModel scoped to the Activity: the first call creates it, and later calls (even after a rotation recreates the Activity) return the SAME instance with favorites intact. Obtaining it here, above the nav entries, lets all three screens share one source of truth."
+    },
+    {
+      "title": "NavDisplay + entryProvider wire keys to screens and pass the shared VM down",
+      "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
+      "start": 255,
+      "end": 299,
+      "explain": "'NavDisplay' renders whatever key is on top of 'backStack'; 'onBack' pops it with 'removeLastOrNull()'. Inside 'entryProvider', one 'entry<KeyType>' block per level maps a key to a screen: tapping a category does 'backStack.add(ItemsKey(categoryId))' to drill in. Crucially, the Items and Detail entries pass the SAME 'favoritesViewModel' down, which is why every level reads the same favorites."
+    },
+    {
+      "title": "Route observes the StateFlow lifecycle-aware and derives a boolean",
+      "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
+      "start": 350,
+      "end": 372,
+      "explain": "'DetailRoute' calls 'favorites.collectAsStateWithLifecycle()' to turn the StateFlow into Compose State, then derives 'isFavorite = item.id in favorites'. It hands the stateless 'DetailScreen' that plain Boolean plus 'onToggleFavorite = { favoritesViewModel.toggleFavorite(item.id) }'. That lambda is the event flowing UP; the resulting new state flows back DOWN and recomposes the Route."
+    },
+    {
+      "title": "rememberSaveable counter contrasts local state with the ViewModel",
+      "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
+      "start": 519,
+      "end": 539,
+      "explain": "'var count by rememberSaveable { mutableStateOf(0) }' is deliberately placed next to the favorite toggle. The counter survives rotation by writing into the saved-instance Bundle but is local to this one composable and resets on a fresh launch, whereas the favorite (held in the ViewModel) is shared across screens and survives navigation too. Comparing the two side by side is the lesson."
+    }
+  ],
+  "newVsPrev": "NavFourScreen taught Nav3 navigation across screens but kept any per-screen state inside the composables. NavViewModelState adds a real ViewModel ('FavoritesViewModel') as a single shared source of truth: state is exposed as a StateFlow, observed with collectAsStateWithLifecycle, and mutated only via an event (toggleFavorite) in unidirectional data flow. It also introduces the stateful-Route vs stateless-Screen split and a rememberSaveable counter so you can directly compare remember vs rememberSaveable vs ViewModel survival rules.",
+  "tryThis": [
+    "Favorite Earth on its Detail screen, then rotate the device (press Ctrl+Left / Ctrl+Right in the emulator). The star persists because favorites live in the ViewModel; the 'Local taps' counter (rememberSaveable) also survives rotation.",
+    "Change 'var count by rememberSaveable { mutableStateOf(0) }' to 'var count by remember { mutableStateOf(0) }' in DetailScreen, tap +1 a few times, then rotate. The count now resets to 0, proving remember does not survive a configuration change while rememberSaveable does.",
+    "Add a 'clearAll()' function to FavoritesViewModel that does '_favorites.update { emptySet() }', then add a button on DetailScreen that calls it; watch every star disappear from the list, demonstrating the shared single source of truth.",
+    "Seed a default favorite by changing the ViewModel's MutableStateFlow to 'MutableStateFlow(setOf(3))' and launch the app; Earth (id 3) already shows a star on the list and reads as favorited on Detail before you tap anything.",
+    "Refactor the ViewModel to the commented SavedStateHandle version (lines 99-108) so favorites survive process death, then test it with adb by killing the app process while backgrounded and relaunching."
+  ],
+  "gotchas": [
+    "This plain ViewModel keeps favorites in memory, so they survive rotation and navigation but NOT process death. The file shows the SavedStateHandle version (a commented recipe around lines 99-108) you would use to also survive the OS reclaiming the process; it is intentionally left out to keep the rotation story focused.",
+    "Previews call the stateless '*Screen' composables and NEVER the '*Route' ones, and never call viewModel(): the preview environment has no real ViewModelStoreOwner, so previews feed plain values like 'favoriteIds = setOf(1, 5)' or 'isFavorite = true' instead. This is exactly what the Route/Screen split is designed to enable.",
+    "Favoriting must produce a brand-new Set ('current - id' / 'current + id'); mutating a set in place would not change the StateFlow value reference and Compose might not recompose. The 'update { }' block and immutable Set are what make the star appear instantly.",
+    "The data is a tiny hardcoded in-memory list (sampleCategories / sampleItems) and lookups use 'first { }', which throws if no id matches. That is safe here only because every nav key is built from a known id; a real app would use Room or a repository and handle missing data."
+  ],
+  "runTest": "Open the project in Android Studio and Run, or from inside the NavViewModelState/ folder run './gradlew installDebug', and launch the app. Drill Categories -> a planet list -> a planet Detail, tap the star to favorite it, press Back to the list and confirm a star appears next to that planet. Then rotate the device and confirm both the star and the 'Local taps' counter persist. Filter Logcat by the tag 'VMState' to see the 'Entered AppNavigation' breadcrumb."
+}

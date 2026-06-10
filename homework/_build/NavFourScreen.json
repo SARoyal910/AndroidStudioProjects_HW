@@ -1,0 +1,125 @@
+{
+  "name": "NavFourScreen",
+  "tagline": "A four-deep drill-down: Categories -> planets -> Detail -> Fun Fact, built on Navigation 3 keys.",
+  "whatItDoes": "You open to a list of two planet categories (Rocky Planets, Gas Giants). Tapping a category drills into its planets; tapping a planet shows a detail screen with two buttons. Pressing 'View fun fact' pushes a fourth screen showing that planet's fun fact, with a 'Back' button and a 'Start over' button. The back stack can now be four screens deep, and system Back pops one level at a time while 'Start over' clears everything back to the categories screen.",
+  "mentalModel": "Each new screen is just one more @Serializable NavKey pushed onto a back stack; navigating forward is backStack.add(key) and going back is backStack.removeLastOrNull().",
+  "domain": "planets",
+  "estTime": "15-25 min",
+  "screens": [
+    {
+      "name": "CategoriesScreen",
+      "role": "Level 1: a LazyColumn of the two planet categories; tapping a row opens that category's planets."
+    },
+    {
+      "name": "ItemsScreen",
+      "role": "Level 2: a header naming the chosen category plus a scrolling list of its planets, with a 'Back to categories' button."
+    },
+    {
+      "name": "DetailScreen",
+      "role": "Level 3: one planet's title and blurb, with a 'View fun fact' button (forward) and a 'Back to list' button."
+    },
+    {
+      "name": "FactScreen",
+      "role": "Level 4 (the new screen): a fun fact about the planet, with a 'Back' button and a 'Start over' button that returns to the root."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "NavKey",
+      "plain": "A marker interface every navigation destination implements. Here CategoriesKey, ItemsKey, DetailKey, and FactKey all implement NavKey so Nav3 can stack them."
+    },
+    {
+      "term": "Back stack",
+      "plain": "An ordered list of keys created by rememberNavBackStack(CategoriesKey). Pushing with backStack.add(...) goes forward; popping with backStack.removeLastOrNull() goes back. It can reach four deep: [CategoriesKey, ItemsKey, DetailKey, FactKey]."
+    },
+    {
+      "term": "Key carries arguments",
+      "plain": "A key both names a screen and holds its data. ItemsKey(val categoryId: Int) and DetailKey/FactKey(val itemId: Int) carry only an id, which screens resolve into full objects via categoryById/itemById."
+    },
+    {
+      "term": "data object vs data class key",
+      "plain": "CategoriesKey is a 'data object' singleton because there is only one categories screen with no arguments; ItemsKey, DetailKey, and FactKey are 'data class'es because each instance differs by which id it carries."
+    },
+    {
+      "term": "entryProvider DSL",
+      "plain": "Inside NavDisplay, entryProvider maps each key type to a Composable using entry<KeyType> { }. Nav3 picks the block matching the current top key; entry<ItemsKey> { key -> } gives you the typed key so you can read key.categoryId."
+    },
+    {
+      "term": "Stateless screen Composables",
+      "plain": "Each screen takes plain data plus callbacks (onOpen, onBack, onOpenFact, onStartOver) and knows nothing about navigation. All push/pop logic lives in AppNavigation, keeping screens reusable and previewable."
+    },
+    {
+      "term": "Clearing the stack",
+      "plain": "onStartOver runs 'while (backStack.size > 1) backStack.removeLastOrNull()', popping every key except the first to jump straight back to the root categories screen."
+    },
+    {
+      "term": "PreviewParameterProvider",
+      "plain": "CategoryPreviewProvider and ItemPreviewProvider feed a Sequence of sample data into @Preview functions so Android Studio renders one card per category and one per planet, covering all 15 reachable screen states without running the app."
+    }
+  ],
+  "files": [
+    {
+      "path": "NavFourScreen/src/main/java/com/example/navfourscreen/MainActivity.kt",
+      "role": "The entire app: data models, the four @Serializable nav keys, MainActivity, the AppNavigation back-stack host, all four screen Composables, and the @Preview functions."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The four serializable nav keys",
+      "file": "NavFourScreen/src/main/java/com/example/navfourscreen/MainActivity.kt",
+      "start": 168,
+      "end": 181,
+      "explain": "Each screen is identified by a NavKey. CategoriesKey is a 'data object' because there is only one categories screen with no arguments, while ItemsKey, DetailKey, and FactKey are 'data class'es that each carry a single id. The @Serializable annotation lets Nav3 save the stack across process death. Compared to the three-screen project, FactKey is the new fourth key."
+    },
+    {
+      "title": "Hosting the back stack in MainActivity",
+      "file": "NavFourScreen/src/main/java/com/example/navfourscreen/MainActivity.kt",
+      "start": 193,
+      "end": 209,
+      "explain": "onCreate calls enableEdgeToEdge() then setContent to install the Compose tree. The app theme wraps a Scaffold, which hands back innerPadding (the space taken by system bars); that padding flows into AppNavigation so every screen lays out inside the safe area. This single Activity hosts everything, no Fragments or XML nav graph."
+    },
+    {
+      "title": "The back stack and NavDisplay",
+      "file": "NavFourScreen/src/main/java/com/example/navfourscreen/MainActivity.kt",
+      "start": 227,
+      "end": 241,
+      "explain": "rememberNavBackStack(CategoriesKey) seeds the stack at the categories screen and preserves it across recomposition and config changes. NavDisplay renders whichever key is on top and animates transitions. The onBack lambda pops the top with backStack.removeLastOrNull(), which is what makes the system Back button walk up the chain one level at a time."
+    },
+    {
+      "title": "Mapping every key to its screen with entryProvider",
+      "file": "NavFourScreen/src/main/java/com/example/navfourscreen/MainActivity.kt",
+      "start": 244,
+      "end": 288,
+      "explain": "entryProvider is a DSL with one entry<KeyType> { } block per screen. Tapping a category runs backStack.add(ItemsKey(categoryId)); tapping a planet adds DetailKey(itemId); 'View fun fact' adds FactKey(itemId) for the same planet (level 4). The entry<ItemsKey> { key -> } form exposes the typed key so the screen can read key.categoryId. This is where all forward navigation lives."
+    },
+    {
+      "title": "Detail screen with a forward button to screen four",
+      "file": "NavFourScreen/src/main/java/com/example/navfourscreen/MainActivity.kt",
+      "start": 394,
+      "end": 423,
+      "explain": "DetailScreen is the level-3 screen and the bridge to the new fourth screen. It is fully stateless: it shows the resolved item and reports taps via two callbacks. 'View fun fact' calls onOpenFact(item.id) to drill forward, while 'Back to list' calls onBack to pop. Notice the screen never touches the back stack itself."
+    },
+    {
+      "title": "The new Fact screen and Start over",
+      "file": "NavFourScreen/src/main/java/com/example/navfourscreen/MainActivity.kt",
+      "start": 435,
+      "end": 461,
+      "explain": "FactScreen is the fourth screen this project adds. It shows the planet's fact field and offers two buttons: 'Back' (onBack pops one level to Detail) and 'Start over' (onStartOver, wired to a while-loop that pops every key until only the root remains). This demonstrates both single-step popping and clearing the whole stack to the root."
+    }
+  ],
+  "newVsPrev": "On top of NavThreeScreen, this adds a FOURTH screen (FactScreen) reached by a 'View fun fact' button on the Detail screen, plus its own FactKey(itemId) nav key and entry<FactKey> block. The Item data gains a 'fact' field that powers screen four, and FactScreen introduces a 'Start over' action that clears the entire back stack to the root (while backStack.size > 1) rather than popping one level. The preview set grows to 15 renderings to cover the extra screen.",
+  "tryThis": [
+    "Add a fifth planet to sampleItems with a new id and a categoryId of 1 or 2, rerun, and watch it appear in that category's list and gain its own detail and fact screens with no other code changes.",
+    "Add a 'Back to detail' label tweak or a third button on FactScreen that calls onStartOver but only pops two levels; compare how the back stack ends up versus the existing 'Start over'.",
+    "Change the FactScreen 'Start over' lambda to also re-add a fresh ItemsKey after clearing, so 'Start over' lands the user on a specific list instead of the root, and observe the resulting back stack.",
+    "Add a Log.d(TAG, backStack.toString()) call inside an entry block, then filter Logcat by 'L4' while tapping through all four screens to literally watch the stack grow and shrink.",
+    "Open the Split/Design view in Android Studio and confirm all 15 @Preview cards render; then add a planet and watch the Detail and Fact preview counts auto-update because the providers read sampleItems."
+  ],
+  "gotchas": [
+    "categoryById and itemById use first { } which THROWS if no match is found; this is safe here only because every key is built from a known id, but passing a bad id would crash.",
+    "The screens are deliberately 'dumb' and never touch the back stack; all add/remove logic lives in AppNavigation, so do not look inside CategoriesScreen/DetailScreen/FactScreen for navigation.",
+    "There is no real persistence, database, or network: sampleCategories and sampleItems are hardcoded in-memory lists, standing in for what would normally come from Room or Retrofit.",
+    "'Start over' clears the stack with a manual while-loop (while backStack.size > 1) rather than a dedicated Nav3 pop-to-root API, so it is a simplified hand-rolled version of that pattern."
+  ],
+  "runTest": "Build and install with './gradlew installDebug' from inside the NavFourScreen/ folder (or run the NavFourScreen configuration in Android Studio), then launch on a device or emulator. Tap a category -> a planet -> 'View fun fact' to push all four screens, and watch the stack grow to [CategoriesKey, ItemsKey, DetailKey, FactKey]. Press the system Back button repeatedly to confirm it pops one level at a time, then redo it and press 'Start over' on the fact screen to confirm it jumps straight back to the categories list. To watch the back stack in real time, open Logcat and filter by the tag 'L4'."
+}

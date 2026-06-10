@@ -1,0 +1,69 @@
+{
+  "name": "SingleActivity",
+  "tagline": "The bare-bones starting point: one Activity hosting a single Compose 'Hello Android!' screen.",
+  "whatItDoes": "When you launch the app you see a single screen with the text 'Hello Android!' near the top-left. There are no buttons, lists, or navigation; nothing is tappable. The whole screen is drawn edge-to-edge behind the system bars, with a Scaffold leaving padding so the text doesn't slide under the status bar. This is the absolute baseline Android Studio scaffold, trimmed down to show the minimum wiring needed to put Compose UI on screen.",
+  "mentalModel": "A modern Android app is one Activity (MainActivity) that calls setContent to render a tree of Composable functions; the Activity is the bridge from the OS into the world of Compose.",
+  "domain": "none",
+  "estTime": "15-25 min",
+  "screens": [
+    {"name": "MainActivity", "role": "The single Activity and launcher entry point; its onCreate calls setContent to host the entire Compose UI."},
+    {"name": "Greeting", "role": "A small @Composable that renders a Text reading 'Hello <name>!' using a Kotlin string template."}
+  ],
+  "concepts": [
+    {"term": "Single-Activity architecture", "plain": "Instead of one Activity per screen, the whole app lives inside one Activity (MainActivity). All UI is built from Composable functions inside it, which is the modern Compose default."},
+    {"term": "ComponentActivity", "plain": "MainActivity extends ComponentActivity, the lightweight Activity base class designed to host Jetpack Compose via setContent."},
+    {"term": "setContent", "plain": "Called inside onCreate, setContent { ... } hands Android the Composable tree to draw. Everything inside that lambda becomes the screen."},
+    {"term": "@Composable function", "plain": "A function annotated @Composable (like Greeting) describes a piece of UI. You call it from other composables; you do not 'return' a view, you emit UI."},
+    {"term": "Scaffold and innerPadding", "plain": "Scaffold provides standard Material screen structure and hands you innerPadding (insets for system bars) which you apply with Modifier.padding(innerPadding) so content isn't hidden under the status bar."},
+    {"term": "enableEdgeToEdge", "plain": "enableEdgeToEdge() lets the app draw behind the status and navigation bars for a modern full-bleed look; Scaffold's padding compensates so text stays visible."},
+    {"term": "Modifier", "plain": "A Modifier is a chainable instruction list for layout and appearance. Here Modifier.fillMaxSize() makes Scaffold fill the screen and Modifier.padding(innerPadding) insets the Greeting text."},
+    {"term": "AndroidManifest LAUNCHER intent-filter", "plain": "The intent-filter with action MAIN and category LAUNCHER marks MainActivity as the screen that opens when you tap the app icon. exported='true' is required for the launcher activity."}
+  ],
+  "files": [
+    {"path": "SingleActivity/app/src/main/java/com/example/singleactivity/MainActivity.kt", "role": "The single Activity (entry point) plus the Greeting composable; wires Compose into the app via setContent."},
+    {"path": "SingleActivity/app/src/main/AndroidManifest.xml", "role": "Declares the app and its one Activity, marking MainActivity as the LAUNCHER entry point."}
+  ],
+  "highlights": [
+    {
+      "title": "The single Activity declaration",
+      "file": "SingleActivity/app/src/main/java/com/example/singleactivity/MainActivity.kt",
+      "start": 21,
+      "end": 24,
+      "explain": "MainActivity extends ComponentActivity, the Compose-ready Activity base class. onCreate is the first lifecycle callback the OS runs when the screen is created, and super.onCreate(savedInstanceState) lets the framework do its own setup first. This is the one and only Activity in the whole app, which is what 'single-activity architecture' means."
+    },
+    {
+      "title": "setContent hands Compose the UI tree",
+      "file": "SingleActivity/app/src/main/java/com/example/singleactivity/MainActivity.kt",
+      "start": 25,
+      "end": 38,
+      "explain": "enableEdgeToEdge() draws behind the system bars, then setContent { ... } is the bridge from the Activity into Compose: everything inside that lambda becomes the screen. SingleActivityTheme applies app colors and typography, and Scaffold supplies innerPadding which is passed into Greeting via Modifier.padding(innerPadding) so the text isn't hidden under the status bar."
+    },
+    {
+      "title": "A Composable function emits UI",
+      "file": "SingleActivity/app/src/main/java/com/example/singleactivity/MainActivity.kt",
+      "start": 47,
+      "end": 53,
+      "explain": "Greeting is annotated @Composable, so it describes UI rather than returning a value. It emits a single Text whose content uses the Kotlin string template 'Hello $name!', and it accepts a modifier parameter (defaulting to Modifier) so the caller controls layout - here the caller passes the Scaffold's padding. This caller-passes-modifier pattern is a core Compose convention you will see in every project."
+    },
+    {
+      "title": "The LAUNCHER intent-filter (entry point)",
+      "file": "SingleActivity/app/src/main/AndroidManifest.xml",
+      "start": 25,
+      "end": 36,
+      "explain": "This <activity> block registers MainActivity with the OS - every Activity must be declared here or it cannot start. The nested intent-filter with action MAIN plus category LAUNCHER is what tells Android this is the screen to open when the user taps the app icon, and android:exported='true' is mandatory for the launcher activity so the system is allowed to start it."
+    }
+  ],
+  "newVsPrev": "This is the FIRST project in the track, so it has no predecessor - it is the baseline. The foundational idea it establishes is single-activity architecture: one MainActivity that calls setContent to host a tree of Composable functions. Every later project builds on this same skeleton (a ComponentActivity + setContent + a theme + a Scaffold), adding navigation, state, and real data on top of it.",
+  "tryThis": [
+    "Change name = 'Android' on line 33 to your own name and re-run; watch the on-screen text update to 'Hello <yourname>!'.",
+    "Uncomment the @Preview block on lines 59-65, then open the Compose preview pane in Android Studio to see Greeting render without launching the app on a device.",
+    "Add a second composable call inside the Scaffold lambda (for example another Greeting('Compose')) and notice both Texts draw on top of each other, since Scaffold's content slot does not lay children out in a column by itself.",
+    "Replace the Text in Greeting with a Material3 Button(onClick = {}) { Text('Tap me') } to see how easily you swap one composable for another."
+  ],
+  "gotchas": [
+    "There is no navigation, no ViewModel, and no state here on purpose - it is the minimal scaffold. Do not look for a NavHost or data classes; the entire app is just one Text.",
+    "The @Preview composable on lines 59-65 is commented out, so by default you get no design-time preview until you uncomment it.",
+    "Scaffold's content slot does not arrange multiple children for you; if you add more than one composable you must wrap them in a Column or Row yourself, or they will overlap."
+  ],
+  "runTest": "Build and install with ./gradlew installDebug (or press Run in Android Studio) and launch the app on an emulator or device. You should see a single screen showing 'Hello Android!' near the top-left, drawn edge-to-edge with the text correctly inset below the status bar. There are no taps or deep links to test in this baseline project."
+}

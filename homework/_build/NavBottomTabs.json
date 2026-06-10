@@ -1,0 +1,133 @@
+{
+  "name": "NavBottomTabs",
+  "tagline": "Three bottom tabs, three independent back stacks - switch tabs and each one remembers exactly where you left it.",
+  "whatItDoes": "The app opens on a 'Planets' tab showing two planet categories; tapping a category lists its planets, and tapping a planet opens a shared Detail screen with a fun fact. A bottom navigation bar lets the user jump to a 'Search' tab (a flat list of all planets) or an 'About' tab (a static blurb). The key behavior: drill deep inside Planets, switch to Search and drill there too, then return to Planets and you land exactly where you left off - not reset to the root. Each tab keeps its own private navigation history, fully preserved while you are looking at another tab.",
+  "mentalModel": "A bottom-nav app needs one back stack PER TAB, all kept alive at once, and you simply display the selected tab's stack - switching tabs swaps which stack is shown without disturbing any of them.",
+  "domain": "planets",
+  "estTime": "20-30 min",
+  "screens": [
+    {
+      "name": "BottomTabsApp",
+      "role": "The root composable: a Scaffold with a NavigationBar of three tabs that holds all three per-tab back stacks and renders a single NavDisplay for the selected tab."
+    },
+    {
+      "name": "CategoriesScreen",
+      "role": "Planets tab root - a scrolling list of planet categories; tapping a row drills into that category's planets."
+    },
+    {
+      "name": "ItemsScreen",
+      "role": "Planets tab level 2 - a header for the chosen category plus a list of its planets, with a 'Back to categories' button."
+    },
+    {
+      "name": "PlanetSearchScreen",
+      "role": "Search tab root - a flat list of every planet that pushes Detail onto the Search tab's own back stack."
+    },
+    {
+      "name": "DetailScreen",
+      "role": "The shared leaf reached from both Planets and Search - shows one planet's title, blurb, fun fact, and a Back button."
+    },
+    {
+      "name": "AboutScreen",
+      "role": "About tab - a single static, centered blurb that summarizes the multiple-back-stacks lesson; never drills anywhere."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "Multiple back stacks",
+      "plain": "A bottom-nav app where each tab owns a separate navigation history. Here that is modeled by calling 'rememberNavBackStack' three times (planetsBackStack, searchBackStack, aboutBackStack) instead of using one global stack."
+    },
+    {
+      "term": "NavBackStack per tab",
+      "plain": "'rememberNavBackStack(CategoriesKey)' creates one remembered, mutable stack seeded with a root key. Because all three are remembered in the same composition and never torn down, every tab's history survives tab switches."
+    },
+    {
+      "term": "selectedTab swap",
+      "plain": "A single 'var selectedTab by rememberSaveable { mutableIntStateOf(0) }' Int decides which stack to display. The 'activeBackStack' when-expression maps that index to one of the three stacks; flipping the Int swaps the visible stack without touching the others."
+    },
+    {
+      "term": "Shared leaf key",
+      "plain": "One 'DetailKey(itemId)' type is pushed by BOTH the Planets and Search tabs. What keeps the two Detail histories separate is not the key type but WHICH stack it is added to (planetsBackStack.add vs searchBackStack.add)."
+    },
+    {
+      "term": "Single NavDisplay",
+      "plain": "Only one 'NavDisplay' is rendered, pointed at 'activeBackStack'. Its 'entryProvider' lists every key type any tab can show; Nav3 renders whichever screen matches the top key of the currently displayed stack."
+    },
+    {
+      "term": "Per-tab System Back",
+      "plain": "'onBack = { activeBackStack.removeLastOrNull() }' pops only the selected tab's stack, so the hardware/gesture Back walks back through the current tab's history and never leaks into another tab."
+    },
+    {
+      "term": "NavigationBar / NavigationBarItem",
+      "plain": "Material 3's bottom bar. 'NavigationBar' is the container; one 'NavigationBarItem' per tab carries 'selected', an 'onClick' that just sets 'selectedTab = tab.index', an emoji 'icon', and a text 'label'."
+    },
+    {
+      "term": "Serializable NavKey",
+      "plain": "Every destination is a key implementing 'NavKey' and marked '@Serializable' - 'data object' for single screens (CategoriesKey, SearchKey, AboutKey) and 'data class' when arguments differ (ItemsKey(categoryId), DetailKey(itemId))."
+    }
+  ],
+  "files": [
+    {
+      "path": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
+      "role": "The entire app in one file: the planets data model and lookups, the per-tab Serializable nav keys, the TabSpec list, MainActivity, the BottomTabsApp scaffold that wires up the three back stacks and NavDisplay, and every screen composable plus previews."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Per-tab nav keys (objects vs classes)",
+      "file": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
+      "start": 196,
+      "end": 217,
+      "explain": "Each destination is a 'NavKey' marked '@Serializable'. CategoriesKey, SearchKey, and AboutKey are 'data object' singletons because there is only one of each screen, while ItemsKey and DetailKey are 'data class' because they carry arguments (categoryId, itemId). DetailKey is the shared leaf both tabs push - the comment stresses that independence comes from WHICH stack holds the key, not the key type."
+    },
+    {
+      "title": "One back stack per tab",
+      "file": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
+      "start": 295,
+      "end": 297,
+      "explain": "The crux of the lesson: 'rememberNavBackStack' is called three times, once per tab, each seeded with that tab's root key. Because all three live in the same composition and are never torn down, every tab's drill-down state stays intact while another tab is on screen. This is what a single global stack cannot do."
+    },
+    {
+      "title": "selectedTab and the activeBackStack swap",
+      "file": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
+      "start": 307,
+      "end": 317,
+      "explain": "'selectedTab' is a 'rememberSaveable' Int (survives rotation/process death) that is the ONLY thing deciding which stack shows. The 'activeBackStack' when-expression maps that index to one of the three NavBackStacks. Changing the Int re-resolves this lookup and swaps the visible stack while the two non-selected stacks sit untouched in memory."
+    },
+    {
+      "title": "NavigationBar items only change the index",
+      "file": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
+      "start": 336,
+      "end": 354,
+      "explain": "The Material 3 'NavigationBar' emits one 'NavigationBarItem' per tab. The critical detail is 'onClick = { selectedTab = tab.index }' - tapping a tab does NOT clear or rebuild any stack, it only changes the selected index, which is exactly why each tab's history is preserved. The icon is an emoji rendered with Text() as a deliberate zero-dependency fallback."
+    },
+    {
+      "title": "Single NavDisplay with per-tab Back",
+      "file": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
+      "start": 371,
+      "end": 375,
+      "explain": "One 'NavDisplay' renders 'backStack = activeBackStack'. When 'selectedTab' changes, activeBackStack re-resolves and NavDisplay instantly swaps to wherever that tab was last left. 'onBack' pops only that tab's stack via 'activeBackStack.removeLastOrNull()', so System Back walks the current tab's history and never crosses into another tab."
+    },
+    {
+      "title": "entryProvider: shared leaf pushed onto different stacks",
+      "file": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
+      "start": 380,
+      "end": 410,
+      "explain": "The 'entryProvider' DSL maps each key type to a screen. Notice the same 'DetailKey' is added by 'planetsBackStack.add(DetailKey(itemId))' inside the Planets entries and by 'searchBackStack.add(DetailKey(itemId))' inside the Search entry. One key type, two stacks - which is why the two tabs keep completely separate Detail histories even though they reuse one screen and one key."
+    }
+  ],
+  "newVsPrev": "NavFourScreen taught a single linear back stack with one NavDisplay over one rememberNavBackStack. NavBottomTabs adds a Material 3 NavigationBar with three TOP-LEVEL tabs and, crucially, THREE simultaneous back stacks (one per tab) instead of one. It introduces a rememberSaveable 'selectedTab' index that swaps which stack the single NavDisplay shows, a shared DetailKey reused across two tabs, and per-tab System Back that never crosses tab boundaries - the classic 'multiple back stacks' problem that Nav3 has no built-in container for.",
+  "tryThis": [
+    "Run the app, drill Planets to a Detail screen, switch to Search and open a different planet's Detail, then tap back to Planets - confirm you land on the same Planets Detail you left, not the root.",
+    "Open Logcat and filter by the tag 'Tabs'. Watch the 'depths -> planets=.. search=.. about=..' line: drill into a tab, switch away, and notice that tab's depth stays the same instead of resetting.",
+    "Change the start tab by editing 'mutableIntStateOf(0)' to '1' so the app opens on Search; rerun and confirm Search is selected and shown first.",
+    "Add a fourth tab: append a TabSpec(3, an emoji, a label) to TABS, create a new @Serializable key and back stack, add a branch to the activeBackStack when-expression, and add a matching entry<> in the entryProvider.",
+    "Break preservation on purpose: change a tab's onClick to also reset its stack (for example clear planetsBackStack back to root on tap) and observe how that tab now forgets your place - showing what the explicit per-tab stacks are protecting against."
+  ],
+  "gotchas": [
+    "The tab icons are emoji rendered via Text(fontSize = 20.sp), NOT real Material Icons.Default.* vectors. This is a deliberate zero-dependency fallback to keep the build green because the material-icons artifact is not on this project's classpath.",
+    "Nav3 has NO built-in multiple-back-stacks container, so the pattern is modeled BY HAND: three rememberNavBackStack calls plus a selectedTab index. There is no magic 'tabs' API doing this for you.",
+    "DetailScreen and DetailKey are shared by both tabs - the screen has no idea which tab it sits on. Independence comes entirely from which stack the key was added to at push time, and from onBack popping activeBackStack.",
+    "The data is hardcoded in-memory lists (sampleCategories, sampleItems) and lookups use first { }, which would throw if an id did not exist - fine here because every key is built from a known id, but not how a real repository-backed app would resolve data."
+  ],
+  "runTest": "Open the NavBottomTabs project in Android Studio and Run, or from inside the NavBottomTabs/ folder run './gradlew installDebug', then launch the app. To verify the lesson: drill into the Planets tab a few levels, switch to the Search tab and open a planet there, then tap back to Planets — you should land exactly where you left off, not at the root. Open Logcat and filter by the tag 'Tabs' to watch the per-tab stack depths stay preserved as you switch tabs. You can also preview the bottom bar and About screen via the @Preview functions without running."
+}

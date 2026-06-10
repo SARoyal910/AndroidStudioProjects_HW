@@ -1,0 +1,129 @@
+{
+  "name": "NavThreeScreen",
+  "tagline": "A three-level drill-down (Categories -> Items -> Detail) built on Navigation 3, where the back stack can grow three keys deep.",
+  "whatItDoes": "You first see a scrolling list of two planet categories: 'Rocky Planets' and 'Gas Giants'. Tapping a category navigates forward to a second screen listing the planets in that group (Mercury, Venus, Earth... or Jupiter, Saturn), with a header and a 'Back to categories' button. Tapping a planet drills down a third level to a detail screen showing that one planet's title, blurb, and a 'Back to list' button. Both the on-screen buttons and the system Back button pop one level at a time, walking you back up the chain.",
+  "mentalModel": "Navigation is just a list (the back stack) of small @Serializable keys; adding a key pushes a screen forward and removing the last key pops back, and the stack here can hold three keys at once.",
+  "domain": "planets",
+  "estTime": "15-25 min",
+  "screens": [
+    {
+      "name": "CategoriesScreen",
+      "role": "Level 1 - a LazyColumn of the two planet categories; tapping a row reports its id via onOpen."
+    },
+    {
+      "name": "ItemsScreen",
+      "role": "Level 2 - a fixed header naming the chosen category plus a scrolling list of that category's planets, with a 'Back to categories' button."
+    },
+    {
+      "name": "DetailScreen",
+      "role": "Level 3 - shows a single planet's title and blurb resolved from the key's itemId, plus a 'Back to list' button."
+    },
+    {
+      "name": "AppNavigation",
+      "role": "Owns the rememberNavBackStack and wires every key type to its screen through NavDisplay + entryProvider."
+    },
+    {
+      "name": "MainActivity",
+      "role": "The single Activity; calls setContent and hosts the whole Compose + Nav3 tree inside a Scaffold."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "Back stack as a list",
+      "plain": "The back stack created by rememberNavBackStack(CategoriesKey) is literally a mutable list of keys. backStack.add(...) pushes a new screen, backStack.removeLastOrNull() pops one. Here it can hold up to three keys: [CategoriesKey, ItemsKey, DetailKey]."
+    },
+    {
+      "term": "NavKey",
+      "plain": "A marker interface every navigation destination implements. CategoriesKey, ItemsKey, and DetailKey all implement NavKey so Nav3 can track them on the stack."
+    },
+    {
+      "term": "Keys carry their arguments",
+      "plain": "A key both names a screen AND holds its data. ItemsKey(val categoryId: Int) carries which category to list, and DetailKey(val itemId: Int) carries which planet to show. CategoriesKey is a 'data object' because there is only one categories screen and it needs no arguments."
+    },
+    {
+      "term": "data object vs data class key",
+      "plain": "CategoriesKey is a 'data object' (a singleton) since there is only ever one categories screen. ItemsKey and DetailKey are 'data class' because each instance differs by the id it carries."
+    },
+    {
+      "term": "entryProvider DSL",
+      "plain": "entryProvider { entry<KeyType> { ... } } maps each key type to a Composable. Nav3 looks at the top key and runs the matching entry<> block; the entry<ItemsKey> { key -> } lambda even hands you the key instance so you can read key.categoryId."
+    },
+    {
+      "term": "Pass the id, not the object",
+      "plain": "Keys carry only a small Int id, and helper functions categoryById, itemById, and itemsInCategory resolve the full Category/Item objects at render time. This keeps each key tiny and @Serializable so it can survive process death."
+    },
+    {
+      "term": "Dumb (stateless) screens",
+      "plain": "CategoriesScreen, ItemsScreen, and DetailScreen know nothing about navigation. They only render what they are given and report taps through callbacks like onOpen and onBack, which makes them reusable and previewable."
+    },
+    {
+      "term": "@PreviewParameter fan-out",
+      "plain": "ItemsScreenPreview and DetailScreenPreview use @PreviewParameter with a PreviewParameterProvider (CategoryPreviewProvider, ItemPreviewProvider) so Android Studio renders one preview per element - 2 item lists and all 6 planet details - without hand-writing a function each."
+    }
+  ],
+  "files": [
+    {
+      "path": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
+      "role": "The entire app: data classes, three @Serializable nav keys, MainActivity, the AppNavigation host, all three screen Composables, and the @Preview functions."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Three navigation keys, one object + two classes",
+      "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
+      "start": 152,
+      "end": 161,
+      "explain": "Each screen is identified by a NavKey. CategoriesKey is a 'data object' (a singleton) because there is only one categories screen with no arguments. ItemsKey and DetailKey are 'data class' because each carries an argument - categoryId or itemId - so every instance is distinct. The @Serializable annotation lets Nav3 save and restore these keys across process death."
+    },
+    {
+      "title": "Resolving full objects from a tiny id",
+      "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
+      "start": 130,
+      "end": 138,
+      "explain": "Keys carry only an Int id, so these helpers turn that id back into real data. categoryById and itemById use first { } (which throws if nothing matches, fine here since ids are known), and itemsInCategory uses filter to gather every planet whose categoryId matches. Passing ids instead of whole objects is what keeps the keys small and serializable."
+    },
+    {
+      "title": "Creating and remembering the back stack",
+      "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
+      "start": 200,
+      "end": 211,
+      "explain": "rememberNavBackStack(CategoriesKey) seeds the stack with the first screen and preserves it across recompositions and configuration changes. This single list IS the navigation state: pushing a key moves forward, popping moves back. In this app it can reach three deep, [CategoriesKey, ItemsKey, DetailKey]."
+    },
+    {
+      "title": "NavDisplay + entryProvider: the heart of Nav3",
+      "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
+      "start": 215,
+      "end": 258,
+      "explain": "NavDisplay renders whatever key is on top of backStack. onBack = { backStack.removeLastOrNull() } makes the system Back button pop one key. Inside entryProvider, one entry<> block per key type maps a key to a screen; entry<ItemsKey> { key -> } and entry<DetailKey> { key -> } receive the key instance so they can read key.categoryId / key.itemId. Tapping a row calls backStack.add(ItemsKey(...)) or backStack.add(DetailKey(...)) to drill forward."
+    },
+    {
+      "title": "ItemsScreen: a static header over a scrolling list",
+      "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
+      "start": 312,
+      "end": 350,
+      "explain": "The middle level combines a non-scrolling header Column (the category name plus a 'Back to categories' Button wired to onBack) with a LazyColumn of clickable item rows. Each row's .clickable { onOpen(item.id) } reports the tapped planet's id upward so the navigation host can push a DetailKey. The screen itself stays navigation-agnostic - it only renders data and fires callbacks."
+    },
+    {
+      "title": "Previewing every screen with @PreviewParameter",
+      "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
+      "start": 447,
+      "end": 461,
+      "explain": "ItemPreviewProvider implements PreviewParameterProvider<Item> and exposes sampleItems as a Sequence. The @PreviewParameter(ItemPreviewProvider::class) annotation on DetailScreenPreview then makes Android Studio render the detail screen once per planet - all six - using no-op {} callbacks. Because the provider reads the same sample data the app uses, the preview set updates automatically when you add a planet."
+    }
+  ],
+  "newVsPrev": "NavListDetail had a two-deep stack (List -> Detail). NavThreeScreen adds a third middle level: a CategoriesKey now sits at the bottom, an ItemsKey (carrying categoryId) sits in the middle, and DetailKey sits on top - so the back stack can be three keys deep and Back pops through all three levels. It introduces a second argument-carrying key type and a third entry<> block, and the data model gains a Category that owns many Items (a parent/child, foreign-key relationship via categoryId).",
+  "tryThis": [
+    "Add a third category like Category(3, 'Dwarf Planets', '...') to sampleCategories and a couple of Items with categoryId = 3, then re-run: the first screen should show three categories and drilling into the new one should list your new planets with zero navigation code changes.",
+    "Filter Logcat by the tag 'L3' while tapping through the app and watch the 'Entered AppNavigation' breadcrumb fire on each navigation, confirming when the host recomposes.",
+    "Comment out the onBack button block in ItemsScreen (lines 327-330) and verify the hardware/system Back button STILL works - because NavDisplay's onBack = { backStack.removeLastOrNull() } handles back independently of the on-screen button.",
+    "Inside entry<ItemsKey>, change 'onOpen = { itemId -> backStack.add(DetailKey(itemId)) }' to push the same key twice (e.g. add 'backStack.add(DetailKey(itemId))' a second time), then tap a planet and press Back twice — observe that the stack really is a list you can push the same screen onto more than once.",
+    "Add a new Category to sampleCategories and watch ItemsScreenPreview automatically gain a new preview rendering, since CategoryPreviewProvider reads sampleCategories.asSequence()."
+  ],
+  "gotchas": [
+    "categoryById and itemById use first { }, which THROWS if no element matches. It is safe here only because every key is built from a known id; if you ever construct a key with a missing id the app will crash.",
+    "All data is hardcoded in-memory (sampleCategories, sampleItems). There is no database, network, or repository - in a real app this layer would be Room/Retrofit, but it is omitted to keep the navigation lesson focused.",
+    "There is no app bar / TopAppBar with an automatic up arrow; 'back' is provided two ways - the system Back button (via NavDisplay's onBack) and plain Material Buttons inside the screens. The two are wired separately but both just call removeLastOrNull().",
+    "@Serializable on the keys is required by Nav3 for saving state across process death even though this demo never actually exercises that path; do not remove it just because the app appears to work without it during a normal session."
+  ],
+  "runTest": "Open the project in Android Studio and Run, or from inside the NavThreeScreen/ folder run './gradlew installDebug' and launch the app. Tap a category (e.g. 'Rocky Planets'), confirm you land on its planet list, tap a planet (e.g. 'Earth') to reach the detail screen, then press the system Back button twice and confirm you walk back through Detail -> Items -> Categories one level at a time. Filter Logcat by 'L3' to see the 'Entered AppNavigation' log. There are no deep links in this project."
+}

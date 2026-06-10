@@ -97,21 +97,21 @@
       "title": "NavDisplay + entryProvider wire keys to screens and pass the shared VM down",
       "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
       "start": 255,
-      "end": 316,
+      "end": 326,
       "explain": "'NavDisplay' renders whatever key is on top of 'backStack'; 'onBack' pops it with 'removeLastOrNull()'. Inside 'entryProvider', one 'entry<KeyType>' block per level maps a key to a screen: tapping a category does 'backStack.add(ItemsKey(categoryId))' to drill in. Crucially, the Items and Detail entries pass the SAME 'favoritesViewModel' down, which is why every level reads the same favorites."
     },
     {
       "title": "Route observes the StateFlow lifecycle-aware and derives a boolean",
       "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
-      "start": 367,
-      "end": 389,
+      "start": 377,
+      "end": 399,
       "explain": "'DetailRoute' calls 'favorites.collectAsStateWithLifecycle()' to turn the StateFlow into Compose State, then derives 'isFavorite = item.id in favorites'. It hands the stateless 'DetailScreen' that plain Boolean plus 'onToggleFavorite = { favoritesViewModel.toggleFavorite(item.id) }'. That lambda is the event flowing UP; the resulting new state flows back DOWN and recomposes the Route."
     },
     {
       "title": "rememberSaveable counter contrasts local state with the ViewModel",
       "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
-      "start": 536,
-      "end": 556,
+      "start": 546,
+      "end": 566,
       "explain": "'var count by rememberSaveable { mutableStateOf(0) }' is deliberately placed next to the favorite toggle. The counter survives rotation by writing into the saved-instance Bundle but is local to this one composable and resets on a fresh launch, whereas the favorite (held in the ViewModel) is shared across screens and survives navigation too. Comparing the two side by side is the lesson."
     }
   ],

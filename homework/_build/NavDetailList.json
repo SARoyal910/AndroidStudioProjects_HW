@@ -78,21 +78,21 @@
       "title": "The back stack and NavDisplay wiring",
       "file": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt",
       "start": 87,
-      "end": 129,
+      "end": 139,
       "explain": "'rememberNavBackStack(ListKey)' starts the stack on the list. 'NavDisplay' draws the top key, calls 'onBack' to pop it, and uses 'entryProvider' to map keys to screens. Tapping a row runs 'backStack.add(DetailKey(id))' to push forward; the detail entry reads 'key.itemId' and resolves the Item. This single block is the whole navigation system."
     },
     {
       "title": "A tappable list that triggers navigation",
       "file": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt",
-      "start": 132,
-      "end": 152,
+      "start": 142,
+      "end": 162,
       "explain": "'ListScreen' uses 'LazyColumn' with 'items(items)' to draw one row per planet. Each row is a 'Column' made tappable by 'Modifier.clickable { onOpen(item.id) }'. Notice the screen does not know about navigation - it just calls the 'onOpen' lambda passed in, keeping the Composable reusable and testable."
     },
     {
       "title": "The detail screen with a back action",
       "file": "NavDetailList/app/src/main/java/com/example/navdetaillist/MainActivity.kt",
-      "start": 155,
-      "end": 170,
+      "start": 165,
+      "end": 180,
       "explain": "'DetailScreen' receives an already-resolved 'item' and an 'onBack' lambda. It renders the title and blurb, then a Button whose 'onClick = onBack' pops the stack. Like ListScreen, it stays ignorant of the back stack - the wiring in AppNavigation supplies 'onBack' as 'backStack.removeLastOrNull()'."
     }
   ],

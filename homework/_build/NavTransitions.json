@@ -89,14 +89,14 @@
       "title": "Wiring the three specs into NavDisplay",
       "file": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
       "start": 394,
-      "end": 424,
+      "end": 434,
       "explain": "This is the call site that makes the sample work: NavDisplay takes backStack, an onBack that pops, and the three params transitionSpec = forwardSpec(), popTransitionSpec = popSpec(), predictivePopTransitionSpec = predictivePopSpec(). NavDisplay decides forward-vs-pop by diffing the back stack and then invokes the matching spec. Without these three lines you would get NavDisplay's plain default cross-fade."
     },
     {
       "title": "Per-entry override: the Fact screen slides vertically via metadata",
       "file": "NavTransitions/src/main/java/com/example/navtransitions/MainActivity.kt",
-      "start": 470,
-      "end": 489,
+      "start": 480,
+      "end": 499,
       "explain": "The FactKey entry passes 'metadata = NavDisplay.transitionSpec { ... } + NavDisplay.popTransitionSpec { ... }'. On push it uses slideInVertically(initialOffsetY = { fullHeight -> fullHeight }) so the screen rises up from the bottom; on pop it uses slideOutVertically downward. Because entry metadata beats the NavDisplay-wide defaults, this one screen visibly breaks the app's horizontal pattern, proving per-entry overrides work."
     },
     {

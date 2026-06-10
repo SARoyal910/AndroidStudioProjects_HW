@@ -103,15 +103,15 @@
     {
       "title": "Observing state the lifecycle-aware way",
       "file": "NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt",
-      "start": 231,
-      "end": 250,
+      "start": 241,
+      "end": 260,
       "explain": "The stateful 'PlanetListScreen' obtains a lifecycle-scoped 'PlanetsViewModel' via 'viewModel()', then observes 'viewModel.uiState.collectAsStateWithLifecycle()' which pauses collection while the screen is backgrounded. It holds no data itself: it just forwards the plain 'uiState' and 'viewModel::retry' down to the stateless body. This stateful/stateless split is what makes the body previewable."
     },
     {
       "title": "Exhaustive state rendering and row taps",
       "file": "NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt",
-      "start": 279,
-      "end": 322,
+      "start": 289,
+      "end": 332,
       "explain": "A single 'when (uiState)' renders each branch: Loading shows a spinner, Empty a note, Error smart-casts to read 'uiState.message' plus a Retry 'Button(onClick = onRetry)', and Success smart-casts to '.planets' and builds a LazyColumn. Each row is '.clickable { onOpen(planet.id) }', which pushes a DetailKey carrying only the id, so navigation never carries the whole object."
     }
   ],

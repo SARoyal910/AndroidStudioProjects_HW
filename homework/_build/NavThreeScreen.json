@@ -93,21 +93,21 @@
       "title": "NavDisplay + entryProvider: the heart of Nav3",
       "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
       "start": 215,
-      "end": 275,
+      "end": 285,
       "explain": "NavDisplay renders whatever key is on top of backStack. onBack = { backStack.removeLastOrNull() } makes the system Back button pop one key. Inside entryProvider, one entry<> block per key type maps a key to a screen; entry<ItemsKey> { key -> } and entry<DetailKey> { key -> } receive the key instance so they can read key.categoryId / key.itemId. Tapping a row calls backStack.add(ItemsKey(...)) or backStack.add(DetailKey(...)) to drill forward."
     },
     {
       "title": "ItemsScreen: a static header over a scrolling list",
       "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
-      "start": 329,
-      "end": 367,
+      "start": 339,
+      "end": 377,
       "explain": "The middle level combines a non-scrolling header Column (the category name plus a 'Back to categories' Button wired to onBack) with a LazyColumn of clickable item rows. Each row's .clickable { onOpen(item.id) } reports the tapped planet's id upward so the navigation host can push a DetailKey. The screen itself stays navigation-agnostic - it only renders data and fires callbacks."
     },
     {
       "title": "Previewing every screen with @PreviewParameter",
       "file": "NavThreeScreen/src/main/java/com/example/navthreescreen/MainActivity.kt",
-      "start": 464,
-      "end": 478,
+      "start": 474,
+      "end": 488,
       "explain": "ItemPreviewProvider implements PreviewParameterProvider<Item> and exposes sampleItems as a Sequence. The @PreviewParameter(ItemPreviewProvider::class) annotation on DetailScreenPreview then makes Android Studio render the detail screen once per planet - all six - using no-op {} callbacks. Because the provider reads the same sample data the app uses, the preview set updates automatically when you add a planet."
     }
   ],

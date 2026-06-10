@@ -92,14 +92,14 @@
       "title": "NavDisplay, onBack, and the entryProvider",
       "file": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
       "start": 176,
-      "end": 224,
+      "end": 234,
       "explain": "'NavDisplay' renders whatever key is on top of 'backStack'. 'onBack' pops the top key so system back returns to the previous screen. Inside 'entryProvider', the 'entry<ListKey>' block wires a row tap to 'backStack.add(DetailKey(id))' (navigate forward) and the 'entry<DetailKey> { key }' block reads 'key.itemId' to render the right planet. This block is the heart of the whole Nav3 setup."
     },
     {
       "title": "The stateless list screen",
       "file": "NavListDetail/app/src/main/java/com/example/navlistdetail/MainActivity.kt",
-      "start": 238,
-      "end": 265,
+      "start": 248,
+      "end": 275,
       "explain": "'ListScreen' renders items in a 'LazyColumn' (Compose's RecyclerView equivalent that only composes visible rows). Each row is a 'Column' made tappable by '.clickable { onOpen(item.id) }', so the whole row reports the id upward. The screen takes no navigation dependency, which is why it stays reusable and easy to preview."
     }
   ],

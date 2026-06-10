@@ -104,14 +104,14 @@
       "title": "Single NavDisplay with per-tab Back",
       "file": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
       "start": 371,
-      "end": 392,
+      "end": 402,
       "explain": "One 'NavDisplay' renders 'backStack = activeBackStack'. When 'selectedTab' changes, activeBackStack re-resolves and NavDisplay instantly swaps to wherever that tab was last left. 'onBack' pops only that tab's stack via 'activeBackStack.removeLastOrNull()', so System Back walks the current tab's history and never crosses into another tab."
     },
     {
       "title": "entryProvider: shared leaf pushed onto different stacks",
       "file": "NavBottomTabs/src/main/java/com/example/navbottomtabs/MainActivity.kt",
-      "start": 397,
-      "end": 427,
+      "start": 407,
+      "end": 437,
       "explain": "The 'entryProvider' DSL maps each key type to a screen. Notice the same 'DetailKey' is added by 'planetsBackStack.add(DetailKey(itemId))' inside the Planets entries and by 'searchBackStack.add(DetailKey(itemId))' inside the Search entry. One key type, two stacks - which is why the two tabs keep completely separate Detail histories even though they reuse one screen and one key."
     }
   ],

@@ -421,6 +421,16 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         //                      data-class key can read its arguments (e.g. key.itemId).
         //                      A data-OBJECT key carries no data, so its block can
         //                      omit the `key ->` parameter.
+        //
+        // WHEN does an entry block RUN? entry<...> { } only REGISTERS a screen here
+        // (like adding a `case` to a switch) — the { } body does NOT run yet. NavDisplay
+        // runs the body whose key type matches the key currently on TOP of the back
+        // stack: when you push that key (navigate forward), when you pop back to it, and
+        // on recomposition while it is showing. A key in the stack but not on top is kept
+        // (state preserved) but not drawn; popping it off removes its screen from
+        // composition. So pushing a key turns its screen on and popping turns it off —
+        // and `key` is the exact instance on top, so the same block runs with different
+        // data per instance (e.g. ItemsKey(1) vs ItemsKey(5)).
         entryProvider = entryProvider {
             // LEVEL 1 — when CategoriesKey is on top, show the list of categories.
             entry<CategoriesKey> {

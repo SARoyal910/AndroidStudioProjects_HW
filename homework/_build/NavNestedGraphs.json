@@ -97,21 +97,21 @@
       "title": "NavDisplay with a flat onBack and a grouped entryProvider",
       "file": "NavNestedGraphs/src/main/java/com/example/navnestedgraphs/MainActivity.kt",
       "start": 335,
-      "end": 366,
+      "end": 376,
       "explain": "NavDisplay renders whatever key is on top of backStack. 'onBack = { backStack.removeLastOrNull() }' is a single flat pop that serves BOTH graphs' internal Back, and removeLastOrNull is a safe no-op on an empty stack. The entryProvider DSL that follows is split into two labelled sections so that two graphs sharing one flat stack stays visible in the code."
     },
     {
       "title": "Graph A entries: 'Get started' wires to finishOnboarding",
       "file": "NavNestedGraphs/src/main/java/com/example/navnestedgraphs/MainActivity.kt",
-      "start": 377,
-      "end": 402,
+      "start": 387,
+      "end": 412,
       "explain": "Each onboarding step's entry<> block pushes the NEXT step ('add(ChooseFavoriteKey)', 'add(DoneKey)') to walk forward within Graph A, and its in-flow Back pops one step. The key teaching moment is DoneScreen's 'onGetStarted = finishOnboarding': the only way to LEAVE the sub-flow is the unit pop, never a one-screen-at-a-time slide into Graph B."
     },
     {
       "title": "Graph B entries: id-carrying keys resolved to objects",
       "file": "NavNestedGraphs/src/main/java/com/example/navnestedgraphs/MainActivity.kt",
-      "start": 413,
-      "end": 440,
+      "start": 423,
+      "end": 450,
       "explain": "The drill-down pushes 'ItemsKey(categoryId)' and 'DetailKey(itemId)', then each entry block reads the id off the key ('key.categoryId', 'key.itemId') and resolves the full object via 'categoryById' / 'itemsInCategory' / 'itemById'. Passing only an id keeps every key tiny and serializable, and because Graph A was already popped, the first Back here exits the app instead of re-entering onboarding."
     }
   ],

@@ -135,7 +135,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     // Back stack seeded with the list screen; preserved across recomposition.
     val backStack = rememberNavBackStack(ListKey)
 
-    Log.d(TAG, "Entered AppNavigation")                    // breadcrumb (filter Logcat by "DataLayer")
+    Log.d("LT", "Entered AppNavigation")                    // breadcrumb (filter Logcat by "DataLayer")
 
     NavDisplay(
         backStack = backStack,
@@ -202,6 +202,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
  */
 @Composable
 private fun DataLayerBanner(modifier: Modifier = Modifier) {
+    Log.d("LT", "Entered DataLayerBanner")
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.secondaryContainer,   // tinted background to stand out
@@ -250,6 +251,7 @@ fun PlanetListScreen(
     // The ViewModel is obtained via viewModel(); its default repo is in-memory.
     viewModel: PlanetsViewModel = viewModel(),
 ) {
+    Log.d("LT", "Entered PlanetListScreen")
     // Observe the StateFlow as Compose State. `by` unwraps it to a PlanetsUiState.
     // collectAsStateWithLifecycle() (not plain collectAsState) stops collecting
     // when the screen is in the background — the lifecycle-aware way to observe.
@@ -291,6 +293,7 @@ fun PlanetListScreenBody(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Log.d("LT", "Entered PlanetListScreenBody")
     Column(modifier = modifier.fillMaxSize()) {
         // The lesson banner is always visible, above whatever state is showing.
         DataLayerBanner()
@@ -361,6 +364,7 @@ fun PlanetListScreenBody(
  */
 @Composable
 private fun CenteredMessage(content: @Composable () -> Unit) {
+    Log.d("LT", "Entered CenteredMessage")
     Box(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         contentAlignment = Alignment.Center,
@@ -406,6 +410,7 @@ fun PlanetDetailScreen(
     // Same data boundary as the ViewModel: depend on the interface, default to in-memory.
     repo: PlanetRepository = remember { InMemoryPlanetRepository() },
 ) {
+    Log.d("LT", "Entered PlanetDetailScreen")
     // Local load state. `loading` starts true; `planet` is filled once the
     // suspend call returns (or stays null if the id wasn't found).
     var loading by remember { mutableStateOf(true) }
@@ -466,45 +471,45 @@ fun PlanetDetailScreen(
 // ===========================================================================
 
 // LOADING — the spinner state.
-@Preview(name = "List · Loading", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun ListLoadingPreview() {
-    NavDataLayerTheme {
-        PlanetListScreenBody(uiState = PlanetsUiState.Loading, onOpen = {}, onRetry = {})
-    }
-}
-
-// EMPTY — fetch succeeded but returned nothing.
-@Preview(name = "List · Empty", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun ListEmptyPreview() {
-    NavDataLayerTheme {
-        PlanetListScreenBody(uiState = PlanetsUiState.Empty, onOpen = {}, onRetry = {})
-    }
-}
-
-// ERROR — fetch failed; note the Retry button.
-@Preview(name = "List · Error", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun ListErrorPreview() {
-    NavDataLayerTheme {
-        PlanetListScreenBody(
-            uiState = PlanetsUiState.Error("Could not reach the planet service."),
-            onOpen = {},
-            onRetry = {},
-        )
-    }
-}
-
-// SUCCESS — the populated list (uses the sample planets directly as preview data).
-@Preview(name = "List · Success", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun ListSuccessPreview() {
-    NavDataLayerTheme {
-        PlanetListScreenBody(
-            uiState = PlanetsUiState.Success(samplePlanets),
-            onOpen = {},
-            onRetry = {},
-        )
-    }
-}
+//@Preview(name = "List · Loading", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun ListLoadingPreview() {
+//    NavDataLayerTheme {
+//        PlanetListScreenBody(uiState = PlanetsUiState.Loading, onOpen = {}, onRetry = {})
+//    }
+//}
+//
+//// EMPTY — fetch succeeded but returned nothing.
+//@Preview(name = "List · Empty", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun ListEmptyPreview() {
+//    NavDataLayerTheme {
+//        PlanetListScreenBody(uiState = PlanetsUiState.Empty, onOpen = {}, onRetry = {})
+//    }
+//}
+//
+//// ERROR — fetch failed; note the Retry button.
+//@Preview(name = "List · Error", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun ListErrorPreview() {
+//    NavDataLayerTheme {
+//        PlanetListScreenBody(
+//            uiState = PlanetsUiState.Error("Could not reach the planet service."),
+//            onOpen = {},
+//            onRetry = {},
+//        )
+//    }
+//}
+//
+//// SUCCESS — the populated list (uses the sample planets directly as preview data).
+//@Preview(name = "List · Success", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun ListSuccessPreview() {
+//    NavDataLayerTheme {
+//        PlanetListScreenBody(
+//            uiState = PlanetsUiState.Success(samplePlanets),
+//            onOpen = {},
+//            onRetry = {},
+//        )
+//    }
+//}

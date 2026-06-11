@@ -2333,7 +2333,8 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
         <span class="codemeta"><code title="NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt">MainActivity.kt</code> · lines 238–248</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
-      <pre class="src"><code>    <span class="k">val</span> backStack = rememberNavBackStack(<span class="t">CategoriesKey</span>)
+      <pre class="src"><code>    <span class="c">// forward; popping a key navigates back.</span>
+    <span class="k">val</span> backStack = rememberNavBackStack(<span class="t">CategoriesKey</span>)
 
     <span class="c">// *** THE KEY LINE ***</span>
     <span class="c">// viewModel() returns the FavoritesViewModel scoped to the nearest</span>
@@ -2342,8 +2343,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <span class="c">// the Activity — and the framework returns the SAME instance, with its</span>
     <span class="c">// favorites set intact. That is why ViewModel state survives rotation while a</span>
     <span class="c">// `remember {}` value would reset. Because we obtain it HERE (above the nav</span>
-    <span class="c">// entries) and pass it down, all three screens share one source of truth.</span>
-    <span class="k">val</span> favoritesViewModel: <span class="t">FavoritesViewModel</span> = viewModel()</code></pre>
+    <span class="c">// entries) and pass it down, all three screens share one source of truth.</span></code></pre>
       <p class="codeexplain">'rememberNavBackStack(CategoriesKey)' seeds and preserves the Nav3 back stack. 'viewModel()' returns the FavoritesViewModel scoped to the Activity: the first call creates it, and later calls (even after a rotation recreates the Activity) return the SAME instance with favorites intact. Obtaining it here, above the nav entries, lets all three screens share one source of truth.</p>
     </figure>
     <figure class="code">
@@ -2434,16 +2434,18 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Route observes the StateFlow lifecycle-aware and derives a boolean</span>
-        <span class="codemeta"><code title="NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt">MainActivity.kt</code> · lines 382–404</span>
+        <span class="codemeta"><code title="NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt">MainActivity.kt</code> · lines 391–413</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
-      <pre class="src"><code><span class="a">@Composable</span>
+      <pre class="src"><code> */
+<span class="a">@Composable</span>
 <span class="k">fun</span> <span class="t">DetailRoute</span>(
     item: <span class="t">Item</span>,
     favoritesViewModel: <span class="t">FavoritesViewModel</span>,
     onBack: () -&gt; <span class="t">Unit</span>,
     modifier: <span class="t">Modifier</span> = <span class="t">Modifier</span>,
 ) {
+    <span class="t">Log</span>.d(<span class="s">"LT"</span>, <span class="s">"Entered DetailRoute"</span>)
     <span class="c">// Observe the whole favorites set (lifecycle-aware), then derive the single</span>
     <span class="c">// boolean this screen cares about: is THIS item's id in the set?</span>
     <span class="k">val</span> favorites <span class="k">by</span> favoritesViewModel.favorites.collectAsStateWithLifecycle()
@@ -2457,18 +2459,23 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
         <span class="c">// this Route (new `favorites`) — closing the unidirectional loop.</span>
         onToggleFavorite = { favoritesViewModel.toggleFavorite(item.id) },
         onBack = onBack,
-        modifier = modifier,
-    )
-}</code></pre>
+        modifier = modifier,</code></pre>
       <p class="codeexplain">'DetailRoute' calls 'favorites.collectAsStateWithLifecycle()' to turn the StateFlow into Compose State, then derives 'isFavorite = item.id in favorites'. It hands the stateless 'DetailScreen' that plain Boolean plus 'onToggleFavorite = { favoritesViewModel.toggleFavorite(item.id) }'. That lambda is the event flowing UP; the resulting new state flows back DOWN and recomposes the Route.</p>
     </figure>
     <figure class="code">
       <figcaption>
         <span class="codetitle">rememberSaveable counter contrasts local state with the ViewModel</span>
-        <span class="codemeta"><code title="NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt">MainActivity.kt</code> · lines 559–579</span>
+        <span class="codemeta"><code title="NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt">MainActivity.kt</code> · lines 568–587</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
-      <pre class="src"><code>    <span class="k">var</span> count <span class="k">by</span> rememberSaveable { mutableStateOf(<span class="n">0</span>) }     <span class="c">// survives rotation; resets on a fresh launch</span>
+      <pre class="src"><code>    <span class="c">//     death it would need a SavedStateHandle (noted in the ViewModel).</span>
+    <span class="c">//</span>
+    <span class="c">// So: remember = recomposition only; rememberSaveable = + rotation + process</span>
+    <span class="c">// death (but local &amp; small); ViewModel = + rotation + navigation + shared &amp;</span>
+    <span class="c">// holds logic (and + process death once backed by SavedStateHandle).</span>
+    <span class="c">// ----------------------------------------------------------------------</span>
+    <span class="t">Log</span>.d(<span class="s">"LT"</span>, <span class="s">"Entered DetailScreen"</span>)
+    <span class="k">var</span> count <span class="k">by</span> rememberSaveable { mutableStateOf(<span class="n">0</span>) }     <span class="c">// survives rotation; resets on a fresh launch</span>
 
     <span class="c">// A single vertical column holding the title, body, the favorite toggle, the</span>
     <span class="c">// contrast counter, and a back button, with 16dp padding around the screen.</span>
@@ -2480,15 +2487,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
         <span class="c">// The item's longer description.</span>
         <span class="t">Text</span>(text = item.blurb, style = <span class="t">MaterialTheme</span>.typography.bodyLarge)
         <span class="c">// Larger 24dp gap before the action buttons.</span>
-        <span class="t">Spacer</span>(modifier = <span class="t">Modifier</span>.height(<span class="n">24</span>.dp))
-
-        <span class="c">// THE FAVORITE TOGGLE — the concept made tappable. The label reflects the</span>
-        <span class="c">// observed [isFavorite] state; the tap sends an EVENT up via</span>
-        <span class="c">// [onToggleFavorite], which the Route forwards to the ViewModel. Favorite,</span>
-        <span class="c">// then rotate or navigate away and back: the ★ persists.</span>
-        <span class="t">Button</span>(onClick = onToggleFavorite) {
-            <span class="t">Text</span>(<span class="k">if</span> (isFavorite) <span class="s">"★ Unfavorite"</span> <span class="k">else</span> <span class="s">"☆ Favorite"</span>)
-        }</code></pre>
+        <span class="t">Spacer</span>(modifier = <span class="t">Modifier</span>.height(<span class="n">24</span>.dp))</code></pre>
       <p class="codeexplain">'var count by rememberSaveable { mutableStateOf(0) }' is deliberately placed next to the favorite toggle. The counter survives rotation by writing into the saved-instance Bundle but is local to this one composable and resets on a fresh launch, whereas the favorite (held in the ViewModel) is shared across screens and survives navigation too. Comparing the two side by side is the lesson.</p>
     </figure>
 
@@ -2843,7 +2842,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Observing state the lifecycle-aware way</span>
-        <span class="codemeta"><code title="NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt">MainActivity.kt</code> · lines 246–265</span>
+        <span class="codemeta"><code title="NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt">MainActivity.kt</code> · lines 246–274</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
       <pre class="src"><code><span class="a">@Composable</span>
@@ -2856,6 +2855,15 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <span class="c">// Observe the StateFlow as Compose State. `by` unwraps it to a PlanetsUiState.</span>
     <span class="c">// collectAsStateWithLifecycle() (not plain collectAsState) stops collecting</span>
     <span class="c">// when the screen is in the background — the lifecycle-aware way to observe.</span>
+    <span class="c">// THREE ideas in one line —  val X by someStateFlow.collectAsStateWithLifecycle():</span>
+    <span class="c">//   1. someStateFlow                  — a StateFlow the ViewModel exposes (its live value).</span>
+    <span class="c">//   2. .collectAsStateWithLifecycle() — SUBSCRIBES to it and wraps the latest value in a</span>
+    <span class="c">//        Compose State, so this composable RECOMPOSES whenever the flow emits a new value.</span>
+    <span class="c">//        "WithLifecycle" = collect only while the screen is visible (lifecycle &gt;= STARTED)</span>
+    <span class="c">//        and PAUSE off-screen; the Android-safe version of a plain collectAsState().</span>
+    <span class="c">//   3. `by`                           — a property delegate that unwraps the State's .value,</span>
+    <span class="c">//        so X reads as the plain value directly (no .value). Reading X also registers this</span>
+    <span class="c">//        composable as a reader, which is what makes Compose recompose it on the next emit.</span>
     <span class="k">val</span> uiState <span class="k">by</span> viewModel.uiState.collectAsStateWithLifecycle()
 
     <span class="c">// Forward the pure state + callbacks to the stateless body.</span>
@@ -2871,7 +2879,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Exhaustive state rendering and row taps</span>
-        <span class="codemeta"><code title="NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt">MainActivity.kt</code> · lines 294–345</span>
+        <span class="codemeta"><code title="NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt">MainActivity.kt</code> · lines 303–354</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
       <pre class="src"><code>        <span class="k">when</span> (uiState) {
@@ -3493,7 +3501,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Stateless rendering: one exhaustive when over the state</span>
-        <span class="codemeta"><code title="NetworkParsing/src/main/java/com/example/networkparsing/MainActivity.kt">MainActivity.kt</code> · lines 128–151</span>
+        <span class="codemeta"><code title="NetworkParsing/src/main/java/com/example/networkparsing/MainActivity.kt">MainActivity.kt</code> · lines 137–160</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
       <pre class="src"><code><span class="a">@Composable</span>
@@ -3751,13 +3759,22 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Open the socket once with LaunchedEffect</span>
-        <span class="codemeta"><code title="WebSocketLive/src/main/java/com/example/websocketlive/MainActivity.kt">MainActivity.kt</code> · lines 85–106</span>
+        <span class="codemeta"><code title="WebSocketLive/src/main/java/com/example/websocketlive/MainActivity.kt">MainActivity.kt</code> · lines 85–115</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
       <pre class="src"><code><span class="k">fun</span> <span class="t">LiveScreen</span>(
     modifier: <span class="t">Modifier</span> = <span class="t">Modifier</span>,
     viewModel: <span class="t">LiveViewModel</span> = viewModel(),
 ) {
+    <span class="c">// THREE ideas in one line —  val X by someStateFlow.collectAsStateWithLifecycle():</span>
+    <span class="c">//   1. someStateFlow                  — a StateFlow the ViewModel exposes (its live value).</span>
+    <span class="c">//   2. .collectAsStateWithLifecycle() — SUBSCRIBES to it and wraps the latest value in a</span>
+    <span class="c">//        Compose State, so this composable RECOMPOSES whenever the flow emits a new value.</span>
+    <span class="c">//        "WithLifecycle" = collect only while the screen is visible (lifecycle &gt;= STARTED)</span>
+    <span class="c">//        and PAUSE off-screen; the Android-safe version of a plain collectAsState().</span>
+    <span class="c">//   3. `by`                           — a property delegate that unwraps the State's .value,</span>
+    <span class="c">//        so X reads as the plain value directly (no .value). Reading X also registers this</span>
+    <span class="c">//        composable as a reader, which is what makes Compose recompose it on the next emit.</span>
     <span class="k">val</span> uiState <span class="k">by</span> viewModel.uiState.collectAsStateWithLifecycle()
 
     <span class="c">// Open the connection exactly once when the screen first appears. Using Unit as</span>
@@ -3972,7 +3989,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Requesting permissions, then fetching</span>
-        <span class="codemeta"><code title="LocationServices/src/main/java/com/example/locationservices/MainActivity.kt">MainActivity.kt</code> · lines 119–133</span>
+        <span class="codemeta"><code title="LocationServices/src/main/java/com/example/locationservices/MainActivity.kt">MainActivity.kt</code> · lines 128–142</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
       <pre class="src"><code>    <span class="c">// Build the permission LAUNCHER. RequestMultiplePermissions shows the system</span>
@@ -4136,7 +4153,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Stateful screen: wiring state DOWN and events UP</span>
-        <span class="codemeta"><code title="MvvmState/src/main/java/com/example/mvvmstate/MainActivity.kt">MainActivity.kt</code> · lines 122–139</span>
+        <span class="codemeta"><code title="MvvmState/src/main/java/com/example/mvvmstate/MainActivity.kt">MainActivity.kt</code> · lines 122–148</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
       <pre class="src"><code><span class="a">@Composable</span>
@@ -4147,6 +4164,15 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <span class="c">// STATE DOWN: subscribe to the StateFlow. collectAsStateWithLifecycle() emits</span>
     <span class="c">// a new value on every ViewModel update, triggering recomposition (UDF step 6),</span>
     <span class="c">// and stops collecting while the screen is not visible.</span>
+    <span class="c">// THREE ideas in one line —  val X by someStateFlow.collectAsStateWithLifecycle():</span>
+    <span class="c">//   1. someStateFlow                  — a StateFlow the ViewModel exposes (its live value).</span>
+    <span class="c">//   2. .collectAsStateWithLifecycle() — SUBSCRIBES to it and wraps the latest value in a</span>
+    <span class="c">//        Compose State, so this composable RECOMPOSES whenever the flow emits a new value.</span>
+    <span class="c">//        "WithLifecycle" = collect only while the screen is visible (lifecycle &gt;= STARTED)</span>
+    <span class="c">//        and PAUSE off-screen; the Android-safe version of a plain collectAsState().</span>
+    <span class="c">//   3. `by`                           — a property delegate that unwraps the State's .value,</span>
+    <span class="c">//        so X reads as the plain value directly (no .value). Reading X also registers this</span>
+    <span class="c">//        composable as a reader, which is what makes Compose recompose it on the next emit.</span>
     <span class="k">val</span> uiState <span class="k">by</span> viewModel.uiState.collectAsStateWithLifecycle()
 
     <span class="c">// Render the stateless UI with the current snapshot, and route every action to</span>
@@ -4162,7 +4188,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Stateless content driven entirely by uiState</span>
-        <span class="codemeta"><code title="MvvmState/src/main/java/com/example/mvvmstate/MainActivity.kt">MainActivity.kt</code> · lines 157–191</span>
+        <span class="codemeta"><code title="MvvmState/src/main/java/com/example/mvvmstate/MainActivity.kt">MainActivity.kt</code> · lines 166–200</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
       <pre class="src"><code><span class="a">@Composable</span>
@@ -4399,7 +4425,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
     <figure class="code">
       <figcaption>
         <span class="codetitle">Driving the whole theme from the persisted setting</span>
-        <span class="codemeta"><code title="RoomAndPreferences/src/main/java/com/example/roomandpreferences/MainActivity.kt">MainActivity.kt</code> · lines 86–108</span>
+        <span class="codemeta"><code title="RoomAndPreferences/src/main/java/com/example/roomandpreferences/MainActivity.kt">MainActivity.kt</code> · lines 86–117</span>
         <button class="copy" type="button" aria-label="Copy code">Copy</button>
       </figcaption>
       <pre class="src"><code>        setContent {
@@ -4410,6 +4436,15 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;paddin
 
             <span class="c">// STATE: read the persisted dark-theme flag from DataStore (via the VM).</span>
             <span class="c">// collectAsStateWithLifecycle keeps collection tied to the UI lifecycle.</span>
+            <span class="c">// THREE ideas in one line —  val X by someStateFlow.collectAsStateWithLifecycle():</span>
+            <span class="c">//   1. someStateFlow                  — a StateFlow the ViewModel exposes (its live value).</span>
+            <span class="c">//   2. .collectAsStateWithLifecycle() — SUBSCRIBES to it and wraps the latest value in a</span>
+            <span class="c">//        Compose State, so this composable RECOMPOSES whenever the flow emits a new value.</span>
+            <span class="c">//        "WithLifecycle" = collect only while the screen is visible (lifecycle &gt;= STARTED)</span>
+            <span class="c">//        and PAUSE off-screen; the Android-safe version of a plain collectAsState().</span>
+            <span class="c">//   3. `by`                           — a property delegate that unwraps the State's .value,</span>
+            <span class="c">//        so X reads as the plain value directly (no .value). Reading X also registers this</span>
+            <span class="c">//        composable as a reader, which is what makes Compose recompose it on the next emit.</span>
             <span class="k">val</span> darkTheme <span class="k">by</span> viewModel.darkTheme.collectAsStateWithLifecycle()
 
             <span class="c">// Drive the whole theme from the PERSISTED setting. dynamicColor=false so</span>

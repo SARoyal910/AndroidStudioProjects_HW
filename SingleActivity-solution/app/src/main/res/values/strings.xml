@@ -1,0 +1,8 @@
+<!--
+    strings.xml — all user-facing text lives here so it can be translated and reused.
+    Referenced from code as R.string.* and from XML as @string/*.
+-->
+<resources>
+    <!-- App name shown under the launcher icon and as the Activity's title. -->
+    <string name="app_name">SingleActivity</string>
+</resources>

@@ -57,7 +57,6 @@ import androidx.compose.runtime.Composable                  // marks a function 
 import androidx.compose.ui.Modifier                         // the "how to lay out / decorate" object
 import androidx.compose.ui.tooling.preview.Preview          // enables @Preview rendering in Android Studio
 import androidx.compose.ui.tooling.preview.PreviewParameter  // feeds a value into a preview parameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider // supplies the SET of preview values
 import androidx.compose.ui.unit.dp                          // density-independent pixel unit (e.g. 16.dp)
 
 // --- Navigation 3 imports -----------------------------------------------------
@@ -73,69 +72,6 @@ import androidx.navigation3.ui.NavDisplay                   // the composable th
 import com.example.navthreescreen.ui.theme.NavThreeScreenTheme // our app's Material theme wrapper (see Theme.kt)
 import kotlinx.serialization.Serializable                   // makes Nav3 keys serializable (required by Nav3)
 import android.util.Log                                     // Logcat logging (Log.d, Log.e, ...)
-
-// ===========================================================================
-// DATA
-// A tiny in-memory data source. In a real app this would come from a database
-// (Room), a network call (Retrofit), or a repository; here hardcoded lists are
-// enough to demonstrate a three-level drill-down.
-//
-// The model is two levels deep:
-//   Category 1─┐
-//              ├── many Items   (each Item belongs to exactly one Category)
-//   Category 2─┘
-// ===========================================================================
-
-// A top-level grouping shown on the FIRST screen.
-//   • id   — stable unique identifier; this is what travels in the nav key.
-//   • name — short label shown as the category row.
-//   • description — one-line summary shown under the name.
-data class Category(val id: Int, val name: String, val description: String)
-
-// A single planet shown on the SECOND (list) and THIRD (detail) screens.
-//   • id         — stable unique identifier; travels in the detail nav key.
-//   • categoryId — which Category this item belongs to (the "foreign key").
-//   • title      — short name shown as the row/headline.
-//   • blurb      — one-line description shown under the title.
-data class Item(val id: Int, val categoryId: Int, val title: String, val blurb: String)
-
-// Logcat tag string. Every log line from this app can be filtered in Logcat by
-// searching for "L3" (for "Level 3 nav demo").
-private const val TAG = "L3"
-
-// The two categories rendered on the first screen.
-private val sampleCategories = listOf(
-    Category(1, "Rocky Planets", "Small, dense worlds with solid surfaces."),
-    Category(2, "Gas Giants", "Massive planets made mostly of gas."),
-)
-
-// The planets rendered on the second screen. Each one's `categoryId` ties it
-// back to a Category above (1 = Rocky, 2 = Gas Giant).
-private val sampleItems = listOf(
-    Item(1, 1, "Mercury", "The smallest planet and the closest to the Sun."),
-    Item(2, 1, "Venus", "The hottest planet, wrapped in thick clouds of acid."),
-    Item(3, 1, "Earth", "The only planet known to support life — so far."),
-    Item(4, 1, "Mars", "The red planet, a frequent target for rovers."),
-    Item(5, 2, "Jupiter", "The largest planet, a gas giant with a great red spot."),
-    Item(6, 2, "Saturn", "The ringed gas giant, second largest in the system."),
-)
-
-// --- Lookups ----------------------------------------------------------------
-// The screens receive only an id (inside their nav key) and resolve the full
-// object here. Passing just the id — rather than the whole object — keeps each
-// navigation key tiny and serializable.
-
-// Resolve a Category by its id. `first { }` throws if none match, which is fine
-// here because every CategoryKey/ItemsKey is built from a known category id.
-private fun categoryById(id: Int): Category = sampleCategories.first { it.id == id }
-
-// Resolve a single Item by its id (used by the detail screen).
-private fun itemById(id: Int): Item = sampleItems.first { it.id == id }
-
-// All items belonging to one category (used by the middle/list screen). `filter`
-// returns every match — possibly an empty list, which is also fine to render.
-private fun itemsInCategory(categoryId: Int): List<Item> =
-    sampleItems.filter { it.categoryId == categoryId }
 
 // ===========================================================================
 // NAVIGATION KEYS
@@ -159,6 +95,10 @@ data class ItemsKey(val categoryId: Int) : NavKey          // second screen; whi
 // `data class` because each detail screen differs by which item it shows.
 @Serializable
 data class DetailKey(val itemId: Int) : NavKey             // third screen; which item was tapped
+
+// Logcat tag string. Every log line from this app can be filtered in Logcat by
+// searching for "L3" (for "Level 3 nav demo").
+private const val TAG = "L3"
 
 /**
  * MainActivity — the app's single Activity and the entry point Android launches.
@@ -220,7 +160,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         // safe) if the stack is somehow already empty.
         onBack = { backStack.removeLastOrNull() },          // back = pop the top key
         // entryProvider is a DSL: one `entry<KeyType> { ... }` block per screen.
-        // Nav3 picks the block whose key type matches the current top key.
+        // NavDisplay picks the block whose key type matches the current top key.
         // entryProvider is a DSL (a small "language" for one job): it builds the
         // map of "which key type -> which screen". You call entry<...> once per
         // screen inside the { } block, and Nav3 runs the block whose key type
@@ -308,6 +248,7 @@ fun CategoriesScreen(
     onOpen: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Log.d("LT", "Entered CategoriesScreen")
     // LazyColumn is the Compose equivalent of a RecyclerView: it only composes
     // and lays out the rows currently visible on screen, so long lists stay fast.
     LazyColumn(modifier = modifier.fillMaxSize()) {
@@ -357,6 +298,7 @@ fun ItemsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Log.d("LT", "Entered ItemsScreen")
     // Outer Column: a fixed header on top, then the scrolling list below it.
     Column(modifier = modifier.fillMaxSize()) {
         // --- Header block (does not scroll) ---
@@ -406,6 +348,7 @@ fun DetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Log.d("LT", "Entered DetailScreen")
     // A single vertical column holding the title, body, and back button, with
     // 16dp of padding around the whole screen.
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
@@ -451,51 +394,40 @@ fun DetailScreen(
 // widthDp/heightDp give each preview a small, fixed phone-shaped frame so the
 // full-screen (fillMaxSize) layouts render as compact cards instead of each
 // taking a whole device-height of space — letting several fit on screen at once.
-@Preview(name = "Categories", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun CategoriesScreenPreview() {
-    NavThreeScreenTheme {
-        CategoriesScreen(categories = sampleCategories, onOpen = {})
-    }
-}
-
-// Supplies every Category to the items-screen preview. `values` is a Sequence;
-// Android Studio renders one preview per element (Rocky Planets, then Gas Giants).
-class CategoryPreviewProvider : PreviewParameterProvider<Category> {
-    override val values: Sequence<Category> = sampleCategories.asSequence()
-}
-
-// LEVEL 2 — one rendering per category, so BOTH item lists are previewed. The
-// `category` argument is injected by Android Studio from the provider above.
-// One compact card per category (Rocky Planets, Gas Giants).
-@Preview(name = "Items", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun ItemsScreenPreview(
-    @PreviewParameter(CategoryPreviewProvider::class) category: Category
-) {
-    NavThreeScreenTheme {
-        ItemsScreen(
-            category = category,
-            items = itemsInCategory(category.id),           // resolve this category's planets
-            onOpen = {},
-            onBack = {},
-        )
-    }
-}
-
-// Supplies every Item to the detail-screen preview — one rendering per planet.
-class ItemPreviewProvider : PreviewParameterProvider<Item> {
-    override val values: Sequence<Item> = sampleItems.asSequence()
-}
-
-// LEVEL 3 — one rendering per item, so ALL six planet details are previewed.
-// One compact card per planet — all six details fit in a single row of cards.
-@Preview(name = "Detail", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun DetailScreenPreview(
-    @PreviewParameter(ItemPreviewProvider::class) item: Item
-) {
-    NavThreeScreenTheme {
-        DetailScreen(item = item, onBack = {})
-    }
-}
+//@Preview(name = "Categories", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun CategoriesScreenPreview() {
+//    NavThreeScreenTheme {
+//        CategoriesScreen(categories = sampleCategories, onOpen = {})
+//    }
+//}
+//
+//// LEVEL 2 — one rendering per category, so BOTH item lists are previewed. The
+//// `category` argument is injected by Android Studio from the provider.
+//// One compact card per category (Rocky Planets, Gas Giants).
+//@Preview(name = "Items", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun ItemsScreenPreview(
+//    @PreviewParameter(CategoryPreviewProvider::class) category: Category
+//) {
+//    NavThreeScreenTheme {
+//        ItemsScreen(
+//            category = category,
+//            items = itemsInCategory(category.id),           // resolve this category's planets
+//            onOpen = {},
+//            onBack = {},
+//        )
+//    }
+//}
+//
+//// LEVEL 3 — one rendering per item, so ALL six planet details are previewed.
+//// One compact card per planet — all six details fit in a single row of cards.
+//@Preview(name = "Detail", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun DetailScreenPreview(
+//    @PreviewParameter(ItemPreviewProvider::class) item: Item
+//) {
+//    NavThreeScreenTheme {
+//        DetailScreen(item = item, onBack = {})
+//    }
+//}

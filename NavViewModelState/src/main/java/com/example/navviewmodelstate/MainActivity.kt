@@ -95,6 +95,7 @@ import androidx.navigation3.ui.NavDisplay                   // the composable th
 import com.example.navviewmodelstate.ui.theme.NavViewModelStateTheme // our app's Material theme wrapper (see Theme.kt)
 import kotlinx.serialization.Serializable                   // makes Nav3 keys serializable (required by Nav3)
 import android.util.Log                                     // Logcat logging (Log.d, Log.e, ...)
+import android.util.Log.d
 
 // ===========================================================================
 // DATA
@@ -247,8 +248,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     // entries) and pass it down, all three screens share one source of truth.
     val favoritesViewModel: FavoritesViewModel = viewModel()
 
-    // A debug breadcrumb visible in Logcat (filter by "VMState").
-    Log.d(TAG, "Entered AppNavigation")
+
 
     // NavDisplay renders whatever key is on top of the back stack, animating the
     // transition when the top changes.
@@ -356,11 +356,21 @@ fun ItemsRoute(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Log.d("LT", "Entered ItemsRoute")
     // collectAsStateWithLifecycle subscribes to the ViewModel's StateFlow and
     // turns its latest value into Compose State, so this composable recomposes
     // whenever favorites change. Unlike a plain collectAsState(), it PAUSES
     // collection when the UI drops below STARTED (e.g. app backgrounded) and
     // resumes on return — avoiding wasted work and updates to off-screen UI.
+    // THREE ideas in one line —  val X by someStateFlow.collectAsStateWithLifecycle():
+    //   1. someStateFlow                  — a StateFlow the ViewModel exposes (its live value).
+    //   2. .collectAsStateWithLifecycle() — SUBSCRIBES to it and wraps the latest value in a
+    //        Compose State, so this composable RECOMPOSES whenever the flow emits a new value.
+    //        "WithLifecycle" = collect only while the screen is visible (lifecycle >= STARTED)
+    //        and PAUSE off-screen; the Android-safe version of a plain collectAsState().
+    //   3. `by`                           — a property delegate that unwraps the State's .value,
+    //        so X reads as the plain value directly (no .value). Reading X also registers this
+    //        composable as a reader, which is what makes Compose recompose it on the next emit.
     val favorites by favoritesViewModel.favorites.collectAsStateWithLifecycle()
 
     // Hand the stateless screen plain data + callbacks only.
@@ -386,6 +396,7 @@ fun DetailRoute(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Log.d("LT", "Entered DetailRoute")
     // Observe the whole favorites set (lifecycle-aware), then derive the single
     // boolean this screen cares about: is THIS item's id in the set?
     val favorites by favoritesViewModel.favorites.collectAsStateWithLifecycle()
@@ -421,6 +432,7 @@ fun CategoriesScreen(
     onOpen: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Log.d("LT", "Entered CategoriesScreen")
     // LazyColumn is the Compose equivalent of a RecyclerView: it only composes
     // and lays out the rows currently visible on screen, so long lists stay fast.
     LazyColumn(modifier = modifier.fillMaxSize()) {
@@ -475,6 +487,9 @@ fun ItemsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+
+    Log.d("LT", "Entered ItemsScreen")
+
     // Outer Column: a fixed header on top, then the scrolling list below it.
     Column(modifier = modifier.fillMaxSize()) {
         // --- Header block (does not scroll) ---
@@ -556,6 +571,7 @@ fun DetailScreen(
     // death (but local & small); ViewModel = + rotation + navigation + shared &
     // holds logic (and + process death once backed by SavedStateHandle).
     // ----------------------------------------------------------------------
+    Log.d("LT", "Entered DetailScreen")
     var count by rememberSaveable { mutableStateOf(0) }     // survives rotation; resets on a fresh launch
 
     // A single vertical column holding the title, body, the favorite toggle, the
@@ -618,55 +634,55 @@ fun DetailScreen(
 // ===========================================================================
 
 // LEVEL 1 — there is only ONE categories-screen state (the full list).
-@Preview(name = "Categories", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun CategoriesScreenPreview() {
-    NavViewModelStateTheme {
-        CategoriesScreen(categories = sampleCategories, onOpen = {})
-    }
-}
-
-// Supplies every Category to the items-screen preview (Rocky Planets, Gas Giants).
-class CategoryPreviewProvider : PreviewParameterProvider<Category> {
-    override val values: Sequence<Category> = sampleCategories.asSequence()
-}
-
-// LEVEL 2 — one compact card per category. We hand a FIXED favoriteIds set (here
-// {1, 5}) so the preview shows the ★ indicator WITHOUT any ViewModel.
-@Preview(name = "Items", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun ItemsScreenPreview(
-    @PreviewParameter(CategoryPreviewProvider::class) category: Category
-) {
-    NavViewModelStateTheme {
-        ItemsScreen(
-            category = category,
-            items = itemsInCategory(category.id),           // resolve this category's planets
-            favoriteIds = setOf(1, 5),                      // plain state — no viewModel() in previews
-            onOpen = {},
-            onBack = {},
-        )
-    }
-}
-
-// Supplies every Item to the detail-screen preview — one per planet.
-class ItemPreviewProvider : PreviewParameterProvider<Item> {
-    override val values: Sequence<Item> = sampleItems.asSequence()
-}
-
-// LEVEL 3 — one compact card per item, rendered as FAVORITED so the ★ label and
-// toggle button show. Again: plain isFavorite value, no ViewModel constructed.
-@Preview(name = "Detail (favorited)", showBackground = true, widthDp = 320, heightDp = 480)
-@Composable
-fun DetailScreenPreview(
-    @PreviewParameter(ItemPreviewProvider::class) item: Item
-) {
-    NavViewModelStateTheme {
-        DetailScreen(
-            item = item,
-            isFavorite = true,                              // hand-supplied state — no viewModel()
-            onToggleFavorite = {},
-            onBack = {},
-        )
-    }
-}
+//@Preview(name = "Categories", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun CategoriesScreenPreview() {
+//    NavViewModelStateTheme {
+//        CategoriesScreen(categories = sampleCategories, onOpen = {})
+//    }
+//}
+//
+//// Supplies every Category to the items-screen preview (Rocky Planets, Gas Giants).
+//class CategoryPreviewProvider : PreviewParameterProvider<Category> {
+//    override val values: Sequence<Category> = sampleCategories.asSequence()
+//}
+//
+//// LEVEL 2 — one compact card per category. We hand a FIXED favoriteIds set (here
+//// {1, 5}) so the preview shows the ★ indicator WITHOUT any ViewModel.
+//@Preview(name = "Items", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun ItemsScreenPreview(
+//    @PreviewParameter(CategoryPreviewProvider::class) category: Category
+//) {
+//    NavViewModelStateTheme {
+//        ItemsScreen(
+//            category = category,
+//            items = itemsInCategory(category.id),           // resolve this category's planets
+//            favoriteIds = setOf(1, 5),                      // plain state — no viewModel() in previews
+//            onOpen = {},
+//            onBack = {},
+//        )
+//    }
+//}
+//
+//// Supplies every Item to the detail-screen preview — one per planet.
+//class ItemPreviewProvider : PreviewParameterProvider<Item> {
+//    override val values: Sequence<Item> = sampleItems.asSequence()
+//}
+//
+//// LEVEL 3 — one compact card per item, rendered as FAVORITED so the ★ label and
+//// toggle button show. Again: plain isFavorite value, no ViewModel constructed.
+//@Preview(name = "Detail (favorited)", showBackground = true, widthDp = 320, heightDp = 480)
+//@Composable
+//fun DetailScreenPreview(
+//    @PreviewParameter(ItemPreviewProvider::class) item: Item
+//) {
+//    NavViewModelStateTheme {
+//        DetailScreen(
+//            item = item,
+//            isFavorite = true,                              // hand-supplied state — no viewModel()
+//            onToggleFavorite = {},
+//            onBack = {},
+//        )
+//    }
+//}

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 1 — Answer Key — Compose &amp; Navigation Foundations</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84; --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed;
+    --good-soft:#ecfdf3; --good-line:#c5ebd3;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:880px; margin:0 auto; padding:0 22px 80px;}
+  header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:30px; border-bottom:4px solid var(--accent);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px; color:var(--accent);
+    font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:64ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  h2{font-size:22px; margin:40px 0 6px; padding-top:12px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  p{margin:11px 0;}
+  ul,ol{margin:10px 0; padding-left:22px;} li{margin:5px 0;}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.9em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:15px 17px; border-radius:10px;
+    overflow:auto; font-size:13px; line-height:1.55; margin:13px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre code{background:none; padding:0; font-size:inherit; color:inherit;}
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 8px; margin:16px 0; box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:2px;}
+  .qid{font-weight:800; color:var(--ink); font-size:16px;}
+  .pts{flex:none; background:var(--pill); color:var(--muted); font-size:12px; font-weight:700;
+    padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .ask{color:var(--muted); font-size:14.5px; margin:4px 0 10px;}
+  .ans b, .ask b{color:var(--ink);}
+  .callout{border-radius:10px; padding:12px 15px; margin:14px 0; font-size:14.5px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.good{background:var(--good-soft); border:1px solid var(--good-line);}
+  .callout b{display:block; margin-bottom:2px;}
+  .file{font-size:12.5px; color:var(--muted); margin:0 0 8px;}
+  .file code{font-size:.92em;}
+  footer{margin-top:42px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13.5px;}
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .q,.callout{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Jetpack Compose · Answer Key</p>
+    <h1>Homework 1 — Solutions</h1>
+    <p class="sub">Complete answer key for <b>Compose &amp; Navigation Foundations</b> — short-answer
+       concepts (Part A) and the coding tasks (Part B), with every change explained. Built around
+       <code>SingleActivity</code>, <code>Intent</code>, and <code>NavDetailList</code>.</p>
+    <div class="meta">
+      <span><b>Part A</b> · 4 concepts (30 pts)</span>
+      <span><b>Part B</b> · 4 coding tasks (36 pts)</span>
+      <span>Runnable solutions included</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout proj">
+    <b>Where the code lives</b>
+    Part B answers are also provided as <b>runnable projects</b> you can open in Android Studio and
+    install: <code>SingleActivity-solution/</code>, <code>Intent-solution/</code>, and
+    <code>NavDetailList-solution/</code>. Every change in those files is tagged with a
+    <code>// B1</code>/<code>// B2</code>/<code>// B3</code>/<code>// B4</code> comment.
+  </div>
+
+  <!-- ================= PART A ================= -->
+  <h2><span class="part">Part A.</span> Concepts — short answer</h2>
+  <p class="lead">Two to four sentences each, using the real names from the code.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">A1 — setContent &amp; stateless UI</span><span class="pts">6 pts</span></div>
+    <p class="ask">What is the job of <code>setContent { }</code> inside <code>onCreate</code>? Why is
+       <code>Greeting(name: String)</code> a stateless composable, and what is <code>modifier</code> for?</p>
+    <p class="ans"><b>setContent</b> bridges the Activity to Compose: it sets the Activity's content to the
+       Compose UI tree described in the lambda — the modern replacement for <code>setContentView(R.layout.…)</code>.
+       <b>Greeting is stateless</b> because it owns no state of its own (no <code>remember {}</code>, nothing it
+       mutates); it is a pure function of its input <code>name</code>, so the same <code>name</code> always draws
+       the same thing. The <b>modifier</b> parameter lets the <i>caller</i> control layout/decoration from the
+       outside — here <code>MainActivity</code> passes <code>Modifier.padding(innerPadding)</code> so the text
+       clears the system bars.</p>
+  </div>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">A2 — “Intent” without an Intent</span><span class="pts">8 pts</span></div>
+    <p class="ask">How does <code>DetailKey(message)</code> + <code>backStack.add(DetailKey("…"))</code> replace
+       the old <code>Intent</code>-extra pattern, and what are two advantages?</p>
+    <p class="ans">Instead of building an <code>Intent</code>, calling <code>putExtra("msg", …)</code> /
+       <code>startActivity</code>, and reading <code>getStringExtra("msg")</code> on the other side, the argument
+       becomes a <b>typed field on a key</b>: <code>DetailKey(val message: String)</code>.
+       <code>backStack.add(DetailKey("Hello from Home!"))</code> pushes that key onto the back stack and
+       <code>DetailScreen</code> reads <code>key.message</code> directly. <b>Advantage 1 — type safety:</b>
+       <code>message</code> is a compile-checked <code>String</code> field, so a wrong name or type is a compile
+       error, not a runtime <code>null</code> from <code>getStringExtra</code>. <b>Advantage 2 — no Activity
+       boilerplate:</b> navigation is just adding to a list of keys in one Activity (no second Activity, no
+       manifest entry), and because the key is <code>@Serializable</code> the whole back stack is saved/restored
+       for free.</p>
+  </div>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">A3 — pass the id, not the object</span><span class="pts">8 pts</span></div>
+    <p class="ask">Give two reasons the <code>id</code> travels in the key instead of the whole <code>Item</code>.</p>
+    <p class="ans"><b>1 — The key is persisted.</b> It is <code>@Serializable</code> and saved into the back stack
+       across rotation/process death, so keeping it a small, stable <code>Int</code> is cheap and robust;
+       serializing a whole <code>Item</code> is heavier and easy to let go stale. <b>2 — Single source of truth.</b>
+       <code>itemById(key.itemId)</code> re-resolves the id against the one <code>sampleItems</code> source every
+       time, so the detail always reflects the <i>current</i> data; carrying a copy of the <code>Item</code> in the
+       key would duplicate data that could drift out of sync.</p>
+  </div>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">A4 — the back stack</span><span class="pts">8 pts</span></div>
+    <p class="ask">What is the back stack? What do <code>add(key)</code> vs <code>removeLastOrNull()</code> do, and
+       why is <code>removeLastOrNull()</code> safer than <code>removeLast()</code>?</p>
+    <p class="ans">The back stack is the ordered list of <b>keys</b> for the screens you've navigated through; the
+       <b>top (last) key is the screen currently shown</b> (<code>NavDisplay</code> renders the top).
+       <code>add(key)</code> pushes a new key on top = <b>navigate forward</b>; <code>removeLastOrNull()</code> pops
+       the top key = <b>go back</b> (the previous screen reappears). <code>removeLastOrNull()</code> is safer than
+       <code>removeLast()</code> because on an empty stack it returns <code>null</code> instead of throwing
+       <code>NoSuchElementException</code> — so a stray Back press at the root can't crash the app.</p>
+  </div>
+
+  <!-- ================= PART B ================= -->
+  <h2><span class="part">Part B.</span> Coding tasks</h2>
+  <p class="lead">Each change shown as the solution code, with a short explanation.</p>
+
+  <!-- B1 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B1 — extend the greeting (SingleActivity)</span><span class="pts">8 pts</span></div>
+    <p class="ask">Add a second parameter to <code>Greeting</code> (<code>course</code>), display two lines, and fix
+       the <code>setContent</code> call and the <code>@Preview</code>.</p>
+    <p class="file">File: <code>SingleActivity-solution/app/src/main/java/com/example/singleactivity/MainActivity.kt</code></p>
+<pre><code>import androidx.compose.foundation.layout.Column   // two lines need a container
+
+@Composable
+fun Greeting(name: String, course: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {                  // Column stacks the lines vertically
+        Text(text = "Hello $name!")                // line 1
+        Text(text = "Welcome to $course.")         // line 2 — uses the new `course` arg
+    }
+}
+
+// in setContent { … }:
+Greeting(
+    name = "Android",
+    course = "Mobile Dev",                         // the new second argument
+    modifier = Modifier.padding(innerPadding)
+)
+
+// uncommented + updated preview (still compiles):
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    SingleActivityTheme {
+        Greeting("Android", "Mobile Dev")          // both args; modifier defaults
+    }
+}</code></pre>
+    <p class="ans"><b>Why a <code>Column</code>:</b> a composable function can only emit one root element at a time
+       here, so two <code>Text</code>s must be wrapped in a layout container; <code>Column</code> stacks them
+       vertically. Adding the <code>course</code> parameter forces every call site (the <code>setContent</code>
+       call and the preview) to supply it — the compiler points you to each one.</p>
+  </div>
+
+  <!-- B2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B2 — add an argument to the key (Intent)</span><span class="pts">10 pts</span></div>
+    <p class="ask">Give <code>DetailKey</code> a second field <code>count: Int</code>, pass a value when Home
+       navigates, and show <code>"message (count)"</code> on the Detail screen.</p>
+    <p class="file">File: <code>Intent-solution/app/src/main/java/com/example/intent/MainActivity.kt</code></p>
+<pre><code>// 1) the key gains a typed field:
+data class DetailKey(val message: String, val count: Int) : NavKey
+
+// 2) Home passes a count when navigating:
+onOpenDetail = { backStack.add(DetailKey("Hello from Home!", 3)) }
+
+// 3) the entry forwards both fields down:
+entry&lt;DetailKey&gt; { key -&gt;
+    DetailScreen(
+        message = key.message,
+        count = key.count,
+        onBack = { backStack.removeLastOrNull() }
+    )
+}
+
+// 4) the screen shows "message (count)":
+@Composable
+fun DetailScreen(message: String, count: Int, onBack: () -&gt; Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(text = "$message ($count)")           // → "Hello from Home! (3)"
+        Button(onClick = onBack) { Text("Back") }
+    }
+}
+
+// 5) fix the preview's call site:
+DetailScreen(message = "Preview message", count = 1, onBack = {})</code></pre>
+    <p class="ans"><b>This is A2 in action:</b> adding a typed argument to a navigation key. Because
+       <code>DetailKey</code> is a <code>data class</code>, the new <code>count</code> field is type-checked
+       everywhere — the compiler flags the navigation call, the <code>entry</code> block, the screen, and the
+       preview until each passes the new argument.</p>
+  </div>
+
+  <!-- B3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B3 — grow the model (NavDetailList)</span><span class="pts">10 pts</span></div>
+    <p class="ask">Add <code>rating: Int</code> to <code>Item</code>, add one new entry, and show the rating on
+       both the Detail screen and each list row. Explain why the navigation code didn't change.</p>
+    <p class="file">File: <code>NavDetailList-solution/app/src/main/java/com/example/navdetaillist/MainActivity.kt</code></p>
+<pre><code>// 1) add the field:
+data class Item(val id: Int, val title: String, val blurb: String, val rating: Int)
+
+// 2) a rating on every row + one NEW entry:
+private val sampleItems = listOf(
+    Item(1, "Mercury", "The smallest planet…", 3),
+    Item(2, "Venus",   "The hottest planet…",  2),
+    Item(3, "Earth",   "The only planet…",     5),
+    Item(4, "Mars",    "The red planet…",      4),
+    Item(5, "Jupiter", "The largest planet…",  5),
+    Item(6, "Saturn",  "The ringed gas giant…", 5),   // new entry
+)
+
+// 3) Detail screen — show the rating:
+Text(text = "Rating: ${item.rating}/5", style = MaterialTheme.typography.bodyMedium)
+
+// 4) each list row — show the rating:
+Text(text = "★ ${item.rating}/5", style = MaterialTheme.typography.bodySmall)</code></pre>
+    <div class="callout good">
+      <b>Why navigation didn't have to change</b>
+      The key only carries the <code>id</code> (<code>DetailKey(itemId)</code>) and the Detail screen re-resolves the
+      full <code>Item</code> via <code>itemById()</code> from the single data source — the routing never touches
+      <code>Item</code>'s shape, so adding a field only affects the data and the screens that render it.
+    </div>
+  </div>
+
+  <!-- B4 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B4 — navigate sideways (NavDetailList)</span><span class="pts">8 pts</span></div>
+    <p class="ask">On the Detail screen, add a “Next” button that opens the detail of the next item (wrapping from
+       the last back to the first) by pushing another <code>DetailKey</code>.</p>
+    <p class="file">File: <code>NavDetailList-solution/app/src/main/java/com/example/navdetaillist/MainActivity.kt</code></p>
+<pre><code>// 1) Detail screen gains an onNext callback + a Next button:
+@Composable
+fun DetailScreen(item: Item, onBack: () -&gt; Unit, onNext: () -&gt; Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        Text(text = item.title,  style = MaterialTheme.typography.headlineSmall)
+        Text(text = item.blurb,  style = MaterialTheme.typography.bodyLarge)
+        Text(text = "Rating: ${item.rating}/5")
+        Button(onClick = onNext) { Text("Next") }            // ← push the NEXT item's detail
+        Button(onClick = onBack) { Text("Back to list") }
+    }
+}
+
+// 2) the entry computes the next id (wrapping) and pushes a new DetailKey:
+entry&lt;DetailKey&gt; { key -&gt;
+    DetailScreen(
+        item = itemById(key.itemId),
+        onBack = { backStack.removeLastOrNull() },
+        onNext = {
+            val idx  = sampleItems.indexOfFirst { it.id == key.itemId }
+            val next = sampleItems[(idx + 1) % sampleItems.size]   // % wraps last → first
+            backStack.add(DetailKey(next.id))                      // PUSH another DetailKey
+        },
+    )
+}
+
+// 3) the preview gains a no-op onNext:
+DetailScreen(item = sampleItems.first(), onBack = {}, onNext = {})</code></pre>
+    <div class="callout good">
+      <b>What you observe</b>
+      After tapping “Next” 3 times you have <b>5 screens</b> on the stack (<code>List</code> + 4 <code>Detail</code>s),
+      so pressing Back walks back through every Detail one at a time instead of jumping to the list — because each
+      “Next” <b>pushes</b> a new <code>DetailKey</code> rather than replacing the current one. (If you didn't want that
+      pile-up, you'd pop the current detail before pushing, or replace the top key.)
+    </div>
+  </div>
+
+  <footer>
+    Answer key for Homework 1 — Compose &amp; Navigation Foundations. Part B solutions are also provided as runnable
+    Android Studio projects: <code>SingleActivity-solution</code>, <code>Intent-solution</code>,
+    <code>NavDetailList-solution</code> (each builds a debug APK). Open in any browser; use <em>Print → Save as PDF</em>
+    to hand out.
+  </footer>
+
+</div>
+</body>
+</html>

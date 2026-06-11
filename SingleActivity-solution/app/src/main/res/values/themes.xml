@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    themes.xml — defines the app's base XML theme. Compose handles most styling,
+    but Android still needs a theme for the app/activity (e.g. before Compose draws,
+    and for system-bar styling). NoActionBar is used because Compose draws its own bars.
+-->
+<resources>
+
+    <style name="Theme.SingleActivity" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

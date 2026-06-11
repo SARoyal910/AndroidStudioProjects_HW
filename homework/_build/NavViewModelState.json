@@ -103,15 +103,15 @@
     {
       "title": "Route observes the StateFlow lifecycle-aware and derives a boolean",
       "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
-      "start": 382,
-      "end": 404,
+      "start": 391,
+      "end": 413,
       "explain": "'DetailRoute' calls 'favorites.collectAsStateWithLifecycle()' to turn the StateFlow into Compose State, then derives 'isFavorite = item.id in favorites'. It hands the stateless 'DetailScreen' that plain Boolean plus 'onToggleFavorite = { favoritesViewModel.toggleFavorite(item.id) }'. That lambda is the event flowing UP; the resulting new state flows back DOWN and recomposes the Route."
     },
     {
       "title": "rememberSaveable counter contrasts local state with the ViewModel",
       "file": "NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt",
-      "start": 559,
-      "end": 579,
+      "start": 568,
+      "end": 588,
       "explain": "'var count by rememberSaveable { mutableStateOf(0) }' is deliberately placed next to the favorite toggle. The counter survives rotation by writing into the saved-instance Bundle but is local to this one composable and resets on a fresh launch, whereas the favorite (held in the ViewModel) is shared across screens and survives navigation too. Comparing the two side by side is the lesson."
     }
   ],

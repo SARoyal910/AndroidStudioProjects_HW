@@ -318,8 +318,9 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
   // ======================= PREVIEW =======================
   function applyPreview(pg, v, stage) {
     stage.className = "stage"; stage.removeAttribute("style"); stage.innerHTML = "";
-    const c = pg.container;
+    let c = pg.container;
     if (COMPONENT_PV[c]) { stage.classList.add("stage-comp"); COMPONENT_PV[c](pg, v, stage); return; }
+    if (c === "Box" && !hasRole(pg, "boxContentAlignment")) c = "single"; // a Box styled by size/offset/corner roles is really a single box
     const n = Math.round(num(v.childCount, num(v.itemCount, pg.childCount || 3)));
     const pad = padCss(v);
 
@@ -333,6 +334,7 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
       const gap = num(v.gap, 0), isSpace = ["SpaceBetween", "SpaceAround", "SpaceEvenly"].indexOf(arr) >= 0;
       stage.style.gap = (gap && !isSpace) ? gap + "px" : "0px";
       if (pad) stage.style.padding = pad;
+      if (v.height != null) { stage.style.flex = "none"; stage.style.height = num(v.height, 200) + "px"; }
       if (v.scroll === "true") stage.classList.add("scrollable");
       const weighted = hasRole(pg, "weightPerChild");
       for (let i = 0; i < n; i++) {
@@ -354,10 +356,15 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
       stage.style.display = "grid";
       stage.style.placeItems = PLACE[v.boxContentAlignment || "Center"] || "center center";
       if (pad) stage.style.padding = pad;
+      if (v.size != null) { stage.style.flex = "none"; stage.style.width = num(v.size, 200) + "px"; stage.style.height = num(v.size, 200) + "px"; stage.style.margin = "auto"; }
+      if (v.background) stage.style.background = "var(--" + (COLORVAR[v.background] || "indigo") + ")";
+      const cs = v.childSize != null ? num(v.childSize, 48) : null;
       const sz = [[120, 76], [88, 56], [58, 38], [40, 28]];
       for (let i = 0; i < Math.min(n, 4); i++) {
-        const chip = h("div", "chip c" + (i % 5));
-        chip.style.gridArea = "1 / 1"; chip.style.width = sz[i][0] + "px"; chip.style.height = sz[i][1] + "px";
+        const chip = h("div", "chip c" + ((i + (v.background ? 1 : 0)) % 5));
+        chip.style.gridArea = "1 / 1";
+        chip.style.width = (cs != null ? cs : sz[i][0]) + "px";
+        chip.style.height = (cs != null ? cs : sz[i][1]) + "px";
         chip.textContent = (pg.childLabels && pg.childLabels[i]) || String.fromCharCode(65 + i);
         stage.appendChild(chip);
       }
@@ -373,7 +380,7 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
     } else { // single
       stage.style.display = "grid"; stage.style.placeItems = "center"; stage.style.padding = "18px";
       const chip = h("div", "chip c0");
-      let w = num(v.width, num(v.size, 130)), ht = num(v.height, num(v.size, 84));
+      let w = num(v.width, num(v.size, num(v.childSize, 130))), ht = num(v.height, num(v.size, num(v.childSize, 84)));
       chip.style.width = w + "px"; chip.style.height = ht + "px";
       if (v.fillMaxWidth === "true") chip.style.width = "100%";
       if (v.fillMaxHeight === "true") chip.style.height = "100%";
@@ -385,6 +392,7 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
       if (v.clip === "true") chip.style.overflow = "hidden";
       if (v.offsetX != null || v.offsetY != null) chip.style.transform = "translate(" + num(v.offsetX, 0) + "px," + num(v.offsetY, 0) + "px)";
       const inner = h("div", "inner", "content");
+      if (v.fontSize != null) { inner.style.fontSize = num(v.fontSize, 16) + "px"; inner.textContent = num(v.fontSize, 16) + " sp"; }
       if (hasRole(pg, "orderSwap")) {
         if (v.orderSwap === "true") { // padding THEN background: outer transparent, inner colored
           chip.style.background = "transparent"; chip.style.boxShadow = "none"; chip.style.padding = pad || "16px";
@@ -405,7 +413,7 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
     if (COMPONENT_GEN[c]) return COMPONENT_GEN[c](pg, v);
     if (c === "Text") return genText(v);
     if (c === "single") return genSingle(pg, v);
-    if (c === "Box") return genBox(pg, v);
+    if (c === "Box") return hasRole(pg, "boxContentAlignment") ? genBox(pg, v) : genSingle(pg, v);
     return genColRow(pg, v);
   }
   function childColor(i) { return COLORK[i % COLORK.length]; }
@@ -413,7 +421,9 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
   function genColRow(pg, v) {
     const isCol = pg.container === "Column";
     const n = Math.round(num(v.childCount, pg.childCount || 3));
-    const mods = ["fillMaxSize()"];
+    const mods = [];
+    if (v.height != null) { mods.push("fillMaxWidth()"); mods.push("height(" + num(v.height, 200) + ".dp)"); }
+    else mods.push("fillMaxSize()");
     const pad = padKotlin(v); if (pad) mods.push(pad);
     if (v.scroll === "true") mods.push("verticalScroll(rememberScrollState())");
     const arr = v[isCol ? "verticalArrangement" : "horizontalArrangement"];
@@ -444,16 +454,20 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
 
   function genBox(pg, v) {
     const n = Math.min(Math.round(num(v.childCount, pg.childCount || 3)), 4);
-    const mods = ["size(200.dp)"]; const pad = padKotlin(v); if (pad) mods.push(pad);
+    const mods = ["size(" + (v.size != null ? num(v.size, 200) : 200) + ".dp)"];
+    if (v.background) mods.push("background(" + COLORK[SELECT_OPTS.background.indexOf(v.background)] + ")");
+    const pad = padKotlin(v); if (pad) mods.push(pad);
     const ca = v.boxContentAlignment || "Center";
+    const cs = v.childSize != null ? num(v.childSize, 48) : null;
     let kids = ""; const sz = [120, 88, 58, 40];
-    for (let i = 0; i < n; i++) kids += "\n    Box(Modifier.size(" + sz[i] + ".dp).background(" + childColor(i) + "))";
+    for (let i = 0; i < n; i++) kids += "\n    Box(Modifier.size(" + (cs != null ? cs : sz[i]) + ".dp).background(" + childColor(i) + "))";
     return "Box(\n    modifier = Modifier." + mods.join(".") + ",\n    contentAlignment = Alignment." + ca + "\n) {" + kids + "\n}";
   }
 
   function genSingle(pg, v) {
     const chain = ["Modifier"];
     if (v.size != null) chain.push("size(" + num(v.size, 96) + ".dp)");
+    else if (v.childSize != null && v.width == null && v.height == null) chain.push("size(" + num(v.childSize, 96) + ".dp)");
     else { if (v.width != null) chain.push("width(" + num(v.width, 120) + ".dp)"); if (v.height != null) chain.push("height(" + num(v.height, 84) + ".dp)"); }
     if (v.fillMaxWidth === "true") chain.push("fillMaxWidth()");
     if (v.fillFraction != null) chain.push("fillMaxWidth(" + num(v.fillFraction, 1) + "f)");
@@ -470,7 +484,8 @@ const SECTIONS = [{"id":"composables","title":"Composables & Recomposition","cat
       if (v.borderWidth != null && num(v.borderWidth, 0) > 0) chain.push("border(" + num(v.borderWidth, 0) + ".dp, Color.DarkGray" + (shape ? ", " + shape : "") + ")");
       const p = padKotlin(v); if (p) chain.push(p);
     }
-    return "Box(\n    " + chain.join("\n        .") + "\n)";
+    const body = (v.fontSize != null) ? ' {\n    Text("Aa", fontSize = ' + num(v.fontSize, 16) + '.sp)\n}' : '';
+    return "Box(\n    " + chain.join("\n        .") + "\n)" + body;
   }
 
   function genText(v) {

@@ -140,6 +140,25 @@ pre .px{color:var(--c-punct);}
   display:flex;align-items:center;justify-content:center;background:rgba(120,134,156,.14);}
 .phone .navbar .pill{width:96px;height:4px;border-radius:2px;background:rgba(80,94,116,.55);}
 .phone .frame{display:flex;flex-direction:column;box-sizing:border-box;width:100%;min-height:600px;}  /* the render target; JS styles padding/arrangement/alignment */
+/* ROOT AFFORDANCES — preview-only chrome that shows WHY you'd pick each root.
+   Not part of your code; toggled by #screen[data-root]. */
+.scaffold-topbar,.scaffold-fab,.lazy-scrollbar{display:none;position:absolute;z-index:4;pointer-events:none;}
+#screen[data-root="Scaffold"] .scaffold-topbar{display:flex;}
+#screen[data-root="Scaffold"] .scaffold-fab{display:flex;}
+#screen[data-root="LazyColumn"] .lazy-scrollbar,#screen[data-root="LazyRow"] .lazy-scrollbar{display:block;}
+.scaffold-topbar{top:26px;left:0;right:0;height:34px;align-items:center;gap:8px;padding:0 12px;
+  background:rgba(15,157,88,.10);border-bottom:1px dashed rgba(15,157,88,.55);
+  font:700 9px ui-monospace,monospace;color:#0f9d58;text-transform:uppercase;letter-spacing:.04em;}
+.scaffold-topbar .tt{flex:1;height:8px;border-radius:4px;background:rgba(15,157,88,.28);max-width:130px;}
+.scaffold-topbar .dot{width:7px;height:7px;border-radius:50%;background:rgba(15,157,88,.55);}
+.scaffold-fab{bottom:34px;right:16px;width:40px;height:40px;border-radius:14px;
+  align-items:center;justify-content:center;border:1.5px dashed rgba(15,157,88,.65);
+  color:#0f9d58;font-size:20px;font-weight:700;background:rgba(15,157,88,.08);}
+.scaffold-fab .fl{position:absolute;bottom:-15px;right:-4px;font:700 8px ui-monospace,monospace;color:#0f9d58;white-space:nowrap;}
+.lazy-scrollbar{top:34px;bottom:24px;right:3px;width:4px;border-radius:2px;background:rgba(80,94,116,.20);}
+.lazy-scrollbar i{position:absolute;top:6px;right:0;width:4px;height:38%;border-radius:2px;background:rgba(80,94,116,.55);}
+.lazy-scrollbar b{position:absolute;top:42%;right:8px;font:700 8px ui-monospace,monospace;color:#6b7c93;white-space:nowrap;writing-mode:vertical-rl;}
+.rootcap{font-weight:700;color:var(--accent-deep);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* placeholder shown for a composable the interpreter doesn't know */
 /* placeholder shown for a composable the interpreter doesn't know */
 .unknown{border:1px dashed #c9596b;color:#a23;background:#fff5f6;border-radius:8px;
@@ -284,13 +303,19 @@ pre .px{color:var(--c-punct);}
   </section>
 
   <section class="pane preview">
-    <div class="panehead"><span class="dot"></span> Live preview <span class="right" id="previewMeta"></span></div>
+    <div class="panehead"><span class="dot"></span> Live preview <span class="rootcap" id="rootcaption"></span><span class="right" id="previewMeta"></span></div>
     <div class="previewscroll">
       <div class="phone">
         <div class="notch"></div>
         <div class="screen" id="screen">
           <div class="statusbar"><span>9:41</span><span>●●●&nbsp;&nbsp;▮</span></div>  <!-- simulated status bar -->
+          <!-- Scaffold-only chrome: a dashed top-app-bar slot + a FAB slot, to show
+               what Scaffold gives you that a bare Column doesn't. -->
+          <div class="scaffold-topbar"><span class="dot"></span><span class="tt"></span><span>topBar slot</span></div>
           <div class="frame" id="frame"></div>                 <!-- rendered composables are injected here -->
+          <!-- LazyColumn-only chrome: a scrollbar to signal "this scrolls long lists". -->
+          <div class="lazy-scrollbar"><i></i><b>scrolls</b></div>
+          <div class="scaffold-fab">＋<span class="fl">FAB slot</span></div>
           <div class="navbar"><span class="pill"></span></div> <!-- simulated gesture nav bar -->
         </div>
       </div>
@@ -1116,6 +1141,7 @@ pre .px{color:var(--c-punct);}
   var frameEl=document.getElementById('frame');      // the actual render target (inside the screen)
   var statusEl=document.getElementById('status');    // the "✓ Rendered…/⚠ error" line
   var metaEl=document.getElementById('previewMeta'); // shows "light/dark theme"
+  var rootCapEl=document.getElementById('rootcaption'); // shows the current root + its purpose
 
   // ----- Screen-frame controls (root / padding / alignment / system bars) ------
   // These rewrite the editor code to wrap your snippet in a real screen container.
@@ -1155,13 +1181,37 @@ pre .px{color:var(--c-punct);}
   // are now REAL code (the interpreter renders them), so the only thing left to
   // fake is the inset offset: if the current code handles insets, push content
   // clear of the status / nav bars; if not, let it slide under them (the bug).
+  // One-line purpose for each root container — shown as a caption next to the
+  // preview AND used to toggle the root-specific affordances (Scaffold bars, etc.).
+  var ROOT_INFO = {
+    Column:'Column · vertical stack',
+    Row:'Row · horizontal line',
+    Box:'Box · overlap & align one space',
+    LazyColumn:'LazyColumn · scrolls long lists',
+    LazyRow:'LazyRow · scrolls horizontally',
+    Scaffold:'Scaffold · app screen (bars + FAB)',
+  };
+  // Which container LEADS the current code (works whether wrapped by the controls
+  // or loaded raw from the catalog). Comments are stripped first.
+  function detectRoot(code){
+    var c=code.replace(/\/\/[^\n]*/g,'').replace(/^\s+/,'');
+    var m=c.match(/^([A-Za-z]\w*)\s*[({]/);
+    return (m && ROOT_INFO[m[1]]) ? m[1] : null;
+  }
+
   function applyFrame(){
     // Strip // line-comments FIRST, so the "add .systemBarsPadding()" warning text
     // in a none-inset frame doesn't falsely read as real inset handling.
     var codeNoComments = codeEl.value.replace(/\/\/[^\n]*/g, '');
     var hasInset = /\.systemBarsPadding\(\)|\.safeDrawingPadding\(\)|\.statusBarsPadding\(\)|\.padding\(innerPadding\)/.test(codeNoComments);
-    frameEl.style.paddingTop = hasInset ? STATUSBAR_PX+'px' : '0';
-    frameEl.style.paddingBottom = hasInset ? NAVBAR_PX+'px' : '0';
+    // Root caption + affordances (the "why use this root" chrome).
+    var root = detectRoot(codeEl.value);
+    screenEl.setAttribute('data-root', root || '');
+    rootCapEl.textContent = root ? '· '+ROOT_INFO[root] : '';
+    // Scaffold draws a topBar slot below the status bar, so push content below it.
+    var topBar = (root==='Scaffold') ? 34 : 0;
+    frameEl.style.paddingTop = ((hasInset?STATUSBAR_PX:0) + topBar) + 'px';
+    frameEl.style.paddingBottom = (hasInset?NAVBAR_PX:0) + 'px';
   }
 
   // Indent every line of `code` by `n` spaces (used to nest the user's snippet
@@ -1372,6 +1422,44 @@ pre .px{color:var(--c-punct);}
 '    Box(modifier = Modifier.width(48.dp).height(48.dp).background(Color(0xFFE8730C)))\n'+
 '}\n' },
 
+    { name:'Spacing', code:
+'// SPACING = gaps BETWEEN children. Two ways:\n'+
+'//   • Arrangement.spacedBy(n.dp) — an even gap between EVERY child.\n'+
+'//   • Spacer(Modifier.width/height(n.dp)) — one exact gap where you place it.\n'+
+'// (SpaceBetween/Around/Evenly spread the LEFTOVER space; they need fillMaxWidth.)\n'+
+'Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {\n'+
+'    Text("spacedBy(12.dp): even gaps between every child")\n'+
+'    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {\n'+
+'        Box(modifier = Modifier.size(40.dp).background(Color(0xFF2563EB)))\n'+
+'        Box(modifier = Modifier.size(40.dp).background(Color(0xFF0F9D58)))\n'+
+'        Box(modifier = Modifier.size(40.dp).background(Color(0xFFE8730C)))\n'+
+'    }\n'+
+'    Row {\n'+
+'        Box(modifier = Modifier.size(40.dp).background(Color(0xFF2563EB)))\n'+
+'        Spacer(modifier = Modifier.width(24.dp))   // one exact 24.dp gap\n'+
+'        Box(modifier = Modifier.size(40.dp).background(Color(0xFF0F9D58)))\n'+
+'    }\n'+
+'}\n' },
+
+    { name:'Alignment', code:
+'// ALIGNMENT = where children sit on the CROSS axis.\n'+
+'//   • Column: cross axis is horizontal → horizontalAlignment.\n'+
+'//   • Row:    cross axis is vertical   → verticalAlignment.\n'+
+'//   • Box:    a single 2-D contentAlignment.\n'+
+'Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {\n'+
+'    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {\n'+
+'        Text("Column · centered horizontally")\n'+
+'    }\n'+
+'    Row(modifier = Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {\n'+
+'        Box(modifier = Modifier.size(24.dp).background(Color(0xFF2563EB)))\n'+
+'        Spacer(modifier = Modifier.width(8.dp))\n'+
+'        Box(modifier = Modifier.size(48.dp).background(Color(0xFF0F9D58)))\n'+
+'    }\n'+
+'    Box(modifier = Modifier.fillMaxWidth().height(80.dp).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {\n'+
+'        Text("Box · dead center")\n'+
+'    }\n'+
+'}\n' },
+
     { name:'Order matters ★', code:
 '// THE headline lesson: a Modifier chain is ORDERED. Swap two modifiers and the\n'+
 '// picture changes, because each modifier wraps the previous one.\n'+
@@ -1553,6 +1641,24 @@ pre .px{color:var(--c-punct);}
         ex:'Column {\n    Text("above the gap")\n    Spacer(modifier = Modifier.height(24.dp))\n    Text("below the gap")\n}\n' },
     ]},
 
+    { group:'Spacing — gaps between children', items:[
+      { name:'Column · spacedBy', what:'Arrangement.spacedBy(n.dp) puts an EVEN gap between every child of a Column — no manual Spacers. A Column’s main axis is vertical, so this is verticalArrangement.', params:'verticalArrangement = Arrangement.spacedBy(n.dp)',
+        ex:'Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {\n    Text("first")\n    Text("second")\n    Text("third")\n}\n' },
+      { name:'Row · arrangement', what:'horizontalArrangement spreads a Row’s children along its main axis. spacedBy adds an even gap; SpaceBetween / SpaceAround / SpaceEvenly distribute the LEFTOVER width, so they need fillMaxWidth to have room to work.', params:'horizontalArrangement = Arrangement.SpaceBetween / spacedBy / SpaceEvenly',
+        ex:'Row(\n    modifier = Modifier.fillMaxWidth(),\n    horizontalArrangement = Arrangement.SpaceBetween\n) {\n    Box(modifier = Modifier.size(40.dp).background(Color(0xFF2563EB)))\n    Box(modifier = Modifier.size(40.dp).background(Color(0xFF0F9D58)))\n    Box(modifier = Modifier.size(40.dp).background(Color(0xFFE8730C)))\n}\n' },
+      { name:'Spacer', what:'A Spacer is an empty, fixed-size element — drop one BETWEEN two composables to push them apart by an EXACT amount (vs spacedBy, which spaces every child evenly).', params:'Spacer(Modifier.width(n.dp)) · Spacer(Modifier.height(n.dp))',
+        ex:'Row(verticalAlignment = Alignment.CenterVertically) {\n    Box(modifier = Modifier.size(40.dp).background(Color(0xFF2563EB)))\n    Spacer(modifier = Modifier.width(24.dp))\n    Box(modifier = Modifier.size(40.dp).background(Color(0xFF0F9D58)))\n}\n' },
+    ]},
+
+    { group:'Alignment — where children sit on the cross axis', items:[
+      { name:'Column · horizontalAlignment', what:'In a Column the MAIN axis is vertical, so the CROSS axis is horizontal: horizontalAlignment moves children left ↔ right (Start, CenterHorizontally, End). It only shows when the Column is wider than its children, e.g. fillMaxWidth.', params:'horizontalAlignment = Alignment.Start / CenterHorizontally / End',
+        ex:'Column(\n    modifier = Modifier.fillMaxWidth(),\n    horizontalAlignment = Alignment.CenterHorizontally,\n    verticalArrangement = Arrangement.spacedBy(8.dp)\n) {\n    Text("one")\n    Button(onClick = {}) { Text("two") }\n}\n' },
+      { name:'Row · verticalAlignment', what:'In a Row the MAIN axis is horizontal, so the CROSS axis is vertical: verticalAlignment lines up children of different heights (Top, CenterVertically, Bottom).', params:'verticalAlignment = Alignment.Top / CenterVertically / Bottom',
+        ex:'Row(\n    modifier = Modifier.fillMaxWidth().height(72.dp),\n    verticalAlignment = Alignment.CenterVertically,\n    horizontalArrangement = Arrangement.spacedBy(8.dp)\n) {\n    Box(modifier = Modifier.size(24.dp).background(Color(0xFF2563EB)))\n    Box(modifier = Modifier.size(48.dp).background(Color(0xFF0F9D58)))\n    Box(modifier = Modifier.size(36.dp).background(Color(0xFFE8730C)))\n}\n' },
+      { name:'Box · contentAlignment', what:'A Box aligns its content in TWO dimensions at once with a single Alignment (Center, TopEnd, BottomStart…). Any child can override the default with Modifier.align(...). Ideal for centering one thing or pinning a corner badge.', params:'contentAlignment = Alignment.Center / TopEnd / BottomStart …',
+        ex:'Box(\n    modifier = Modifier.fillMaxWidth().height(140.dp).background(MaterialTheme.colorScheme.surfaceVariant),\n    contentAlignment = Alignment.Center\n) {\n    Text("centered")\n    Text("badge", modifier = Modifier.align(Alignment.TopEnd))\n}\n' },
+    ]},
+
     { group:'Placing a whole screen (the "stuck in the corner" fix)', items:[
       { name:'Why it lands in the corner', what:'A composable passed straight to setContent gets NO size, NO padding and NO inset handling. With nothing telling it otherwise it shrinks to wrap its content and is placed at the TOP-START — under the status bar. Fixing it = fillMaxSize + padding + alignment + system-bar insets (the four controls in the "Screen frame" bar above).', params:'the four fixes: fillMaxSize · insets · padding · arrangement/alignment',
         ex:'// Bare content — flip "wrap content" OFF in the Screen-frame bar to see this\n// jam into the corner under the status bar, then ON to fix it.\nColumn {\n    Text("I am stuck top-left, under the status bar")\n    Button(onClick = {}) { Text("…and so am I") }\n}\n' },
@@ -1566,8 +1672,8 @@ pre .px{color:var(--c-punct);}
         ex:'Box(\n    modifier = Modifier.fillMaxSize(),\n    contentAlignment = Alignment.Center\n) {\n    Text("dead center of the screen")\n}\n' },
       { name:'.padding(...) — 3 forms', what:'Empty space between content and its edges. All sides: padding(16.dp). Per-axis: padding(horizontal = 20.dp, vertical = 8.dp). Per-side: padding(start = 16.dp, top = 8.dp, …). On the root it keeps content off the screen edges; drag the "padding" slider above to set it.', params:'padding(all) · padding(horizontal=, vertical=) · padding(start=, top=, end=, bottom=)',
         ex:'Column(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 24.dp, vertical = 12.dp)) {\n    Text("24 left/right, 12 top/bottom", color = MaterialTheme.colorScheme.onPrimaryContainer)\n}\n' },
-      { name:'Scaffold(innerPadding)', what:'The standard screen scaffold. It measures the top app bar, bottom bar and SYSTEM BARS for you and hands back an innerPadding you MUST apply to your content (.padding(innerPadding)) — otherwise content draws under those bars. Pick "Scaffold(innerPadding)" in the system-bars dropdown to generate this shape.', params:'Scaffold(topBar, bottomBar) { innerPadding -> … .padding(innerPadding) }',
-        ex:'// (sketch — the playground renders the inner content; the frame bar simulates insets)\nColumn(\n    modifier = Modifier.fillMaxSize().padding(16.dp),\n    verticalArrangement = Arrangement.spacedBy(8.dp)\n) {\n    Text("Inside Scaffold { innerPadding -> }")\n    Text("…with Modifier.padding(innerPadding) applied")\n}\n' },
+      { name:'Scaffold(innerPadding)', what:'The standard screen scaffold. It measures the top app bar, bottom bar and SYSTEM BARS for you and hands back an innerPadding you MUST apply to your content (.padding(innerPadding)) — otherwise content draws under those bars. Pick "Scaffold" in the ROOT dropdown to generate this shape (the preview shows its topBar + FAB slots).', params:'Scaffold(topBar, bottomBar) { innerPadding -> … .padding(innerPadding) }',
+        ex:'Scaffold { innerPadding ->\n    Column(\n        modifier = Modifier.fillMaxSize().padding(innerPadding).padding(16.dp),\n        verticalArrangement = Arrangement.spacedBy(8.dp)\n    ) {\n        Text("Inside Scaffold { innerPadding -> }")\n        Text("…with Modifier.padding(innerPadding) applied")\n    }\n}\n' },
       { name:'.systemBarsPadding() / insets', what:'If you are NOT using a Scaffold (or use enableEdgeToEdge), add inset padding yourself: systemBarsPadding() clears the status + nav bars; statusBarsPadding() only the top; safeDrawingPadding() also avoids the keyboard and display cutout. Without one of these, edge-to-edge content slides under the bars — your exact bug. (The interpreter ignores these; the "system bars" dropdown above simulates them.)', params:'systemBarsPadding() · statusBarsPadding() · navigationBarsPadding() · safeDrawingPadding() · imePadding()',
         ex:'Column(\n    modifier = Modifier.fillMaxSize().systemBarsPadding().padding(16.dp),\n    verticalArrangement = Arrangement.spacedBy(8.dp)\n) {\n    Text("Clear of the status bar at the top")\n    Text("…and the nav bar at the bottom")\n}\n' },
     ]},

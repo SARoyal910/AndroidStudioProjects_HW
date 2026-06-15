@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Build a profile card</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-04',
+  title: 'Lab 4 · Build a profile card',
+  track: 'Compose',
+  level: 'Intermediate',
+  goal: 'Compose a real list-item layout: a Card with a circular avatar, a name/status column that eats the leftover width, and a trailing heart icon.',
+  steps: [
+    'Inside the <code>Row</code>, add a circular <b>avatar</b>: a <code>Box</code> with <code>Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)</code>.',
+    'Give the name <code>Column</code> <code>Modifier.weight(1f)</code> so it takes the remaining width and pushes the icon to the end.',
+    'Add a trailing <code>Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.Red)</code> after the column.',
+  ],
+  hints: [
+    'A round avatar is just a sized <code>Box</code> clipped to <code>CircleShape</code> with a background.',
+    '<code>weight(1f)</code> only works inside a Row/Column — it splits the leftover space.',
+    'Order inside the Row is: avatar, then the weighted Column, then the Icon.',
+  ],
+  starter:
+'// Turn this into a profile row. Add: a circular avatar, weight on the name\n' +
+'// column, and a trailing heart Icon.\n' +
+'Card(modifier = Modifier.fillMaxWidth()) {\n' +
+'    Row(\n' +
+'        modifier = Modifier.padding(16.dp),\n' +
+'        verticalAlignment = Alignment.CenterVertically,\n' +
+'        horizontalArrangement = Arrangement.spacedBy(12.dp)\n' +
+'    ) {\n' +
+'        Column {\n' +
+'            Text("Ada Lovelace", style = MaterialTheme.typography.titleMedium)\n' +
+'            Text("Online now", color = MaterialTheme.colorScheme.primary)\n' +
+'        }\n' +
+'    }\n' +
+'}\n',
+  solution:
+'Card(modifier = Modifier.fillMaxWidth()) {\n' +
+'    Row(\n' +
+'        modifier = Modifier.padding(16.dp),\n' +
+'        verticalAlignment = Alignment.CenterVertically,\n' +
+'        horizontalArrangement = Arrangement.spacedBy(12.dp)\n' +
+'    ) {\n' +
+'        Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))\n' +
+'        Column(modifier = Modifier.weight(1f)) {\n' +
+'            Text("Ada Lovelace", style = MaterialTheme.typography.titleMedium)\n' +
+'            Text("Online now", color = MaterialTheme.colorScheme.primary)\n' +
+'        }\n' +
+'        Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.Red)\n' +
+'    }\n' +
+'}\n',
+  checks: [
+    { label: 'A <code>Card</code> wraps a <code>Row</code>', test: function(a){ return !!a.find('Card') && !!a.find('Row'); } },
+    { label: 'A circular avatar — a <b>sized</b> <code>Box</code> with <code>clip(CircleShape)</code>', test: function(a){ return a.findAll('Box').some(function(b){ return a.hasMod(b,'size') && a.shapeOf(b)==='CircleShape'; }); } },
+    { label: 'The name <code>Column</code> uses <code>Modifier.weight(1f)</code>', test: function(a){ return a.findAll('Column').some(function(c){ return a.weightOf(c)!=null; }); } },
+    { label: 'A trailing <code>Icon</code> is present', test: function(a){ return !!a.find('Icon'); } },
+  ],
+});
+</script>
+</body>
+</html>

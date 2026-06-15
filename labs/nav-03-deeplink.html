@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Seed a deep link</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="nav-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'nav',
+  id: 'nav-03',
+  title: 'Lab 7 · Seed a deep-link back stack',
+  track: 'Navigation',
+  level: 'Intermediate',
+  goal: 'A deep link drops the user straight onto a detail screen. Hand-seed the back stack so opening navdemo://planet/5 lands on Jupiter — and Back still walks up Detail → Items → Categories.',
+  steps: [
+    'The link <code>navdemo://planet/5</code> targets Jupiter (<code>itemId = 5</code>, in <code>categoryId = 2</code>).',
+    'Seed the back stack with three keys so Back is meaningful: <code>CategoriesKey</code>, then <code>ItemsKey(categoryId = 2)</code>, then <code>DetailKey(itemId = 5)</code>.',
+    'Add them to the <code>rememberNavBackStack(…)</code> list. Then press <b>‹ Back</b> in the phone to confirm it walks up the chain.',
+  ],
+  hints: [
+    'A deep link doesn’t just show one screen — you build the whole stack the user would have if they had navigated there, so Back behaves.',
+    'Jupiter is a Gas Giant: <code>categoryId = 2</code>, <code>itemId = 5</code>.',
+  ],
+  starter:
+'// Deep link navdemo://planet/5 should open Jupiter, with Back walking up\n' +
+'// Detail -> Items -> Categories. Seed the back stack to match.\n' +
+'val backStack = rememberNavBackStack(\n' +
+'    CategoriesKey,\n' +
+')\n',
+  solution:
+'val backStack = rememberNavBackStack(\n' +
+'    CategoriesKey,\n' +
+'    ItemsKey(categoryId = 2),\n' +
+'    DetailKey(itemId = 5),\n' +
+')\n',
+  checks: [
+    { label: 'The seeded stack is <b>3</b> keys deep', test: function(a){ return a.stack.length===3; } },
+    { label: 'The bottom (root) is <code>CategoriesKey</code>', test: function(a){ return a.stack[0] && a.stack[0].type==='CategoriesKey'; } },
+    { label: 'The middle is <code>ItemsKey(categoryId = 2)</code>', test: function(a){ var k=a.stack[1]; return k && k.type==='ItemsKey' && k.args.categoryId===2; } },
+    { label: 'The top is <code>DetailKey(itemId = 5)</code> — Jupiter', test: function(a){ var k=a.stack[a.stack.length-1]; return k && k.type==='DetailKey' && k.args.itemId===5; } },
+  ],
+});
+</script>
+</body>
+</html>

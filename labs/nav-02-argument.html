@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Carry the right argument</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="nav-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'nav',
+  id: 'nav-02',
+  title: 'Lab 6 · Carry the right argument',
+  track: 'Navigation',
+  level: 'Beginner',
+  goal: 'A key carries its screen’s arguments. This back stack opens a detail screen — but for the WRONG planet. Fix the argument so it shows Saturn.',
+  steps: [
+    'Notice the top key is <code>DetailKey(itemId = 1)</code>, which shows Mercury.',
+    'Saturn is <code>itemId = 6</code>. Change the argument the top <code>DetailKey</code> carries.',
+    'The detail screen and the back stack should now read Saturn — without adding or removing any keys.',
+  ],
+  hints: [
+    'The same <code>entry&lt;DetailKey&gt;</code> screen renders ANY planet — the <code>itemId</code> in the key chooses which one.',
+    'Just edit the number: <code>DetailKey(itemId = 6)</code>.',
+  ],
+  starter:
+'// This opens a planet detail — but the WRONG planet. Saturn is itemId 6.\n' +
+'// Fix the argument the top DetailKey carries (do not add or remove keys).\n' +
+'val backStack = rememberNavBackStack(\n' +
+'    CategoriesKey,\n' +
+'    ItemsKey(categoryId = 2),\n' +
+'    DetailKey(itemId = 1),\n' +
+')\n',
+  solution:
+'val backStack = rememberNavBackStack(\n' +
+'    CategoriesKey,\n' +
+'    ItemsKey(categoryId = 2),\n' +
+'    DetailKey(itemId = 6),\n' +
+')\n',
+  checks: [
+    { label: 'The stack is still 3 keys (no keys added or removed)', test: function(a){ return a.stack.length===3; } },
+    { label: 'The root is <code>CategoriesKey</code>', test: function(a){ return a.stack[0] && a.stack[0].type==='CategoriesKey'; } },
+    { label: 'The middle is <code>ItemsKey(categoryId = 2)</code>', test: function(a){ var k=a.stack[1]; return k && k.type==='ItemsKey' && k.args.categoryId===2; } },
+    { label: 'The top key is a <code>DetailKey</code>', test: function(a){ var k=a.stack[a.stack.length-1]; return k && k.type==='DetailKey'; } },
+    { label: 'It carries <code>itemId = 6</code> (Saturn)', test: function(a){ var k=a.stack[a.stack.length-1]; return k && k.args.itemId===6; } },
+  ],
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Drill down</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="nav-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'nav',
+  id: 'nav-01',
+  title: 'Lab 5 · Drill down to a planet',
+  track: 'Navigation',
+  level: 'Beginner',
+  goal: 'Navigate from the categories list all the way to Mars’s detail. Pushing a key navigates forward; the back stack should end up three deep.',
+  steps: [
+    'In the phone, tap <b>Rocky Planets</b> — that pushes <code>ItemsKey(categoryId = 1)</code>.',
+    'Then tap <b>Mars</b> — that pushes <code>DetailKey(itemId = 4)</code>.',
+    'Watch the back stack grow to <code>[CategoriesKey, ItemsKey(categoryId = 1), DetailKey(itemId = 4)]</code>. (You can also type the keys directly.)',
+  ],
+  hints: [
+    'Each tap calls <code>backStack.add(…)</code> — that IS "navigate forward".',
+    'Mars is <code>itemId = 4</code> and lives in <code>categoryId = 1</code> (Rocky Planets).',
+    'Stuck? Edit the list on the left to add the two keys by hand.',
+  ],
+  starter:
+'// Navigate to Mars’s detail. Tap a category, then a planet — or edit the list.\n' +
+'val backStack = rememberNavBackStack(\n' +
+'    CategoriesKey,\n' +
+')\n',
+  solution:
+'val backStack = rememberNavBackStack(\n' +
+'    CategoriesKey,\n' +
+'    ItemsKey(categoryId = 1),\n' +
+'    DetailKey(itemId = 4),\n' +
+')\n',
+  checks: [
+    { label: 'The back stack is <b>3</b> keys deep', test: function(a){ return a.stack.length===3; } },
+    { label: 'The root is <code>CategoriesKey</code>', test: function(a){ return a.stack[0] && a.stack[0].type==='CategoriesKey'; } },
+    { label: 'Then <code>ItemsKey(categoryId = 1)</code>', test: function(a){ var k=a.stack[1]; return k && k.type==='ItemsKey' && k.args.categoryId===1; } },
+    { label: 'Top is <code>DetailKey(itemId = 4)</code> — Mars', test: function(a){ var k=a.stack[a.stack.length-1]; return k && k.type==='DetailKey' && k.args.itemId===4; } },
+  ],
+});
+</script>
+</body>
+</html>

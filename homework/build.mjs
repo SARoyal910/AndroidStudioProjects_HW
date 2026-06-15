@@ -304,6 +304,14 @@ function overviewPanel() {
       <a href="./nav-playground.html" style="flex:none;background:var(--blue);color:#fff;text-decoration:none;font-weight:750;padding:10px 18px;border-radius:10px;white-space:nowrap;">Open the Nav Playground →</a>
     </div>
 
+    <div class="callout new" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-color:var(--accent);background:#eafaf1;">
+      <div style="flex:1;min-width:240px;">
+        <b>✅ Hands-on Labs (guided exercises with instant checking)</b>
+        <p>Ready to <i>build</i> instead of read? The <b>labs</b> give you a task and starter code; edit it (or tap the phone) and the success checks turn green as you go — with hints and a solution if you get stuck. Seven labs across Compose (layout, modifier order, text, a profile card) and Navigation (drill-down, key arguments, deep-link seeding).</p>
+      </div>
+      <a href="../labs/index.html" style="flex:none;background:var(--accent-deep);color:#fff;text-decoration:none;font-weight:750;padding:10px 18px;border-radius:10px;white-space:nowrap;">Open the Labs →</a>
+    </div>
+
     <h3>Two learning tracks</h3>
     <div class="tracks">
       <div class="trackcol nav">
@@ -733,6 +741,7 @@ const html = `<!DOCTYPE html>
       <span>Real source · real line numbers</span>
       <span><a href="./playground.html" style="color:inherit;text-decoration:none;">🧪 compose playground</a></span>
       <span><a href="./nav-playground.html" style="color:inherit;text-decoration:none;">🧭 nav playground</a></span>
+      <span><a href="../labs/index.html" style="color:inherit;text-decoration:none;">✅ hands-on labs</a></span>
       <span>← → to move · ⌕ to search</span>
     </div>
   </div>

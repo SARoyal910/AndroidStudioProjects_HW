@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Style the text</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-03',
+  title: 'Lab 3 · Style the text',
+  track: 'Compose',
+  level: 'Beginner',
+  goal: 'Three plain lines need styling. Make a title use a type-scale role, make the second line bold and theme-colored, and make the caption italic.',
+  steps: [
+    'Give the first <code>Text</code> a <code>style = MaterialTheme.typography.titleLarge</code>.',
+    'Make the second <code>Text</code> <code>fontWeight = FontWeight.Bold</code> AND <code>color = MaterialTheme.colorScheme.primary</code>.',
+    'Make the third <code>Text</code> <code>fontStyle = FontStyle.Italic</code>.',
+  ],
+  hints: [
+    'Style and color are named arguments on <code>Text</code>, e.g. <code>Text("Hi", fontWeight = FontWeight.Bold)</code>.',
+    'Pull sizes from the type scale (<code>titleLarge</code>, <code>bodyMedium</code>…) and colors from <code>MaterialTheme.colorScheme</code> instead of hardcoding.',
+  ],
+  starter:
+'Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {\n' +
+'    Text("Saturn")\n' +
+'    Text("Ringed gas giant")\n' +
+'    Text("Second largest planet")\n' +
+'}\n',
+  solution:
+'Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {\n' +
+'    Text("Saturn", style = MaterialTheme.typography.titleLarge)\n' +
+'    Text("Ringed gas giant", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)\n' +
+'    Text("Second largest planet", fontStyle = FontStyle.Italic)\n' +
+'}\n',
+  checks: [
+    { label: 'A <code>Text</code> uses <code>style = MaterialTheme.typography.titleLarge</code>', test: function(a){ return a.findAll('Text').some(function(t){ return a.textProps(t).styleRole==='titleLarge'; }); } },
+    { label: 'A <code>Text</code> is <code>FontWeight.Bold</code> with <code>color = …colorScheme.primary</code>', test: function(a){ return a.findAll('Text').some(function(t){ var p=a.textProps(t); return p.fontWeight==='Bold' && p.colorName==='primary'; }); } },
+    { label: 'A <code>Text</code> is <code>FontStyle.Italic</code>', test: function(a){ return a.findAll('Text').some(function(t){ return a.textProps(t).italic===true; }); } },
+  ],
+});
+</script>
+</body>
+</html>

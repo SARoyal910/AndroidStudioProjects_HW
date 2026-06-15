@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Layout basics</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-01',
+  title: 'Lab 1 · Lay it out',
+  track: 'Compose',
+  level: 'Beginner',
+  goal: 'Stack three lines of text vertically, evenly spaced and centered — using a Column, Arrangement, and Alignment.',
+  steps: [
+    'Make the root a <code>Column</code>.',
+    'Put <b>three</b> <code>Text</code> composables inside it.',
+    'Give it <code>verticalArrangement = Arrangement.spacedBy(8.dp)</code> so the lines have an even 8&nbsp;dp gap.',
+    'Make it <code>Modifier.fillMaxWidth()</code> and center the children with <code>horizontalAlignment = Alignment.CenterHorizontally</code> — you need width to center within.',
+  ],
+  hints: [
+    'A <code>Column</code> takes its children in a trailing <code>{ }</code> block.',
+    'Arrangement controls the MAIN axis (vertical for a Column); Alignment controls the CROSS axis (horizontal).',
+    'Add <code>modifier = Modifier.fillMaxWidth()</code> so centering is visible across the whole width.',
+  ],
+  starter:
+'Column {\n' +
+'    Text("One")\n' +
+'    Text("Two")\n' +
+'}\n',
+  solution:
+'Column(\n' +
+'    modifier = Modifier.fillMaxWidth(),\n' +
+'    verticalArrangement = Arrangement.spacedBy(8.dp),\n' +
+'    horizontalAlignment = Alignment.CenterHorizontally\n' +
+') {\n' +
+'    Text("One")\n' +
+'    Text("Two")\n' +
+'    Text("Three")\n' +
+'}\n',
+  checks: [
+    { label: 'The root composable is a <code>Column</code>', test: function(a){ var t=a.top(); return t && t.name==='Column'; } },
+    { label: 'It has exactly <b>three</b> direct <code>Text</code> children', test: function(a){ var c=a.find('Column'); return !!c && (c.children||[]).filter(function(n){ return n.name==='Text'; }).length===3; } },
+    { label: '8&nbsp;dp spacing via <code>Arrangement.spacedBy(8.dp)</code>', test: function(a){ return a.spacing(a.find('Column'),'vertical')===8; } },
+    { label: '<code>Modifier.fillMaxWidth()</code> gives room to center within', test: function(a){ return a.hasMod(a.find('Column'),'fillMaxWidth'); } },
+    { label: 'Children centered with <code>CenterHorizontally</code>', test: function(a){ return a.crossAlignOf(a.find('Column'),'vertical')==='CenterHorizontally'; } },
+  ],
+});
+</script>
+</body>
+</html>

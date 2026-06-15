@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hands-on Labs — Compose &amp; Navigation 3</title>
+<link rel="stylesheet" href="labs.css" />
+</head>
+<body>
+<header class="hero">
+  <div class="bartop">
+    <div>
+      <p class="eyebrow">Android · Kotlin · Jetpack Compose &amp; Navigation 3</p>
+      <h1>Hands-on Labs</h1>
+    </div>
+    <div class="links">
+      <a class="back" href="../homework/playground.html">🎨 Compose Playground</a>
+      <a class="back" href="../homework/nav-playground.html">🧭 Nav Playground</a>
+      <a class="back" href="../homework/projects.html">← Projects, Explained</a>
+    </div>
+  </div>
+  <p class="goal">Short, guided exercises with <b>instant checking</b>. Each lab gives you a task and starter code; edit it (or tap the phone) and the success checks turn green as you go. There are hints if you’re stuck and a full solution to peek at. Nothing to install — it all runs in the browser.</p>
+</header>
+
+<div class="wrap">
+  <p class="intro">Pick a lab. The Compose track builds UI; the Navigation track builds back-stack intuition. Roughly in order of difficulty.</p>
+
+  <div class="tracktitle">🎨 Compose track</div>
+  <div class="labgrid" id="compose-grid"></div>
+
+  <div class="tracktitle">🧭 Navigation 3 track</div>
+  <div class="labgrid" id="nav-grid"></div>
+</div>
+
+<script>
+  var LABS = {
+    compose: [
+      { n:1, href:'compose-01-layout.html',    title:'Lay it out',          level:'Beginner',     blurb:'Stack text in a Column with even spacing and centered alignment.', skills:['Column','Arrangement','Alignment'] },
+      { n:2, href:'compose-02-modifiers.html', title:'Order matters',       level:'Beginner',     blurb:'Reorder a Modifier chain so the background hugs the text.', skills:['Modifier','padding','background'] },
+      { n:3, href:'compose-03-text.html',      title:'Style the text',      level:'Beginner',     blurb:'Apply a type-scale role, bold + theme color, and italic.', skills:['Text','typography','color'] },
+      { n:4, href:'compose-04-profile.html',   title:'Build a profile card',level:'Intermediate', blurb:'Compose a Card with a circular avatar, weighted column, and icon.', skills:['Card','weight','clip','Icon'] },
+    ],
+    nav: [
+      { n:5, href:'nav-01-drilldown.html', title:'Drill down to a planet',     level:'Beginner',     blurb:'Push keys to navigate Categories → Items → Detail (Mars).', skills:['backStack.add','push'] },
+      { n:6, href:'nav-02-argument.html',  title:'Carry the right argument',   level:'Beginner',     blurb:'Fix the itemId a DetailKey carries so it shows Saturn.', skills:['NavKey args'] },
+      { n:7, href:'nav-03-deeplink.html',  title:'Seed a deep-link stack',     level:'Intermediate', blurb:'Hand-build a back stack so a deep link lands on Jupiter with working Back.', skills:['deep link','rememberNavBackStack'] },
+    ],
+  };
+  function card(lab, kind){
+    var a=document.createElement('a'); a.className='labcard'+(kind==='nav'?' nav':''); a.href=lab.href;
+    var top=document.createElement('div'); top.className='lc-top';
+    var num=document.createElement('span'); num.className='lc-num'; num.textContent=lab.n; top.appendChild(num);
+    var lvl=document.createElement('span'); lvl.className='lc-level'; lvl.textContent=lab.level; top.appendChild(lvl);
+    a.appendChild(top);
+    var h=document.createElement('h3'); h.textContent=lab.title; a.appendChild(h);
+    var p=document.createElement('p'); p.textContent=lab.blurb; a.appendChild(p);
+    var sk=document.createElement('div'); sk.className='lc-skills';
+    lab.skills.forEach(function(s){ var c=document.createElement('code'); c.textContent=s; sk.appendChild(c); });
+    a.appendChild(sk);
+    return a;
+  }
+  var cg=document.getElementById('compose-grid'); LABS.compose.forEach(function(l){ cg.appendChild(card(l,'compose')); });
+  var ng=document.getElementById('nav-grid'); LABS.nav.forEach(function(l){ ng.appendChild(card(l,'nav')); });
+</script>
+</body>
+</html>

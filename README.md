@@ -22,6 +22,13 @@ comments, so you can diff any two projects to see exactly what a feature adds.
 > and **[`nav-playground.html`](./homework/nav-playground.html)** for a live
 > **Navigation 3 Playground** where you edit a `rememberNavBackStack(…)` key list
 > (or tap the phone / press Back) and watch the back stack and screen update.
+>
+> ✅ Prefer to **practice**? **[`labs/`](./labs)** is a set of guided, browser-based
+> **hands-on exercises** with instant checking — a task, starter code, and success
+> checks that turn green as you edit (with hints + solutions). Open
+> **[`labs/index.html`](./labs/index.html)**: four Compose labs (layout, modifier
+> order, text styling, a profile card) and three Navigation labs (drill-down, key
+> arguments, deep-link seeding).
 
 ---
 

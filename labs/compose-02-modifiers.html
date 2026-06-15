@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Order matters</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-02',
+  title: 'Lab 2 · Order matters',
+  track: 'Compose',
+  level: 'Beginner',
+  goal: 'A Modifier chain is ordered. Right now the blue fills the whole box and the text sits inside it. Make the blue HUG the text instead — by reordering two modifiers.',
+  steps: [
+    'Look at the box: the chain is <code>.background(…).padding(16.dp)</code>, so blue is painted first and the padding pushes the text inward — blue shows all around.',
+    'Swap the order to <code>.padding(16.dp).background(…)</code>.',
+    'Now the 16&nbsp;dp padding is a transparent margin OUTSIDE the blue, so the blue wraps tightly around the text.',
+  ],
+  hints: [
+    'Each modifier wraps everything AFTER it in the chain; the FIRST modifier is the outermost layer, the LAST sits closest to the content.',
+    'You only need to reorder <code>.padding(...)</code> and <code>.background(...)</code> — nothing else changes.',
+  ],
+  starter:
+'// The blue fills the whole box and the text is inset inside it.\n' +
+'// Goal: make the blue hug the text (a transparent margin OUTSIDE the blue).\n' +
+'Box(modifier = Modifier.background(Color(0xFF2563EB)).padding(16.dp)) {\n' +
+'    Text("Hug me", color = Color.White)\n' +
+'}\n',
+  solution:
+'Box(modifier = Modifier.padding(16.dp).background(Color(0xFF2563EB))) {\n' +
+'    Text("Hug me", color = Color.White)\n' +
+'}\n',
+  checks: [
+    { label: 'A <code>Box</code> contains a <code>Text</code>', test: function(a){ return !!a.find('Box') && a.findAll('Text').length>=1; } },
+    { label: 'The chain still has both <code>.padding</code> and <code>.background</code>', test: function(a){ var b=a.find('Box'); return a.hasMod(b,'padding') && a.hasMod(b,'background'); } },
+    { label: '<code>.padding(…)</code> comes <b>before</b> <code>.background(…)</code>', test: function(a){ var b=a.find('Box'); var pi=a.modIndex(b,'padding'), bi=a.modIndex(b,'background'); return pi>=0 && bi>=0 && pi<bi; } },
+  ],
+});
+</script>
+</body>
+</html>

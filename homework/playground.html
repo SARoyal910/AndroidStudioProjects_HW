@@ -449,6 +449,8 @@ pre .px{color:var(--c-punct);}
     var toks = [], i = 0, n = src.length;
     function isIdentStart(c){ return /[A-Za-z_]/.test(c); }   // first char of an identifier
     function isIdent(c){ return /[A-Za-z0-9_]/.test(c); }     // later chars of an identifier
+    // Each token records its START index `p` in the source, so the parser can
+    // slice the RAW text of e.g. an onClick lambda (needed to run `count++`).
     while(i < n){
       var c = src[i];
       if(/\s/.test(c)){ i++; continue; }                                         // whitespace: skip
@@ -457,11 +459,11 @@ pre .px{color:var(--c-punct);}
       if(c==='"'){                                                               // a string literal
         if(src[i+1]==='"' && src[i+2]==='"'){                                    // triple-quoted """..."""
           var j=i+3; while(j<n && !(src[j]==='"'&&src[j+1]==='"'&&src[j+2]==='"')) j++;
-          toks.push({t:'str',v:src.slice(i+3,j)}); i=j+3; continue;
+          toks.push({t:'str',v:src.slice(i+3,j),p:i}); i=j+3; continue;
         }
         var k=i+1, out='';                                                       // normal "..." (handle \ escapes)
         while(k<n && src[k]!=='"'){ if(src[k]==='\\'){ out+=src[k+1]||''; k+=2; } else { out+=src[k]; k++; } }
-        toks.push({t:'str',v:out}); i=k+1; continue;
+        toks.push({t:'str',v:out,p:i}); i=k+1; continue;
       }
       if(/[0-9]/.test(c)){                                                        // a number (hex 0x.., decimal, f/L suffix)
         var s=i;
@@ -469,14 +471,14 @@ pre .px{color:var(--c-punct);}
         else { while(i<n && /[0-9_]/.test(src[i])) i++; if(src[i]==='.' && /[0-9]/.test(src[i+1])){ i++; while(i<n && /[0-9_]/.test(src[i])) i++; } } // 16 or 0.5
         var raw=src.slice(s,i);
         if(/[fFlL]/.test(src[i])) i++;                                           // drop a trailing f/F/l/L suffix
-        toks.push({t:'num',v:raw.replace(/_/g,'')}); continue;                   // (strip digit-group underscores)
+        toks.push({t:'num',v:raw.replace(/_/g,''),p:s}); continue;               // (strip digit-group underscores)
       }
-      if(isIdentStart(c)){ var p=i; while(i<n && isIdent(src[i])) i++; toks.push({t:'id',v:src.slice(p,i)}); continue; } // identifier
-      if(c==='-' && src[i+1]==='>'){ toks.push({t:'pn',v:'->'}); i+=2; continue; }     // the lambda arrow ->
-      if('(){}.,='.indexOf(c)>=0){ toks.push({t:'pn',v:c}); i++; continue; }            // punctuation we care about
+      if(isIdentStart(c)){ var p=i; while(i<n && isIdent(src[i])) i++; toks.push({t:'id',v:src.slice(p,i),p:p}); continue; } // identifier
+      if(c==='-' && src[i+1]==='>'){ toks.push({t:'pn',v:'->',p:i}); i+=2; continue; }     // the lambda arrow ->
+      if('(){}.,='.indexOf(c)>=0){ toks.push({t:'pn',v:c,p:i}); i++; continue; }            // punctuation we care about
       i++; // anything else (':', '<', '>', '+', stray chars) — skip it, stay tolerant
     }
-    toks.push({t:'eof',v:''});            // sentinel so the parser always has a "next" token
+    toks.push({t:'eof',v:'',p:n});        // sentinel so the parser always has a "next" token
     return toks;
   }
 
@@ -488,7 +490,8 @@ pre .px{color:var(--c-punct);}
   //     'access' models a dotted expression like Modifier.padding(16.dp) or
   //     Color.Red or MaterialTheme.colorScheme.primary.
   // =========================================================================
-  function parse(toks){
+  function parse(toks, src){
+    src = src || '';
     var pos = 0;                                  // index of the token we're looking at
     function cur(){ return toks[pos]; }           // current token
     function at(k){ return toks[pos+k] || toks[toks.length-1]; } // token k ahead (clamped to eof)
@@ -496,6 +499,20 @@ pre .px{color:var(--c-punct);}
     function isPn(v){ return cur().t==='pn' && cur().v===v; }     // "is current token the punctuation v?"
     function eat(v){ if(isPn(v)) pos++; }                          // consume v if present
     function expectId(){ if(cur().t==='id'){ var v=cur().v; pos++; return v; } pos++; return '?'; } // read an identifier
+
+    // A `var`/`val` line is a state declaration (e.g. `var count by remember {
+    // mutableStateOf(0) }`), NOT a composable — SKIP it so it doesn't render as
+    // junk. (Its name + initial value are picked up separately by collectStateVars.)
+    function isDecl(){ return cur().t==='id' && (cur().v==='var'||cur().v==='val'); }
+    function skipBalanced(open, close){ var d=0; while(!eof()){ var t=cur(); if(t.t==='pn'&&t.v===open){ d++; pos++; } else if(t.t==='pn'&&t.v===close){ d--; pos++; if(d===0) return; } else pos++; } }
+    function consumeValueTokens(){
+      var t=cur();
+      if(t.t==='num'){ pos++; if(isPn('.')&&at(1).t==='id'&&(at(1).v==='dp'||at(1).v==='sp')) pos+=2; else if(isPn('.')&&at(1).t==='pn'&&at(1).v==='.'){ pos+=2; consumeValueTokens(); } return; }
+      if(t.t==='str'){ pos++; return; }
+      if(t.t==='id'){ pos++; while(true){ if(isPn('.')){ pos++; if(cur().t==='id') pos++; } else if(isPn('(')){ skipBalanced('(',')'); } else if(isPn('{')){ skipBalanced('{','}'); } else break; } return; }
+      pos++;
+    }
+    function skipDeclaration(){ pos++; if(cur().t==='id') pos++; if((cur().t==='id'&&cur().v==='by')||(cur().t==='pn'&&cur().v==='=')) pos++; consumeValueTokens(); }
 
     // A lambda can start with parameters: "{ innerPadding -> … }" or "{ a, b -> … }".
     // This skips everything up to and including a top-level "->" so the body parser
@@ -514,7 +531,8 @@ pre .px{color:var(--c-punct);}
       eat('{'); skipLambdaParams();
       var nodes=[];
       while(!eof() && !isPn('}')){
-        if(cur().t==='id') nodes.push(parseComposable());  // a child composable
+        if(isDecl()) skipDeclaration();                    // `var`/`val` state declaration — skip
+        else if(cur().t==='id') nodes.push(parseComposable());  // a child composable
         else if(isPn(',')||isPn('=')) pos++;               // stray separators — skip
         else pos++;                                         // anything unexpected — skip (defensive)
       }
@@ -530,8 +548,12 @@ pre .px{color:var(--c-punct);}
         // Capture a leading numeric literal so 'progress = { 0.66f }' (the modern,
         // idiomatic determinate API) keeps its value through parsing.
         var fnum = (at(1) && at(1).t==='num') ? at(1).v : null;
+        var openPos = cur().p;                                     // index of the '{'
         var body=parseBlock();
-        return {kind:'lambda', body:body, firstNum:fnum};
+        var closeTok = toks[pos-1];                               // the '}' parseBlock just consumed
+        // raw = the lambda's source text — lets onClick run e.g. `count++`.
+        var raw = (closeTok && closeTok.t==='pn' && closeTok.v==='}') ? src.slice(openPos+1, closeTok.p) : '';
+        return {kind:'lambda', body:body, firstNum:fnum, raw:raw};
       }
       if(tk.t==='id'){
         if(tk.v==='true'||tk.v==='false'){ pos++; return {kind:'bool', v:tk.v==='true'}; } // boolean
@@ -587,7 +609,8 @@ pre .px{color:var(--c-punct);}
     // Top level: a sequence of composable statements.
     var top=[];
     while(!eof()){
-      if(cur().t==='id') top.push(parseComposable());
+      if(isDecl()) skipDeclaration();               // a top-level `var`/`val` state declaration
+      else if(cur().t==='id') top.push(parseComposable());
       else pos++;                                   // skip stray tokens, never loop forever
     }
     return top;
@@ -785,6 +808,62 @@ pre .px{color:var(--c-punct);}
   }
 
   // =========================================================================
+  // 5b · STATE & EVENTS — a tiny reactive layer so buttons actually DO something.
+  //
+  // STATE holds the current value of each `var NAME by remember { mutableStateOf(x) }`
+  // (or rememberSaveable / mutableIntStateOf / `= literal`). It is (re)seeded from
+  // the code on every edit; a button's onClick mutates it and we re-render. This is
+  // NOT a real Compose runtime — it understands a handful of common mutations.
+  // =========================================================================
+  var STATE = {};
+  // Read the declared state vars + their initial values out of the source.
+  function collectStateVars(code){
+    var vars = {}, m;
+    // var/val NAME … mutableStateOf(INIT) / mutableIntStateOf(INIT)
+    var re1 = /\b(?:var|val)\s+(\w+)[^\n]*?mutable(?:State|IntState)Of\s*\(\s*(-?\d+(?:\.\d+)?|true|false|"(?:[^"\\]|\\.)*")\s*\)/g;
+    while((m = re1.exec(code))) vars[m[1]] = litValue(m[2]);
+    // var/val NAME = LITERAL (plain)
+    var re2 = /\b(?:var|val)\s+(\w+)\s*=\s*(-?\d+(?:\.\d+)?|true|false|"(?:[^"\\]|\\.)*")/g;
+    while((m = re2.exec(code))){ if(vars[m[1]]===undefined) vars[m[1]] = litValue(m[2]); }
+    return vars;
+  }
+  function litValue(s){
+    if(s==='true') return true; if(s==='false') return false;
+    if(/^".*"$/.test(s)) return s.slice(1,-1);
+    var n=parseFloat(s); return isNaN(n)?0:n;
+  }
+  // Substitute $NAME / ${NAME} in a string with the current STATE value.
+  function interpolate(s){
+    return String(s).replace(/\$\{(\w+)\}|\$(\w+)/g, function(m,a,b){ var n=a||b; return (STATE[n]!==undefined) ? String(STATE[n]) : m; });
+  }
+  // Run a button's onClick lambda (its RAW text) against STATE. Supports the
+  // common mutations: count++, count--, count += n, count -= n, flag = !flag,
+  // flag = true/false, count = n. Returns true if it changed a known state var.
+  function applyOnClick(raw){
+    if(!raw) return false; var m;
+    if((m=raw.match(/([A-Za-z_]\w*)\s*\+\+/)) && STATE[m[1]]!==undefined){ STATE[m[1]] = (+STATE[m[1]]||0) + 1; return true; }
+    if((m=raw.match(/([A-Za-z_]\w*)\s*--/)) && STATE[m[1]]!==undefined){ STATE[m[1]] = (+STATE[m[1]]||0) - 1; return true; }
+    if((m=raw.match(/([A-Za-z_]\w*)\s*\+=\s*(-?\d+)/)) && STATE[m[1]]!==undefined){ STATE[m[1]] = (+STATE[m[1]]||0) + parseInt(m[2],10); return true; }
+    if((m=raw.match(/([A-Za-z_]\w*)\s*-=\s*(-?\d+)/)) && STATE[m[1]]!==undefined){ STATE[m[1]] = (+STATE[m[1]]||0) - parseInt(m[2],10); return true; }
+    if((m=raw.match(/([A-Za-z_]\w*)\s*=\s*!\s*([A-Za-z_]\w*)/)) && m[1]===m[2] && STATE[m[1]]!==undefined){ STATE[m[1]] = !STATE[m[1]]; return true; }
+    if((m=raw.match(/([A-Za-z_]\w*)\s*=\s*(true|false)\b/)) && STATE[m[1]]!==undefined){ STATE[m[1]] = (m[2]==='true'); return true; }
+    if((m=raw.match(/([A-Za-z_]\w*)\s*=\s*(-?\d+)\b/)) && STATE[m[1]]!==undefined){ STATE[m[1]] = parseInt(m[2],10); return true; }
+    return false;
+  }
+  // If a node's `checked`/`selected` arg is a bare reference to a state var
+  // (e.g. checked = on), return that var name so the control can bind to STATE.
+  function boundStateVar(v){
+    return (v && v.kind==='access' && (!v.segments || v.segments.length===0) && STATE[v.root]!==undefined) ? v.root : null;
+  }
+  // Wire a clickable element to an onClick lambda: run the mutation, then re-render.
+  function wireOnClick(elx, node){
+    var oc = node.named.onClick;
+    if(oc && oc.kind==='lambda' && oc.raw){
+      elx.addEventListener('click', function(){ if(applyOnClick(oc.raw)) rerender(); });
+    }
+  }
+
+  // =========================================================================
   // 6 · RENDERER — turn a parsed node into a real DOM element, mapping each
   //     composable to its closest HTML/CSS equivalent.
   // =========================================================================
@@ -794,8 +873,8 @@ pre .px{color:var(--c-punct);}
   }
   // Pull the plain text out of a node's Text children (used for button/chip labels).
   function inlineText(node){
-    if(node.positional[0] && node.positional[0].kind==='str') return node.positional[0].v;
-    if(node.named.text) return str(node.named.text);
+    if(node.positional[0] && node.positional[0].kind==='str') return interpolate(node.positional[0].v);
+    if(node.named.text) return interpolate(str(node.named.text));
     var out='';
     if(node.children) node.children.forEach(function(ch){ if(ch.name==='Text') out += inlineText(ch); });
     return out;
@@ -859,7 +938,8 @@ pre .px{color:var(--c-punct);}
   // Text -> a <span>. Reads style/fontSize/fontWeight/color/fontStyle/decoration/align/maxLines.
   function buildText(node){
     var span=document.createElement('span');
-    span.textContent = (node.positional[0] && node.positional[0].kind==='str') ? node.positional[0].v : str(node.named.text);
+    var raw = (node.positional[0] && node.positional[0].kind==='str') ? node.positional[0].v : str(node.named.text);
+    span.textContent = interpolate(raw);            // "$count" -> the live state value
     span.style.color = 'inherit';                    // inherit the container's content color (e.g. white inside a filled Button)
     var st=styleOf(node.named.style);                // style = MaterialTheme.typography.X
     if(st){ span.style.fontSize=st[0]+'px'; span.style.fontWeight=st[1]; }
@@ -946,6 +1026,7 @@ pre .px{color:var(--c-punct);}
     var content=buttonContent(node);
     if(variant==='filled'||variant==='tonal'||variant==='elevated') content.style.color='inherit';
     b.appendChild(content);
+    if(enabled) wireOnClick(b, node);                // run the onClick lambda on tap (if it mutates state)
     return b;
   }
   // IconButton -> a round 40x40 tap target holding the icon.
@@ -954,6 +1035,7 @@ pre .px{color:var(--c-punct);}
     b.style.display='inline-flex'; b.style.alignItems='center'; b.style.justifyContent='center';
     b.style.width='40px'; b.style.height='40px'; b.style.borderRadius='50%'; b.style.cursor='pointer';
     if(node.children) node.children.forEach(function(ch){ b.appendChild(render(ch)); });
+    wireOnClick(b, node);
     return b;
   }
   // FloatingActionButton (round) / ExtendedFloatingActionButton (pill with label).
@@ -965,6 +1047,7 @@ pre .px{color:var(--c-punct);}
     if(extended){ f.style.padding='14px 20px'; f.style.borderRadius='16px'; f.style.fontWeight='600'; }
     else { f.style.width='52px'; f.style.height='52px'; f.style.borderRadius='16px'; }
     if(node.children) node.children.forEach(function(ch){ f.appendChild(render(ch)); });
+    wireOnClick(f, node);
     return f;
   }
 
@@ -1011,7 +1094,10 @@ pre .px{color:var(--c-punct);}
   // Switch -> a track + thumb. Reflects `checked`; clicking flips it FOR THE DEMO
   // (real Compose stays put unless you update hoisted state in onCheckedChange).
   function buildSwitch(node){
-    var checked=boolOf(node.named.checked, node.positional[0]&&node.positional[0].kind==='bool'?node.positional[0].v:false);
+    // If `checked = someStateVar`, bind to STATE so flipping it is real and any
+    // Text("$someStateVar") updates too. Otherwise fall back to a cosmetic toggle.
+    var bound = boundStateVar(node.named.checked);
+    var checked = bound ? !!STATE[bound] : boolOf(node.named.checked, node.positional[0]&&node.positional[0].kind==='bool'?node.positional[0].v:false);
     var track=document.createElement('span');
     track.style.display='inline-flex'; track.style.alignItems='center'; track.style.width='52px'; track.style.height='32px';
     track.style.borderRadius='999px'; track.style.padding='3px'; track.style.cursor='pointer'; track.style.transition='.15s';
@@ -1024,12 +1110,13 @@ pre .px{color:var(--c-punct);}
     }
     paint();
     track.appendChild(thumb);
-    track.addEventListener('click', function(){ checked=!checked; paint(); }); // demo-only toggle
+    track.addEventListener('click', function(){ if(bound){ STATE[bound]=!STATE[bound]; rerender(); } else { checked=!checked; paint(); } });
     return track;
   }
-  // Checkbox (square) / RadioButton (circle). Reflects checked/selected; demo toggle on click.
+  // Checkbox (square) / RadioButton (circle). Reflects checked/selected; binds to STATE when possible.
   function buildCheckbox(node, radio){
-    var checked=boolOf(node.named.checked, false) || boolOf(node.named.selected,false);
+    var bound = boundStateVar(node.named.checked) || boundStateVar(node.named.selected);
+    var checked = bound ? !!STATE[bound] : (boolOf(node.named.checked, false) || boolOf(node.named.selected,false));
     var box=document.createElement('span');
     box.style.display='inline-flex'; box.style.alignItems='center'; box.style.justifyContent='center';
     box.style.width='20px'; box.style.height='20px'; box.style.cursor='pointer';
@@ -1039,7 +1126,7 @@ pre .px{color:var(--c-punct);}
       else { box.style.background=checked?T().primary:'transparent'; box.style.border='2px solid '+(checked?T().primary:T().outline); box.style.color=T().onPrimary; box.textContent=checked?'✓':''; box.style.fontSize='14px'; box.style.fontWeight='800'; }
     }
     paint();
-    box.addEventListener('click', function(){ checked=!checked; paint(); });    // demo-only toggle
+    box.addEventListener('click', function(){ if(bound){ STATE[bound]=!STATE[bound]; rerender(); } else { checked=!checked; paint(); } });
     return box;
   }
   // Slider / RangeSlider -> a track with a filled portion + thumb at `value`.
@@ -1350,16 +1437,23 @@ pre .px{color:var(--c-punct);}
   function refreshHighlight(){
     hlEl.innerHTML = hlKotlin(esc(codeEl.value)) + '\n'; // esc() FIRST (security), then add tokens; trailing \n keeps last line visible
   }
+  var lastNodes = [];                                  // the parsed tree, kept so clicks can re-render it
   // The full pipeline: highlight -> tokenize -> parse -> render -> swap into the screen.
+  // Called when the CODE changes, so it RESETS state to the declared initial values.
   function renderNow(){
     refreshHighlight();
     screenEl.style.background=T().background;
     screenEl.style.color=T().onBackground;           // default content color; Text/Icon inherit this
+    STATE = collectStateVars(codeEl.value);          // (re)seed state from `mutableStateOf(...)` initials
     var nodes;
-    try { nodes = parse(tokenize(codeEl.value)); }   // text -> tokens -> node tree
+    try { nodes = parse(tokenize(codeEl.value), codeEl.value); }   // text -> tokens -> node tree
     catch(e){ statusEl.className='status err'; statusEl.textContent='⚠ Parse error: '+e.message; return; }
-    // Render into a DETACHED fragment first, so if rendering throws the visible
-    // preview is left untouched (never blanks mid-typing).
+    lastNodes = nodes;
+    paintNodes(nodes);
+  }
+  // Render the (already-parsed) node tree into the phone using the CURRENT state.
+  // Shared by renderNow (after a code change) and rerender (after a button tap).
+  function paintNodes(nodes){
     var frag=document.createDocumentFragment(); var count=0;
     try { nodes.forEach(function(n){ frag.appendChild(render(n)); count++; }); }
     catch(e){ statusEl.className='status err'; statusEl.textContent='⚠ Render error: '+e.message; return; }
@@ -1368,6 +1462,8 @@ pre .px{color:var(--c-punct);}
     statusEl.className='status'; statusEl.textContent='✓ Rendered '+count+' top-level composable'+(count===1?'':'s')+'.';
     metaEl.textContent = themeName==='dark'?'dark theme':'light theme';
   }
+  // Re-render after a button/switch mutated STATE — keeps state, does NOT re-parse.
+  function rerender(){ paintNodes(lastNodes); }
   // Debounce: re-render ~120ms after the last keystroke (not on every character).
   var timer=null;
   function schedule(){ if(timer) clearTimeout(timer); timer=setTimeout(renderNow, 120); }
@@ -1387,6 +1483,29 @@ pre .px{color:var(--c-punct);}
   // are part of the Compose code — the interpreter ignores them and the editor
   // colors them, so they teach right inside the snippet.
   var PRESETS = [
+    { name:'Counter ★', code:
+'// Buttons WORK here: onClick mutates remembered state and the UI re-renders.\n'+
+'// Supported mutations: count++, count--, count += n, count -= n,\n'+
+'// flag = !flag, and = n / true / false. Try editing them!\n'+
+'var count by remember { mutableStateOf(0) }\n'+
+'var on by remember { mutableStateOf(false) }\n'+
+'Column(\n'+
+'    modifier = Modifier.fillMaxWidth(),\n'+
+'    horizontalAlignment = Alignment.CenterHorizontally,\n'+
+'    verticalArrangement = Arrangement.spacedBy(10.dp)\n'+
+') {\n'+
+'    Text("Count: $count", style = MaterialTheme.typography.headlineSmall)\n'+
+'    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {\n'+
+'        Button(onClick = { count++ }) { Text("Add one") }\n'+
+'        OutlinedButton(onClick = { count -= 1 }) { Text("Minus") }\n'+
+'        TextButton(onClick = { count = 0 }) { Text("Reset") }\n'+
+'    }\n'+
+'    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {\n'+
+'        Switch(checked = on, onCheckedChange = { on = it })\n'+
+'        Text("Switch is $on")\n'+
+'    }\n'+
+'}\n' },
+
     { name:'Text', code:
 '// Text draws a string. Pick a type-scale role with style, or set props directly.\n'+
 'Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {\n'+
@@ -1678,9 +1797,11 @@ pre .px{color:var(--c-punct);}
         ex:'Column(\n    modifier = Modifier.fillMaxSize().systemBarsPadding().padding(16.dp),\n    verticalArrangement = Arrangement.spacedBy(8.dp)\n) {\n    Text("Clear of the status bar at the top")\n    Text("…and the nav bar at the bottom")\n}\n' },
     ]},
 
-    { group:'Choosing a root container (the “root” dropdown)', items:[
-      { name:'Column (vertical stack)', what:'The default root: lays children out top→bottom. Main axis = vertical (verticalArrangement: Top, Center, SpaceBetween, spacedBy…); cross axis = horizontal (horizontalAlignment: Start, CenterHorizontally, End). Reach for it when your screen is "a few things stacked down the page".', params:'modifier, verticalArrangement, horizontalAlignment',
+    { group:'Choosing a container — Column · Row · Box · LazyColumn · Scaffold', items:[
+      { name:'Column (vertical stack)', what:'The default root: lays children out top→bottom. Main axis = vertical (verticalArrangement: Top, Center, SpaceBetween, spacedBy…); cross axis = horizontal (horizontalAlignment: Start, CenterHorizontally, End). Reach for it when your screen is "a few things stacked down the page". Composes ALL children — add Modifier.verticalScroll(…) if it might overflow, or use LazyColumn for long lists.', params:'modifier, verticalArrangement, horizontalAlignment',
         ex:'Column(\n    modifier = Modifier.fillMaxSize().systemBarsPadding().padding(16.dp),\n    verticalArrangement = Arrangement.spacedBy(12.dp)\n) {\n    Text("Title", style = MaterialTheme.typography.headlineSmall)\n    Text("Some body text under it.")\n    Button(onClick = {}) { Text("Action") }\n}\n' },
+      { name:'Row (horizontal)', what:'Column’s sideways twin: lays children left→right. Main axis = horizontal (horizontalArrangement); cross axis = vertical (verticalAlignment: Top, CenterVertically, Bottom). Rarely a whole-screen root — usually NESTED inside a Column (a button bar, an icon + label). Composes all children; for many/long horizontal items use a LazyRow.', params:'modifier, horizontalArrangement, verticalAlignment',
+        ex:'Row(\n    modifier = Modifier.fillMaxWidth().padding(16.dp),\n    horizontalArrangement = Arrangement.spacedBy(8.dp),\n    verticalAlignment = Alignment.CenterVertically\n) {\n    Text("Label", modifier = Modifier.weight(1f))\n    Button(onClick = {}) { Text("Action") }\n}\n' },
       { name:'Box (overlap / center)', what:'Overlaps all children in one space and positions them with ONE 2-D contentAlignment (Center, TopEnd, BottomStart…); any child can override with Modifier.align(...). It replaces verticalArrangement + horizontalAlignment with a single value. Use it to center one thing, or to layer (a FAB or badge over content).', params:'modifier, contentAlignment',
         ex:'Box(\n    modifier = Modifier.fillMaxSize().systemBarsPadding().padding(16.dp),\n    contentAlignment = Alignment.Center\n) {\n    Text("Centered on the whole screen")\n    Text("top-right badge", modifier = Modifier.align(Alignment.TopEnd))\n}\n' },
       { name:'LazyColumn (scrolling list)', what:'A vertical list that only composes the rows currently on screen — use it instead of a Column for long or variable content (it would be slow/janky to build hundreds of children eagerly). Children go in item { } / items(list) { } blocks, and edge spacing goes in contentPadding so rows scroll under the bars without being clipped.', params:'modifier, contentPadding, verticalArrangement, horizontalAlignment; item { } / items(list) { }',
@@ -1703,8 +1824,8 @@ pre .px{color:var(--c-punct);}
         ex:'Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {\n    Text("titleLarge role", style = MaterialTheme.typography.titleLarge)\n    Text("Bold + primary", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)\n    Text("22sp red", fontSize = 22.sp, color = Color.Red)\n}\n' },
     ]},
     { group:'Buttons', items:[
-      { name:'Button', what:'Filled, highest-emphasis button. onClick is required; the label goes in { }.', params:'onClick, enabled, { content }',
-        ex:'Button(onClick = {}) { Text("Filled") }\n' },
+      { name:'Button', what:'Filled, highest-emphasis button. onClick runs here: it can mutate remembered state (count++, += n, = n, flag = !flag) and the preview updates. See the Counter ★ preset.', params:'onClick, enabled, { content }',
+        ex:'var count by remember { mutableStateOf(0) }\nColumn {\n    Text("Count: $count")\n    Button(onClick = { count++ }) { Text("Add one") }\n}\n' },
       { name:'FilledTonalButton', what:'Medium emphasis — a softer, tinted fill.', params:'onClick, { content }',
         ex:'FilledTonalButton(onClick = {}) { Text("Tonal") }\n' },
       { name:'ElevatedButton', what:'Medium emphasis with a drop shadow.', params:'onClick, { content }',
@@ -1733,10 +1854,10 @@ pre .px{color:var(--c-punct);}
         ex:'Surface(modifier = Modifier.fillMaxWidth()) {\n    Text("On a Surface", modifier = Modifier.padding(16.dp))\n}\n' },
     ]},
     { group:'Selection controls', items:[
-      { name:'Switch', what:'A sliding on/off toggle. (Toggles here for the demo; real Compose updates hoisted state in onCheckedChange.)', params:'checked, onCheckedChange',
-        ex:'Row(verticalAlignment = Alignment.CenterVertically) {\n    Switch(checked = true, onCheckedChange = {})\n    Text("   On")\n}\n' },
-      { name:'Checkbox', what:'A square multi-select control. (Demo toggle on tap.)', params:'checked, onCheckedChange',
-        ex:'Row(verticalAlignment = Alignment.CenterVertically) {\n    Checkbox(checked = true, onCheckedChange = {})\n    Text("   Checked")\n}\n' },
+      { name:'Switch', what:'A sliding on/off toggle. Bind checked to a state var (checked = on) and it really toggles here — and any Text("$on") updates. With a literal it just toggles cosmetically.', params:'checked, onCheckedChange',
+        ex:'var on by remember { mutableStateOf(true) }\nRow(verticalAlignment = Alignment.CenterVertically) {\n    Switch(checked = on, onCheckedChange = { on = it })\n    Text("   $on")\n}\n' },
+      { name:'Checkbox', what:'A square multi-select control. Bind checked to a state var to make it really toggle (see Switch).', params:'checked, onCheckedChange',
+        ex:'var done by remember { mutableStateOf(false) }\nRow(verticalAlignment = Alignment.CenterVertically) {\n    Checkbox(checked = done, onCheckedChange = { done = it })\n    Text("   done = $done")\n}\n' },
       { name:'RadioButton', what:'A round single-select control (one of a group).', params:'selected, onClick',
         ex:'Row(verticalAlignment = Alignment.CenterVertically) {\n    RadioButton(selected = true, onClick = {})\n    Text("   Selected")\n}\n' },
       { name:'Slider', what:'Drag to pick a value (0f..1f by default).', params:'value, onValueChange, valueRange, steps',

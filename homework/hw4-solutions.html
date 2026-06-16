@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 4 — Answer Key — Compose Layout, Modifiers &amp; State</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84; --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed; --warn-line:#fde2c0;
+    --good-soft:#ecfdf3; --good-line:#c5ebd3;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 22px 80px;}
+  header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:30px; border-bottom:4px solid var(--accent);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px; color:var(--accent);
+    font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:66ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:12px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:15.5px; margin:20px 0 4px;}
+  p{margin:11px 0;}
+  ul,ol{margin:10px 0; padding-left:22px;} li{margin:5px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.9em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:15px 17px; border-radius:10px;
+    overflow:auto; font-size:13px; line-height:1.6; margin:13px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre code{background:none; padding:0; font-size:inherit; color:inherit;}
+
+  /* where-to-run tag (mirrors the assignment) */
+  .where{flex:none; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .where.pg{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}
+  .where.as{background:#fff3e6; color:#b4530a; border:1px solid var(--warn-line);}
+  .where.both{background:#eafaf1; color:var(--accent-deep); border:1px solid var(--good-line);}
+
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 8px; margin:16px 0; box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:2px;}
+  .qid{font-weight:800; color:var(--ink); font-size:16px;}
+  .ask{color:var(--muted); font-size:14.5px; margin:4px 0 10px;}
+  .ans{margin:12px 0;}
+  .ans b, .ask b{color:var(--ink);}
+  .file{font-size:12.5px; color:var(--muted); margin:0 0 8px;}
+  .file code{font-size:.92em;}
+
+  .callout{border-radius:10px; padding:12px 15px; margin:14px 0; font-size:14.5px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.good{background:var(--good-soft); border:1px solid var(--good-line);}
+  .callout.predict{background:var(--warn-soft); border:1px solid var(--warn-line); color:#7c4a12;}
+  .callout b{display:block; margin-bottom:2px;}
+  .callout.inline b{display:inline; margin:0;}
+
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; margin:12px 0;}
+  table.cmp th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.cmp td{padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.cmp td:first-child{font-weight:700; white-space:nowrap;}
+
+  footer{margin-top:42px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13.5px;}
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.callout,table.cmp{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Jetpack Compose · Answer Key</p>
+    <h1>Homework 4 — Solutions</h1>
+    <p class="sub">Complete, runnable answer key for <b>Compose Layout, Modifiers &amp; State</b>. Every task
+       (T1–T10) is solved with full code, heavy line-by-line teaching comments, the written-out predictions,
+       the required inline comment-answers, and a "what changes / why it works" explanation. Built around
+       <code>ComposeCatalog</code> and <code>ComposeModifiers</code>.</p>
+    <div class="meta">
+      <span><b>Part A</b> · T1–T3 · containers</span>
+      <span><b>Part B</b> · T4–T6 · modifier order</span>
+      <span><b>Part C</b> · T7–T9 · state</span>
+      <span><b>Part D</b> · T10 · capstone</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="./hw4.html">← Homework 4 (assignment)</a>
+      <a href="./playground.html">▶ Compose Playground</a>
+      <a href="./projects.html">Projects, Explained</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout proj">
+    <b>How to read this key</b>
+    Each task shows the <em>solution code</em> (heavily commented in the teaching style), then an explanation.
+    Tasks that ask you to <b>predict</b> (T2, T4) have the prediction written out <em>before</em> the result, and
+    tasks that ask for an inline <b>comment-answer</b> (T1, T3, T5, T6, T7, T9) have that answer spelled out. The
+    <span class="where both">Both</span> / <span class="where as">Android Studio</span> tags match the assignment.
+    Screenshots are yours to capture; this key supplies the code and the words.
+  </div>
+
+  <div class="callout predict">
+    <b>One mental model carries the whole assignment</b>
+    A modifier chain is an <em>ordered, immutable list of instructions applied outside-in</em>: the first modifier
+    wraps everything after it. Layout modifiers (<code>size</code>, <code>padding</code>, <code>fillMaxWidth</code>,
+    <code>weight</code>) change the <em>measured</em> box; draw modifiers (<code>background</code>, <code>border</code>,
+    <code>clip</code>, <code>shadow</code>, <code>alpha</code>) only change how that box is <em>painted</em>. Parts A–B
+    are about <em>order</em>; Parts C–D add <em>state</em> (<code>remember { mutableStateOf(...) }</code> → recomposition).
+  </div>
+
+  <!-- ================= PART A ================= -->
+  <h2><span class="part">Part A.</span> The three containers &amp; the layout tree</h2>
+  <p class="lead">Column stacks vertically, Row horizontally, Box layers on the z-axis. Arrangement spaces children
+     on the main axis; Alignment positions them on the cross axis.</p>
+
+  <!-- T1 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T1 — a Column with arrangement &amp; alignment</span><span class="where both">Both</span></div>
+    <p class="ask">A full-width <code>Column</code> with <code>16.dp</code> padding, <code>8.dp</code> between children,
+       centered horizontally, holding three <code>Text</code>s and a <code>Button</code>. Then switch
+       <code>verticalArrangement</code> to <code>Arrangement.spacedBy(24.dp)</code> and note what visibly changes.</p>
+    <p class="file">Where: drop into <code>ComposeCatalog</code> as a new <code>@Composable</code> with a <code>@Preview</code>, then run.</p>
+<pre><code>@Composable
+fun T1PlanetColumn() {                                   // T1 — a vertical stack
+    Column(
+        // fillMaxWidth = take ALL horizontal space the parent allows (a layout/size modifier).
+        // padding(16.dp) = inset the whole column's content by 16dp on every edge.
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        // verticalArrangement controls spacing on the MAIN axis (vertical, for a Column).
+        // spacedBy(8.dp) puts an 8dp gap BETWEEN each child (not before the first / after the last).
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        // horizontalAlignment controls the CROSS axis (horizontal, for a Column).
+        // CenterHorizontally centers each child left-to-right inside the column's width.
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Mercury", style = MaterialTheme.typography.titleLarge) // child 1
+        Text("Closest to the Sun")                                   // child 2
+        Text("88-day year")                                          // child 3
+        Button(onClick = { /* no-op for the layout demo */ }) {      // child 4
+            Text("Open")
+        }
+    }
+}</code></pre>
+    <p class="ans"><b>Required comment — what changes with <code>spacedBy(24.dp)</code>:</b> only the
+       <em>gaps grow</em>. The three Texts and the Button do not resize; Compose inserts 24dp of empty space between
+       each pair of neighbours instead of 8dp, so the children spread further apart and the whole group becomes
+       taller. <code>verticalArrangement</code> distributes space on the column's <em>main</em> axis; it never
+       touches the children's own sizes (that is what a <code>Modifier.size</code> on a child would do).</p>
+    <div class="callout good">
+      <b>Why centering needs <code>fillMaxWidth()</code></b>
+      <code>horizontalAlignment = CenterHorizontally</code> centers children inside the column's width. If the
+      column only wrapped its content, there'd be no extra width to center <em>within</em> — so the
+      <code>fillMaxWidth()</code> is what makes the centering visible.
+    </div>
+  </div>
+
+  <!-- T2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T2 — a Row that shares width with <code>weight</code></span><span class="where both">Both</span></div>
+    <p class="ask">A <code>Row</code> of three <code>Button</code>s in a <strong>1 : 2 : 1</strong> width ratio, 8dp
+       apart. Then remove <code>.weight()</code> from the middle button only — predict the widths first.</p>
+    <p class="file">Where: <code>ComposeCatalog</code> (or <code>ComposeModifiers</code>), run on the emulator.</p>
+<pre><code>@Composable
+fun T2WeightedRow() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()                              // the row spans the full width...
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp) // ...minus 8dp gaps between buttons
+    ) {
+        // weight(n) divides the LEFTOVER horizontal space in proportion to n.
+        // 1 : 2 : 1  ->  A gets 1/4, B gets 2/4, C gets 1/4 of the space left after gaps.
+        Button(onClick = {}, modifier = Modifier.weight(1f)) { Text("A") }
+        Button(onClick = {}, modifier = Modifier.weight(2f)) { Text("B (wide)") }
+        Button(onClick = {}, modifier = Modifier.weight(1f)) { Text("C") }
+    }
+}</code></pre>
+    <div class="callout predict">
+      <b>Prediction (write this BEFORE running the no-weight version)</b>
+      Remove <code>.weight(2f)</code> from the middle button. Now B has no weight, so Compose measures it at its
+      <em>natural content width</em> (just wide enough for the text "B (wide)" plus the button's minimum size). That
+      width is reserved first; whatever horizontal space is <em>left</em> is then split between the two
+      <code>weight(1f)</code> buttons — <strong>equally</strong>. So A and C become equal and noticeably
+      <em>wider</em> than before, and B becomes a narrow, text-hugging button in the middle.
+    </div>
+    <p class="ans"><b>Confirm-comment (what actually happens):</b> exactly as predicted — <em>un-weighted children
+       are measured first at their intrinsic size, then weighted children share the remainder</em>. Going from
+       1:2:1 (A=25%, B=50%, C=25%) to "A &amp; C weighted, B not" makes A and C each grab roughly half of
+       <code>(total − B's content width)</code>, so A == C and both grow, while B shrinks to fit its label.</p>
+  </div>
+
+  <!-- T3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T3 — a Box that layers &amp; aligns</span><span class="where both">Both</span></div>
+    <p class="ask">A 140dp-tall full-width <code>Box</code> with a tinted background, a centered title, and a "NEW"
+       badge in the top-end corner. Then move the badge to BottomEnd, add a second in TopStart, and say why
+       <code>Box</code> (not Row/Column) is right for a badge.</p>
+    <p class="file">Where: <code>ComposeCatalog</code>, run on the emulator.</p>
+<pre><code>@Composable
+fun T3Banner() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(140.dp)                              // fixed banner height
+            .background(Color(0xFF22314A)),              // tinted backdrop (draw-only)
+        contentAlignment = Alignment.Center              // DEFAULT placement for children w/o their own align
+    ) {
+        // This child has no .align(), so it inherits contentAlignment = Center.
+        Text("Featured planet", color = Color.White)
+
+        // .align(...) on a child OVERRIDES the default for THAT child only.
+        // Each corner badge is pinned independently because Box children stack on the z-axis.
+        Text(
+            "NEW",
+            color = Color.White,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)              // moved from TopEnd -> BottomEnd
+                .padding(8.dp)
+        )
+        Text(
+            "NEW",
+            color = Color.White,
+            modifier = Modifier
+                .align(Alignment.TopStart)               // second badge, opposite corner
+                .padding(8.dp)
+        )
+    }
+}</code></pre>
+    <p class="ans"><b>Required comment — why <code>Box</code>, not Row/Column:</b> a badge has to <em>overlap</em> the
+       banner content and sit in a corner. <code>Row</code> and <code>Column</code> lay their children out
+       <em>sequentially</em> along one axis — children never share the same space — so a badge placed in a Row/Column
+       would push the title aside instead of floating over it. <code>Box</code> stacks children on the z-axis (later
+       children paint on top) and lets each one be aligned independently with <code>Modifier.align(...)</code>. That
+       overlap-plus-corner-pinning is exactly what a badge needs.</p>
+    <div class="callout good inline">
+      <b>Paint order:</b> children are drawn in source order, so the last <code>Text</code> in the Box renders on
+      top. If a badge ever disappears behind the title, move it lower in the block (or give it a higher
+      <code>Modifier.zIndex()</code>).
+    </div>
+  </div>
+
+  <!-- ================= PART B ================= -->
+  <h2><span class="part">Part B.</span> Modifier order is a feature ★</h2>
+  <p class="lead">The same modifiers in a different order produce a different UI, because the chain is applied
+     outside-in: the first modifier wraps the rest.</p>
+
+  <!-- T4 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T4 — padding vs background (predict, then run)</span><span class="where both">Both</span></div>
+    <p class="ask">Two Texts: one is <code>.background().padding()</code>, the other <code>.padding().background()</code>.
+       Predict which one's green <em>includes</em> the padding and which has a transparent gap to the edge.</p>
+    <p class="file">Where: prototype in the Playground, reproduce in <code>ComposeModifiers</code>, run.</p>
+<pre><code>// A — background FIRST, then padding
+Text(
+    "Hello",
+    modifier = Modifier
+        .background(Color(0xFF3DDC84))  // 1) paint the WHOLE area green (outermost)
+        .padding(16.dp)                 // 2) THEN inset the text 16dp INSIDE that green
+)
+
+// B — padding FIRST, then background
+Text(
+    "Hello",
+    modifier = Modifier
+        .padding(16.dp)                 // 1) inset 16dp first -> leaves a transparent margin
+        .background(Color(0xFF3DDC84))  // 2) paint green only on the SMALLER inner area
+)</code></pre>
+    <div class="callout predict">
+      <b>Prediction (BEFORE running)</b>
+      <b>A</b> (background → padding): the green is the outer box, and the 16dp of padding lives <em>inside</em> the
+      green — so <strong>the green includes the padding</strong> (a thick green border around the text).
+      <b>B</b> (padding → background): the 16dp inset is applied first as a transparent margin, then green paints
+      only the inner area hugging the text — so <strong>B has a transparent gap to the edge</strong> and the green
+      is small.
+    </div>
+    <table class="cmp">
+      <thead><tr><th>Chain</th><th>What the green covers</th><th>Outer edge</th></tr></thead>
+      <tbody>
+        <tr><td>A · bg → pad</td><td>whole box, padding sits inside it</td><td>green to the edge</td></tr>
+        <tr><td>B · pad → bg</td><td>only the text's inner area</td><td>transparent gap, then green</td></tr>
+      </tbody>
+    </table>
+    <p class="ans"><b>Emulator vs Playground sentence:</b> the emulator matches the Playground exactly for the
+       padding/background result — but the real version adds things a static interpreter can't, e.g. live
+       <strong>Material theming &amp; dark-mode color resolution</strong>, a real <strong>touch ripple</strong> if you
+       make it <code>clickable</code>, and true density-correct <code>dp → px</code> scaling on the device.</p>
+  </div>
+
+  <!-- T5 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T5 — clip, border &amp; background together</span><span class="where both">Both</span></div>
+    <p class="ask">A rounded "avatar": fixed-size <code>Box</code>, clipped to a rounded shape, filled, and outlined so
+       the border follows the rounded corners. Then move <code>.background()</code> before <code>.clip()</code> and
+       describe what changes.</p>
+    <p class="file">Where: <code>ComposeModifiers</code>, run on the emulator.</p>
+<pre><code>@Composable
+fun T5Avatar() {
+    Box(
+        modifier = Modifier
+            .size(72.dp)                                       // fixed square (layout)
+            .clip(RoundedCornerShape(16.dp))                   // 1) round the corners FIRST...
+            .background(Color(0xFFB3E5FC))                     // 2) ...so the fill respects the rounded clip
+            .border(2.dp, Color(0xFF0288D1), RoundedCornerShape(16.dp)), // 3) border on the same rounded shape
+        contentAlignment = Alignment.Center
+    ) {
+        Text("JP")
+    }
+}</code></pre>
+    <p class="ans"><b>Required comment — reorder observation (<code>.background()</code> BEFORE <code>.clip()</code>):</b>
+       <code>clip</code> only affects what is drawn <em>after</em> it in the chain. So with
+       <code>.background().clip()</code>, the fill is painted on the full <em>square</em> before the clip takes
+       effect — the color now <strong>reaches into the square corners</strong> and you lose the rounded fill (the
+       rounding only clips later content). Keep <code>.clip()</code> <em>first</em> for a clean rounded avatar: clip,
+       then fill, then a border that traces the rounded outline.</p>
+  </div>
+
+  <!-- T6 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T6 — size-affecting vs draw-only modifiers</span><span class="where both">Both</span></div>
+    <p class="ask">One <code>Card</code> using at least one size-affecting and one draw-only modifier; label each, and
+       explain why fading with <code>alpha</code> does not move the cards below it, but adding <code>padding</code> does.</p>
+    <p class="file">Where: <code>ComposeModifiers</code>, run on the emulator.</p>
+<pre><code>@Composable
+fun T6Card() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()                                // size  — changes the MEASURED width
+            .padding(16.dp)                                // size  — adds measured space around the card
+            .shadow(8.dp, RoundedCornerShape(12.dp))       // draw  — paints a shadow, no size change
+            .alpha(0.9f)                                   // draw  — changes opacity only
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {       // size  — inner content padding
+            Text("Olympus Mons", style = MaterialTheme.typography.titleMedium)
+            Text("Tallest volcano in the solar system")
+        }
+    }
+}</code></pre>
+    <p class="ans"><b>Required explanation — alpha vs padding:</b> the two modifiers act in <em>different phases</em>
+       of Compose's frame. <code>alpha</code> is a <strong>draw-only</strong> modifier: it runs in the draw phase,
+       after measurement is already fixed, so the card keeps the exact same measured box — its neighbours below see
+       no change and don't move; it just paints more transparently. <code>padding</code> is a
+       <strong>layout</strong> modifier: it runs in the measure phase and <em>adds space to the card's measured
+       size</em>, so the card now occupies more room and everything laid out after it is pushed down. Rule of thumb:
+       if a modifier changes <em>how big</em> the node is, siblings move; if it only changes <em>how it's painted</em>,
+       they don't.</p>
+  </div>
+
+  <!-- ================= PART C ================= -->
+  <h2><span class="part">Part C.</span> State &amp; interactivity — real Compose</h2>
+  <p class="lead">These need recomposition, so they run in Android Studio only. UI is a function of state: change the
+     state, Compose re-runs the affected composables to redraw.</p>
+
+  <!-- T7 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T7 — a counter (state &amp; recomposition)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">A <code>Text</code> showing a number and a <code>Button</code> that increments it live. Then explain
+       what happens if you replace the state with a plain <code>var count = 0</code>.</p>
+    <p class="file">Where: <code>ComposeCatalog</code>, new <code>@Composable</code> + <code>@Preview</code>, run on the emulator.</p>
+<pre><code>@Composable
+fun Counter() {
+    // remember { } caches a value ACROSS recompositions (so it survives re-runs of this function).
+    // mutableStateOf(0) makes it OBSERVABLE: reading `count` subscribes this composable, and
+    // writing `count` schedules a recomposition. `by` lets us read/write it like a normal var.
+    var count by remember { mutableStateOf(0) }            // the single source of truth
+
+    Column(
+        modifier = Modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Count: $count", style = MaterialTheme.typography.headlineSmall) // re-reads on each recompose
+        Spacer(Modifier.height(8.dp))
+        Button(onClick = { count++ }) {                    // mutate state -> Compose recomposes -> Text updates
+            Text("Add one")
+        }
+    }
+}</code></pre>
+    <p class="ans"><b>Required explanation — the plain <code>var count = 0</code> version:</b> the number
+       <strong>stays at 0</strong> no matter how many times you tap. Two reasons, both fatal:
+       <strong>(1)</strong> a plain <code>var</code> is not a snapshot <code>State</code>, so mutating it does
+       <em>not</em> notify Compose — no recomposition is ever scheduled, and the <code>Text</code> never re-reads the
+       value. <strong>(2)</strong> even if something else forced a recomposition, <code>var count = 0</code> runs
+       again from the top and <em>re-initialises to 0</em> every time, because there is no <code>remember</code> to
+       preserve it. You need both pieces: <code>remember</code> to survive recomposition, and
+       <code>mutableStateOf</code> to <em>trigger</em> it.</p>
+  </div>
+
+  <!-- T8 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T8 — a real toggle that drives the UI (state hoisting)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">A <code>Switch</code> whose state does something visible, split into a <strong>stateless</strong>
+       composable (takes <code>checked</code> + <code>onCheckedChange</code>) and a <strong>stateful</strong> caller
+       that owns the remembered state.</p>
+    <p class="file">Where: <code>ComposeCatalog</code>, run on the emulator in both states (on / off).</p>
+<pre><code>@Composable
+fun ToggleDemo() {                                          // STATEFUL: owns the state
+    var on by remember { mutableStateOf(false) }           // the source of truth lives here
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        // "state down, event up": pass the value DOWN, pass the change-handler UP.
+        ToggleRow(checked = on, onCheckedChange = { on = it })
+
+        // Something VISIBLE driven by the same state: an extra card appears only when ON.
+        if (on) {
+            Spacer(Modifier.height(12.dp))
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Notifications are enabled — you'll get alerts.",
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ToggleRow(                                              // STATELESS: owns NOTHING, fully reusable
+    checked: Boolean,                                      // value handed in from above
+    onCheckedChange: (Boolean) -> Unit,                   // event handed back up
+    modifier: Modifier = Modifier                          // convention: hoisted modifier, first optional param
+) {
+    Row(
+        modifier = modifier.padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            if (checked) "Notifications: ON" else "Notifications: OFF",
+            modifier = Modifier.weight(1f)                 // label takes the leftover width...
+        )
+        Switch(checked = checked, onCheckedChange = onCheckedChange) // ...switch sits at the end
+    }
+}</code></pre>
+    <div class="callout good">
+      <b>Why hoist?</b>
+      <code>ToggleRow</code> holds no state, so it is trivial to <code>@Preview</code> in either position
+      (just pass <code>checked = true</code> or <code>false</code>) and reusable anywhere. The stateful
+      <code>ToggleDemo</code> is the only place that decides <em>where the truth lives</em> — the same
+      Screen-owns-state / Row-is-pure split you saw in <code>NavViewModelState</code>.
+    </div>
+  </div>
+
+  <!-- T9 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T9 — a bound TextField</span><span class="where as">Android Studio</span></div>
+    <p class="ask">A text field bound to state, with a live <code>Text</code> below echoing what's typed plus a
+       character count. Explain the typing → recompose loop.</p>
+    <p class="file">Where: <code>ComposeCatalog</code>, run on the emulator (screenshot mid-typing).</p>
+<pre><code>@Composable
+fun NameField() {
+    var name by remember { mutableStateOf("") }            // holds the current text (source of truth)
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        OutlinedTextField(
+            value = name,                                  // the field DISPLAYS state (state flows down)
+            onValueChange = { name = it },                 // every keystroke writes state (event flows up)
+            label = { Text("Your name") },
+            singleLine = true
+        )
+        Spacer(Modifier.height(8.dp))
+        // This Text re-reads `name`, so it recomposes on every keystroke alongside the field.
+        Text("Hello, ${name.ifBlank { "stranger" }} (${name.length} chars)")
+    }
+}</code></pre>
+    <p class="ans"><b>Required comment — the data-flow loop:</b> this is <strong>unidirectional data flow</strong>.
+       You type a key → the field calls <code>onValueChange</code> → that writes the new string into
+       <code>name</code> (state) → because <code>name</code> changed, Compose <strong>recomposes</strong> everything
+       that reads it → the <code>OutlinedTextField</code> redraws with the new <code>value</code> <em>and</em> the
+       echo <code>Text</code> redraws with the new text and length. The field never stores its own text; it is just a
+       view of <code>name</code>, and the only way the text changes is by sending an event up and letting state flow
+       back down. (Skip the <code>remember</code> and the field appears frozen — your keystrokes have nowhere to be
+       stored.)</p>
+  </div>
+
+  <!-- ================= PART D ================= -->
+  <h2><span class="part">Part D.</span> Capstone — a real, interactive screen</h2>
+  <p class="lead">One runnable screen that combines layout, modifiers, and state.</p>
+
+  <!-- T10 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">T10 — capstone: an interactive planet screen</span><span class="where as">Android Studio</span></div>
+    <p class="ask">A single screen with: an outer <code>Column</code> (fillMaxWidth + padding); a banner <code>Box</code>
+       with centered title + corner badge (T3); a <code>LazyColumn</code> of 4–6 planets, each row an extracted
+       reusable <code>@Composable</code> (Card + Row); <strong>state that changes the UI</strong> (a remembered
+       <code>Set&lt;Int&gt;</code> of favorites, with the count shown in the banner); at least one size-affecting
+       <em>and</em> one draw-only modifier (T6); one <code>Spacer</code>; one <code>HorizontalDivider</code>.</p>
+    <p class="file">Where: <code>ComposeCatalog</code>, new <code>@Composable</code> + <code>@Preview</code>, run on the emulator (light + dark).</p>
+
+    <h3>Imports</h3>
+<pre><code>import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp</code></pre>
+
+    <h3>Data</h3>
+<pre><code>// A tiny immutable model. `id` is the stable identity we key favorites by.
+data class Planet(val id: Int, val name: String, val blurb: String)
+
+private val planets = listOf(
+    Planet(1, "Mercury", "Closest to the Sun · 88-day year"),
+    Planet(2, "Venus",   "Hottest planet · thick CO₂ clouds"),
+    Planet(3, "Earth",   "The only known living world"),
+    Planet(4, "Mars",    "The red planet · home of Olympus Mons"),
+    Planet(5, "Jupiter", "Largest planet · the Great Red Spot"),
+    Planet(6, "Saturn",  "Ringed gas giant"),
+)</code></pre>
+
+    <h3>The screen (owns the state)</h3>
+<pre><code>@Composable
+fun PlanetScreen() {
+    // STATE THAT CHANGES THE UI: the set of favorited planet ids.
+    // We store a Set&lt;Int&gt; in state and replace it with a NEW set on every toggle
+    // (assigning a new value is what tells Compose to recompose).
+    var favorites by remember { mutableStateOf(setOf&lt;Int&gt;()) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()        // outer column spans the width  (size)
+            .padding(16.dp)        // ...with a 16dp inset          (size)
+    ) {
+        // --- Banner Box (from T3): centered title + corner badge showing the live count ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .clip(RoundedCornerShape(16.dp))     // round corners FIRST (so the fill is rounded)
+                .background(Color(0xFF22314A)),      // draw-only fill behind the content
+            contentAlignment = Alignment.Center      // default placement = centered title
+        ) {
+            Text(
+                "Solar System",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            // Corner badge — pinned top-end, and it RE-READS favorites.size so it updates live.
+            // Note the modifier ORDER (Part B): position -> clip -> fill -> inner text padding.
+            Text(
+                "★ ${favorites.size}",
+                color = Color(0xFF0F172A),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)                          // gap from the corner
+                    .clip(RoundedCornerShape(50))           // pill shape
+                    .background(Color(0xFFFFD54F))          // gold fill, respects the clip
+                    .padding(horizontal = 8.dp, vertical = 4.dp) // text breathing room INSIDE the pill
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))                      // required Spacer
+        HorizontalDivider()                                 // required HorizontalDivider
+        Spacer(Modifier.height(4.dp))
+
+        // --- The list: LazyColumn only composes the rows that are visible ---
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(planets, key = { it.id }) { planet ->     // stable keys help recomposition/scrolling
+                PlanetRow(
+                    planet = planet,
+                    isFavorite = planet.id in favorites,    // value DOWN
+                    onToggleFavorite = {                    // event UP
+                        // produce a NEW set (don't mutate in place) so Compose sees the change
+                        favorites = if (planet.id in favorites)
+                            favorites - planet.id
+                        else
+                            favorites + planet.id
+                    }
+                )
+            }
+        }
+    }
+}</code></pre>
+
+    <h3>The extracted row (stateless &amp; reusable)</h3>
+<pre><code>@Composable
+fun PlanetRow(
+    planet: Planet,
+    isFavorite: Boolean,                  // state in (does NOT own it — hoisted to PlanetScreen)
+    onToggleFavorite: () -> Unit,         // event out
+    modifier: Modifier = Modifier         // convention: hoisted modifier, first optional param
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()                              // size-affecting modifier (T6)
+            .shadow(4.dp, RoundedCornerShape(12.dp))     // draw-only modifier      (T6)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Title + blurb take the leftover width via weight, pushing the star to the end.
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    planet.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(planet.blurb, style = MaterialTheme.typography.bodyMedium)
+            }
+            // The star is the interactive bit: tapping it sends the event up,
+            // which rewrites `favorites`, which recomposes the badge AND this row.
+            Text(
+                text = if (isFavorite) "★" else "☆",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier
+                    .clickable { onToggleFavorite() }     // real click handling (emulator only)
+                    .padding(8.dp)                        // larger, comfier tap target
+            )
+        }
+    }
+}</code></pre>
+
+    <h3>Preview</h3>
+<pre><code>@Preview(showBackground = true)
+@Composable
+fun PlanetScreenPreview() {
+    // Wrap in MaterialTheme so typography/colors resolve. Toggle the preview's
+    // light/dark to confirm text stays readable (the assignment's light + dark check).
+    MaterialTheme { PlanetScreen() }
+}</code></pre>
+
+    <div class="callout good">
+      <b>Where every requirement is satisfied</b>
+      <b>Outer Column</b> (fillMaxWidth + padding) · <b>banner Box</b> with centered title + top-end badge ·
+      <b>LazyColumn</b> of 6 planets · <b>extracted reusable</b> <code>PlanetRow</code> (Card + Row) ·
+      <b>state that changes the UI</b> = remembered <code>Set&lt;Int&gt;</code> of favorites, count shown in the
+      banner badge · <b>size modifier</b> <code>fillMaxWidth()</code> + <b>draw modifier</b> <code>shadow()</code>
+      on the card · one <b>Spacer</b> · one <b>HorizontalDivider</b>.
+    </div>
+    <div class="callout proj inline">
+      <b>State change to demo (before/after):</b> tap any star — that row flips ☆ → ★ and the banner badge ticks up
+      (e.g. <code>★ 0</code> → <code>★ 1</code>); tap again to un-favorite and watch it tick back down. That single
+      remembered <code>Set</code> is the source of truth driving both the row and the banner.
+    </div>
+  </div>
+
+  <!-- ================= CHECKLIST ================= -->
+  <h2>Self-check before you submit</h2>
+  <table class="cmp">
+    <thead><tr><th>Task</th><th>Must show</th></tr></thead>
+    <tbody>
+      <tr><td>T1</td><td>Column code + the <code>spacedBy(24.dp)</code> "gaps grew" comment + screenshot</td></tr>
+      <tr><td>T2</td><td>both row versions + your written prediction + confirm comment</td></tr>
+      <tr><td>T3</td><td>Box with two badges + the "why Box" comment</td></tr>
+      <tr><td>T4</td><td>both chains + prediction + the emulator-vs-playground sentence</td></tr>
+      <tr><td>T5</td><td>clean avatar + the bg-before-clip reorder observation</td></tr>
+      <tr><td>T6</td><td>Card with <code>// size</code>/<code>// draw</code> labels + alpha-vs-padding explanation</td></tr>
+      <tr><td>T7</td><td>working counter + the plain-<code>var</code> explanation</td></tr>
+      <tr><td>T8</td><td>stateful + stateless composables + on/off screenshots</td></tr>
+      <tr><td>T9</td><td>bound field + echo/count + the data-flow comment</td></tr>
+      <tr><td>T10</td><td>full screen + extracted row + light &amp; dark screenshots + a before/after state change</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Answer key for Homework 4 — Compose Layout, Modifiers &amp; State. Prototype Parts A–B in the
+    <a href="./playground.html">Compose Playground</a>; build everything for real in <code>ComposeCatalog</code> /
+    <code>ComposeModifiers</code>. Open in any browser; use <em>Print → Save as PDF</em> to hand out.
+  </footer>
+
+</div>
+</body>
+</html>

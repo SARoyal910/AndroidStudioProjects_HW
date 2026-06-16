@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- <application> holds app-wide settings (icon, label, theme, backup rules) and
+         declares every component. Android only knows an Activity exists if it is
+         declared here; an undeclared Activity will crash with ActivityNotFoundException. -->
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NavFourScreen">
+
+        <!-- MainActivity: the app's entry-point screen.
+             exported="true" is REQUIRED here because it is launched from outside the app
+             (by the Android launcher / home screen). Any activity with an intent-filter
+             that the system uses must be exported. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.NavFourScreen"
+            android:windowSoftInputMode="adjustResize">
+
+            <!-- This intent-filter marks the activity as the app's launch screen:
+                 action MAIN     = this is the starting point of the app, and
+                 category LAUNCHER = show its icon in the device's app drawer.
+                 Together they tell Android "open this activity when the icon is tapped". -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

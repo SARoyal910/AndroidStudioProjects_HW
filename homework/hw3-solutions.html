@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 3 — Answer Key — Deep Stacks, ViewModel State &amp; the Data Layer</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84; --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed; --warn-line:#fde2c0;
+    --good-soft:#ecfdf3; --good-line:#c5ebd3;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 22px 80px;}
+  header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:30px; border-bottom:4px solid var(--accent);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px; color:var(--accent);
+    font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:66ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:12px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:15.5px; margin:20px 0 4px;}
+  p{margin:11px 0;}
+  ul,ol{margin:10px 0; padding-left:22px;} li{margin:5px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.9em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:15px 17px; border-radius:10px;
+    overflow:auto; font-size:13px; line-height:1.6; margin:13px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre code{background:none; padding:0; font-size:inherit; color:inherit;}
+
+  /* where-to-run tag (mirrors the assignment's project pills) */
+  .where{flex:none; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .where.a{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}
+  .where.b{background:#fff3e6; color:#b4530a; border:1px solid var(--warn-line);}
+  .where.c{background:#eafaf1; color:var(--accent-deep); border:1px solid var(--good-line);}
+
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 8px; margin:16px 0; box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:2px;}
+  .qid{font-weight:800; color:var(--ink); font-size:16px;}
+  .ask{color:var(--muted); font-size:14.5px; margin:4px 0 10px;}
+  .ans{margin:12px 0;}
+  .ans b, .ask b{color:var(--ink);}
+  .file{font-size:12.5px; color:var(--muted); margin:0 0 8px;}
+  .file code{font-size:.92em;}
+
+  .callout{border-radius:10px; padding:12px 15px; margin:14px 0; font-size:14.5px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.good{background:var(--good-soft); border:1px solid var(--good-line);}
+  .callout.predict{background:var(--warn-soft); border:1px solid var(--warn-line); color:#7c4a12;}
+  .callout b{display:block; margin-bottom:2px;}
+  .callout.inline b{display:inline; margin:0;}
+
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; margin:12px 0;}
+  table.cmp th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.cmp td{padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.cmp td:first-child{font-weight:700; white-space:nowrap;}
+
+  footer{margin-top:42px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13.5px;}
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.callout,table.cmp{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Jetpack Compose · Navigation 3 · Answer Key</p>
+    <h1>Homework 3 — Solutions</h1>
+    <p class="sub">Complete, runnable answer key for <b>Deep Stacks, ViewModel State &amp; the Data Layer</b>.
+       All twelve tasks (A1–A4, B1–B4, C1–C4) are solved with full code, heavy line-by-line teaching comments,
+       and every required written answer spelled out in the comments where the tasks ask for them. Built around
+       <code>NavFourScreen</code>, <code>NavViewModelState</code>, and <code>NavDataLayer</code>.</p>
+    <div class="meta">
+      <span><b>Part A</b> · A1–A4 · deep back stack</span>
+      <span><b>Part B</b> · B1–B4 · ViewModel state</span>
+      <span><b>Part C</b> · C1–C4 · the data layer</span>
+      <span><b>12 tasks</b> · 100 pts</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="./hw3.html">← Homework 3 (assignment)</a>
+      <a href="./playground.html">▶ Compose Playground</a>
+      <a href="./projects.html">Projects, Explained</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout proj">
+    <b>How to read this key</b>
+    Each task shows the <em>file the change goes in</em>, then the complete <em>solution code</em> (heavily commented
+    in the teaching style of the provided source), then an explanation. Every change is tagged with a
+    <code>// A1</code> … <code>// C4</code> comment so it is trivial to find in your diff. The tasks that ask for a
+    short <b>written answer in a code comment</b> (A2, A3, C1, C2, C3, C4) have that answer written out in full,
+    right inside the code. The <span class="where a">NavFourScreen</span> /
+    <span class="where b">NavViewModelState</span> / <span class="where c">NavDataLayer</span> tags match the
+    assignment's three projects.
+  </div>
+
+  <div class="callout predict">
+    <b>One mental model carries all three projects</b>
+    <em>State you can't see is a list.</em> The back stack is just a <code>List&lt;NavKey&gt;</code> you push and pop
+    (Part A). Shared screen state is a <code>StateFlow</code> the ViewModel owns and every screen observes
+    (Part B). The data is a <code>Flow&lt;List&lt;Item&gt;&gt;</code> behind a <code>PlanetRepository</code> interface
+    that the UI never reaches past (Part C). In all three, the UI is a pure function of that data — you change the
+    list/flow/repository and the screens just re-render.
+  </div>
+
+  <!-- ============================================================ PART A -->
+  <h2><span class="part">Part A.</span> NavFourScreen — shaping a deep back stack
+      <span class="where a" style="float:right;margin-top:6px;">NavFourScreen</span></h2>
+  <p class="lead">The back stack is a list of keys, so you can grow it (A1), jump around in it (A2), and pop it in
+     chunks (A3). All edits below land in
+     <code>NavFourScreen/src/main/java/com/example/navfourscreen/MainActivity.kt</code>.</p>
+
+  <!-- A1 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">A1 — a fifth screen (<code>CategoryInfoScreen</code>)</span><span class="where a">10 pts</span></div>
+    <p class="ask">Add a fifth level reached by an <b>"About its category"</b> button on <code>FactScreen</code>. It
+       shows the planet's category — <code>name</code> as a headline, <code>description</code> underneath — plus a
+       <b>Back</b> button that pops one. The stack can now be five deep:
+       <code>[Categories, Items, Detail, Fact, CategoryInfo]</code>. You touch all four places a new screen needs (a
+       key, an <code>entry</code>, a screen composable, the button that pushes the key), plus the
+       <code>FactScreen</code> preview.</p>
+    <p class="file">File: <code>NavFourScreen/.../MainActivity.kt</code></p>
+
+    <h3>1 · The new key — add it beside <code>FactKey</code></h3>
+<pre><code>// A1 — the new key. Like every other key it implements NavKey and is @Serializable
+// (so the whole back stack survives process death). It carries the SAME itemId the
+// Fact screen had, so the new screen knows which planet — and thus which category —
+// we came from. `data class` (not `data object`) because each instance differs by id.
+@Serializable
+data class CategoryInfoKey(val itemId: Int) : NavKey       // fifth screen; which planet's category to show</code></pre>
+
+    <h3>2 · The new <code>entry</code> — register it inside <code>entryProvider { … }</code> (after <code>entry&lt;FactKey&gt;</code>)</h3>
+<pre><code>// A1 — LEVEL 5: when a CategoryInfoKey is on top, show that planet's category.
+entry&lt;CategoryInfoKey&gt; { key -&gt;
+    val item = itemById(key.itemId)                        // resolve the planet from the id in the key
+    CategoryInfoScreen(
+        item = item,
+        category = categoryById(item.categoryId),          // follow the "foreign key" to its Category
+        onBack = { backStack.removeLastOrNull() },         // pop ONE level, back to the Fact screen
+    )
+}</code></pre>
+
+    <h3>3 · Wire the button — add a param to <code>FactScreen</code> and push the key from <code>entry&lt;FactKey&gt;</code></h3>
+<pre><code>// A1 — inside entry&lt;FactKey&gt; { key -&gt; FactScreen( ... ) }, add the new callback.
+// It pushes a CategoryInfoKey for the SAME planet, navigating forward to level 5.
+onOpenCategoryInfo = { itemId -&gt;                            // itemId handed up from the Fact screen's button
+    backStack.add(CategoryInfoKey(itemId))                 // push the 5th key -&gt; NavDisplay shows CategoryInfoScreen
+},</code></pre>
+
+    <h3>4 · The new screen composable — modeled on <code>FactScreen</code></h3>
+<pre><code>// A1 — the fifth screen. Same Column / Text / Button shape as FactScreen.
+// STATELESS by design: it receives the resolved [item] and [category] plus a no-arg
+// [onBack] callback, so it knows nothing about navigation and previews without the app.
+@Composable
+fun CategoryInfoScreen(
+    item: Item,                                            // the planet we came from (used in the headline)
+    category: Category,                                    // the category that planet belongs to (the real content)
+    onBack: () -&gt; Unit,                                    // event UP: "Back" pops one level (wired in the entry)
+    modifier: Modifier = Modifier,                         // convention: hoisted modifier, first optional param
+) {
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        // A small line tying the screen back to the planet the user drilled through.
+        Text(
+            text = "${item.title} belongs to:",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        // The category NAME as the headline — the primary thing this screen shows.
+        Text(text = category.name, style = MaterialTheme.typography.headlineSmall)
+        Spacer(modifier = Modifier.height(8.dp))
+        // The category DESCRIPTION underneath, just like the assignment asks.
+        Text(text = category.description, style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.height(24.dp))
+        // Back pops exactly ONE key, returning to the Fact screen below it.
+        Button(onClick = onBack) {
+            Text("Back")
+        }
+    }
+}</code></pre>
+
+    <h3>5 · Add the parameter to <code>FactScreen</code> and its button</h3>
+<pre><code>@Composable
+fun FactScreen(
+    item: Item,
+    onBack: () -&gt; Unit,
+    onStartOver: () -&gt; Unit,
+    onOpenCategoryInfo: (Int) -&gt; Unit,                     // A1 — new event: open the 5th screen
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        Text(
+            text = "Fun fact about ${item.title}",
+            style = MaterialTheme.typography.headlineSmall,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = item.fact, style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // A1 — the new button that drills FORWARD to the fifth screen. We pass the
+        // planet's id up; the entry&lt;FactKey&gt; block turns it into a CategoryInfoKey.
+        Button(onClick = { onOpenCategoryInfo(item.id) }) {
+            Text("About its category")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = onBack) {                          // pops one level back to Detail
+            Text("Back")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = onStartOver) {                    // pops everything but the root
+            Text("Start over")
+        }
+    }
+}</code></pre>
+
+    <h3>6 · Fix the <code>FactScreen</code> preview call site (it must keep compiling)</h3>
+<pre><code>// A1 — the preview is LIVE code that calls FactScreen, so it now needs the new
+// parameter too. Previews don't navigate, so pass a no-op lambda, exactly like the
+// existing onBack = {} / onStartOver = {}.
+@Preview(name = "Fact", showBackground = true, widthDp = 320, heightDp = 480)
+@Composable
+fun FactScreenPreview(
+    @PreviewParameter(ItemPreviewProvider::class) item: Item
+) {
+    NavFourScreenTheme {
+        FactScreen(
+            item = item,
+            onBack = {},
+            onStartOver = {},
+            onOpenCategoryInfo = {},                        // A1 — no-op for the preview
+        )
+    }
+}</code></pre>
+
+    <p class="ans"><b>Why this works.</b> A new screen in Nav3 always needs exactly four things: a <b>key</b> (names
+       the destination + carries its argument), an <b>entry</b> (maps that key type to a composable), the
+       <b>screen</b> itself, and a <b>push</b> of the key from somewhere (the button). The key carries only the
+       <code>itemId</code> — small and serializable — and the entry resolves the full <code>Item</code> and its
+       <code>Category</code> with the same <code>itemById</code>/<code>categoryById</code> lookups the rest of the
+       file uses, so no data is duplicated.</p>
+    <div class="callout good"><b>What you observe</b>
+       Drill Categories → Items → Detail → "View fun fact" → "About its category". The stack is now five deep; the
+       category name + description show; <b>Back</b> returns to the Fact screen, and <b>Start over</b> still flushes
+       all the way to Categories because it pops while <code>backStack.size &gt; 1</code>.</div>
+  </div>
+
+  <!-- A2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">A2 — jump ahead, then seed the whole stack</span><span class="where a">10 pts</span></div>
+    <p class="ask"><b>(a)</b> Add a "Surprise me" button atop <code>CategoriesScreen</code> that jumps straight to a
+       random planet's fact screen by pushing a single <code>FactKey</code>; note in a comment where Back lands and
+       why. <b>(b)</b> Fix it so Back behaves as if the user drilled down by hand — push the <em>whole path</em>.</p>
+    <p class="file">File: <code>NavFourScreen/.../MainActivity.kt</code></p>
+
+    <h3>The button slot — add the parameter and an <code>item { }</code> above the rows</h3>
+<pre><code>@Composable
+fun CategoriesScreen(
+    categories: List&lt;Category&gt;,
+    onJumpToFact: () -&gt; Unit,                              // A2 — new event: the "Surprise me" jump
+    onOpen: (Int) -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        // A2 — CategoriesScreen is a bare LazyColumn, so the button gets its OWN slot
+        // above the category rows via the SINGULAR item { } builder (one child, not a list).
+        item {
+            Button(
+                onClick = onJumpToFact,
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+            ) {
+                Text("Surprise me")
+            }
+            HorizontalDivider()
+        }
+        // The normal category rows follow, unchanged.
+        items(categories) { category -&gt;
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpen(category.id) }
+                    .padding(16.dp)
+            ) {
+                Text(text = category.name, style = MaterialTheme.typography.titleMedium)
+                Text(text = category.description, style = MaterialTheme.typography.bodyMedium)
+            }
+            HorizontalDivider()
+        }
+    }
+}</code></pre>
+
+    <h3>(a) The naive one-key jump — wire it in <code>entry&lt;CategoriesKey&gt;</code>, with the required written answer</h3>
+<pre><code>// A2(a) — the NAIVE jump: push only the destination key.
+onJumpToFact = {
+    val item = sampleItems.random()                        // pick any planet at random
+    backStack.add(FactKey(item.id))                        // push ONLY the Fact key
+    // WHERE DOES BACK LAND, AND WHY?  After this jump the stack is just
+    // [CategoriesKey, FactKey] — we skipped Items and Detail entirely. So pressing
+    // Back (or the on-screen "Back") pops the single FactKey and lands straight on
+    // CATEGORIES, not on the planet's Detail or its Items list. That feels wrong:
+    // the user expects Back to walk DOWN the drill-down they appear to be inside,
+    // but those middle screens were never pushed, so there is nothing to walk back
+    // through. (a) shows the bug; (b) below fixes it.
+}</code></pre>
+
+    <h3>(b) The fix — push the whole path so Back walks down sensibly</h3>
+<pre><code>// A2(b) — hand-seed the stack so Back behaves as if the user drilled by hand:
+// push the WHOLE path [Items, Detail, Fact], not just the end.
+onJumpToFact = {
+    val item = sampleItems.random()                        // pick any planet
+    backStack.add(ItemsKey(item.categoryId))               // level 2 — its category's planet list
+    backStack.add(DetailKey(item.id))                      // level 3 — its detail
+    backStack.add(FactKey(item.id))                        // level 4 — the fact (top = what's shown)
+    // Now the stack is [Categories, Items, Detail, Fact]. Back pops Fact -&gt; Detail
+    // -&gt; Items -&gt; Categories, exactly as if the user had tapped through manually.
+}</code></pre>
+
+    <h3>Fix the <code>CategoriesScreenPreview</code> call site</h3>
+<pre><code>// A2 — the preview now needs the new parameter; pass a no-op.
+@Preview(name = "Categories", showBackground = true, widthDp = 320, heightDp = 480)
+@Composable
+fun CategoriesScreenPreview() {
+    NavFourScreenTheme {
+        CategoriesScreen(
+            categories = sampleCategories,
+            onJumpToFact = {},                              // A2 — no-op for the preview
+            onOpen = {},
+        )
+    }
+}</code></pre>
+
+    <p class="ans"><b>Written answer (A2a — where Back lands and why):</b> with only <code>FactKey</code> pushed, the
+       stack is <code>[CategoriesKey, FactKey]</code>. Back pops the one <code>FactKey</code> and lands on
+       <b>Categories</b>, because the <code>ItemsKey</code> and <code>DetailKey</code> screens were never pushed —
+       there is nothing in between to pop back through. <b>How (b) fixes it:</b> by pushing the entire chain
+       <code>[ItemsKey, DetailKey, FactKey]</code>, the stack now reads
+       <code>[Categories, Items, Detail, Fact]</code>, so Back pops one key at a time and walks the user down the
+       full drill-down exactly as if they had tapped through by hand.</p>
+    <div class="callout predict"><b>Why this matters</b>
+       Pushing a hand-built chain of keys is exactly how a <code>NavDeepLink</code> reconstructs a sensible back
+       stack when the app is opened from a URL — you've practiced the deep-link trick one project early.</div>
+  </div>
+
+  <!-- A3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">A3 — pop exactly two ("Back to planet list")</span><span class="where a">6 pts</span></div>
+    <p class="ask">Add a third button on <code>FactScreen</code>, between "Back" and "Start over", that pops
+       <em>exactly two</em> keys (<code>FactKey</code> + <code>DetailKey</code>), landing on
+       <code>ItemsScreen</code>. Use <code>repeat(2) { backStack.removeLastOrNull() }</code>; explain in its comment
+       why <code>removeLastOrNull()</code> is right inside the loop (vs <code>removeLast()</code>), and what this
+       button would have done under the A2(a) one-jump stack — and why finishing A2(b) protects it.</p>
+    <p class="file">File: <code>NavFourScreen/.../MainActivity.kt</code></p>
+
+    <h3>The new <code>onBackToList</code> param + the third button on <code>FactScreen</code></h3>
+<pre><code>@Composable
+fun FactScreen(
+    item: Item,
+    onBack: () -&gt; Unit,
+    onStartOver: () -&gt; Unit,
+    onOpenCategoryInfo: (Int) -&gt; Unit,                     // from A1
+    onBackToList: () -&gt; Unit,                              // A3 — new event: pop exactly two
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        Text(
+            text = "Fun fact about ${item.title}",
+            style = MaterialTheme.typography.headlineSmall,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = item.fact, style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(onClick = { onOpenCategoryInfo(item.id) }) {  // A1
+            Text("About its category")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = onBack) { Text("Back") }            // pops ONE
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // A3 — the new button: pop exactly TWO keys (Fact + Detail) -&gt; land on Items.
+        Button(onClick = onBackToList) {
+            Text("Back to planet list")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(onClick = onStartOver) { Text("Start over") } // pops everything but the root
+    }
+}</code></pre>
+
+    <h3>Wire it in <code>entry&lt;FactKey&gt;</code>, with the required written answer</h3>
+<pre><code>// A3 — pop EXACTLY TWO keys: FactKey (current) and DetailKey (below it), landing on Items.
+onBackToList = {
+    repeat(2) { backStack.removeLastOrNull() }
+    // WHY removeLastOrNull() INSIDE repeat(2), not removeLast()?
+    //   removeLast() THROWS NoSuchElementException if the list is already empty;
+    //   removeLastOrNull() simply returns null and leaves the stack alone. Inside a
+    //   blind repeat(2) we are popping twice WITHOUT first checking the size, so if
+    //   the stack were ever shorter than two, removeLast() would crash on the second
+    //   pop — removeLastOrNull() makes the extra pop a safe no-op instead. (It is the
+    //   same safety the system-back onBack uses: backStack.removeLastOrNull().)
+    //
+    // WHAT WOULD THIS BUTTON HAVE DONE UNDER THE A2(a) ONE-JUMP STACK?
+    //   After A2(a) the stack was only [Categories, Fact]. repeat(2) would pop Fact
+    //   (back to Categories) and then try to pop again — and because we used
+    //   removeLastOrNull(), that second pop is a HARMLESS no-op (with removeLast()
+    //   it would have CRASHED). Either way the user lands on Categories, NOT on an
+    //   "Items" screen, because no ItemsKey was ever pushed — the button can't pop
+    //   back to a screen that isn't in the stack.
+    //
+    // WHY FINISHING A2(b) PROTECTS IT:
+    //   A2(b) pushes the whole path [Items, Detail, Fact], so popping two now removes
+    //   Fact + Detail and correctly leaves the user on the planet's ITEMS list — the
+    //   button finally does what its label promises, for both hand-drilled and
+    //   "Surprise me" arrivals.
+}</code></pre>
+
+    <h3>Fix the <code>FactScreenPreview</code> (now two new params)</h3>
+<pre><code>// A3 — the preview gains another no-op for the new callback.
+FactScreen(
+    item = item,
+    onBack = {},
+    onStartOver = {},
+    onOpenCategoryInfo = {},                                // A1
+    onBackToList = {},                                      // A3
+)</code></pre>
+
+    <p class="ans"><b>Written answer (A3):</b> <code>removeLastOrNull()</code> is correct because the
+       <code>repeat(2)</code> pops twice without first checking the stack's size; <code>removeLast()</code> would
+       throw if the stack were shorter than two, whereas <code>removeLastOrNull()</code> turns an over-pop into a
+       safe no-op. Under the A2(a) stack <code>[Categories, Fact]</code> the button would have popped Fact then
+       no-op'd, dumping the user on Categories (and <code>removeLast()</code> would have crashed instead).
+       <b>A2(b) protects it</b> by ensuring <code>DetailKey</code> and <code>ItemsKey</code> are really on the
+       stack, so popping two lands on the Items list as intended.</p>
+  </div>
+
+  <!-- A4 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">A4 — preview every state of the new screen</span><span class="where a">4 pts</span></div>
+    <p class="ask">Give <code>CategoryInfoScreen</code> the same preview treatment the other four screens get: a
+       <code>@Preview(widthDp = 320, heightDp = 480)</code> using the existing <code>ItemPreviewProvider</code> via
+       <code>@PreviewParameter</code>, so the design pane renders <b>one card per planet</b> (six). Resolve the
+       category the same way the <code>entry</code> block does.</p>
+    <p class="file">File: <code>NavFourScreen/.../MainActivity.kt</code> (preview section)</p>
+<pre><code>// A4 — LEVEL 5 preview: one compact card per planet (six in all), reusing the SAME
+// ItemPreviewProvider that drives the Detail and Fact previews. The provider yields
+// every Item, so Android Studio renders this @Composable once per planet — no app run.
+@Preview(name = "CategoryInfo", showBackground = true, widthDp = 320, heightDp = 480)
+@Composable
+fun CategoryInfoScreenPreview(
+    @PreviewParameter(ItemPreviewProvider::class) item: Item   // one Item per preview render
+) {
+    NavFourScreenTheme {
+        CategoryInfoScreen(
+            item = item,
+            // Resolve the category EXACTLY as entry&lt;CategoryInfoKey&gt; does: follow the
+            // item's categoryId through categoryById(). The preview thus shows the real
+            // category each planet belongs to, with no ViewModel and no navigation.
+            category = categoryById(item.categoryId),
+            onBack = {},                                       // previews don't navigate
+        )
+    }
+}</code></pre>
+    <div class="callout good"><b>What you observe</b>
+       The design pane shows six cards (Mercury…Saturn). Rocky planets render "Rocky Planets" + its description;
+       gas giants render "Gas Giants" + its description — the same resolution the running app performs, proving the
+       stateless screen is fully previewable.</div>
+  </div>
+
+  <!-- ============================================================ PART B -->
+  <h2><span class="part">Part B.</span> NavViewModelState — one source of truth, more screens
+      <span class="where b" style="float:right;margin-top:6px;">NavViewModelState</span></h2>
+  <p class="lead">Favorites live in one shared <code>FavoritesViewModel</code>; these tasks make more screens read
+     it, write it, and grow what it owns. Edits land in <code>FavoritesViewModel.kt</code> and
+     <code>NavViewModelState/src/main/java/com/example/navviewmodelstate/MainActivity.kt</code>.</p>
+
+  <!-- B1 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B1 — a second event: clear all</span><span class="where b">6 pts</span></div>
+    <p class="ask">Add a "Clear favorites" button to the <code>ItemsScreen</code> header (under "Back to
+       categories"). Keep the screen stateless: add an <code>onClearFavorites: () -&gt; Unit</code> parameter, wire it
+       in <code>ItemsRoute</code>, and put the actual clearing in a new <code>clearFavorites()</code> on the
+       ViewModel — the only place the set may be mutated.</p>
+    <p class="file">Files: <code>FavoritesViewModel.kt</code> and <code>NavViewModelState/.../MainActivity.kt</code></p>
+
+    <h3>1 · The new event on the ViewModel</h3>
+<pre><code>// B1 — the SECOND event the UI can send up (the first was toggleFavorite).
+// Clearing is mutation, so it MUST live here, not in a composable.
+/** Clears every favorite. */
+fun clearFavorites() {
+    _favorites.update { emptySet() }                       // same atomic update pattern as toggleFavorite
+}</code></pre>
+
+    <h3>2 · The button in the <code>ItemsScreen</code> header (stateless)</h3>
+<pre><code>@Composable
+fun ItemsScreen(
+    category: Category,
+    items: List&lt;Item&gt;,
+    favoriteIds: Set&lt;Int&gt;,
+    onClearFavorites: () -&gt; Unit,                          // B1 — new event, kept hoisted
+    onOpen: (Int) -&gt; Unit,
+    onBack: () -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        // --- Header block (does not scroll) ---
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Text(text = category.name, style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onBack) { Text("Back to categories") }
+            Spacer(modifier = Modifier.height(8.dp))
+            // B1 — the new button. The screen stays STATELESS: it just reports the
+            // event up via onClearFavorites; the ViewModel does the actual clearing.
+            Button(onClick = onClearFavorites) {
+                Text("Clear favorites")
+            }
+        }
+        HorizontalDivider()
+        // ... the LazyColumn of planet rows is unchanged ...
+    }
+}</code></pre>
+
+    <h3>3 · Wire it through <code>ItemsRoute</code> to the ViewModel</h3>
+<pre><code>@Composable
+fun ItemsRoute(
+    category: Category,
+    items: List&lt;Item&gt;,
+    favoritesViewModel: FavoritesViewModel,
+    onOpen: (Int) -&gt; Unit,
+    onBack: () -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    val favorites by favoritesViewModel.favorites.collectAsStateWithLifecycle()
+    ItemsScreen(
+        category = category,
+        items = items,
+        favoriteIds = favorites,
+        onClearFavorites = favoritesViewModel::clearFavorites,  // B1 — event UP to the VM
+        onOpen = onOpen,
+        onBack = onBack,
+        modifier = modifier,
+    )
+}</code></pre>
+    <div class="callout good"><b>What you observe / why it works</b>
+       Favorite two planets, tap "Clear favorites" on the list — every ★ disappears at once, and the Detail
+       screen's button reads "☆ Favorite" again. It works because there is exactly one favorites set (in the VM);
+       <code>clearFavorites()</code> replaces it with <code>emptySet()</code>, the <code>StateFlow</code> re-emits,
+       and every screen observing it recomposes.</div>
+  </div>
+
+  <!-- B2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B2 — the categories screen joins in</span><span class="where b">10 pts</span></div>
+    <p class="ask">Show a live "★ N favorited so far" count atop <code>CategoriesScreen</code>. Follow the project's
+       Route/Screen pattern: a stateful <code>CategoriesRoute</code> observes the VM and hands a plain count to a
+       stateless <code>CategoriesScreen</code>; change <code>entry&lt;CategoriesKey&gt;</code> to call the Route.</p>
+    <p class="file">File: <code>NavViewModelState/.../MainActivity.kt</code></p>
+
+    <h3>1 · The new stateful Route</h3>
+<pre><code>// B2 — CategoriesRoute (STATEFUL): observes the SAME shared VM the other screens use,
+// then hands a plain Int count down to the stateless screen. Mirrors ItemsRoute/DetailRoute.
+@Composable
+fun CategoriesRoute(
+    categories: List&lt;Category&gt;,
+    favoritesViewModel: FavoritesViewModel,
+    onOpen: (Int) -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Subscribe to the SAME StateFlow the other screens observe — one source of truth.
+    val favorites by favoritesViewModel.favorites.collectAsStateWithLifecycle()
+    CategoriesScreen(
+        categories = categories,
+        favoriteCount = favorites.size,                    // the screen needs only the COUNT, so pass only that
+        onOpen = onOpen,
+        modifier = modifier,
+    )
+}</code></pre>
+
+    <h3>2 · Add <code>favoriteCount</code> to the stateless screen and render the line</h3>
+<pre><code>@Composable
+fun CategoriesScreen(
+    categories: List&lt;Category&gt;,
+    favoriteCount: Int,                                    // B2 — plain count handed down by the Route
+    onOpen: (Int) -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        // B2 — a dedicated item { } slot above the rows renders the live count.
+        // It RE-READS favoriteCount, so it updates the instant the VM's set changes.
+        item {
+            Text(
+                text = "★ $favoriteCount favorited so far",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+            )
+            HorizontalDivider()
+        }
+        items(categories) { category -&gt;
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpen(category.id) }
+                    .padding(16.dp)
+            ) {
+                Text(text = category.name, style = MaterialTheme.typography.titleMedium)
+                Text(text = category.description, style = MaterialTheme.typography.bodyMedium)
+            }
+            HorizontalDivider()
+        }
+    }
+}</code></pre>
+
+    <h3>3 · Point <code>entry&lt;CategoriesKey&gt;</code> at the Route</h3>
+<pre><code>// B2 — call the stateful Route (not the bare Screen) so Categories reads the shared VM.
+entry&lt;CategoriesKey&gt; {
+    CategoriesRoute(
+        categories = sampleCategories,
+        favoritesViewModel = favoritesViewModel,           // the SAME instance the other screens get
+        onOpen = { categoryId -&gt; backStack.add(ItemsKey(categoryId)) },
+    )
+}</code></pre>
+    <div class="callout good"><b>What you observe / why it works</b>
+       Favorite a planet on Detail, walk all the way back — the first screen already reads "★ 1 favorited so far".
+       One ViewModel, three screens, zero copies of the state: Categories now observes the very same
+       <code>StateFlow</code> as Items and Detail, so its count is always in sync.</div>
+  </div>
+
+  <!-- B3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B3 — toggle straight from the list</span><span class="where b">8 pts</span></div>
+    <p class="ask">On <code>ItemsScreen</code>, replace the conditional ★ with an always-visible, tappable star
+       (★ favorited / ☆ not). Tapping the star toggles the favorite <em>without navigating</em>; tapping elsewhere on
+       the row still opens detail. Add an <code>onToggleFavorite: (Int) -&gt; Unit</code> param wired through
+       <code>ItemsRoute</code> to <code>favoritesViewModel::toggleFavorite</code>.</p>
+    <p class="file">File: <code>NavViewModelState/.../MainActivity.kt</code></p>
+<pre><code>@Composable
+fun ItemsScreen(
+    category: Category,
+    items: List&lt;Item&gt;,
+    favoriteIds: Set&lt;Int&gt;,
+    onClearFavorites: () -&gt; Unit,                          // from B1
+    onToggleFavorite: (Int) -&gt; Unit,                      // B3 — toggle one planet from the list
+    onOpen: (Int) -&gt; Unit,
+    onBack: () -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Text(text = category.name, style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onBack) { Text("Back to categories") }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onClearFavorites) { Text("Clear favorites") }   // B1
+        }
+        HorizontalDivider()
+
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(items) { item -&gt;
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpen(item.id) }     // whole row still opens detail
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {  // title/blurb take the leftover width
+                        Text(text = item.title, style = MaterialTheme.typography.titleMedium)
+                        Text(text = item.blurb, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    // B3 — ALWAYS render the star; ★ when favorited, ☆ when not. Its own
+                    // clickable "shadows" the row's — Compose delivers the tap to the
+                    // INNERMOST handler, so tapping the star toggles WITHOUT navigating.
+                    Text(
+                        text = if (item.id in favoriteIds) "★" else "☆",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .clickable { onToggleFavorite(item.id) }
+                            .padding(8.dp),                // comfier tap target
+                    )
+                }
+                HorizontalDivider()
+            }
+        }
+    }
+}</code></pre>
+
+    <h3>Wire the new event through <code>ItemsRoute</code></h3>
+<pre><code>ItemsScreen(
+    category = category,
+    items = items,
+    favoriteIds = favorites,
+    onClearFavorites = favoritesViewModel::clearFavorites,   // B1
+    onToggleFavorite = favoritesViewModel::toggleFavorite,   // B3 — event UP to the VM
+    onOpen = onOpen,
+    onBack = onBack,
+    modifier = modifier,
+)</code></pre>
+    <p class="ans"><b>Note on <code>Alignment</code>:</b> <code>verticalAlignment = Alignment.CenterVertically</code>
+       needs <code>import androidx.compose.ui.Alignment</code> and <code>Row</code> already imported. The star uses
+       <code>Modifier.weight(1f)</code> on the text column so the ☆/★ is pushed to the row's end.</p>
+    <div class="callout good"><b>What you observe (both directions)</b>
+       Toggle on the list, open the detail — its button already says "★ Unfavorite"; toggle on the detail, come back
+       — the row's star already changed. Both views are reading and writing the one <code>StateFlow</code>, so a
+       change in either place recomposes the other.</div>
+  </div>
+
+  <!-- B4 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B4 — a second piece of shared state: visited</span><span class="where b">8 pts</span></div>
+    <p class="ask">Track which planets the user has actually opened. Add a second <code>StateFlow</code>
+       <code>visited: Set&lt;Int&gt;</code> with a <code>markVisited(id)</code> event that only ever <em>adds</em>.
+       Record the visit when the detail appears, and show a small "· visited" label on visited rows in
+       <code>ItemsScreen</code>. <code>ItemsRoute</code> now collects <em>two</em> flows and passes <em>two</em> sets
+       down.</p>
+    <p class="file">Files: <code>FavoritesViewModel.kt</code> and <code>NavViewModelState/.../MainActivity.kt</code></p>
+
+    <h3>1 · The second piece of state in the ViewModel</h3>
+<pre><code>// B4 — a SECOND piece of shared state, same recipe as favorites.
+private val _visited = MutableStateFlow&lt;Set&lt;Int&gt;&gt;(emptySet())  // private, mutable source of truth
+val visited: StateFlow&lt;Set&lt;Int&gt;&gt; = _visited.asStateFlow()       // public, read-only view for the UI
+
+/** Marks a planet as seen. Unlike toggleFavorite, this only ever ADDS. */
+fun markVisited(id: Int) {
+    _visited.update { it + id }                            // adding an existing id to a Set is a harmless no-op
+}</code></pre>
+
+    <h3>2 · Record the visit once per planet shown, in <code>DetailRoute</code></h3>
+<pre><code>@Composable
+fun DetailRoute(
+    item: Item,
+    favoritesViewModel: FavoritesViewModel,
+    onBack: () -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    val favorites by favoritesViewModel.favorites.collectAsStateWithLifecycle()
+    val isFavorite = item.id in favorites
+
+    // B4 — record the visit ONCE per planet shown (not on every recomposition).
+    // LaunchedEffect re-runs its block only when its key (item.id) changes, which is
+    // exactly "the user opened THIS detail". Import androidx.compose.runtime.LaunchedEffect.
+    LaunchedEffect(item.id) {
+        favoritesViewModel.markVisited(item.id)
+    }
+
+    DetailScreen(
+        item = item,
+        isFavorite = isFavorite,
+        onToggleFavorite = { favoritesViewModel.toggleFavorite(item.id) },
+        onBack = onBack,
+        modifier = modifier,
+    )
+}</code></pre>
+
+    <h3>3 · <code>ItemsRoute</code> now collects BOTH flows and passes BOTH sets down</h3>
+<pre><code>@Composable
+fun ItemsRoute(
+    category: Category,
+    items: List&lt;Item&gt;,
+    favoritesViewModel: FavoritesViewModel,
+    onOpen: (Int) -&gt; Unit,
+    onBack: () -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    // B4 — collect TWO flows now: favorites AND visited.
+    val favorites by favoritesViewModel.favorites.collectAsStateWithLifecycle()
+    val visited by favoritesViewModel.visited.collectAsStateWithLifecycle()
+    ItemsScreen(
+        category = category,
+        items = items,
+        favoriteIds = favorites,
+        visitedIds = visited,                              // B4 — second set down
+        onClearFavorites = favoritesViewModel::clearFavorites,   // B1
+        onToggleFavorite = favoritesViewModel::toggleFavorite,   // B3
+        onOpen = onOpen,
+        onBack = onBack,
+        modifier = modifier,
+    )
+}</code></pre>
+
+    <h3>4 · Show "· visited" on visited rows in <code>ItemsScreen</code></h3>
+<pre><code>@Composable
+fun ItemsScreen(
+    category: Category,
+    items: List&lt;Item&gt;,
+    favoriteIds: Set&lt;Int&gt;,
+    visitedIds: Set&lt;Int&gt;,                                  // B4 — which planets have been opened
+    onClearFavorites: () -&gt; Unit,
+    onToggleFavorite: (Int) -&gt; Unit,
+    onOpen: (Int) -&gt; Unit,
+    onBack: () -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    // ... header (B1 buttons) unchanged ...
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        items(items) { item -&gt;
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpen(item.id) }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    // B4 — append "· visited" to the title row once the planet's been opened.
+                    Row {
+                        Text(text = item.title, style = MaterialTheme.typography.titleMedium)
+                        if (item.id in visitedIds) {
+                            Text(
+                                text = "  · visited",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                    Text(text = item.blurb, style = MaterialTheme.typography.bodyMedium)
+                }
+                Text(                                       // B3 — the tappable star
+                    text = if (item.id in favoriteIds) "★" else "☆",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier
+                        .clickable { onToggleFavorite(item.id) }
+                        .padding(8.dp),
+                )
+            }
+            HorizontalDivider()
+        }
+    }
+}</code></pre>
+    <div class="callout good"><b>What you observe / why it works</b>
+       Open Mercury and Mars, go back — those two rows say "· visited". Rotate the device — still there, for the same
+       reason favorites survive: both sets live in the <code>FavoritesViewModel</code> (scoped to the Activity), not
+       in the composition. <code>markVisited</code> only adds, so re-opening a planet is idempotent.</div>
+  </div>
+
+  <!-- ============================================================ PART C -->
+  <h2><span class="part">Part C.</span> NavDataLayer — swapping sources behind the boundary
+      <span class="where c" style="float:right;margin-top:6px;">NavDataLayer</span></h2>
+  <p class="lead">The contract is <code>PlanetRepository</code>; the ViewModel and screens depend only on the
+     interface. These tasks prove the boundary by changing what's behind it. Edits land in
+     <code>Repository.kt</code>, <code>PlanetsViewModel.kt</code>, and
+     <code>NavDataLayer/src/main/java/com/example/navdatalayer/MainActivity.kt</code>.</p>
+
+  <!-- C1 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">C1 — grow the data, touch no screens</span><span class="where c">6 pts</span></div>
+    <p class="ask">Add Uranus (id 7) and Neptune (id 8) to <code>samplePlanets</code> in <code>Repository.kt</code>
+       (categoryId 2, with a blurb and a fact each). Run it: both appear and their details load, with <em>zero</em>
+       changes to <code>MainActivity.kt</code> or <code>PlanetsViewModel.kt</code>. Add a comment explaining why
+       nothing else needed to change.</p>
+    <p class="file">File: <code>NavDataLayer/.../Repository.kt</code> (the <code>samplePlanets</code> list)</p>
+<pre><code>internal val samplePlanets = listOf(
+    Item(1, 1, "Mercury", "The smallest planet and the closest to the Sun.",
+        "A year on Mercury is just 88 Earth days, but a single day lasts 176."),
+    Item(2, 1, "Venus", "The hottest planet, wrapped in thick clouds of acid.",
+        "Venus spins backwards, so the Sun rises in the west and sets in the east."),
+    Item(3, 1, "Earth", "The only planet known to support life — so far.",
+        "Earth is the only planet not named after a Greek or Roman god."),
+    Item(4, 1, "Mars", "The red planet, a frequent target for rovers.",
+        "Mars hosts Olympus Mons, the tallest volcano in the solar system."),
+    Item(5, 2, "Jupiter", "The largest planet, a gas giant with a great red spot.",
+        "Jupiter's Great Red Spot is a storm wider than the entire Earth."),
+    Item(6, 2, "Saturn", "The ringed gas giant, second largest in the system.",
+        "Saturn is so light it would float in water — if you found a big enough tub."),
+
+    // C1 — two NEW gas giants (categoryId 2). WHY does adding rows here need ZERO
+    // changes to MainActivity.kt or PlanetsViewModel.kt? Because the UI never sees
+    // this list. The screens get their data ONLY from the repository, through the
+    // PlanetRepository interface: PlanetsViewModel calls repo.planets() and renders
+    // whatever Flow&lt;List&lt;Item&gt;&gt; arrives; PlanetDetailScreen calls repo.planet(id).
+    // The list IS the data source behind that interface, so growing it just makes the
+    // existing Flow emit more items — the ViewModel maps them to Success and the
+    // LazyColumn draws every row it's handed. That is the whole point of the data boundary.
+    Item(7, 2, "Uranus", "The tilted ice giant that rolls on its side.",
+        "Uranus rotates almost completely sideways, so its poles take turns facing the Sun."),
+    Item(8, 2, "Neptune", "The windiest planet, a deep-blue ice giant.",
+        "Neptune has the fastest winds in the solar system — over 2,000 km/h."),
+)</code></pre>
+    <p class="ans"><b>Written answer (C1):</b> nothing else changes because <b>the UI gets its data only from the
+       repository, through the <code>PlanetRepository</code> interface</b> — never from this list directly.
+       <code>PlanetsViewModel</code> collects <code>repo.planets()</code> (a <code>Flow&lt;List&lt;Item&gt;&gt;</code>)
+       and maps it to <code>Success</code>; the detail screen calls <code>repo.planet(id)</code>. The
+       <code>samplePlanets</code> list is the source <em>behind</em> the interface, so adding rows just makes the
+       same Flow emit more items, which the existing screens already render.</p>
+  </div>
+
+  <!-- C2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">C2 — make every UI state reachable</span><span class="where c">8 pts</span></div>
+    <p class="ask">Make the Empty/Error demo switchable: give <code>InMemoryPlanetRepository</code> a compile-checked
+       mode and branch on it in <code>planets()</code>. Confirm you can reach Empty, Error, and Success. Note in a
+       comment what Retry does in <code>ERROR</code> mode and why it can never succeed there. Set the default back to
+       <code>Simulate.OK</code> when done.</p>
+    <p class="file">File: <code>NavDataLayer/.../Repository.kt</code></p>
+<pre><code>// C2 — a compile-checked switch for the demo modes (no stringly-typed "ok"/"error").
+// An enum means a typo is a COMPILE error and the `when` below can be exhaustive.
+enum class Simulate { OK, EMPTY, ERROR }
+
+class InMemoryPlanetRepository(
+    private val simulate: Simulate = Simulate.OK,          // C2 — default: behave normally. SET THIS BACK TO OK before C3.
+) : PlanetRepository {
+
+    private val fakeLatencyMillis = 1_200L
+
+    // C2 — WHAT DOES RETRY DO IN ERROR MODE, AND WHY CAN IT NEVER SUCCEED?
+    //   Retry (PlanetsViewModel.retry) resets the state to Loading and calls
+    //   observePlanets() again, which re-collects this cold flow and RE-RUNS this body.
+    //   But `simulate` is fixed at construction to ERROR, so every fresh collection
+    //   hits the `throw` branch again -&gt; the .catch in the ViewModel maps it back to
+    //   Error. Retry keeps re-running deterministically failing code, so it can NEVER
+    //   succeed here — the failure is permanent, not transient. (C3 builds a repository
+    //   whose first attempt fails but later ones succeed, which is what makes Retry useful.)
+    override fun planets(): Flow&lt;List&lt;Item&gt;&gt; = flow {
+        delay(fakeLatencyMillis)                           // pretend we're hitting disk/network -&gt; makes Loading visible
+        when (simulate) {
+            Simulate.OK    -&gt; emit(samplePlanets)          // -&gt; the UI's Success state
+            Simulate.EMPTY -&gt; emit(emptyList())            // -&gt; the UI's Empty state
+            Simulate.ERROR -&gt; throw IllegalStateException("Simulated data-source failure") // -&gt; Error + Retry
+        }
+    }
+
+    override suspend fun planet(id: Int): Item? {
+        delay(fakeLatencyMillis / 2)
+        return samplePlanets.firstOrNull { it.id == id }
+    }
+}</code></pre>
+    <p class="ans"><b>How to reach each state:</b> temporarily construct the repo with the mode you want — either flip
+       the constructor default, or pass it where the repo is built (e.g. in <code>PlanetsViewModel</code>'s default:
+       <code>InMemoryPlanetRepository(Simulate.EMPTY)</code>). <code>OK</code> → Success, <code>EMPTY</code> → Empty,
+       <code>ERROR</code> → Error+Retry. <b>Written answer (C2):</b> in <code>ERROR</code> mode, Retry resets to
+       Loading and re-collects the same cold flow, which re-runs the body and hits the <code>throw</code> again;
+       since <code>simulate</code> is fixed to <code>ERROR</code>, every attempt fails identically, so Retry can
+       never succeed. <b>Remember to set the default back to <code>Simulate.OK</code></b> — C3 builds on a working
+       repository.</p>
+  </div>
+
+  <!-- C3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">C3 — a flaky repository that Retry actually rescues</span><span class="where c">12 pts</span></div>
+    <p class="ask">Write a new <code>FlakyPlanetRepository</code> in <code>Repository.kt</code> that fails the first
+       time the list is collected and succeeds afterward. Swap it in by changing only
+       <code>PlanetsViewModel</code>'s default constructor arg — the screens and the ViewModel body don't change.
+       Then explain in a comment why Retry reaches the flaky code again (cold flow).</p>
+    <p class="file">Files: <code>NavDataLayer/.../Repository.kt</code> and <code>PlanetsViewModel.kt</code></p>
+
+    <h3>1 · The new implementation in <code>Repository.kt</code></h3>
+<pre><code>// C3 — a flaky repository: FAILS the first collection, SUCCEEDS on every later one.
+//
+// WHY DOES RETRY REACH THIS CODE AGAIN AT ALL?
+//   The list flow is COLD. repo.planets() returns a flow { } whose body does NOT run
+//   until something collects it. The ViewModel's observePlanets() ends in
+//   .launchIn(viewModelScope), which STARTS a collection. retry() calls
+//   observePlanets() a SECOND time, which launches a SECOND collection of the same
+//   cold flow — so the flow { } body runs AGAIN from the top. Each fresh collection
+//   re-executes `attempts++`, and on the 2nd run attempts == 2, so we skip the throw
+//   and emitAll the real data. Cold = "re-run the body per collector"; that re-run is
+//   exactly what lets Retry escape a transient failure.
+class FlakyPlanetRepository(
+    // Explicitly OK — don't inherit whatever demo mode C2 left as the default.
+    private val wrapped: PlanetRepository = InMemoryPlanetRepository(Simulate.OK),
+) : PlanetRepository {
+
+    private var attempts = 0                               // how many times planets() has been collected
+
+    override fun planets(): Flow&lt;List&lt;Item&gt;&gt; = flow {
+        attempts++                                         // the flow body runs on EVERY collection (cold flow)
+        if (attempts == 1) {
+            delay(800)                                     // a little fake latency before failing
+            throw IllegalStateException("Network hiccup — try again")  // first try always fails
+        }
+        emitAll(wrapped.planets())                         // afterwards: defer to the real repository
+    }
+
+    // Required by the interface. Note: the app never actually calls THIS delegate —
+    // PlanetDetailScreen builds its OWN InMemoryPlanetRepository (you'll see it in C4).
+    override suspend fun planet(id: Int): Item? = wrapped.planet(id)
+}</code></pre>
+    <p class="ans"><b>Import:</b> <code>emitAll</code> forwards every value of another Flow into this one — add
+       <code>import kotlinx.coroutines.flow.emitAll</code> at the top of <code>Repository.kt</code>.</p>
+
+    <h3>2 · The one-line swap in <code>PlanetsViewModel</code></h3>
+<pre><code>// C3 — swap the data source by changing ONLY this default ctor arg. The ViewModel
+// body (observePlanets, retry, the StateFlow) and every screen are untouched —
+// that is the data boundary paying off.
+class PlanetsViewModel(
+    private val repo: PlanetRepository = FlakyPlanetRepository(),   // was InMemoryPlanetRepository()
+) : ViewModel() {
+    // ... init { observePlanets() }, observePlanets(), retry() all unchanged ...
+}</code></pre>
+    <div class="callout good"><b>What you observe (the full arc)</b>
+       Launch → spinner → <b>Error</b> ("Network hiccup — try again") → tap <b>Retry</b> → spinner →
+       <b>Success</b>. If Retry keeps failing, check that C2's default really is back to <code>Simulate.OK</code> —
+       that failure is unrelated to this class.</div>
+    <p class="ans"><b>Written answer (C3):</b> Retry reaches the flaky code because the list is a <b>cold Flow</b>.
+       <code>retry()</code> calls <code>observePlanets()</code>, which calls <code>repo.planets()</code> and
+       <code>launchIn</code>s it — starting a brand-new collection. A cold flow re-runs its <code>flow { }</code>
+       body for each collector, so <code>attempts</code> increments to 2 and the second run skips the throw and
+       <code>emitAll</code>s the real data. <b>Subtlety:</b> only the <em>list</em> goes through the ViewModel's
+       repository; the detail screen still builds its own <code>InMemoryPlanetRepository</code> as a default
+       parameter — the C4 stretch goal is what finally eliminates that line.</p>
+  </div>
+
+  <!-- C4 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">C4 — give the detail screen the sealed-state treatment</span><span class="where c">12 pts</span></div>
+    <p class="ask">Refactor <code>PlanetDetailScreen</code> from two loose vars (<code>loading</code>,
+       <code>planet</code>) + a <code>when { }</code> with a <code>planet!!</code> to the list's pattern: a sealed
+       <code>DetailUiState</code>, one state var, and an exhaustive <code>when</code> — making the <code>!!</code>
+       impossible. Explain in a comment why the <code>!!</code> is gone.</p>
+    <p class="file">File: <code>NavDataLayer/.../MainActivity.kt</code></p>
+
+    <h3>1 · The sealed state (add it near <code>PlanetDetailScreen</code>)</h3>
+<pre><code>// C4 — the detail screen's own sealed UI state, mirroring PlanetsUiState for the list.
+// A sealed interface = a CLOSED set of subtypes known at compile time, so the `when`
+// below can be exhaustive and no case can be forgotten.
+sealed interface DetailUiState {
+    data object Loading : DetailUiState                    // suspend load still running -&gt; spinner
+    data object NotFound : DetailUiState                   // load finished; id matched nothing
+    data class Success(val planet: Item) : DetailUiState   // load finished; the non-null planet lives HERE
+}</code></pre>
+
+    <h3>2 · The refactored screen — one state var, exhaustive <code>when</code></h3>
+<pre><code>@Composable
+fun PlanetDetailScreen(
+    planetId: Int,
+    onBack: () -&gt; Unit,
+    modifier: Modifier = Modifier,
+    repo: PlanetRepository = remember { InMemoryPlanetRepository() },
+) {
+    // C4 — ONE state var replaces the loading/planet pair. The starting value is
+    // Loading, so the first frame is a spinner. The explicit &lt;DetailUiState&gt; type
+    // argument lets us assign any subtype to it.
+    var state by remember { mutableStateOf&lt;DetailUiState&gt;(DetailUiState.Loading) }
+
+    // C4 — load the planet when the screen appears (re-runs only if planetId changes).
+    LaunchedEffect(planetId) {
+        state = DetailUiState.Loading
+        state = repo.planet(planetId)                      // suspend call into the data layer...
+            ?.let { DetailUiState.Success(it) }            // ...non-null -&gt; Success carrying the planet
+            ?: DetailUiState.NotFound                      // ...null -&gt; NotFound
+    }
+
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        // C4 — WHY IS THE OLD `planet!!` GONE FOR GOOD?
+        //   The non-null planet no longer lives in a loose `Item?` var that the code
+        //   has to re-assert with !!. It lives INSIDE DetailUiState.Success(val planet: Item),
+        //   where the type is a non-null Item. The exhaustive `when` proves we are in the
+        //   Success branch before we touch it, and `when (val s = state)` smart-casts `s`
+        //   to Success there, so `s.planet` is statically non-null. The compiler GUARANTEES
+        //   the planet is present in that branch — there is no nullable var left to force-unwrap.
+        //   (We capture `state` into the local `val s` because a `by`-delegated property
+        //   can't be smart-cast directly.)
+        when (val s = state) {
+            is DetailUiState.Loading -&gt; CenteredMessage {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Loading planet…", style = MaterialTheme.typography.bodyMedium)
+            }
+            is DetailUiState.NotFound -&gt; {
+                Text("Planet not found", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onBack) { Text("Back to list") }
+            }
+            is DetailUiState.Success -&gt; {                  // s smart-casts to Success here
+                Text(s.planet.title, style = MaterialTheme.typography.headlineSmall)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(s.planet.blurb, style = MaterialTheme.typography.bodyLarge)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Fun fact: ${s.planet.fact}", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = onBack) { Text("Back to list") }
+            }
+        }
+    }
+}</code></pre>
+    <p class="ans"><b>Written answer (C4):</b> the old <code>planet!!</code> is gone because the non-null planet now
+       lives inside <code>DetailUiState.Success(val planet: Item)</code> — a non-null field. The exhaustive
+       <code>when (val s = state)</code> smart-casts <code>s</code> to <code>Success</code> inside that branch, so
+       <code>s.planet</code> is statically guaranteed non-null; there is no nullable <code>Item?</code> var left to
+       force-unwrap. The compiler — not a runtime <code>!!</code> — is what guarantees the planet is there.</p>
+
+    <h3>Stretch (no extra points): hoist the load into a <code>PlanetDetailViewModel</code></h3>
+    <p class="ask">Promote the refactor all the way: a <code>PlanetDetailViewModel(planetId, repo)</code> exposing
+       <code>StateFlow&lt;DetailUiState&gt;</code>, modeled on <code>PlanetsViewModel</code>, so the composable holds
+       no load logic at all.</p>
+<pre><code>// C4 STRETCH — the same sealed state, now owned by a ViewModel (sketch).
+// Because planetId is REQUIRED (no default), plain viewModel() won't work — you need
+// the factory overload with a per-planet KEY so two open details don't share one VM.
+class PlanetDetailViewModel(
+    private val planetId: Int,
+    private val repo: PlanetRepository = InMemoryPlanetRepository(),
+) : ViewModel() {
+    private val _state = MutableStateFlow&lt;DetailUiState&gt;(DetailUiState.Loading)
+    val state: StateFlow&lt;DetailUiState&gt; = _state.asStateFlow()
+    init {
+        viewModelScope.launch {                            // load once when the VM is created
+            _state.value = repo.planet(planetId)
+                ?.let { DetailUiState.Success(it) }
+                ?: DetailUiState.NotFound
+        }
+    }
+}
+
+// In the screen — the composable now holds NO load logic, just observes:
+//   val vm: PlanetDetailViewModel = viewModel(key = "detail-$planetId") { PlanetDetailViewModel(planetId) }
+//   val state by vm.state.collectAsStateWithLifecycle()
+// The per-planet key is the crux: it scopes a DISTINCT VM instance per planetId, so
+// navigating between two details doesn't reuse one VM's stale state — and this is the
+// line that finally removes the detail screen's own InMemoryPlanetRepository default.</code></pre>
+    <div class="callout good"><b>What you observe / why it works</b>
+       Behavior is identical to the in-screen version, but the load logic is now testable in isolation and survives
+       rotation in the VM. The <code>viewModel(key = "detail-$planetId") { … }</code> factory overload supplies the
+       required <code>planetId</code> constructor arg (plain <code>viewModel()</code> only works when every
+       parameter has a default, which is why <code>PlanetsViewModel</code> gets away with it).</div>
+  </div>
+
+  <!-- ============================================================ SUBMIT -->
+  <h2>What to hand in</h2>
+  <ul>
+    <li>The three modified project folders (zip them, or push to your repo) — each app must <b>build and run</b>.
+        After every task the app should still compile, which means fixing the live <code>@Preview</code> call sites
+        the moment you add a required parameter (A1, A2, A3).</li>
+    <li>Every change tagged (<code>// A1</code> … <code>// C4</code>) and commented in the teaching style of the
+        provided source.</li>
+    <li>The small written answers live <em>in code comments</em> where the tasks ask for them: A2's "where does Back
+        land", A3's <code>removeLastOrNull</code> reasoning, C1's "why nothing changed", C2's "why Retry can't
+        succeed in <code>ERROR</code> mode", C3's "why Retry works (cold flow)", and C4's "why <code>!!</code> is
+        gone".</li>
+    <li>Reset C2's <code>InMemoryPlanetRepository</code> default to <code>Simulate.OK</code> before you submit, so
+        C3's flaky-then-success arc works.</li>
+  </ul>
+
+  <h2>Self-check before you submit</h2>
+  <table class="cmp">
+    <thead><tr><th>Task</th><th>Must show</th></tr></thead>
+    <tbody>
+      <tr><td>A1</td><td><code>CategoryInfoKey</code> + <code>entry&lt;CategoryInfoKey&gt;</code> + <code>CategoryInfoScreen</code> + <code>onOpenCategoryInfo</code> button wired in <code>entry&lt;FactKey&gt;</code> + fixed <code>FactScreenPreview</code></td></tr>
+      <tr><td>A2</td><td>"Surprise me" <code>item { }</code> button + the (a) one-key version with the "where Back lands" comment + the (b) whole-path fix + fixed <code>CategoriesScreenPreview</code></td></tr>
+      <tr><td>A3</td><td>"Back to planet list" button using <code>repeat(2){ removeLastOrNull() }</code> + the comment covering the loop, the A2(a) stack, and why A2(b) protects it</td></tr>
+      <tr><td>A4</td><td><code>@Preview</code> + <code>@PreviewParameter(ItemPreviewProvider::class)</code> for <code>CategoryInfoScreen</code>, resolving the category via <code>categoryById</code></td></tr>
+      <tr><td>B1</td><td><code>clearFavorites()</code> in the VM + "Clear favorites" header button + <code>onClearFavorites</code> wired through <code>ItemsRoute</code></td></tr>
+      <tr><td>B2</td><td><code>CategoriesRoute</code> + <code>favoriteCount</code> on <code>CategoriesScreen</code> rendering "★ N favorited so far" + <code>entry&lt;CategoriesKey&gt;</code> calling the Route</td></tr>
+      <tr><td>B3</td><td>always-visible tappable ★/☆ star with its own <code>clickable</code> + <code>onToggleFavorite</code> wired <code>ItemsRoute</code> → <code>toggleFavorite</code>; row click still opens detail</td></tr>
+      <tr><td>B4</td><td><code>visited</code> <code>StateFlow</code> + <code>markVisited</code> in the VM + <code>LaunchedEffect(item.id)</code> in <code>DetailRoute</code> + "· visited" label + <code>ItemsRoute</code> collecting BOTH flows</td></tr>
+      <tr><td>C1</td><td>Uranus (7) + Neptune (8) in <code>samplePlanets</code> + the "why nothing else changed" comment</td></tr>
+      <tr><td>C2</td><td><code>enum class Simulate</code> + constructor param + <code>when (simulate)</code> branch + the "Retry can't succeed" comment + default back to <code>OK</code></td></tr>
+      <tr><td>C3</td><td><code>FlakyPlanetRepository</code> (fails attempt 1, then <code>emitAll</code> the real repo) + one-line swap in <code>PlanetsViewModel</code> + the cold-flow "why Retry works" comment</td></tr>
+      <tr><td>C4</td><td><code>sealed interface DetailUiState</code> + one <code>state</code> var + <code>LaunchedEffect</code> load + exhaustive <code>when (val s = state)</code> + the "why <code>!!</code> is gone" comment (stretch <code>PlanetDetailViewModel</code> optional)</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Answer key for Homework 3 — Deep Stacks, ViewModel State &amp; the Data Layer. Built around
+    <code>NavFourScreen</code>, <code>NavViewModelState</code>, and <code>NavDataLayer</code>. Open in any browser;
+    use <em>Print → Save as PDF</em> to hand out.
+  </footer>
+
+</div>
+</body>
+</html>

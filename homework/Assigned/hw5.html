@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 5 — Composing Multiple Items: a Profile Card &amp; a Settings List</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84;        /* Android green */
+    --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:0 22px 80px;}
+
+  /* Header */
+  header.hero{
+    background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:34px;
+    border-bottom:4px solid var(--accent);
+  }
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px;
+    color:var(--accent); font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:64ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:10px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:16px; margin:24px 0 6px;}
+  h3 code{font-size:.95em;}
+
+  p{margin:12px 0;}
+  ul,ol{margin:10px 0 10px; padding-left:22px;}
+  li{margin:6px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.92em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:16px 18px; border-radius:10px;
+    overflow:auto; font-size:13.5px; line-height:1.55; margin:14px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre .c{color:#7d8aa0;}          /* comment */
+  pre .k{color:#c792ea;}          /* keyword */
+  pre .s{color:#a5e8a0;}          /* string  */
+  pre .f{color:#82aaff;}          /* fn/type */
+
+  /* Where-to-work tag on each task */
+  .where{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.04em;
+    text-transform:uppercase; padding:2px 8px; border-radius:999px; margin-left:8px; vertical-align:middle;}
+  .where.pg{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}     /* playground */
+  .where.as{background:#fff3e6; color:#b4530a; border:1px solid #fde2c0;}     /* Android Studio */
+  .where.both{background:#eafaf1; color:var(--accent-deep); border:1px solid #c5ebd3;}
+
+  /* Project / problem blocks */
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 6px; margin:16px 0;
+     box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .q > .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
+  .q .qid{font-weight:800; color:var(--ink);}
+  .deliver{margin:10px 0 4px; font-size:14px; color:var(--accent-deep); font-weight:700;}
+  .deliver span{color:var(--muted); font-weight:500;}
+
+  /* Project facts strip at the top of each project card */
+  .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin:8px 0 14px;}
+  .facts div{background:var(--pill); border:1px solid var(--line); border-radius:8px; padding:8px 11px;
+    font-size:12.5px;}
+  .facts div b{display:block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+    color:#9aa8b8; margin-bottom:2px;}
+  .facts code{background:#f1f7f3; color:var(--accent-deep); font-weight:600; font-size:11.5px;}
+
+  /* Per-TODO block inside a project */
+  .todo{border:1px solid var(--line); border-radius:10px; padding:12px 14px 4px; margin:14px 0; background:#fff;}
+  .todo .th{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .todo .tn{flex:none; width:auto; min-width:30px; height:24px; padding:0 9px; border-radius:999px;
+    background:var(--accent); color:#063; font-weight:800; display:inline-grid; place-items:center; font-size:12px;}
+  .todo .ttl{font-weight:800; font-size:15px;}
+  .todo .builds{font-size:11.5px; font-weight:700; letter-spacing:.03em; color:#2454c9;
+    background:#eef4ff; border:1px solid #d3e0ff; border-radius:999px; padding:2px 9px;}
+  .todo p{margin:8px 0;}
+  .hint{font-size:13.5px; color:#7c4a12; background:var(--warn-soft); border:1px solid #fde2c0;
+    border-radius:8px; padding:8px 11px; margin:8px 0;}
+  .hint b{color:#7c4a12;}
+  .hint code{background:#fff3e6; color:#b4530a;}
+
+  .callout{border-radius:10px; padding:13px 16px; margin:16px 0; font-size:15px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.tip{background:#ecfdf3; border:1px solid #c5ebd3;}
+  .callout.warn{background:var(--warn-soft); border:1px solid #fde2c0; color:#7c4a12;}
+  .callout b{color:inherit;}
+
+  .progression{display:grid; grid-template-columns:1fr; gap:10px; margin:18px 0;}
+  .step{display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid var(--line);
+    border-radius:10px; padding:12px 14px;}
+  .step .n{flex:none; width:26px; height:26px; border-radius:50%; background:var(--accent);
+    color:#063; font-weight:800; display:grid; place-items:center; font-size:13px;}
+  .step h4{margin:0 0 2px; font-size:15px;}
+  .step p{margin:0; color:var(--muted); font-size:14px;}
+  .step code{font-size:.85em;}
+
+  /* "Done when" checklist */
+  ul.check{list-style:none; padding-left:0; margin:8px 0;}
+  ul.check li{position:relative; padding-left:26px; margin:5px 0; font-size:14.5px;}
+  ul.check li::before{content:"☐"; position:absolute; left:0; top:0; color:var(--accent-deep);
+    font-weight:800; font-size:15px;}
+
+  /* Reference grid */
+  .refgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; margin:16px 0;}
+  .refcard{border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:#fff;}
+  .refcard h4{margin:0 0 6px; font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:#9aa8b8;}
+  .refcard code{display:inline-block; margin:2px 4px 2px 0; font-size:11.5px; color:var(--accent-deep);
+    background:#f1f7f3; font-weight:600;}
+
+  table.grade{width:100%; border-collapse:collapse; font-size:14.5px; margin-top:8px;}
+  table.grade th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.grade td{padding:8px 10px; border-bottom:1px solid var(--line);}
+
+  footer{margin-top:46px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:13.5px;}
+
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.step,.callout,.refcard,.todo{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Jetpack Compose</p>
+    <h1>Homework 5 — Composing Multiple Items: a Profile Card &amp; a Settings List</h1>
+    <p class="sub">Two ready-to-run starter projects. You've practiced each skill on its own in the
+       single-skill <b>Labs</b> — layout, modifier order, text, state, <code>Row</code> alignment,
+       arrangement, <code>weight</code>, <code>Box</code> align. Now you'll combine them into <em>two</em>
+       richer screens that each place <b>multiple</b> items on screen at once. No solutions are provided —
+       you open each project, run it to see a partial screen, then fill in the TODOs.</p>
+    <div class="meta">
+      <span><b>Projects:</b> Hw5ProfileCard · Hw5SettingsList</span>
+      <span><b>2 starter apps</b> · starter-only (no solutions)</span>
+      <span><b>Tools:</b> Android Studio + emulator/device</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="../../labs/index.html">▶ Open the Labs</a>
+      <a href="../projects.html">← Projects, Explained</a>
+      <a href="./hw4.html">Homework 4</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ CONTEXT ============ -->
+  <section>
+    <p>The <a href="../../labs/index.html"><b>Labs</b></a> (<code>compose-01</code> … <code>compose-10</code>)
+       drilled one Compose skill at a time: a <code>Column</code> layout, modifier order, styling
+       <code>Text</code>, a profile card, <code>remember</code>ed state, a <code>Row</code>'s cross-axis,
+       <code>Arrangement</code>, <code>Modifier.weight</code>, splitting a row, and <code>Box</code> alignment.
+       Each lab was deliberately tiny — one idea, one widget. This homework is the payoff: you assemble those
+       isolated skills into two real screens, each holding <b>several</b> elements that have to share space,
+       align to each other, and respond to taps.</p>
+
+    <div class="progression">
+      <div class="step"><div class="n">1</div><div>
+        <h4>Hw5ProfileCard — one card, many parts</h4>
+        <p>An avatar with a pinned status dot (<code>Box</code> + <code>align</code>), a name and handle,
+           a three-up stats row that splits the width evenly (<code>weight</code>), and a two-button action
+           row (<code>Arrangement.spacedBy</code> + <code>weight</code>).</p>
+      </div></div>
+      <div class="step"><div class="n">2</div><div>
+        <h4>Hw5SettingsList — a list of rows that all line up</h4>
+        <p>Six settings rows, each an icon + a label that fills the middle + a trailing control
+           (<code>Row</code> cross-axis + <code>weight</code>), real working <code>Switch</code> toggles
+           (<code>remember</code>ed state), and a divider before an About footer.</p>
+      </div></div>
+    </div>
+
+    <h3>How to work this assignment</h3>
+    <div class="progression">
+      <div class="step"><div class="n">1</div><div>
+        <h4>Open the project folder</h4>
+        <p>In Android Studio: <code>File ▸ Open…</code>, then select the project <em>folder itself</em>
+           (e.g. <code>Hw5ProfileCard</code>) — not a file inside it.</p>
+      </div></div>
+      <div class="step"><div class="n">2</div><div>
+        <h4>Let Gradle sync, then Run</h4>
+        <p>Wait for the Gradle sync to finish, pick an emulator, and press <b>Run ▶</b>. It builds and shows a
+           <em>partial</em> screen — the parts already done for you, plus visible placeholders where the TODOs are.</p>
+      </div></div>
+      <div class="step"><div class="n">3</div><div>
+        <h4>Edit <code>MainActivity.kt</code> to complete the TODOs</h4>
+        <p>Open the one file named in each project section, find each numbered <code>// TODO</code>, replace its
+           placeholder with real Compose, and <b>re-run</b> to watch the screen fill in.</p>
+      </div></div>
+    </div>
+
+    <div class="callout proj">
+      <b>One file per project.</b> Everything you change lives in a single <code>MainActivity.kt</code>. The
+      theme wrapper (<code>ui/theme/Theme.kt</code>), the <code>Scaffold</code>, the data classes, the sample
+      data, and the centered layout shell are <em>already written</em> — you only fill in the TODOs. The starter
+      always compiles and always shows something, so you can run after every small change.
+    </div>
+
+    <div class="callout warn">
+      <b>How to submit.</b> For each project, submit <b>(1)</b> your finished <code>MainActivity.kt</code> and
+      <b>(2)</b> an emulator/device screenshot of the completed screen. Tag each change with a comment naming the
+      TODO (<code>// TODO 1</code>, <code>// TODO 2</code>, …) and comment every line you add in the same heavy
+      teaching style as the surrounding starter code. Starter-only means: <b>no solution is provided</b> — the
+      hints name the API, the rest is yours.
+    </div>
+
+    <div class="callout tip">
+      <b>Stuck on a single skill?</b> Re-open the matching lab. Every TODO below names exactly which lab(s) it
+      builds on, so if a TODO feels unfamiliar, that lab is your worked example for the one idea you're missing.
+    </div>
+  </section>
+
+  <!-- ============ PROJECT 1 ============ -->
+  <h2><span class="part">Project 1.</span> Hw5ProfileCard — a profile card <span class="where as">Android Studio</span></h2>
+  <p class="lead">A single profile card, centered on screen, assembled from several aligned pieces.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Open, run, then complete three TODOs in <code>MainActivity.kt</code></span></div>
+
+    <div class="facts">
+      <div><b>Project folder</b> <code>Hw5ProfileCard</code></div>
+      <div><b>Package</b> <code>com.example.hw5profilecard</code></div>
+      <div><b>Theme wrapper</b> <code>Hw5ProfileCardTheme</code></div>
+      <div><b>Material 3 · Compose BOM</b> <code>2026.02.01</code></div>
+    </div>
+    <p><b>File to edit:</b>
+       <code>app/src/main/java/com/example/hw5profilecard/MainActivity.kt</code></p>
+
+    <p><b>What the finished screen looks like</b> — a single profile card centered on screen:</p>
+    <ul>
+      <li>a circular avatar showing the person's initials, with a small <b>green</b> "online" dot pinned to its
+          bottom-right corner;</li>
+      <li>the person's name (bold, <code>titleLarge</code>) and "<code>@handle · Role</code>" (muted) beneath it;</li>
+      <li>a row of <b>three</b> stats — Posts / Followers / Following — that split the width <b>evenly</b>, each a
+          big bold number above a small muted label;</li>
+      <li>a row of <b>two</b> equal-width buttons: a filled <b>"Follow"</b> and an outlined <b>"Message"</b>.</li>
+    </ul>
+
+    <div class="callout proj"><b>Already done for you (do not re-implement).</b> The <code>Scaffold</code>; a
+      <code>Profile</code> data class (<code>name, handle, role, posts:Int, followers:Int, following:Int</code>); a
+      sample <code>val ada = Profile(...)</code>; the outer centered <code>Column</code>
+      (<code>fillMaxSize</code>, padding, <code>horizontalAlignment = CenterHorizontally</code>); the avatar
+      <code>Box</code> (a ~<code>96.dp</code> circle via
+      <code>Modifier.size(96.dp).clip(CircleShape).background(brandColor)</code> with a centered initials
+      <code>Text</code>); the name <code>Text</code>; and the "<code>@handle · role</code>" <code>Text</code>. Your
+      job is the three TODOs below.</div>
+
+    <!-- TODO 1 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 1</span>
+        <span class="ttl">Online badge</span>
+        <span class="builds">builds on Lab 10 — Box + align</span>
+      </div>
+      <p>Add a small (~<code>16.dp</code>) <b>green</b> dot to the <b>bottom-end</b> corner of the avatar
+         <code>Box</code>, so it reads as an "online" indicator overlapping the avatar's edge. It must sit on
+         <em>top</em> of the avatar in that one corner, not below it in the layout flow.</p>
+      <div class="hint"><b>Hint (API only):</b> place the dot inside the avatar <code>Box</code> and pin it with
+        <code>Modifier.align(Alignment.BottomEnd)</code>. A small <code>Box</code> with
+        <code>.size(16.dp).clip(CircleShape).background(...)</code> makes a clean dot.</div>
+    </div>
+
+    <!-- TODO 2 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 2</span>
+        <span class="ttl">Stats row</span>
+        <span class="builds">builds on Labs 8 &amp; 9 — weight</span>
+      </div>
+      <p>Make the three stats (Posts / Followers / Following) split the row <b>evenly</b>: each of the three cells
+         takes one equal share of the width, with the big bold <em>number</em> on top and the small muted
+         <em>label</em> centered below it.</p>
+      <div class="hint"><b>Hint (API only):</b> give each cell <code>Modifier.weight(1f)</code> inside the
+        <code>Row</code> so the three shares are equal; center each cell's contents with a
+        <code>Column</code> + <code>horizontalAlignment = Alignment.CenterHorizontally</code>.</div>
+    </div>
+
+    <!-- TODO 3 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 3</span>
+        <span class="ttl">Action buttons</span>
+        <span class="builds">builds on Labs 7 &amp; 8 — arrangement + weight</span>
+      </div>
+      <p>Add a <code>Row</code> with a filled <code>Button("Follow")</code> and an
+         <code>OutlinedButton("Message")</code>. Each button takes an <b>equal</b> half of the row width, and the
+         two are separated by a fixed <code>12.dp</code> gap.</p>
+      <div class="hint"><b>Hint (API only):</b> give each button <code>Modifier.weight(1f)</code>, and set the
+        <code>Row</code>'s <code>horizontalArrangement = Arrangement.spacedBy(12.dp)</code>.</div>
+    </div>
+
+    <p class="deliver" style="margin-top:14px;">Done when…</p>
+    <ul class="check">
+      <li>the green online dot sits in the avatar's bottom-right corner, overlapping its edge;</li>
+      <li>the three stats are exactly equal-width, each centered, number bold above a muted label;</li>
+      <li>"Follow" and "Message" are equal-width with a visible gap between them;</li>
+      <li>the app builds and runs, and no TODO placeholder text is still visible on screen.</li>
+    </ul>
+    <div class="deliver">Deliver: <span>finished <code>MainActivity.kt</code> + one emulator/device screenshot of the completed card.</span></div>
+  </div>
+
+  <!-- ============ PROJECT 2 ============ -->
+  <h2><span class="part">Project 2.</span> Hw5SettingsList — a settings list <span class="where as">Android Studio</span></h2>
+  <p class="lead">A scrollable list of settings rows that all line up, with toggles that actually flip.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Open, run, then complete the TODOs in <code>MainActivity.kt</code></span></div>
+
+    <div class="facts">
+      <div><b>Project folder</b> <code>Hw5SettingsList</code></div>
+      <div><b>Package</b> <code>com.example.hw5settingslist</code></div>
+      <div><b>Theme wrapper</b> <code>Hw5SettingsListTheme</code></div>
+      <div><b>Material 3 · Compose BOM</b> <code>2026.02.01</code></div>
+    </div>
+    <p><b>File to edit:</b>
+       <code>app/src/main/java/com/example/hw5settingslist/MainActivity.kt</code></p>
+
+    <p><b>What the finished screen looks like</b> — a scrollable settings list:</p>
+    <ul>
+      <li>a "<b>Settings</b>" screen title;</li>
+      <li><b>six</b> rows; each row = a leading icon + a label that fills the middle + a trailing control on the
+          right edge — a <code>Switch</code> for toggle settings, a "<code>›</code>" chevron <code>Text</code> for
+          navigation settings;</li>
+      <li>the toggle switches actually <b>flip</b> when tapped;</li>
+      <li>a divider separating the main settings from an "<b>About</b>" footer row.</li>
+    </ul>
+
+    <div class="callout proj"><b>Already done for you (do not re-implement).</b> The <code>Scaffold</code> +
+      "Settings" title; an <code>enum Kind { TOGGLE, NAV }</code>; a <code>SettingItem</code> data class
+      (<code>icon: String</code> emoji, <code>label: String</code>, <code>kind: Kind</code>,
+      <code>initiallyOn: Boolean = false</code>); a <code>val settings = listOf(...)</code> of <b>six</b> items —
+      <em>Notifications, Dark mode, Data saver</em> as <code>TOGGLE</code>; <em>Privacy, Language, About</em> as
+      <code>NAV</code>; and the <code>SettingRow</code> composable <b>signature</b>. Your job is the TODOs
+      below.</div>
+
+    <!-- TODO 1 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 1</span>
+        <span class="ttl">Show every row</span>
+        <span class="builds">builds on Lab 1 — layout + lists</span>
+      </div>
+      <p>Render <b>all</b> items from <code>settings</code> — the starter only shows a placeholder / a single row.
+         You need a scrollable container that produces one <code>SettingRow</code> per item.</p>
+      <div class="hint"><b>Hint (API only):</b> either a <code>Column(Modifier.verticalScroll(rememberScrollState()))</code>
+        with <code>settings.forEach { ... }</code>, or a <code>LazyColumn { items(settings) { ... } }</code>.</div>
+    </div>
+
+    <!-- TODO 2 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 2</span>
+        <span class="ttl">Row layout</span>
+        <span class="builds">builds on Labs 6 &amp; 8 — Row cross-axis + weight</span>
+      </div>
+      <p>Implement <code>SettingRow</code> as a <code>Row</code>: the leading icon first, then the label
+         <code>Text</code>, then the trailing control. The label must <b>fill the middle</b> so the trailing
+         control is pushed all the way to the <b>end</b> of the row, and the icon / label / control must be
+         vertically centered with each other.</p>
+      <div class="hint"><b>Hint (API only):</b> give the label <code>Text</code> a <code>Modifier.weight(1f)</code>
+        (that's what pushes the control to the end), and set the <code>Row</code>'s
+        <code>verticalAlignment = Alignment.CenterVertically</code>.</div>
+    </div>
+
+    <!-- TODO 3 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 3</span>
+        <span class="ttl">Make toggles work</span>
+        <span class="builds">builds on Lab 5 — state</span>
+      </div>
+      <p>Make each <code>TOGGLE</code> row's <code>Switch</code> actually flip on and off when tapped. Give each
+         toggle row its own remembered boolean state seeded from <code>item.initiallyOn</code>, feed it to the
+         switch's <code>checked</code>, and update it from <code>onCheckedChange</code>.</p>
+      <div class="hint"><b>Hint (API only):</b> hold the state with
+        <code>var on by remember { mutableStateOf(item.initiallyOn) }</code>; the <code>Switch</code> takes
+        <code>checked = on</code> and <code>onCheckedChange = { on = it }</code>. (The <code>NAV</code> rows show
+        the "<code>›</code>" chevron instead of a switch.)</div>
+    </div>
+
+    <!-- TODO 4 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 4 <span style="font-weight:600; color:var(--muted);">(optional)</span></span>
+        <span class="ttl">Divider before About</span>
+        <span class="builds">structure / arrangement</span>
+      </div>
+      <p>Add a <code>HorizontalDivider</code> just <b>above</b> the "About" footer row, so the About item reads as a
+         separated footer rather than just another setting in the list.</p>
+      <div class="hint"><b>Hint (API only):</b> emit a <code>HorizontalDivider()</code> before the row whose label
+        is "About" (or before the last item).</div>
+    </div>
+
+    <p class="deliver" style="margin-top:14px;">Done when…</p>
+    <ul class="check">
+      <li>all six rows render and the list scrolls if it doesn't fit;</li>
+      <li>in every row the icon is on the left, the label fills the middle, and the control sits flush on the right edge, all vertically centered;</li>
+      <li>each toggle row's switch flips and stays flipped when you tap it; NAV rows show a "<code>›</code>" chevron;</li>
+      <li>(optional) a divider sits above the About row;</li>
+      <li>the app builds and runs, and no TODO placeholder text is still visible on screen.</li>
+    </ul>
+    <div class="deliver">Deliver: <span>finished <code>MainActivity.kt</code> + one emulator/device screenshot showing at least one toggle flipped on.</span></div>
+  </div>
+
+  <!-- ============ REFERENCE ============ -->
+  <h2>Quick reference</h2>
+  <p class="lead">The exact APIs the TODOs name, grouped by the idea they belong to. Each maps back to a lab — if
+     one is unfamiliar, open that lab for the worked single-skill example.</p>
+
+  <div class="refgrid">
+    <div class="refcard">
+      <h4>Containers</h4>
+      <code>Column</code><code>Row</code><code>Box</code><code>Spacer</code><code>LazyColumn</code>
+    </div>
+    <div class="refcard">
+      <h4>Box &amp; align — Lab 10</h4>
+      <code>Modifier.align</code><code>Alignment.BottomEnd</code><code>contentAlignment</code><code>clip(CircleShape)</code>
+    </div>
+    <div class="refcard">
+      <h4>Weight — Labs 8 &amp; 9</h4>
+      <code>Modifier.weight(1f)</code><code>fillMaxWidth</code>
+    </div>
+    <div class="refcard">
+      <h4>Row cross-axis — Lab 6</h4>
+      <code>verticalAlignment</code><code>Alignment.CenterVertically</code>
+    </div>
+    <div class="refcard">
+      <h4>Arrangement — Lab 7</h4>
+      <code>Arrangement.spacedBy(12.dp)</code><code>horizontalArrangement</code>
+    </div>
+    <div class="refcard">
+      <h4>State — Lab 5</h4>
+      <code>remember { }</code><code>mutableStateOf()</code><code>by</code><code>onCheckedChange</code>
+    </div>
+    <div class="refcard">
+      <h4>Components</h4>
+      <code>Text</code><code>Button</code><code>OutlinedButton</code><code>Switch</code><code>HorizontalDivider</code>
+    </div>
+    <div class="refcard">
+      <h4>Scrolling</h4>
+      <code>verticalScroll</code><code>rememberScrollState()</code><code>LazyColumn</code>
+    </div>
+  </div>
+
+  <!-- ============ OVERVIEW ============ -->
+  <h2>Overview &amp; checklist</h2>
+  <table class="grade">
+    <thead><tr><th>Project</th><th>Combines</th><th>TODOs</th></tr></thead>
+    <tbody>
+      <tr><td><b>Hw5ProfileCard</b></td><td>Box + align, weight, arrangement</td><td>3 (online badge · stats row · action buttons)</td></tr>
+      <tr><td><b>Hw5SettingsList</b></td><td>lists, Row cross-axis, weight, state</td><td>3 + 1 optional (show rows · row layout · toggles · divider)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip" style="margin-top:18px;">
+    <b>You're done when</b> both apps build and run, every required TODO placeholder is gone, the profile card shows
+    a pinned green dot with evenly-split stats and equal action buttons, and the settings list shows six aligned
+    rows whose toggles actually flip. Each TODO names the lab it came from — the homework is just those single
+    skills, composed together.
+  </div>
+
+  <footer>
+    Homework 5 · Composing Multiple Items · two starter projects, no solutions —
+    <code>Hw5ProfileCard</code> and <code>Hw5SettingsList</code>. Practice each skill alone in the
+    <a href="../../labs/index.html">Labs</a>, then assemble them here. Edit only <code>MainActivity.kt</code>; the
+    emulator is the source of truth.
+  </footer>
+
+</div>
+</body>
+</html>

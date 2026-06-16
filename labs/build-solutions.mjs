@@ -188,8 +188,8 @@ const out = `<!doctype html>
     <p>The full answer key for every browser lab: the task, the working solution, why it works, and exactly what the auto-grader checks. ${composeCount} Compose labs and ${navCount} Navigation labs.</p>
     <div class="links">
       <a href="./index.html">← All labs</a>
-      <a href="../homework/playground.html">🎨 Compose Playground</a>
-      <a href="../homework/nav-playground.html">🧭 Nav Playground</a>
+      <a href="../homework/Playground/playground.html">🎨 Compose Playground</a>
+      <a href="../homework/Playground/nav-playground.html">🧭 Nav Playground</a>
     </div>
   </header>
 

@@ -58,7 +58,7 @@
     bar.appendChild(titleWrap);
     var links = el('div','links');
     links.appendChild(linkBtn('← All labs', './index.html'));
-    links.appendChild(linkBtn(isNav?'🧭 Nav Playground':'🎨 Compose Playground', isNav?'../homework/nav-playground.html':'../homework/playground.html'));
+    links.appendChild(linkBtn(isNav?'🧭 Nav Playground':'🎨 Compose Playground', isNav?'../homework/Playground/nav-playground.html':'../homework/Playground/playground.html'));
     bar.appendChild(links);
     hero.appendChild(bar);
     var chips = el('div','herochips');

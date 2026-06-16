@@ -1,6 +1,6 @@
 // =============================================================================
 // nav-engine.js — a SHARED, introspectable Navigation 3 model for the labs,
-// distilled from the Navigation 3 Playground (homework/nav-playground.html).
+// distilled from the Navigation 3 Playground (homework/Playground/nav-playground.html).
 //
 // The back stack is a list of keys; the TOP key is on screen. This engine
 // parses an editable rememberNavBackStack(...) key list, renders an interactive

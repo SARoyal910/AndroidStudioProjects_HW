@@ -43,7 +43,7 @@
     "Drag the stepped Slider — it snaps to 0–5 because of 'valueRange = 0f..5f, steps = 4'. Change 'steps' to 9 and a 'valueRange' of '0f..10f' to get 0–10.",
     "Tap the 'FilterChip' and watch a leading checkmark appear / disappear — that is the 'leadingIcon = if (selected) { { Icon(...) } } else null' nullable slot at work.",
     "Open MainActivity.kt in Android Studio and view the tall 'Catalog' @Preview to scroll the whole catalog without an emulator.",
-    "Edit the same components live in homework/playground.html — change a Button to an OutlinedButton, or a Text's style, and watch the preview update as you type."
+    "Edit the same components live in homework/Playground/playground.html — change a Button to an OutlinedButton, or a Text's style, and watch the preview update as you type."
   ],
   "gotchas": [
     "'TopAppBar' is an experimental Material 3 API, so 'CatalogScreen' is annotated '@OptIn(ExperimentalMaterial3Api::class)'. Forgetting the opt-in is a compile error, not a crash.",

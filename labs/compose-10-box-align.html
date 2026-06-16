@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Stack &amp; align</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-10',
+  title: 'Lab 10 · Stack & align',
+  track: 'Compose',
+  level: 'Intermediate',
+  goal: 'Column and Row place children side by side; a Box LAYERS them on top of each other — later children draw on top. That is how you build avatars-with-badges, banners over images, FAB overlays. Here: pin a green “online” dot to the bottom-end corner of an avatar with Modifier.align.',
+  steps: [
+    'Inside the outer <code>Box</code>, the avatar and the status dot both sit in the top-start corner — stacked, because a Box overlaps its children.',
+    'Move the dot with <code>Modifier.align(Alignment.BottomEnd)</code> on the dot&rsquo;s own Box. <code>align</code> is a Box-only modifier that positions <i>that one child</i> within the Box.',
+    'Result: a 64&nbsp;dp avatar with a 16&nbsp;dp dot tucked into its bottom-right corner — the classic presence indicator.',
+  ],
+  hints: [
+    '<code>Alignment</code> inside a Box is two-dimensional: <code>TopStart</code>, <code>Center</code>, <code>BottomEnd</code>, etc. Put it as the first link: <code>Modifier.align(Alignment.BottomEnd).size(16.dp)…</code>.',
+    'To align <i>every</i> child the same way you&rsquo;d set <code>Box(contentAlignment = …)</code> on the parent; to move just one child, use <code>Modifier.align(…)</code> on that child — that&rsquo;s what we want here.',
+    'A round shape is a sized Box <code>.clip(CircleShape)</code> with a <code>.background(…)</code> — same recipe as the avatar in Lab 4.',
+  ],
+  starter:
+'// A Box layers its children. The avatar and the green dot are stacked in the\n' +
+'// top-start corner. Pin the dot to the BOTTOM-END corner with Modifier.align.\n' +
+'Box {\n' +
+'    // avatar\n' +
+'    Box(modifier = Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))\n' +
+'    // online status dot — currently stuck in the top-start corner\n' +
+'    Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(Color(0xFF00C853)))\n' +
+'}\n',
+  solution:
+'Box {\n' +
+'    Box(modifier = Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))\n' +
+'    Box(\n' +
+'        modifier = Modifier\n' +
+'            .align(Alignment.BottomEnd)\n' +
+'            .size(16.dp)\n' +
+'            .clip(CircleShape)\n' +
+'            .background(Color(0xFF00C853))\n' +
+'    )\n' +
+'}\n',
+  checks: [
+    { label: 'An outer <code>Box</code> stacks the avatar and the dot (3 Boxes total)', test: function(a){ return a.findAll('Box').length>=3; } },
+    { label: 'Both inner Boxes are circular — sized + <code>clip(CircleShape)</code>', test: function(a){ return a.findAll('Box').filter(function(b){ return a.hasMod(b,'size') && a.shapeOf(b)==='CircleShape'; }).length>=2; } },
+    { label: 'The dot is pinned bottom-end — a Box with <code>Modifier.align(Alignment.BottomEnd)</code>', test: function(a){ return a.findAll('Box').some(function(b){ return a.hasMod(b,'align'); }) && /Alignment\s*\.\s*BottomEnd/.test(a.code); } },
+  ],
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Spread them out</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-07',
+  title: 'Lab 7 · Spread them out',
+  track: 'Compose',
+  level: 'Beginner',
+  goal: 'Arrangement decides how leftover space on the MAIN axis is shared out. These three action buttons are bunched at the start because the Row is only as wide as its content. Make the Row full-width and spread the buttons edge-to-edge with Arrangement.SpaceBetween.',
+  steps: [
+    'A Row hugs its children by default, so there is no leftover space to distribute. First add <code>Modifier.fillMaxWidth()</code> so the Row spans the screen.',
+    'Now set <code>horizontalArrangement = Arrangement.SpaceBetween</code> — first child pinned to the start, last to the end, equal gaps between.',
+    'Try swapping in <code>SpaceEvenly</code> or <code>SpaceAround</code> to feel the difference, then settle on <code>SpaceBetween</code> for an action bar.',
+  ],
+  hints: [
+    'Arrangement only has visible space to work with once the Row is wider than its children — that&rsquo;s why <code>fillMaxWidth()</code> comes first.',
+    '<code>SpaceBetween</code> = no space at the ends; <code>SpaceAround</code> = half-size gaps at the ends; <code>SpaceEvenly</code> = equal gaps everywhere, ends included.',
+    'Both the modifier and the arrangement live in the <code>Row(</code>…<code>)</code> header.',
+  ],
+  starter:
+'// Three buttons, bunched at the left because the Row is content-width.\n' +
+'// Goal: make the Row full-width and spread them with Arrangement.SpaceBetween.\n' +
+'Row {\n' +
+'    TextButton(onClick = {}) { Text("Cancel") }\n' +
+'    TextButton(onClick = {}) { Text("Save draft") }\n' +
+'    Button(onClick = {}) { Text("Publish") }\n' +
+'}\n',
+  solution:
+'Row(\n' +
+'    modifier = Modifier.fillMaxWidth(),\n' +
+'    horizontalArrangement = Arrangement.SpaceBetween\n' +
+') {\n' +
+'    TextButton(onClick = {}) { Text("Cancel") }\n' +
+'    TextButton(onClick = {}) { Text("Save draft") }\n' +
+'    Button(onClick = {}) { Text("Publish") }\n' +
+'}\n',
+  checks: [
+    { label: 'A <code>Row</code> holds <b>three</b> buttons', test: function(a){ return !!a.find('Row') && (a.findAll('Button').length + a.findAll('TextButton').length) >= 3; } },
+    { label: 'The Row is full-width — <code>Modifier.fillMaxWidth()</code>', test: function(a){ return a.hasMod(a.find('Row'),'fillMaxWidth'); } },
+    { label: 'Buttons spread edge-to-edge — <code>horizontalArrangement = Arrangement.SpaceBetween</code>', test: function(a){ var ar=a.arrangementOf(a.find('Row'),'horizontal'); return !!ar && ar.name==='SpaceBetween'; } },
+  ],
+});
+</script>
+</body>
+</html>

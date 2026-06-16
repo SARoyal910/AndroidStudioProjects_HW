@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Split the row 1 : 2</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-09',
+  title: 'Lab 9 · Split the row 1 : 2',
+  track: 'Compose',
+  level: 'Intermediate',
+  goal: 'Lab 8 used one weight to push. Use TWO weights to divide. When several children are weighted, they split the leftover space in proportion to their weights. Give the panels weights of 1 and 2 so the right panel ends up twice as wide as the left.',
+  steps: [
+    'Right now neither panel is weighted, so each is only as wide as its text — leaving a big empty gap on the right.',
+    'Give the <b>left</b> Box <code>Modifier.weight(1f)</code> and the <b>right</b> Box <code>Modifier.weight(2f)</code>.',
+    'Weights are a ratio: 1 + 2 = 3 shares, so the panels become 1/3 and 2/3 of the row&rsquo;s width — they grow and shrink together as the screen resizes.',
+  ],
+  hints: [
+    'Chain weight with the other modifiers, e.g. <code>Modifier.weight(1f).height(80.dp).background(…)</code>. Order of weight vs paint modifiers doesn&rsquo;t change the share.',
+    'Equal weights (<code>1f</code> and <code>1f</code>) would split 50/50; <code>1f</code> and <code>2f</code> gives one-third / two-thirds.',
+    'Because both panels are weighted, the <code>spacedBy(12.dp)</code> gap is subtracted first, then the remaining width is split 1 : 2.',
+  ],
+  starter:
+'// Two panels in a full-width Row. Make the RIGHT panel twice as wide as the\n' +
+'// left using weights of 1 and 2 (weights split the width by ratio).\n' +
+'Row(\n' +
+'    modifier = Modifier.fillMaxWidth(),\n' +
+'    horizontalArrangement = Arrangement.spacedBy(12.dp)\n' +
+') {\n' +
+'    Box(modifier = Modifier.height(80.dp).background(MaterialTheme.colorScheme.primaryContainer)) {\n' +
+'        Text("1 part", modifier = Modifier.padding(12.dp))\n' +
+'    }\n' +
+'    Box(modifier = Modifier.height(80.dp).background(MaterialTheme.colorScheme.secondaryContainer)) {\n' +
+'        Text("2 parts", modifier = Modifier.padding(12.dp))\n' +
+'    }\n' +
+'}\n',
+  solution:
+'Row(\n' +
+'    modifier = Modifier.fillMaxWidth(),\n' +
+'    horizontalArrangement = Arrangement.spacedBy(12.dp)\n' +
+') {\n' +
+'    Box(modifier = Modifier.weight(1f).height(80.dp).background(MaterialTheme.colorScheme.primaryContainer)) {\n' +
+'        Text("1 part", modifier = Modifier.padding(12.dp))\n' +
+'    }\n' +
+'    Box(modifier = Modifier.weight(2f).height(80.dp).background(MaterialTheme.colorScheme.secondaryContainer)) {\n' +
+'        Text("2 parts", modifier = Modifier.padding(12.dp))\n' +
+'    }\n' +
+'}\n',
+  checks: [
+    { label: 'A full-width <code>Row</code> holds two <code>Box</code> panels', test: function(a){ var r=a.find('Row'); return !!r && a.hasMod(r,'fillMaxWidth') && a.findAll('Box').length>=2; } },
+    { label: 'The left panel has <code>Modifier.weight(1f)</code>', test: function(a){ var b=a.findAll('Box'); return b[0] && a.weightOf(b[0])===1; } },
+    { label: 'The right panel has <code>Modifier.weight(2f)</code> — twice the left', test: function(a){ var b=a.findAll('Box'); return b[1] && a.weightOf(b[1])===2; } },
+  ],
+});
+</script>
+</body>
+</html>

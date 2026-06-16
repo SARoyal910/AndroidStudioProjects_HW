@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Push it to the edge</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-08',
+  title: 'Lab 8 · Push it to the edge',
+  track: 'Compose',
+  level: 'Intermediate',
+  goal: 'This is the most common Row pattern in real apps: a label on the left, a control on the right, full width. The trick is Modifier.weight(1f) — give it to the label and it greedily eats all the leftover space, shoving the Switch to the far end. No fixed widths, no Spacer needed.',
+  steps: [
+    'The Row is already <code>fillMaxWidth()</code>, but the label and Switch hug each other at the start because neither claims the empty space.',
+    'Add <code>Modifier.weight(1f)</code> to the <b>label</b> <code>Text</code>. <code>weight</code> means &ldquo;take a share of the leftover space&rdquo; — with one weighted child, it takes <i>all</i> of it.',
+    'The label now stretches across the gap, so the Switch is pushed to the trailing edge. (This only works inside a Row or Column.)',
+  ],
+  hints: [
+    'Put the modifier on the child, not the Row: <code>Text("Wi-Fi", modifier = Modifier.weight(1f), …)</code>.',
+    'Why not <code>Arrangement.SpaceBetween</code>? It works for two items, but <code>weight</code> scales to any number of trailing items and lets you cap or pad the label independently — it&rsquo;s the more flexible tool.',
+    'A weighted child reserves space <i>after</i> the unweighted ones are measured — that&rsquo;s why the fixed-size Switch keeps its size and the Text flexes.',
+  ],
+  starter:
+'// A full-width settings row. The Switch should sit at the FAR right, but it\n' +
+'// hugs the label. Give the label Modifier.weight(1f) to eat the leftover space.\n' +
+'Row(\n' +
+'    modifier = Modifier.fillMaxWidth().padding(16.dp),\n' +
+'    verticalAlignment = Alignment.CenterVertically\n' +
+') {\n' +
+'    Text("Wi-Fi", style = MaterialTheme.typography.titleMedium)\n' +
+'    Switch(checked = true)\n' +
+'}\n',
+  solution:
+'Row(\n' +
+'    modifier = Modifier.fillMaxWidth().padding(16.dp),\n' +
+'    verticalAlignment = Alignment.CenterVertically\n' +
+') {\n' +
+'    Text(\n' +
+'        "Wi-Fi",\n' +
+'        modifier = Modifier.weight(1f),\n' +
+'        style = MaterialTheme.typography.titleMedium\n' +
+'    )\n' +
+'    Switch(checked = true)\n' +
+'}\n',
+  checks: [
+    { label: 'A full-width <code>Row</code> holds a <code>Text</code> and a <code>Switch</code>', test: function(a){ var r=a.find('Row'); return !!r && a.hasMod(r,'fillMaxWidth') && !!a.find('Text') && !!a.find('Switch'); } },
+    { label: 'The label <code>Text</code> carries <code>Modifier.weight(1f)</code>', test: function(a){ return a.findAll('Text').some(function(t){ return a.weightOf(t)===1; }); } },
+    { label: 'The weighted label comes <b>before</b> the Switch (so it pushes it to the end)', test: function(a){ var r=a.find('Row'); if(!r||!r.children) return false; var ti=-1, si=-1; r.children.forEach(function(c,i){ if(c.name==='Text' && a.weightOf(c)!=null && ti<0) ti=i; if(c.name==='Switch' && si<0) si=i; }); return ti>=0 && si>=0 && ti<si; } },
+  ],
+});
+</script>
+</body>
+</html>

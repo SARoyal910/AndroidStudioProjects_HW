@@ -26,9 +26,10 @@ comments, so you can diff any two projects to see exactly what a feature adds.
 > ✅ Prefer to **practice**? **[`labs/`](./labs)** is a set of guided, browser-based
 > **hands-on exercises** with instant checking — a task, starter code, and success
 > checks that turn green as you edit (with hints + solutions). Open
-> **[`labs/index.html`](./labs/index.html)**: four Compose labs (layout, modifier
-> order, text styling, a profile card) and three Navigation labs (drill-down, key
-> arguments, deep-link seeding).
+> **[`labs/index.html`](./labs/index.html)**: ten Compose labs (layout, modifier
+> order, text styling, a profile card, state, Row cross-axis, arrangement, weight
+> to push, weight to split, and Box layering) and three Navigation labs (drill-down,
+> key arguments, deep-link seeding).
 
 ---
 

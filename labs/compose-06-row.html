@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Row: mind the other axis</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="compose-engine.js"></script>
+<script src="lab-harness.js"></script>
+</head>
+<body>
+<script>
+mountLab({
+  kind: 'compose',
+  id: 'compose-06',
+  title: 'Lab 6 · Row: mind the other axis',
+  track: 'Compose',
+  level: 'Beginner',
+  goal: 'A Column stacks children top-to-bottom; a Row lays them left-to-right. The two knobs swap meaning: in a Row the MAIN axis is horizontal (so spacing is horizontalArrangement) and the CROSS axis is vertical (so centering is verticalAlignment). Make the star and the label share one line — vertically centered, with an 8.dp gap.',
+  steps: [
+    'Right now the star Icon (22&nbsp;dp tall) and the label sit on different baselines, glued together. They are children of a <code>Row</code>, so they already run left-to-right.',
+    'Center them on the <b>cross axis</b> (vertical) with <code>verticalAlignment = Alignment.CenterVertically</code> — this is the Row twin of a Column&rsquo;s <code>horizontalAlignment</code>.',
+    'Add an 8&nbsp;dp gap on the <b>main axis</b> (horizontal) with <code>horizontalArrangement = Arrangement.spacedBy(8.dp)</code>.',
+  ],
+  hints: [
+    'Mnemonic: <b>arrangement = the axis the Row flows along</b> (horizontal); <b>alignment = the axis across it</b> (vertical). In a Column it&rsquo;s the mirror image.',
+    'Both go in the <code>Row(</code>…<code>)</code> parameter list, not on a child: <code>Row(verticalAlignment = …, horizontalArrangement = …) { … }</code>.',
+    '<code>Arrangement.spacedBy(8.dp)</code> inserts the gap <i>between</i> children only — no leading or trailing space.',
+  ],
+  starter:
+'// A Row runs left-to-right. The star and label are mis-aligned and touching.\n' +
+'// Goal: center them vertically and put an 8.dp gap between them.\n' +
+'Row {\n' +
+'    Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107))\n' +
+'    Text("4.8 — Highly rated", style = MaterialTheme.typography.titleMedium)\n' +
+'}\n',
+  solution:
+'Row(\n' +
+'    verticalAlignment = Alignment.CenterVertically,\n' +
+'    horizontalArrangement = Arrangement.spacedBy(8.dp)\n' +
+') {\n' +
+'    Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107))\n' +
+'    Text("4.8 — Highly rated", style = MaterialTheme.typography.titleMedium)\n' +
+'}\n',
+  checks: [
+    { label: 'A <code>Row</code> holds an <code>Icon</code> and a <code>Text</code>', test: function(a){ return !!a.find('Row') && !!a.find('Icon') && !!a.find('Text'); } },
+    { label: 'Children are centered on the cross axis — <code>verticalAlignment = Alignment.CenterVertically</code>', test: function(a){ return a.crossAlignOf(a.find('Row'),'horizontal')==='CenterVertically'; } },
+    { label: 'An 8&nbsp;dp gap via <code>horizontalArrangement = Arrangement.spacedBy(8.dp)</code>', test: function(a){ return a.spacing(a.find('Row'),'horizontal')===8; } },
+  ],
+});
+</script>
+</body>
+</html>

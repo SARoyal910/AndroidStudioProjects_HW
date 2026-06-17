@@ -335,14 +335,14 @@ function overviewPanel() {
       </table>
     </div>
     <p style="font-size:13px;color:var(--muted);margin:0 0 6px;"><b>Rule of thumb:</b> <code>Scaffold</code> is the outer screen frame; inside it you arrange content with <code>Column</code> / <code>Row</code>, layer things with <code>Box</code>, and scroll long lists with <code>LazyColumn</code>. They nest freely — a Scaffold's content is usually a Column, whose rows may be a LazyColumn, and so on.</p>
-    <p style="font-size:13px;color:var(--muted);margin:0;"><b>See it live:</b> the <a href="./Playground/playground.html">Compose Playground</a> (root-layout dropdown + the "Choosing a container" reference cards) and the <b>Layouts</b> tab in the <b>ComposeParts</b> app both let you flip between these and watch the result change.</p>
+    <p style="font-size:13px;color:var(--muted);margin:0;"><b>See it live:</b> the <a href="../Playground/playground.html">Compose Playground</a> (root-layout dropdown + the "Choosing a container" reference cards) and the <b>Layouts</b> tab in the <b>ComposeParts</b> app both let you flip between these and watch the result change.</p>
 
     <div class="callout new" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
       <div style="flex:1;min-width:240px;">
         <b>🧪 Interactive Compose Playground</b>
         <p>Want to <i>change the code and see the effect</i>? Open the live playground: edit Jetpack&nbsp;Compose Kotlin (Column, Row, Box, Text, Button, Card, modifiers…) and watch the UI re-render as you type. It's the hands-on companion to the <b>ComposeCatalog</b> and <b>ComposeModifiers</b> projects.</p>
       </div>
-      <a href="./Playground/playground.html" style="flex:none;background:var(--accent-deep);color:#fff;text-decoration:none;font-weight:750;padding:10px 18px;border-radius:10px;white-space:nowrap;">Open the Playground →</a>
+      <a href="../Playground/playground.html" style="flex:none;background:var(--accent-deep);color:#fff;text-decoration:none;font-weight:750;padding:10px 18px;border-radius:10px;white-space:nowrap;">Open the Playground →</a>
     </div>
 
     <div class="callout new" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-color:var(--blue-line);background:var(--blue-soft);">
@@ -350,7 +350,7 @@ function overviewPanel() {
         <b>🧭 Interactive Navigation 3 Playground</b>
         <p>See navigation as a <i>back stack of keys</i>: edit a <code>rememberNavBackStack(…)</code> list — or tap the phone, press Back, switch tabs — and watch the stack and the equivalent <code>backStack.add(…)</code> / <code>removeLastOrNull()</code> update live. The hands-on companion to the <b>navigation track</b> (NavListDetail → deep links, tabs, nested graphs).</p>
       </div>
-      <a href="./Playground/nav-playground.html" style="flex:none;background:var(--blue);color:#fff;text-decoration:none;font-weight:750;padding:10px 18px;border-radius:10px;white-space:nowrap;">Open the Nav Playground →</a>
+      <a href="../Playground/nav-playground.html" style="flex:none;background:var(--blue);color:#fff;text-decoration:none;font-weight:750;padding:10px 18px;border-radius:10px;white-space:nowrap;">Open the Nav Playground →</a>
     </div>
 
     <div class="callout new" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-color:var(--accent);background:#eafaf1;">
@@ -785,13 +785,13 @@ const html = `<!DOCTYPE html>
   <div class="wrap">
     <p class="eyebrow">Android · Kotlin · Jetpack Compose · Navigation 3</p>
     <h1>Android Projects, Explained</h1>
-    <p class="sub">An interactive tour of ${ORDER.length} small, self-contained teaching apps. Each one isolates a single idea — from the smallest possible Compose screen all the way to deep links, multiple back stacks, MVVM and on-device storage. Pick a project from the sidebar and read exactly what is going on. New: live <a href="./Playground/playground.html" style="color:#fff;font-weight:800;text-decoration:underline;">Compose</a> &amp; <a href="./Playground/nav-playground.html" style="color:#fff;font-weight:800;text-decoration:underline;">Navigation</a> playgrounds where you edit code and watch the UI update.</p>
+    <p class="sub">An interactive tour of ${ORDER.length} small, self-contained teaching apps. Each one isolates a single idea — from the smallest possible Compose screen all the way to deep links, multiple back stacks, MVVM and on-device storage. Pick a project from the sidebar and read exactly what is going on. New: live <a href="../Playground/playground.html" style="color:#fff;font-weight:800;text-decoration:underline;">Compose</a> &amp; <a href="../Playground/nav-playground.html" style="color:#fff;font-weight:800;text-decoration:underline;">Navigation</a> playgrounds where you edit code and watch the UI update.</p>
     <div class="hmeta">
       <span><b>${ORDER.length}</b> projects</span>
       <span><b>2</b> tracks · navigation &amp; Android concepts</span>
       <span>Real source · real line numbers</span>
-      <span><a href="./Playground/playground.html" style="color:inherit;text-decoration:none;">🧪 compose playground</a></span>
-      <span><a href="./Playground/nav-playground.html" style="color:inherit;text-decoration:none;">🧭 nav playground</a></span>
+      <span><a href="../Playground/playground.html" style="color:inherit;text-decoration:none;">🧪 compose playground</a></span>
+      <span><a href="../Playground/nav-playground.html" style="color:inherit;text-decoration:none;">🧭 nav playground</a></span>
       <span><a href="../labs/index.html" style="color:inherit;text-decoration:none;">✅ hands-on labs</a></span>
       <span>← → to move · ⌕ to search</span>
     </div>

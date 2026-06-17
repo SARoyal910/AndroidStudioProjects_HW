@@ -14,22 +14,21 @@ comments, so you can diff any two projects to see exactly what a feature adds.
 > `file:line` where each concept lives, and run/test notes — see
 > **[`NAV_DEMOS.md`](./NAV_DEMOS.md)**.
 >
-> 🖥️ Interactive HTML companions live in [`homework/`](./homework): open
+> 🖥️ Interactive HTML companions: open
 > **[`projects.html`](./homework/projects.html)** for a per-project, real-source
-> walk-through of all of these apps;
-> **[`playground.html`](./homework/Playground/playground.html)** for a live **Compose
-> Playground** where you edit Compose Kotlin and watch the UI render as you type;
-> and **[`nav-playground.html`](./homework/Playground/nav-playground.html)** for a live
-> **Navigation 3 Playground** where you edit a `rememberNavBackStack(…)` key list
-> (or tap the phone / press Back) and watch the back stack and screen update.
->
-> 🗄️ For **data storage** in depth, the **[`StorageMaster/`](./StorageMaster)** lab
-> (**[`storage-tutorial.html`](./StorageMaster/storage-tutorial.html)**) is a single-file,
-> offline, interactive master class on local persistence — DataStore, Room (entities, DAOs,
-> reactive `Flow` queries, migrations, relations), files & scoped storage, encryption and
-> backup. It's the deep-dive behind [`RoomAndPreferences`](./RoomAndPreferences): insert rows
-> and watch a `Flow` re-emit, flip `@Entity` annotations and watch the `CREATE TABLE` change,
-> break a migration and watch it crash.
+> walk-through of all of these apps. Three live **playgrounds** live in
+> **[`Playground/`](./Playground)**:
+> **[`playground.html`](./Playground/playground.html)** (Compose — edit Compose Kotlin and
+> watch the UI render as you type),
+> **[`nav-playground.html`](./Playground/nav-playground.html)** (Navigation 3 — edit a
+> `rememberNavBackStack(…)` key list, or tap the phone / press Back, and watch the back stack
+> update), and
+> **[`storage-playground.html`](./Playground/storage-playground.html)** (Data storage — a
+> single-file master class on local persistence: DataStore, Room (entities, DAOs, reactive
+> `Flow` queries, migrations, relations), files & scoped storage, encryption and backup;
+> insert rows and watch a `Flow` re-emit, flip `@Entity` annotations and watch the
+> `CREATE TABLE` change, break a migration and watch it crash). The storage lab is the
+> deep-dive behind [`RoomAndPreferences`](./RoomAndPreferences).
 >
 > ✅ Prefer to **practice**? **[`labs/`](./labs)** is a set of guided, browser-based
 > **hands-on exercises** with instant checking — a task, starter code, and success

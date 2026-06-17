@@ -9,7 +9,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(join(here, "styles.css"), "utf8");
 const engine = readFileSync(join(here, "engine.js"), "utf8");
 const sections = JSON.parse(readFileSync(join(here, "sections.json"), "utf8"));
-const out = join(here, "..", "storage-tutorial.html");
+const out = join(here, "..", "storage-playground.html");
 
 const html = `<!DOCTYPE html>
 <html lang="en" data-theme="light">

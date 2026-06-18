@@ -1,0 +1,11 @@
+node_modules/
+package-lock.json
+package.json
+*.log
+# dev-only helpers (kept locally, not part of the published lab)
+smoke-test.mjs
+merge.mjs
+patch.mjs
+facts-pack.json
+smoke-*.png
+*.tmp

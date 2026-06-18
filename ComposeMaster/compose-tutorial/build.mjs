@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Assemble the self-contained Compose Layout Lab from styles.css + engine.js + sections.json.
+// Assemble the self-contained ComposeMaster course from styles.css + engine.js + sections.json.
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,8 +15,8 @@ const html = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jetpack Compose Layout Lab — every concept, interactive</title>
-<meta name="description" content="The most detailed interactive Jetpack Compose tutorial: modifiers, padding, alignment, spacing, arrangement, weight, Box/Row/Column, and more — each with a live playground and generated Kotlin.">
+<title>ComposeMaster — interactive Jetpack Compose encyclopedia</title>
+<meta name="description" content="ComposeMaster is a deep interactive Jetpack Compose course and reference with live playgrounds, generated Kotlin, MaterialTheme, design-system tokens, custom layouts, ConstraintLayout, ConstraintSet, guidelines, barriers, chains, visibility tracking, onVisibilityChanged, onLayoutRectChanged, RelativeLayoutBounds, viewport-aware impressions, intrinsic measurements, Canvas graphics, draw modifiers, resources, stringResource, pluralStringResource, painterResource, Image, AsyncImage, ContentScale, SearchBar, AssistChip, FilterChip, InputChip, SuggestionChip, SegmentedButton, DatePicker, TimePicker, CircularProgressIndicator, LinearProgressIndicator, PullToRefreshBox, ListItem, HorizontalDivider, VerticalDivider, HorizontalMultiBrowseCarousel, HorizontalUncontainedCarousel, AlertDialog, Dialog, SnackbarHostState, ModalBottomSheet, DropdownMenu, TooltipBox, BadgedBox, TopAppBar, NavigationBar, NavigationRail, ModalNavigationDrawer, PrimaryTabRow, state hoisting, StateFlow, ViewModel boundaries, state-based TextFieldState input, InputTransformation, OutputTransformation, SecureTextField, Autofill, gestures, pointer input, focus traversal, keyboard and D-pad input, IME actions, shortcuts, lazy lists, lazy grids, staggered grids, Paging Compose, FlowRow, Pager, edge-to-edge, WindowInsets, system bars, display cutouts, keyboard insets, ComposeView, AndroidView, AndroidFragment, AbstractComposeView, ViewCompositionStrategy, View interop, migration strategy, Navigation Compose, Navigation 3, NavKey, NavDisplay, entryProvider, adaptive scenes, adaptive layouts, state saving, effects, performance, Macrobenchmark, Baseline Profiles, StartupTimingMetric, FrameTimingMetric, CompilationMode, JankStats, Compose compiler reports, Android Studio previews, tooling, lint, accessibility, Compose UI testing, animation, mastery drills, progress tracking, and official Android cross-checks.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -24,17 +24,17 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
 <button id="theme" class="theme-btn" aria-label="Toggle theme">🌙</button>
-<div class="app">
+<div id="app" class="app">
   <aside class="sidebar">
-    <div class="brand"><div class="logo">JC</div><div><b>Compose Layout Lab</b><span>Every concept, interactive</span></div></div>
+    <div class="brand"><div class="logo">CM</div><div><b>ComposeMaster</b><span>Interactive Compose encyclopedia</span></div></div>
     <div id="nav"></div>
   </aside>
   <main class="main">
     <header class="hero">
       <span class="kick">Jetpack Compose · Material 3 · Interactive</span>
-      <h1>The Compose <em>Layout Lab</em></h1>
-      <p>Every layout concept — modifiers and their order, padding, sizing, alignment, arrangement, spacing, weight, Box/Row/Column, scrolling, and text — explained in depth and made tweakable. Drag the controls and watch both the live preview and the generated Kotlin update in real time.</p>
-      <p class="meta"><b>${sections.length} sections</b> · built for Android devs who want to truly understand Compose, not just copy-paste. The previews emulate Compose layout in the browser; the Kotlin is the real thing.</p>
+      <h1><em>ComposeMaster</em></h1>
+      <p>The complete Compose layout and UI reference: mental models, state hoisting, StateFlow, MaterialTheme, design-system tokens, modifier order, sizing, spacing, Box/Row/Column, custom layouts, ConstraintLayout, ConstraintSet, guidelines, barriers, chains, visibility tracking, onVisibilityChanged, onLayoutRectChanged, RelativeLayoutBounds, viewport-aware impressions, intrinsic measurements, Canvas graphics, draw modifiers, resources, stringResource, pluralStringResource, painterResource, Image, AsyncImage, ContentScale, SearchBar, AssistChip, FilterChip, InputChip, SuggestionChip, SegmentedButton, DatePicker, TimePicker, CircularProgressIndicator, LinearProgressIndicator, PullToRefreshBox, ListItem, HorizontalDivider, VerticalDivider, HorizontalMultiBrowseCarousel, HorizontalUncontainedCarousel, AlertDialog, Dialog, SnackbarHostState, ModalBottomSheet, DropdownMenu, TooltipBox, BadgedBox, TopAppBar, NavigationBar, NavigationRail, ModalNavigationDrawer, PrimaryTabRow, lazy lists, lazy grids, staggered grids, Paging Compose, FlowRow, Pager, Material 3, state-based TextFieldState input, transformations, SecureTextField, Autofill, pointer input and gestures, focus traversal, keyboard and D-pad input, IME actions, shortcuts, edge-to-edge, WindowInsets, system bars, display cutouts, keyboard insets, ComposeView, AndroidView, AndroidFragment, AbstractComposeView, ViewCompositionStrategy, View interop, incremental migration, Navigation Compose, Navigation 3, NavKey, NavDisplay, entryProvider, adaptive scenes, adaptive layouts, state saving, effects, performance measurement, Macrobenchmark, Baseline Profiles, StartupTimingMetric, FrameTimingMetric, CompilationMode, JankStats, Compose compiler reports, Android Studio previews, tooling, lint, accessibility, Compose UI testing, animation, recipes, live previews, and generated Kotlin.</p>
+      <p class="meta"><b>${sections.length} sections</b> · built for Android developers who want to predict Compose behavior, explain it clearly, and ship it correctly.</p>
     </header>
     <div id="sections"></div>
   </main>

@@ -1,7 +1,7 @@
 // =============================================================================
 // compose-engine.js — a SHARED, introspectable Jetpack Compose interpreter for
 // the labs. It is the same tokenizer -> parser -> renderer used by the Compose
-// Playground (homework/Playground/playground.html), repackaged as a reusable global with
+// Playground (Playground/playground.html), repackaged as a reusable global with
 // extra "check helpers" the lab harness uses to auto-grade a learner's code.
 //
 //   window.ComposeEngine = {

@@ -41,7 +41,7 @@
     "In the 'Arrangement' lesson, add a row using 'Arrangement.spacedBy(24.dp)' and compare it to 'SpaceBetween'.",
     "In the 'Box & align' lesson, change one Tile's 'Alignment.BottomEnd' to 'Alignment.TopCenter' and see it jump to a new corner.",
     "Open MainActivity.kt in Android Studio and look at the 'Order: background vs padding' @Preview — the difference is obvious at a glance with no emulator.",
-    "Reproduce the same experiments live in homework/Playground/playground.html: type a Modifier chain, reorder '.padding()' and '.background()', and watch the preview re-render instantly."
+    "Reproduce the same experiments live in Playground/playground.html: type a Modifier chain, reorder '.padding()' and '.background()', and watch the preview re-render instantly."
   ],
   "gotchas": [
     "'Modifier.weight(...)' and 'Modifier.align(...)' are SCOPED extensions: 'weight' only exists inside a RowScope/ColumnScope and 'align' inside a BoxScope. They compile only because the calls sit lexically inside those layout lambdas.",

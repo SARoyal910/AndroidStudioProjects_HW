@@ -1,0 +1,252 @@
+{
+  "name": "ExampleProject",
+  "tagline": "The growing example app: navigation + Compose, two mini-games, and a storage preview — split across files like a real project.",
+  "whatItDoes": "Wanderlist is a travel bucket list with FOUR bottom tabs. Explore is a list of places with a progress bar; tapping one opens a Detail screen (mark visited / remove). Play is a menu into two mini-games built from the same data: Flashcards (tap a card to flip it with a 3D animation) and Guess (an 'I spy' game that uses coordinate hit-testing — one tap on a grid is mapped to the cell you hit). Add is a form (text fields with keyboard IME actions, continent chips, an excitement slider, a switch, validation). Stats shows totals, a per-continent breakdown, a dark-mode switch that re-themes the app, and a Storage card that previews next week's topic: Save/Load to the device and Push/Pull to a (simulated) cloud, with a spinner while it syncs. Each tab keeps its own back stack.",
+  "mentalModel": "One hoisted source of truth (the list of places in WanderlistApp) feeds every stateless screen; the back stack's top key drives the app bar/FAB; and a DestinationStore interface hides whether data is saved on the device or in the cloud. Built from the same pieces as the single-concept demos, organized into files by concern.",
+  "domain": "travel",
+  "estTime": "45-70 min",
+  "screens": [
+    {
+      "name": "ExploreScreen",
+      "role": "Tab 0 root: a progress bar over a LazyColumn of place Cards. Tapping a card pushes DetailKey; its FilterChip toggles 'visited' inline."
+    },
+    {
+      "name": "DetailScreen",
+      "role": "Reached by drilling into a place: emoji, notes, an excitement rating, a 'Mark visited' button, and a 'Remove' action guarded by an AlertDialog."
+    },
+    {
+      "name": "PlayMenuScreen",
+      "role": "Tab 1 root: two tappable cards that drill (on the Play tab's own back stack) into the Flashcards or Guess game."
+    },
+    {
+      "name": "FlashcardScreen",
+      "role": "A flip-card deck: tap a card and animateFloatAsState + graphicsLayer rotate it 0°→180° to reveal the answer on the back. Next/Previous walk the deck."
+    },
+    {
+      "name": "GuessScreen",
+      "role": "An 'I spy' game: we name a place, you tap it in a grid. A single pointerInput/detectTapGestures handler maps the tap's (x,y) to a cell — real coordinate hit-testing. Keeps a score."
+    },
+    {
+      "name": "AddDestinationScreen",
+      "role": "Tab 2: a form with OutlinedTextFields (Next/Done IME actions + focus advance), single-select continent FilterChips, an excitement Slider, a Switch, and an enabled-based-validation Add button."
+    },
+    {
+      "name": "StatsScreen",
+      "role": "Tab 3: totals, a completion bar, a per-continent breakdown, the dark-mode Switch, and the Storage card (Save/Load on device, Push/Pull to the simulated cloud with a sync spinner)."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "Organized into files by concern",
+      "plain": "Instead of one giant file, the app is split: data/ (model + storage), navigation/ (keys + the nav host), and one file per screen under ui/screens/. Dependencies point one way — screens depend on data; navigation wires screens together; MainActivity just launches the app."
+    },
+    {
+      "term": "data object vs data class NavKey",
+      "plain": "The six tab-root/game keys are 'data object' singletons (no arguments). DetailKey is a 'data class' carrying a destinationId, because each detail screen differs by which place it shows. All seven implement NavKey and are @Serializable."
+    },
+    {
+      "term": "Multiple back stacks (one per tab)",
+      "plain": "rememberNavBackStack is called once per tab. Both Explore and Play can drill one level deep ([root, leaf]); Add and Stats stay at root. All four stacks are remembered at once, so each tab preserves its own history; re-tapping the active tab pops it to its root."
+    },
+    {
+      "term": "State hoisting / single source of truth",
+      "plain": "The list of places lives in WanderlistApp and nowhere else. Every screen takes plain data plus callbacks and owns no app state — events flow UP into edit helpers, new state flows DOWN (unidirectional data flow)."
+    },
+    {
+      "term": "remember vs rememberSaveable",
+      "plain": "destinations uses plain remember, so it RESETS on rotation — deliberately, to motivate persistence (the Storage card) and a ViewModel. selectedTab and the dark-theme flag use rememberSaveable, which survives rotation for free."
+    },
+    {
+      "term": "3D flip animation",
+      "plain": "FlashcardScreen drives a 0°→180° angle with animateFloatAsState and applies it via graphicsLayer { rotationY = … }. Which face shows is pure math (past 90° = the back, counter-rotated so its text isn't mirrored)."
+    },
+    {
+      "term": "Coordinate hit-testing (tap-to-guess)",
+      "plain": "GuessScreen uses ONE pointerInput { detectTapGestures { offset -> … } } on the whole scene. Because the grid is even, the tapped cell is arithmetic: col = x / (width/3), row = y / (height/rows), index = row*3 + col. The same shape works on a real photo with hotspot rectangles."
+    },
+    {
+      "term": "Storage behind an interface (repository)",
+      "plain": "A DestinationStore interface declares suspend save()/load(); LocalDestinationStore (SharedPreferences + JSON) and CloudDestinationStore (simulated) implement it. The UI depends only on the interface, so the storage technology can swap without touching any screen."
+    },
+    {
+      "term": "Async work: suspend, loading & errors",
+      "plain": "save/load are suspend (off the main thread). The UI launches them in a coroutine scope, shows a Snackbar on completion, drives a spinner from a `syncing` flag, and wraps the cloud calls in try/catch/finally so a failure surfaces as a message and the spinner always clears."
+    },
+    {
+      "term": "Scaffold chrome driven by the back stack",
+      "plain": "One Scaffold owns the TopAppBar, NavigationBar, FAB, and SnackbarHost. The title, the Back arrow (shown whenever activeBackStack.size > 1), and the FAB are all decided by the key on top of the active stack."
+    },
+    {
+      "term": "Keyboard / IME handling",
+      "plain": "The Add form sets ImeAction.Next on 'Place name' (advances focus to Country via a FocusRequester) and ImeAction.Done on 'Country' (dismisses the keyboard via LocalFocusManager)."
+    },
+    {
+      "term": "Material 3 component sampler + theming",
+      "plain": "Across the screens: Scaffold, TopAppBar, NavigationBar, Card/ElevatedCard, FilterChip, Slider, Switch, OutlinedTextField, LinearProgressIndicator, CircularProgressIndicator, Snackbar, AlertDialog, the Button family, FAB — plus a dark-mode toggle whose state lives above the theme."
+    }
+  ],
+  "files": [
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/MainActivity.kt",
+      "role": "The entry point: the single Activity, the dark-theme state that wraps the app in a theme, and a top-of-file map of how the project is organized across files."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/data/Destination.kt",
+      "role": "The data layer: the @Serializable Destination model, CONTINENTS, the initialDestinations starter data, and the priorityStars() helper."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/data/storage/DestinationStore.kt",
+      "role": "The storage abstraction: a suspend save()/load() interface every storage backend implements."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/data/storage/LocalDestinationStore.kt",
+      "role": "On-device storage: SharedPreferences + JSON (with disk I/O on Dispatchers.IO and a parse guard)."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/data/storage/CloudDestinationStore.kt",
+      "role": "A simulated cloud backend (in-memory + delay), heavily commented with the real Firebase Firestore / Retrofit equivalents."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/navigation/NavKeys.kt",
+      "role": "The seven @Serializable NavKeys (Explore/Detail, Play/Flashcard/Guess, Add, Stats)."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/navigation/WanderlistApp.kt",
+      "role": "The nav host: hoisted state, one back stack per tab, edit + storage helpers, the Scaffold, and the entryProvider mapping each key to its screen."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/ExploreScreen.kt",
+      "role": "Tab 0: the list screen + DestinationCard + preview."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/DetailScreen.kt",
+      "role": "The drill-down detail + the delete-confirm AlertDialog + the @PreviewParameter provider."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/PlayMenuScreen.kt",
+      "role": "Tab 1: the games menu (two cards that drill into the games)."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/FlashcardScreen.kt",
+      "role": "The flip-card deck (animateFloatAsState + graphicsLayer 3D flip)."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/GuessScreen.kt",
+      "role": "The tap-to-guess game (pointerInput + detectTapGestures coordinate hit-testing)."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/AddDestinationScreen.kt",
+      "role": "Tab 2: the add-a-place form (fields + IME, chips, slider, switch, validation)."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/StatsScreen.kt",
+      "role": "Tab 3: aggregates, the dark-mode switch, the Storage card, and the reusable StatTile."
+    },
+    {
+      "path": "ExampleProject/src/main/java/com/example/exampleproject/ui/theme/Theme.kt",
+      "role": "ExampleProjectTheme — the light/dark color schemes the Stats switch flips between."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "Organized across files by concern (not one giant file)",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/MainActivity.kt",
+      "start": 9,
+      "end": 42,
+      "explain": "The project is split by responsibility: data/ (model + storage), navigation/ (keys + nav host), ui/screens/ (one file per screen), ui/theme/. Dependencies point one way — screens depend on data; navigation wires the screens together; MainActivity just launches it. MainActivity opens with this map so a reader knows where everything lives."
+    },
+    {
+      "title": "Seven nav keys: tab roots + games (object) and one argument key (class)",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/navigation/NavKeys.kt",
+      "start": 24,
+      "end": 54,
+      "explain": "Explore/Add/Stats/Play roots and the two game keys are 'data object' singletons; DetailKey is a 'data class' carrying destinationId. Both Explore (→Detail) and Play (→a game) drill one level, so both tabs' back stacks can be two keys deep."
+    },
+    {
+      "title": "The dark-mode state lives ABOVE the theme it controls",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/MainActivity.kt",
+      "start": 76,
+      "end": 94,
+      "explain": "darkTheme is a rememberSaveable in MainActivity, OUTSIDE ExampleProjectTheme, because the theme reads it. We pass it (and a flip callback) into WanderlistApp; the Stats switch calls back to flip it and the whole app recomposes. dynamicColor = false keeps the flip obvious on any device."
+    },
+    {
+      "title": "Hoisted state: remember (the list) vs rememberSaveable (the tab)",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/navigation/WanderlistApp.kt",
+      "start": 118,
+      "end": 121,
+      "explain": "destinations is the single source of truth, an observable SnapshotStateList in plain remember — so it resets on rotation (the motivation for the Storage card and a ViewModel). selectedTab uses rememberSaveable and DOES survive rotation."
+    },
+    {
+      "title": "One back stack per tab (multiple back stacks)",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/navigation/WanderlistApp.kt",
+      "start": 128,
+      "end": 139,
+      "explain": "rememberNavBackStack is called once per tab and all four are kept alive simultaneously, so each tab preserves its own history. activeBackStack maps the selected index to that tab's stack; flipping selectedTab swaps which stack NavDisplay shows."
+    },
+    {
+      "title": "Save/load behind one DestinationStore interface (local + cloud)",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/navigation/WanderlistApp.kt",
+      "start": 199,
+      "end": 262,
+      "explain": "Two stores (local + simulated cloud) behind the same interface. The four helpers launch the suspend save/load in a coroutine scope, report via a Snackbar, replace the list on load, and (for the cloud) drive a `syncing` spinner and wrap the call in try/catch/finally so a failure surfaces and the spinner always clears."
+    },
+    {
+      "title": "The TopAppBar title + a generic Back arrow, from the back stack",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/navigation/WanderlistApp.kt",
+      "start": 270,
+      "end": 296,
+      "explain": "A when-expression over the top key picks the title (looking up the place name for DetailKey). The Back arrow appears whenever the active tab is drilled in past its root (activeBackStack.size > 1) — one generic rule that covers Explore→Detail and Play→a game alike."
+    },
+    {
+      "title": "Bottom bar (re-tap to root) + a contextual FAB + Snackbar",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/navigation/WanderlistApp.kt",
+      "start": 297,
+      "end": 330,
+      "explain": "Switching to a different tab only changes selectedTab (history preserved); re-tapping the tab you're on pops it to root. The FAB shows only on the Explore root and jumps to the Add tab (programmatic navigation). The SnackbarHost shows confirmations."
+    },
+    {
+      "title": "Mapping every key to a screen, including the two games",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/navigation/WanderlistApp.kt",
+      "start": 339,
+      "end": 416,
+      "explain": "One entry<KeyType> { } block per screen. Tapping a place pushes DetailKey; the Play menu pushes FlashcardKey/GuessKey onto the Play stack; the games and Detail read the same `destinations`. Add shows a Snackbar then resets Explore to root and jumps there; Stats receives the storage callbacks."
+    },
+    {
+      "title": "The flashcard 3D flip (animation + graphicsLayer)",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/FlashcardScreen.kt",
+      "start": 79,
+      "end": 146,
+      "explain": "animateFloatAsState smoothly animates a 0°→180° angle when `flipped` changes; graphicsLayer { rotationY = … } turns that number into a 3D flip. Which face shows is pure math: past 90° we draw the back, counter-rotated by 180° so its text isn't mirrored."
+    },
+    {
+      "title": "Coordinate hit-testing — mapping a tap to a cell",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/GuessScreen.kt",
+      "start": 128,
+      "end": 147,
+      "explain": "One pointerInput/detectTapGestures handler on the whole square scene gives the tap's (x,y) and the scene's size. The tapped cell is arithmetic: col = x/(width/3), row = y/(height/rows), index = row*3 + col. Swap the grid for an Image and a list of hotspot rectangles and the exact same code taps on a real photo."
+    },
+    {
+      "title": "The Add form: chips, slider, switch, validation (and IME)",
+      "file": "ExampleProject/src/main/java/com/example/exampleproject/ui/screens/AddDestinationScreen.kt",
+      "start": 120,
+      "end": 165,
+      "explain": "Single-select continent FilterChips (a scrolling Row), a 1-5 excitement Slider (steps = 3 → five stops), and an 'already visited' Switch, each backed by local remembered state. The Add button's enabled flag is canAdd (name + country non-blank). The text fields above also wire ImeAction Next→Done."
+    }
+  ],
+  "newVsPrev": "This is the example project that grows beyond the single-concept demos. On top of the earlier Explore/Detail/Add/Stats app it adds a fourth 'Play' tab with its OWN drill-down into two mini-games — Flashcards (a 3D flip with animateFloatAsState + graphicsLayer) and Guess (an 'I spy' game with real coordinate hit-testing via pointerInput/detectTapGestures) — and a storage layer that PREVIEWS the next topic: a DestinationStore interface with a real local (SharedPreferences + JSON) implementation and a simulated cloud one, wired to a Storage card on Stats with suspend save/load, a sync spinner, and error handling. The whole thing is split across files by concern (data / data.storage / navigation / ui.screens / ui.theme), and is paired with a full HTML design document (ExampleProject/design.html) that shows the design done before the code.",
+  "tryThis": [
+    "Give the Guess game a real image: replace the emoji grid with an Image and a list of hotspot rectangles, then compare each tap offset against those rectangles — the hit-testing code barely changes.",
+    "Make persistence automatic: load from LocalDestinationStore on startup and save on every edit (or move the list into a ViewModel), so the explicit Save/Load buttons become unnecessary.",
+    "Add a 'shuffle' button to Flashcards that randomizes the deck order, and animate the card swap with the screen-transition ideas from the NavTransitions demo.",
+    "Turn the simulated CloudDestinationStore into a real one: implement it with Firebase Firestore or a Retrofit API behind the same DestinationStore interface — no screen changes needed.",
+    "Add a fifth bottom tab with its own back stack and a filtered list, to feel again how each tab is just one more independent back stack."
+  ],
+  "gotchas": [
+    "The `destinations` list is plain remember, so edits are LOST on rotation unless you Save (local) or Push (cloud) first, then Load/Pull — which is exactly the point of the Storage card. selectedTab (rememberSaveable) survives.",
+    "The cloud store is SIMULATED (in-memory + delay): Push then Pull syncs within one app run, but it does not really leave the device. The comments show the real Firebase/Retrofit calls that would replace it.",
+    "Local storage uses SharedPreferences for zero dependencies; the modern tools (DataStore, Room) are introduced in the separate RoomAndPreferences demo. The save/serialize/load shape is the same.",
+    "TopAppBar is still experimental, so WanderlistApp is annotated @OptIn(ExperimentalMaterial3Api::class).",
+    "The Guess grid's coordinate math assumes an even 3-column grid that fills the square scene; if you change the columns or the scene's shape, update both the layout AND the col/row arithmetic so they stay in sync."
+  ],
+  "runTest": "Build and install with './gradlew installDebug' from inside the ExampleProject/ folder. Explore: tap a place → Detail, mark it visited, watch the progress bar and Stats update. Play: open Flashcards and tap a card to flip it; open Guess and tap the named place (the score climbs on a hit). Add: fill the form (the Add button enables once name + country are set; the keyboard shows Next then Done) and submit. Stats: flip Dark theme to re-color the app, then try Storage — Save then change something then Load to see the device restore it; Push then Pull to watch the cloud spinner and round-trip. A companion design document is at ExampleProject/design.html, and the line-by-line code walkthrough is the ExampleProject tab in homework/projects.html. Filter Logcat by 'Wander' to watch the per-tab back-stack depths."
+}

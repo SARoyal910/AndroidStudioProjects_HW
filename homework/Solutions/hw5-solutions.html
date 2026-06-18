@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 5 — Answer Key — Composing Multiple Items: a Profile Card &amp; a Settings List</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84; --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed; --warn-line:#fde2c0;
+    --good-soft:#ecfdf3; --good-line:#c5ebd3;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 22px 80px;}
+  header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:30px; border-bottom:4px solid var(--accent);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px; color:var(--accent);
+    font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:66ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:12px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:15.5px; margin:20px 0 4px;}
+  p{margin:11px 0;}
+  ul,ol{margin:10px 0; padding-left:22px;} li{margin:5px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.9em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:15px 17px; border-radius:10px;
+    overflow:auto; font-size:13px; line-height:1.6; margin:13px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre code{background:none; padding:0; font-size:inherit; color:inherit;}
+
+  /* where-to-run tag (mirrors the assignment) */
+  .where{flex:none; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .where.pg{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}
+  .where.as{background:#fff3e6; color:#b4530a; border:1px solid var(--warn-line);}
+  .where.both{background:#eafaf1; color:var(--accent-deep); border:1px solid var(--good-line);}
+
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 8px; margin:16px 0; box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:2px;}
+  .qid{font-weight:800; color:var(--ink); font-size:16px;}
+  .ask{color:var(--muted); font-size:14.5px; margin:4px 0 10px;}
+  .ans{margin:12px 0;}
+  .ans b, .ask b{color:var(--ink);}
+  .file{font-size:12.5px; color:var(--muted); margin:0 0 8px;}
+  .file code{font-size:.92em;}
+
+  .callout{border-radius:10px; padding:12px 15px; margin:14px 0; font-size:14.5px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.good{background:var(--good-soft); border:1px solid var(--good-line);}
+  .callout.predict{background:var(--warn-soft); border:1px solid var(--warn-line); color:#7c4a12;}
+  .callout b{display:block; margin-bottom:2px;}
+  .callout.inline b{display:inline; margin:0;}
+
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; margin:12px 0;}
+  table.cmp th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.cmp td{padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.cmp td:first-child{font-weight:700; white-space:nowrap;}
+
+  footer{margin-top:42px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13.5px;}
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.callout,table.cmp{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Jetpack Compose · Answer Key</p>
+    <h1>Homework 5 — Solutions</h1>
+    <p class="sub">Complete, runnable answer key for <b>Composing Multiple Items</b> — two screens built from
+       repeated parts. <b>Project A · Profile Card</b> stacks an avatar, stats, and action buttons; <b>Project B ·
+       Settings List</b> is a scrollable list of identical rows with working toggles. Every TODO is solved with the
+       <em>real</em> code from the solution projects, plus a short "why it works" and the lab the skill came from.</p>
+    <div class="meta">
+      <span><b>Project A</b> · Profile Card · TODO 1–3</span>
+      <span><b>Project B</b> · Settings List · TODO 1–4</span>
+      <span>Skills from Labs 7–10</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="../Assigned/hw5.html">← Homework 5 (assignment)</a>
+      <a href="../../Playground/playground.html">▶ Compose Playground</a>
+      <a href="../projects.html">Projects, Explained</a>
+      <a href="../../labs/index.html">Labs</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout proj">
+    <b>How to read this key</b>
+    Each project shows its TODO slots in order. For every TODO you get the <em>solution code</em> (heavily
+    commented in the teaching style), a one-or-two-sentence explanation of <b>why it works</b>, and a note of
+    <b>which lab</b> the skill came from. These two screens run in Android Studio (the toggles need real
+    recomposition), so the <span class="where as">Android Studio</span> tag is on both.
+  </div>
+
+  <div class="callout predict">
+    <b>One idea carries the whole assignment: factor out the repeated part</b>
+    Both screens are "many of the same thing." Instead of copy-pasting, you write the repeating piece <em>once</em>
+    as a small reusable <code>@Composable</code> (<code>StatCell</code>, <code>SettingRow</code>) and call it with
+    different data. <b>Layout</b> = <code>Row</code>/<code>Column</code>/<code>Box</code> + <code>weight</code> +
+    <code>align</code> (Labs 7–10); <b>state</b> = <code>remember { mutableStateOf(...) }</code> so a tapped switch
+    flips and recomposes; <b>state hoisting</b> = the parent owns the value, the row just displays it and reports taps.
+  </div>
+
+  <!-- ================= PROJECT A ================= -->
+  <h2><span class="part">Project A.</span> Profile Card — avatar, stats &amp; action buttons</h2>
+  <p class="lead">A single centered card: a circular avatar with an "online" badge, the name + handle, a row of
+     three evenly-split stats, and a row of two equal-width buttons. The outer scaffolding is given; you fill three
+     TODO slots.</p>
+
+  <!-- A · TODO 1 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">A · TODO 1 — the online badge (Box + align)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Pin a small <strong>green "online" dot</strong> to the avatar's <strong>bottom-right</strong>
+       corner so it reads as a status badge on the rim of the circle.</p>
+    <p class="file">Where: <code>Hw5ProfileCard</code> → <code>ProfileScreen</code>, inside the outer <code>Box</code> that already wraps the avatar. <span class="where both" style="margin-left:6px;">builds on Lab 10 · Box + align</span></p>
+<pre><code>// SOLUTION (TODO 1 — online badge): a small GREEN dot pinned to
+// the avatar's BOTTOM-END corner. Because this Box is a child of
+// the OUTER Box (not the avatar circle), it's painted ON TOP of
+// the avatar on the z-axis. The key piece is .align(BottomEnd):
+// inside a Box, .align tells THIS child where to sit relative to
+// the Box's bounds — here the bottom-right corner — which is what
+// makes it read as a status badge on the rim of the avatar.
+//
+// POLISH: the order of modifiers is the order they're applied, so
+// we put .border UNDER the .background — the white 2.dp ring is
+// drawn slightly OUTSIDE the green fill, giving the dot a crisp
+// white halo so it pops off the blue avatar. We size this Box at
+// 18.dp (16 dot + the 2.dp ring) so the ring isn't clipped.
+Box(
+    modifier = Modifier
+        .align(Alignment.BottomEnd)          // pin to bottom-right of the outer Box
+        .size(18.dp)                         // 16.dp dot + 2.dp white ring around it
+        .border(2.dp, Color.White, CircleShape) // thin white halo (drawn first/underneath)
+        .clip(CircleShape)                   // round the green fill to a circle
+        .background(Online),                 // the GREEN "online" fill on top
+)</code></pre>
+    <p class="ans"><b>Why it works:</b> <code>align(Alignment.BottomEnd)</code> pins this child to the corner —
+       inside a <code>Box</code>, every child can choose its own corner independently because Box children stack on
+       the z-axis (later children paint on top), instead of being laid out one-after-another the way Row/Column do.
+       Modifiers apply in order, so listing <code>.border()</code> <em>before</em> <code>.background()</code> draws
+       the white ring underneath the green fill, giving the dot a clean halo. <em>(Lab 10 — Box stacking + align.)</em></p>
+  </div>
+
+  <!-- A · TODO 2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">A · TODO 2 — the stats row (3× weight(1f))</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Three stats (Posts / Followers / Following) that split the row's width <strong>evenly</strong>,
+       each a big bold number over a small muted label.</p>
+    <p class="file">Where: <code>Hw5ProfileCard</code> → <code>StatsRow</code>, calling the extracted <code>StatCell</code> three times. <span class="where both" style="margin-left:6px;">builds on Labs 8 &amp; 9 · weight</span></p>
+<pre><code>// SOLUTION (TODO 2 — stats row): three StatCell columns, each handed
+// Modifier.weight(1f). Inside a Row, weight asks for a SHARE of the
+// leftover space; three equal weights (1 : 1 : 1) split the full width
+// evenly, so the three stats line up in neat thirds no matter the screen
+// size. We factored the repeated "big number over small label" layout
+// into ONE StatCell composable (below) and call it three times — same
+// shape, different data — instead of copy-pasting the Column thrice.
+StatCell(value = profile.posts,     label = "Posts",     modifier = Modifier.weight(1f))
+StatCell(value = profile.followers, label = "Followers", modifier = Modifier.weight(1f))
+StatCell(value = profile.following, label = "Following", modifier = Modifier.weight(1f))</code></pre>
+    <p class="file" style="margin-top:10px;">The extracted cell (written once, called three times):</p>
+<pre><code>@Composable
+private fun StatCell(value: Int, label: String, modifier: Modifier = Modifier) {
+    // A Column stacks the number above the label; CenterHorizontally lines them
+    // up on the cell's center so the stat reads as one tidy unit.
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        // The NUMBER: large and bold so it's the eye-catching part of the stat.
+        Text(
+            text = value.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+        )
+        // The LABEL: small and muted (onSurfaceVariant) so it sits quietly
+        // UNDER the number and explains what it counts.
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> <code>weight(1f)</code> on each of three cells means each one asks for an
+       equal share of the Row's leftover width, so 1 : 1 : 1 splits it into even thirds — no hard-coded pixel widths,
+       so it stays even on any screen size. Pulling the repeated "number-over-label" shape into one
+       <code>StatCell</code> means the three stats literally can't drift out of sync; the caller just passes the data
+       and the hoisted <code>Modifier.weight(1f)</code>. <em>(Labs 8 &amp; 9 — Row + weight to share width.)</em></p>
+  </div>
+
+  <!-- A · TODO 3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">A · TODO 3 — the action buttons (Row + arrangement + weight)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">A row of <strong>two equal-width buttons</strong> with a gap between them: a filled "Follow" and an
+       outlined "Message".</p>
+    <p class="file">Where: <code>Hw5ProfileCard</code> → <code>ActionButtons</code>. <span class="where both" style="margin-left:6px;">builds on Labs 7 &amp; 8 · arrangement + weight</span></p>
+<pre><code>// SOLUTION (TODO 3 — action buttons): a full-width Row with two buttons.
+// horizontalArrangement = Arrangement.spacedBy(12.dp) inserts a 12.dp gap
+// BETWEEN the children (so the buttons don't touch), and giving EACH button
+// Modifier.weight(1f) makes them share the remaining width evenly — each
+// takes half the row after that gap is reserved. The filled Button is the
+// high-emphasis primary action ("Follow"); the OutlinedButton is the
+// lower-emphasis secondary action ("Message"). onClick is empty for now
+// since this homework is about LAYOUT, not behavior.
+Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.spacedBy(12.dp), // 12.dp gap between the two buttons
+) {
+    // Filled, high-emphasis primary action; weight(1f) -> left half of the row.
+    Button(onClick = {}, modifier = Modifier.weight(1f)) {
+        Text("Follow")
+    }
+    // Outlined, lower-emphasis secondary action; weight(1f) -> right half.
+    OutlinedButton(onClick = {}, modifier = Modifier.weight(1f)) {
+        Text("Message")
+    }
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> <code>Arrangement.spacedBy(12.dp)</code> reserves a 12dp gap between the two
+       children first; then each button's <code>weight(1f)</code> claims half of the <em>remaining</em> width, so the
+       buttons end up equal and never touch. Using a filled <code>Button</code> for the primary action and an
+       <code>OutlinedButton</code> for the secondary is the Material emphasis convention. <em>(Lab 7 — arrangement
+       for spacing; Lab 8 — weight for equal shares.)</em></p>
+    <div class="callout good">
+      <b>The whole card, top to bottom</b>
+      avatar <code>Box</code> + online badge (TODO 1) · name + <code>@handle · Role</code> · <code>StatsRow</code> of
+      three even <code>StatCell</code>s (TODO 2) · <code>ActionButtons</code> row of two equal buttons (TODO 3). The
+      outer <code>Column</code> centers it all with <code>horizontalAlignment = CenterHorizontally</code> and even
+      <code>Arrangement.spacedBy(16.dp)</code> gaps between sections.
+    </div>
+  </div>
+
+  <!-- ================= PROJECT B ================= -->
+  <h2><span class="part">Project B.</span> Settings List — one row, reused six times</h2>
+  <p class="lead">A scrollable settings screen: six rows that all follow the pattern
+     <code>[icon] · label(weight) · control</code>, where the control is a working <code>Switch</code> or a "›"
+     chevron, plus a divider before the "About" footer. The data model and the row's signature are given; you fill
+     four TODO slots.</p>
+
+  <!-- B · TODO 1 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B · TODO 1 — render every row</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Show <strong>all six</strong> items from the <code>settings</code> list, in order — not one
+       hard-coded row.</p>
+    <p class="file">Where: <code>Hw5SettingsList</code> → <code>SettingsScreen</code>, inside the scrolling <code>Column</code> body. <span class="where both" style="margin-left:6px;">builds on Lab 9 · lists of items</span></p>
+<pre><code>// SOLUTION (TODO 1): render EVERY item, not just one hard-coded row.
+// We're already inside a verticalScroll Column, so the simplest loop is
+// forEach — it emits one SettingRow per item, in list order. (We use
+// forEachIndexed because TODO 4's divider also wants the position; the
+// index itself isn't strictly needed since we key off the label.)
+settings.forEachIndexed { _, item ->
+    // ... (TODO 4 divider + TODO 3 state + SettingRow go here)
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> the body is a plain <code>verticalScroll</code> <code>Column</code>, so we can
+       just loop the data with <code>forEachIndexed</code> and emit one <code>SettingRow</code> per item — the list
+       drives the UI, so adding or reordering a setting only means editing the <code>settings</code> list. <em>(Lab 9
+       — turning a list of data into a list of composables.)</em></p>
+  </div>
+
+  <!-- B · TODO 2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B · TODO 2 — the row layout (icon · label(weight) · control)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Lay one <code>SettingRow</code> out as <strong>icon · label · control</strong>, with the label eating
+       the middle so the control is pushed to the far right edge.</p>
+    <p class="file">Where: <code>Hw5SettingsList</code> → <code>SettingRow</code> body. <span class="where both" style="margin-left:6px;">builds on Labs 8–10 · Row + weight + alignment</span></p>
+<pre><code>// SOLUTION (TODO 2): one settings row laid out as  icon · label · control.
+// A Row places its children left-to-right on a single horizontal line.
+Row(
+    // fillMaxWidth so the row spans the screen; the padding gives each row some
+    // breathing room (16.dp on the sides, 12.dp top/bottom) so taps land comfortably.
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 12.dp),
+    // CenterVertically lines up the icon, the label text and the control on the
+    // SAME center line — without it they'd align to the top and look ragged.
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    // 1) The leading emoji "icon". sp (scale-independent px) so it respects the
+    //    user's font-size setting; 22.sp makes it a touch bigger than body text.
+    Text(item.icon, fontSize = 22.sp)
+    // 2) A fixed 16.dp gap between the icon and the label.
+    Spacer(Modifier.width(16.dp))
+    // 3) The label. weight(1f) tells the Row "let this child EAT all the leftover
+    //    horizontal space," which shoves whatever comes after it (the control) to
+    //    the far END of the row — the classic "label on the left, control on the
+    //    right" settings look, with no hard-coded widths.
+    Text(item.label, modifier = Modifier.weight(1f))
+    // 4) The trailing control depends on the row's KIND:
+    //    • TOGGLE → a real Switch. `checked = isOn` shows the current value; the
+    //      parent owns that value (state hoisting) and onToggle reports taps back.
+    //    • NAV    → a "›" chevron hinting "tap to go to another screen."
+    if (item.kind == Kind.TOGGLE) {
+        Switch(checked = isOn, onCheckedChange = onToggle)
+    } else {
+        Text("›", fontSize = 24.sp)
+    }
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> giving the label <code>Modifier.weight(1f)</code> makes it eat <em>all</em> the
+       leftover horizontal space, which shoves the trailing control to the far end — the classic "label left, control
+       right" look with no hard-coded widths. <code>verticalAlignment = CenterVertically</code> keeps the icon, label,
+       and control on one center line. The <code>if (item.kind == Kind.TOGGLE)</code> branch picks a <code>Switch</code>
+       or a "›" chevron per row. <em>(Lab 8 — weight; Lab 10 — cross-axis alignment.)</em></p>
+  </div>
+
+  <!-- B · TODO 3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B · TODO 3 — make the toggles work (remember + state hoisting)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Give each <code>TOGGLE</code> row its own remembered on/off value so its <code>Switch</code>
+       actually <strong>flips</strong> when tapped.</p>
+    <p class="file">Where: <code>Hw5SettingsList</code> → inside the <code>forEachIndexed</code> loop, wrapping each <code>SettingRow</code>. <span class="where both" style="margin-left:6px;">builds on the state labs · remember + mutableStateOf</span></p>
+<pre><code>// SOLUTION (TODO 3): give EACH row its own on/off state.
+// `key(item.label)` gives every iteration a stable identity so its
+// remembered state stays attached to THIS item across recompositions
+// (e.g. if the list ever changes order, each toggle keeps its value).
+key(item.label) {
+    // remember + mutableStateOf holds the toggle's value across
+    // recomposition; `by` lets us read/write `on` as a plain Boolean.
+    // A NAV row simply never reads/changes this (it shows a chevron).
+    var on by remember { mutableStateOf(item.initiallyOn) }
+    // State hoisting: the PARENT (here) owns `on`; the row only
+    // DISPLAYS it (isOn) and REPORTS taps (onToggle). The tap sets
+    // `on = it`, which recomposes this key block with the new value,
+    // so the Switch visibly flips.
+    SettingRow(item = item, isOn = on, onToggle = { on = it })
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> <code>remember { mutableStateOf(...) }</code> gives each row a value that
+       <em>survives recomposition</em> and that Compose <em>watches</em>: when the tap sets <code>on = it</code>,
+       Compose recomposes this block and the <code>Switch</code> flips to the new value. The parent owns the state and
+       the row only displays it (<code>isOn</code>) and reports taps (<code>onToggle</code>) — that's
+       <em>state hoisting</em>. Wrapping in <code>key(item.label)</code> ties each remembered value to its specific
+       item so a reorder can't shuffle the toggle states. <em>(State labs — remember + mutableStateOf + hoisting.)</em></p>
+  </div>
+
+  <!-- B · TODO 4 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B · TODO 4 — divider before the "About" footer</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Add a thin <strong>divider</strong> just above the "About" row so it reads as a separate footer
+       section below the main settings.</p>
+    <p class="file">Where: <code>Hw5SettingsList</code> → at the top of each loop iteration, guarded by the label. <span class="where both" style="margin-left:6px;">builds on Lab 9 · HorizontalDivider</span></p>
+<pre><code>// SOLUTION (TODO 4): a thin divider just BEFORE the "About" row, so
+// "About" reads as a separate footer section below the main list.
+// Emitting it here (inside the loop, guarded by the label) keeps it
+// in the right spot even if the list is reordered.
+if (item.label == "About") {
+    HorizontalDivider()
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> emitting <code>HorizontalDivider()</code> only when
+       <code>item.label == "About"</code> drops a single line in front of that one row. Because the check runs
+       <em>inside</em> the loop and keys off the label (not a fixed index), the divider stays glued to "About" even if
+       the list is reordered. <em>(Lab 9 — HorizontalDivider to separate sections.)</em></p>
+    <div class="callout good">
+      <b>The finished screen</b>
+      a <code>Scaffold</code> + <code>TopAppBar("Settings")</code> · a <code>verticalScroll</code> body · six rows
+      from the <code>settings</code> list (TODO 1), each laid out icon · label(weight) · control (TODO 2) · three
+      working <code>Switch</code>es with remembered, hoisted state (TODO 3) · a divider above the "About" footer
+      (TODO 4).
+    </div>
+  </div>
+
+  <!-- ================= SKILLS MAP ================= -->
+  <h2>Where each skill came from</h2>
+  <table class="cmp">
+    <thead><tr><th>TODO</th><th>Skill</th><th>Lab</th></tr></thead>
+    <tbody>
+      <tr><td>A · 1</td><td><code>Box</code> stacking + <code>Modifier.align(BottomEnd)</code> for a corner badge</td><td>Lab 10</td></tr>
+      <tr><td>A · 2</td><td>three <code>weight(1f)</code> cells split a Row evenly; extract a reusable <code>StatCell</code></td><td>Labs 8 &amp; 9</td></tr>
+      <tr><td>A · 3</td><td><code>Arrangement.spacedBy</code> + two <code>weight(1f)</code> buttons</td><td>Labs 7 &amp; 8</td></tr>
+      <tr><td>B · 1</td><td>loop a data list into one row composable per item</td><td>Lab 9</td></tr>
+      <tr><td>B · 2</td><td><code>Row</code> with a <code>weight(1f)</code> label pushing the control to the end</td><td>Labs 8–10</td></tr>
+      <tr><td>B · 3</td><td><code>remember { mutableStateOf }</code> + state hoisting so the switch flips</td><td>State labs</td></tr>
+      <tr><td>B · 4</td><td><code>HorizontalDivider()</code> to separate a footer section</td><td>Lab 9</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ================= CHECKLIST ================= -->
+  <h2>Self-check before you submit</h2>
+  <table class="cmp">
+    <thead><tr><th>Project</th><th>Must show</th></tr></thead>
+    <tbody>
+      <tr><td>A · Profile Card</td><td>circular avatar + green corner badge (TODO 1) · three even stats (TODO 2) · two equal buttons (TODO 3) · screenshot</td></tr>
+      <tr><td>B · Settings List</td><td>all six rows (TODO 1) · icon·label·control layout (TODO 2) · switches that flip (TODO 3) · divider above "About" (TODO 4) · screenshot</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Answer key for Homework 5 — Composing Multiple Items: a Profile Card &amp; a Settings List. Build both in
+    Android Studio (the toggles need real recomposition); prototype layout ideas in the
+    <a href="../../Playground/playground.html">Compose Playground</a>. See the fully-commented projects in
+    <a href="../projects.html">Projects, Explained</a> and the source skills in the
+    <a href="../../labs/index.html">Labs</a>. Open in any browser; use <em>Print → Save as PDF</em> to hand out.
+  </footer>
+
+</div>
+</body>
+</html>

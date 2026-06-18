@@ -1,0 +1,2952 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android Storage Lab - Interactive Guide</title>
+<meta name="description" content="A detailed interactive HTML guide to Android app storage: app-specific files, DataStore, Room, MediaStore, Storage Access Framework, Photo Picker, permissions, backup, cache, and lifecycle behavior.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: var(--blue);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+
+.brand {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand-mark {
+  height: 42px;
+  width: 42px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.92), rgba(45, 100, 200, 0.9)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.8), transparent 32%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+}
+
+.brand-title {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.brand-subtitle {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.nav-title {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin: 18px 8px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.nav-link {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  align-items: center;
+  min-height: 34px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 5px;
+  opacity: 0.78;
+}
+
+.nav-icon.round {
+  border-radius: 50%;
+}
+
+.nav-icon.line {
+  border-radius: 0;
+  border-width: 0;
+  border-top: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+}
+
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.progress-box {
+  margin: 16px 8px 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.progress-track {
+  height: 8px;
+  background: var(--surface-alt);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--green), var(--blue));
+  transition: width 0.2s ease;
+}
+
+.content {
+  min-width: 0;
+}
+
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+}
+
+.topbar select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+
+.band {
+  padding: 34px min(5vw, 58px);
+  border-bottom: 1px solid var(--line);
+}
+
+.band:nth-child(odd) {
+  background: var(--surface);
+}
+
+.band-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  min-width: 0;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+  gap: 28px;
+  align-items: start;
+  min-width: 0;
+}
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  margin: 0 0 8px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: 3rem;
+  line-height: 1.05;
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-size: 2rem;
+  line-height: 1.14;
+  margin-bottom: 12px;
+}
+
+h3 {
+  font-size: 1.18rem;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.lead {
+  color: var(--muted);
+  font-size: 1.08rem;
+  max-width: 72ch;
+  overflow-wrap: anywhere;
+}
+
+.dense {
+  color: var(--muted);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.tag.green {
+  background: var(--green-soft);
+  color: var(--green);
+  border-color: rgba(27, 138, 90, 0.35);
+}
+
+.tag.blue {
+  background: var(--blue-soft);
+  color: var(--blue);
+  border-color: rgba(45, 100, 200, 0.35);
+}
+
+.tag.amber {
+  background: var(--amber-soft);
+  color: var(--amber);
+  border-color: rgba(181, 108, 0, 0.35);
+}
+
+.tag.red {
+  background: var(--red-soft);
+  color: var(--red);
+  border-color: rgba(195, 61, 61, 0.35);
+}
+
+.tool {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.tool-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+
+.tool-title {
+  font-weight: 850;
+}
+
+.tool-body {
+  padding: 16px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  min-width: 0;
+}
+
+.three {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.four {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.control {
+  display: grid;
+  gap: 5px;
+}
+
+.control label,
+.label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.select,
+.text-input,
+.range {
+  width: 100%;
+}
+
+.select,
+.text-input {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+
+.text-input:focus,
+.select:focus,
+.text-area:focus {
+  border-color: var(--blue);
+  outline: 3px solid rgba(45, 100, 200, 0.15);
+}
+
+.text-area {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.seg button,
+.btn {
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface);
+  padding: 7px 11px;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.seg button:hover,
+.btn:hover {
+  border-color: var(--blue);
+}
+
+.seg button.on,
+.btn.primary {
+  background: var(--blue);
+  color: #ffffff;
+  border-color: var(--blue);
+}
+
+.btn.green {
+  background: var(--green);
+  border-color: var(--green);
+  color: #ffffff;
+}
+
+.btn.red {
+  background: var(--red);
+  border-color: var(--red);
+  color: #ffffff;
+}
+
+.btn.amber {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #ffffff;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.range-wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+input[type="range"] {
+  accent-color: var(--blue);
+}
+
+.value-badge {
+  min-width: 52px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.check-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+}
+
+.device-shell {
+  position: relative;
+  min-height: 520px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(10, 143, 154, 0.06), rgba(45, 100, 200, 0.05)),
+    var(--surface);
+  border-radius: 8px;
+  padding: 16px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.device-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.storage-stack {
+  display: grid;
+  gap: 9px;
+}
+
+.storage-layer {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  min-height: 60px;
+  padding: 9px 10px;
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+  min-width: 0;
+}
+
+.storage-layer:hover,
+.storage-layer.active {
+  transform: translateY(-1px);
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.layer-chip {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: white;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.layer-chip.green {
+  background: var(--green);
+}
+
+.layer-chip.teal {
+  background: var(--teal);
+}
+
+.layer-chip.blue {
+  background: var(--blue);
+}
+
+.layer-chip.amber {
+  background: var(--amber);
+}
+
+.layer-chip.red {
+  background: var(--red);
+}
+
+.layer-chip.violet {
+  background: var(--violet);
+}
+
+.storage-layer strong {
+  display: block;
+  font-size: 0.94rem;
+  overflow-wrap: anywhere;
+}
+
+.storage-layer span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mini-led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+
+.storage-layer.active .mini-led {
+  background: var(--green);
+  box-shadow: 0 0 0 5px rgba(27, 138, 90, 0.13);
+}
+
+.layer-detail {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.layer-detail h3 {
+  margin-bottom: 4px;
+}
+
+.fact-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 126px 1fr;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  font-size: 0.9rem;
+}
+
+.fact b {
+  color: var(--muted);
+}
+
+.fact span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.result-panel {
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.recommendation-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.recommendation-title h3 {
+  margin: 0;
+}
+
+.why-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.why-list li {
+  margin: 4px 0;
+}
+
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 10px;
+  color: var(--code-dim);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.code-panel pre {
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 28px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.life-table,
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.life-table th,
+.life-table td,
+.matrix-table th,
+.matrix-table td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.9rem;
+}
+
+.life-table th,
+.matrix-table th {
+  background: var(--surface-alt);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.life-table tr:last-child td,
+.matrix-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.life-table td:last-child,
+.life-table th:last-child,
+.matrix-table td:last-child,
+.matrix-table th:last-child {
+  border-right: 0;
+}
+
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 0.78rem;
+}
+
+.status-dot.yes {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.status-dot.no {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.status-dot.maybe {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.state-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.state-cell {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 102px;
+  background: var(--surface);
+  min-width: 0;
+}
+
+.state-cell strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.state-cell span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.82rem;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.state-cell .number {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 1.2rem;
+  margin-top: 6px;
+}
+
+.pulse {
+  animation: pulse-bg 0.6s ease;
+}
+
+@keyframes pulse-bg {
+  0% {
+    box-shadow: 0 0 0 0 rgba(45, 100, 200, 0.32);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(45, 100, 200, 0);
+  }
+}
+
+.phone {
+  width: 312px;
+  max-width: 100%;
+  margin: 0 auto;
+  border: 10px solid #0d1520;
+  border-radius: 30px;
+  background: #0d1520;
+  overflow: hidden;
+}
+
+.phone-screen {
+  background: var(--surface);
+  min-height: 498px;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-bar {
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-alt);
+}
+
+.phone-title {
+  font-weight: 850;
+}
+
+.phone-caption {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.phone-list {
+  flex: 1;
+  overflow: auto;
+}
+
+.note-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.note-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--line-strong);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: white;
+  font-weight: 900;
+}
+
+.note-check.on {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.note-title {
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.note-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.mini-action {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--red);
+  min-height: 26px;
+  padding: 2px 7px;
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.timeline {
+  display: grid;
+  gap: 9px;
+}
+
+.time-step {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.time-dot {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-alt);
+  color: var(--muted);
+  font-weight: 900;
+  border: 1px solid var(--line);
+}
+
+.time-step.active .time-dot {
+  background: var(--green);
+  color: white;
+  border-color: var(--green);
+}
+
+.time-body {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 9px 10px;
+}
+
+.time-body strong {
+  display: block;
+}
+
+.time-body span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.permission-stage {
+  display: grid;
+  gap: 12px;
+}
+
+.permission-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--surface);
+}
+
+.permission-meter {
+  height: 18px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.permission-meter span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--green), var(--teal), var(--blue));
+  transition: width 0.22s ease;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.media-dot {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+}
+
+.media-dot.access {
+  background: var(--green-soft);
+  border-color: var(--green);
+}
+
+.media-dot.full {
+  background: var(--blue-soft);
+  border-color: var(--blue);
+}
+
+.saf-map {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.folder {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.folder:hover,
+.folder.active {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.folder.blocked {
+  border-color: rgba(195, 61, 61, 0.38);
+  background: var(--red-soft);
+}
+
+.folder strong {
+  display: block;
+}
+
+.folder span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.quiz-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.quiz-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 12px;
+}
+
+.quiz-item.correct {
+  border-color: rgba(27, 138, 90, 0.5);
+  background: var(--green-soft);
+}
+
+.quiz-item.wrong {
+  border-color: rgba(195, 61, 61, 0.5);
+  background: var(--red-soft);
+}
+
+.answer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.answer-row button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 32px;
+  padding: 5px 9px;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.answer-row button.selected {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.footnotes {
+  columns: 2;
+  column-gap: 34px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.footnotes li {
+  break-inside: avoid;
+  margin-bottom: 7px;
+}
+
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.callout.warn {
+  border-left-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.callout.danger {
+  border-left-color: var(--red);
+  background: var(--red-soft);
+}
+
+.callout.good {
+  border-left-color: var(--green);
+  background: var(--green-soft);
+}
+
+.flash-text {
+  min-height: 22px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-top: 8px;
+}
+
+.inline-kbd {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  border: 1px solid var(--line);
+  border-bottom-color: var(--line-strong);
+  background: var(--surface);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+@media (max-width: 1080px) {
+  .hero-grid,
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-grid {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 860px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .rail {
+    display: none;
+  }
+
+  .topbar {
+    display: block;
+  }
+
+  .band {
+    padding: 26px 16px;
+  }
+
+  .section-head,
+  .control-grid,
+  .three,
+  .four,
+  .state-grid {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    font-size: 2.1rem;
+  }
+
+  h2 {
+    font-size: 1.55rem;
+  }
+
+  .fact {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .storage-layer {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .storage-layer .mini-led {
+    display: none;
+  }
+
+  .layer-chip {
+    width: 30px;
+    height: 30px;
+  }
+
+  .footnotes {
+    columns: 1;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail" aria-label="Lesson navigation">
+    <div class="brand">
+      <div class="brand-mark">AS</div>
+      <div>
+        <div class="brand-title">Android Storage Lab</div>
+        <div class="brand-subtitle">Interactive mental model</div>
+      </div>
+    </div>
+    <div class="nav-title">Explore</div>
+    <a class="nav-link active" href="#overview"><span class="nav-icon"></span><span>Storage map</span></a>
+    <a class="nav-link" href="#chooser"><span class="nav-icon round"></span><span>Decision engine</span></a>
+    <a class="nav-link" href="#lifecycle"><span class="nav-icon line"></span><span>Lifecycle lab</span></a>
+    <a class="nav-link" href="#permissions"><span class="nav-icon"></span><span>Permissions</span></a>
+    <a class="nav-link" href="#room"><span class="nav-icon round"></span><span>Room</span></a>
+    <a class="nav-link" href="#datastore"><span class="nav-icon"></span><span>DataStore</span></a>
+    <a class="nav-link" href="#files"><span class="nav-icon line"></span><span>Files and cache</span></a>
+    <a class="nav-link" href="#media"><span class="nav-icon"></span><span>MediaStore</span></a>
+    <a class="nav-link" href="#saf"><span class="nav-icon round"></span><span>SAF</span></a>
+    <a class="nav-link" href="#backup"><span class="nav-icon"></span><span>Backup and security</span></a>
+    <a class="nav-link" href="#quiz"><span class="nav-icon line"></span><span>Knowledge check</span></a>
+    <button class="theme-toggle" id="themeToggle" type="button">Switch theme</button>
+    <div class="progress-box">
+      <div><strong id="progressText">0%</strong> viewed</div>
+      <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <select id="mobileNav" aria-label="Jump to lesson section">
+        <option value="#overview">Storage map</option>
+        <option value="#chooser">Decision engine</option>
+        <option value="#lifecycle">Lifecycle lab</option>
+        <option value="#permissions">Permissions</option>
+        <option value="#room">Room</option>
+        <option value="#datastore">DataStore</option>
+        <option value="#files">Files and cache</option>
+        <option value="#media">MediaStore</option>
+        <option value="#saf">SAF</option>
+        <option value="#backup">Backup and security</option>
+        <option value="#quiz">Knowledge check</option>
+      </select>
+    </div>
+
+    <section class="band" id="overview">
+      <div class="band-inner hero-grid">
+        <div>
+          <p class="eyebrow">The useful mental model</p>
+          <h1>Android storage is a set of scoped places, not one shared disk.</h1>
+          <p class="lead">Every storage choice answers five questions: who owns the data, who should see it, how structured it is, whether it should survive uninstall, and whether the user should explicitly choose the file or media.</p>
+          <div class="callout good">
+            <strong>Rule of thumb:</strong> default to the narrowest storage surface that satisfies the feature. Private app state belongs in the app sandbox. User-visible media belongs in MediaStore. Arbitrary user documents belong behind the system picker.
+          </div>
+          <div class="three" style="margin-top: 14px;">
+            <div class="state-cell">
+              <strong>Private app data</strong>
+              <span>Room, DataStore, filesDir, cacheDir. Other apps cannot browse it. Removed when the app is uninstalled.</span>
+            </div>
+            <div class="state-cell">
+              <strong>Shared user data</strong>
+              <span>Photos, videos, audio, downloads, and documents. Use system APIs so Android mediates access.</span>
+            </div>
+            <div class="state-cell">
+              <strong>Granted access</strong>
+              <span>Photo Picker and SAF return content URIs. Your app receives access to exactly what the user selected.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="device-shell" aria-label="Interactive Android storage map">
+          <div class="device-label"><span>Tap a layer</span><span class="tag blue">API aware</span></div>
+          <div class="storage-stack" id="storageStack"></div>
+          <div class="layer-detail" id="layerDetail"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="chooser">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Decision engine</p>
+            <h2>Choose the right storage API by describing the data.</h2>
+            <p class="lead">Change the inputs and watch the recommendation, tradeoffs, and Kotlin entry point update. This is the fastest way to avoid using broad permissions when a narrower API is enough.</p>
+          </div>
+          <span class="tag green">Interactive</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">Storage chooser</div>
+            <span class="tag">Updates instantly</span>
+          </div>
+          <div class="tool-body split">
+            <div class="control-grid">
+              <div class="control">
+                <label for="dataKind">What are you storing?</label>
+                <select class="select" id="dataKind">
+                  <option value="setting">Small setting or flag</option>
+                  <option value="profile">Typed app object</option>
+                  <option value="records">Structured rows you query</option>
+                  <option value="privateFile">Private blob or text file</option>
+                  <option value="cache">Re-creatable cache</option>
+                  <option value="photo">Photo or video user should see</option>
+                  <option value="audio">Audio user should see</option>
+                  <option value="document">Arbitrary user document</option>
+                </select>
+              </div>
+              <div class="control">
+                <label for="sizeRange">Approximate size</label>
+                <div class="range-wrap">
+                  <input class="range" id="sizeRange" type="range" min="1" max="5" value="2">
+                  <span class="value-badge" id="sizeLabel">KBs</span>
+                </div>
+              </div>
+              <label class="check-row"><input type="checkbox" id="mustShare">Other apps should access it</label>
+              <label class="check-row"><input type="checkbox" id="surviveUninstall">It should remain after uninstall</label>
+              <label class="check-row"><input type="checkbox" id="needsQuery">Needs search, sort, relations, or transactions</label>
+              <label class="check-row"><input type="checkbox" id="userChooses">User should choose the exact file</label>
+              <label class="check-row"><input type="checkbox" id="sensitive">Contains sensitive data</label>
+              <label class="check-row"><input type="checkbox" id="offlineReliable" checked>Must be available at app start</label>
+            </div>
+            <div class="result-panel" id="chooserResult"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="lifecycle">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Lifecycle lab</p>
+            <h2>See what survives restart, cache clearing, and uninstall.</h2>
+            <p class="lead">This simulator writes into conceptual Android locations. Then it models common events: app process restart, clear cache, clear storage, uninstall, and user deletion from shared storage.</p>
+          </div>
+          <span class="tag amber">Visual feedback</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">Persistence simulator</div>
+            <span class="tag" id="lifeRunBadge">Run 1</span>
+          </div>
+          <div class="tool-body">
+            <div class="btn-row">
+              <button class="btn green" type="button" id="saveSettingBtn">Save setting</button>
+              <button class="btn green" type="button" id="addRoomBtn">Add Room row</button>
+              <button class="btn green" type="button" id="writeFileBtn">Write filesDir</button>
+              <button class="btn amber" type="button" id="writeCacheBtn">Create cache blob</button>
+              <button class="btn primary" type="button" id="insertMediaBtn">Insert shared media</button>
+              <button class="btn primary" type="button" id="pickDocBtn">Pick SAF document</button>
+            </div>
+            <div class="btn-row" style="margin-top: 10px;">
+              <button class="btn ghost" type="button" id="restartBtn">Restart app process</button>
+              <button class="btn amber" type="button" id="clearCacheBtn">Clear cache</button>
+              <button class="btn red" type="button" id="clearStorageBtn">Clear app storage</button>
+              <button class="btn red" type="button" id="uninstallBtn">Uninstall app</button>
+              <button class="btn ghost" type="button" id="deleteSharedBtn">User deletes shared file</button>
+            </div>
+            <div class="flash-text" id="lifeLog">Write something, then trigger a lifecycle event.</div>
+            <div style="overflow:auto; margin-top: 12px;">
+              <table class="life-table" id="lifeTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warn" style="margin-top: 14px;">
+          <strong>Important distinction:</strong> clearing cache only affects cache locations. Clearing app storage and uninstall remove app-specific state such as Room databases, DataStore files, internal files, and external app-specific files. Shared media and documents can remain on the device, but your app may lose grants or ownership context.
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="permissions">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Permissions by API level</p>
+            <h2>Modern storage access is mostly URI and collection based.</h2>
+            <p class="lead">Use the sliders to compare device API level, target SDK, and operation. Android 13 introduced granular media permissions. Android 14 added selected photo/video access in the permission prompt. Photo Picker and SAF avoid storage permissions for user-selected content.</p>
+          </div>
+          <span class="tag blue">Scoped storage</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">Permission matrix simulator</div>
+            <span class="tag" id="permEraTag">Modern</span>
+          </div>
+          <div class="tool-body split">
+            <div class="permission-stage">
+              <div class="control-grid">
+                <div class="control">
+                  <label for="deviceApi">Device Android API</label>
+                  <div class="range-wrap">
+                    <input id="deviceApi" type="range" min="21" max="37" value="35">
+                    <span class="value-badge" id="deviceApiLabel">35</span>
+                  </div>
+                </div>
+                <div class="control">
+                  <label for="targetApi">Target SDK</label>
+                  <div class="range-wrap">
+                    <input id="targetApi" type="range" min="23" max="37" value="35">
+                    <span class="value-badge" id="targetApiLabel">35</span>
+                  </div>
+                </div>
+              </div>
+              <div class="control">
+                <label for="operationSelect">Operation</label>
+                <select class="select" id="operationSelect">
+                  <option value="private">Read/write private app file</option>
+                  <option value="externalApp">Read/write app-specific external file</option>
+                  <option value="addOwnMedia">Add your own photo/video to shared media</option>
+                  <option value="readImages">Read other apps' images/videos</option>
+                  <option value="readAudio">Read other apps' audio</option>
+                  <option value="photoPicker">Let user pick photos/videos</option>
+                  <option value="safDoc">Let user pick a document</option>
+                  <option value="allFiles">Manage broad shared files</option>
+                </select>
+              </div>
+              <div class="permission-card" id="permissionResult"></div>
+            </div>
+
+            <div class="permission-card">
+              <h3>Photo access prompt model</h3>
+              <p class="dense">Simulate what your app can see when visual media access is denied, selected, or broad. For many apps, Photo Picker is better because it grants only selected URIs and does not require media-library permission.</p>
+              <div class="seg" id="photoGrantSeg" role="group" aria-label="Photo access grant">
+                <button type="button" data-grant="none">Deny</button>
+                <button type="button" data-grant="selected" class="on">Selected</button>
+                <button type="button" data-grant="all">All media</button>
+                <button type="button" data-grant="picker">Photo Picker</button>
+              </div>
+              <div class="permission-meter" style="margin-top: 12px;"><span id="permissionMeter"></span></div>
+              <div class="media-grid" id="mediaGrid" aria-label="Accessible media grid"></div>
+              <p class="dense" id="photoGrantText" style="margin-top: 10px;"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="room">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Room and SQLite</p>
+            <h2>Room stores structured app data and emits reactive query results.</h2>
+            <p class="lead">Use Room when data has rows, relationships, queries, sorting, transactions, or migrations. A DAO can return <code>Flow&lt;List&lt;Note&gt;&gt;</code>; writes invalidate the query and the UI receives a new list.</p>
+          </div>
+          <span class="tag green">Structured data</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">Reactive Room model</div>
+            <span class="tag" id="roomEmitTag">Flow emissions: 0</span>
+          </div>
+          <div class="tool-body split">
+            <div>
+              <div class="control-grid">
+                <div class="control">
+                  <label for="roomTitle">New note title</label>
+                  <input class="text-input" id="roomTitle" value="Draft storage lesson">
+                </div>
+                <div class="control">
+                  <label for="roomPriority">Priority</label>
+                  <select class="select" id="roomPriority">
+                    <option>LOW</option>
+                    <option selected>NORMAL</option>
+                    <option>HIGH</option>
+                  </select>
+                </div>
+              </div>
+              <div class="btn-row" style="margin-top: 10px;">
+                <button class="btn green" type="button" id="roomAdd">INSERT</button>
+                <button class="btn ghost" type="button" id="roomSort">Toggle sort</button>
+                <button class="btn amber" type="button" id="roomMigrate">Run migration</button>
+                <button class="btn red" type="button" id="roomClear">DELETE all</button>
+              </div>
+              <div class="phone" style="margin-top: 14px;">
+                <div class="phone-screen">
+                  <div class="phone-bar">
+                    <div class="phone-title">Notes screen</div>
+                    <div class="phone-caption" id="roomSortCaption">DAO query sorted by newest first</div>
+                  </div>
+                  <div class="phone-list" id="roomList"></div>
+                </div>
+              </div>
+            </div>
+            <div class="code-panel">
+              <div class="code-head">
+                <span id="roomCodeTitle">Generated DAO and SQL</span>
+                <button class="copy-btn" type="button" data-copy="#roomCode">Copy</button>
+              </div>
+              <pre id="roomCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="three" style="margin-top: 14px;">
+          <div class="state-cell">
+            <strong>Entity</strong>
+            <span>Kotlin data class annotated with <code>@Entity</code>. Room maps it to a SQLite table.</span>
+          </div>
+          <div class="state-cell">
+            <strong>DAO</strong>
+            <span>Interface with <code>@Query</code>, <code>@Insert</code>, <code>@Update</code>, and <code>@Delete</code>. Suspends writes off the UI thread.</span>
+          </div>
+          <div class="state-cell">
+            <strong>Migration</strong>
+            <span>Versioned schema change. You explicitly transform old tables so users keep their data.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="datastore">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">DataStore</p>
+            <h2>DataStore is for small private state, read as a Flow and written transactionally.</h2>
+            <p class="lead">Preferences DataStore stores key-value preferences. Proto or typed DataStore stores one typed object. Both are asynchronous and transactional, which makes them a better default than legacy SharedPreferences for new code.</p>
+          </div>
+          <span class="tag green">Small app state</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">Transactional settings writer</div>
+            <span class="tag" id="dsVersionTag">Version 1</span>
+          </div>
+          <div class="tool-body split">
+            <div>
+              <div class="state-grid">
+                <div class="state-cell" id="dsThemeCell">
+                  <strong>Dark theme</strong>
+                  <span>Preferences key</span>
+                  <div class="number" id="dsThemeValue">false</div>
+                </div>
+                <div class="state-cell" id="dsSortCell">
+                  <strong>Sort order</strong>
+                  <span>Preferences key</span>
+                  <div class="number" id="dsSortValue">NEWEST</div>
+                </div>
+                <div class="state-cell" id="dsProfileCell">
+                  <strong>User profile</strong>
+                  <span>Typed JSON or Proto</span>
+                  <div class="number" id="dsProfileValue">Ada</div>
+                </div>
+              </div>
+              <div class="btn-row" style="margin-top: 12px;">
+                <button class="btn primary" type="button" id="dsTheme">Toggle theme</button>
+                <button class="btn primary" type="button" id="dsSort">Toggle sort</button>
+                <button class="btn primary" type="button" id="dsProfile">Rename profile</button>
+                <button class="btn amber" type="button" id="dsBurst">Queue 3 writes</button>
+              </div>
+              <div class="timeline" id="dsTimeline" style="margin-top: 12px;"></div>
+            </div>
+            <div class="code-panel">
+              <div class="code-head">
+                <span>Current DataStore operation</span>
+                <button class="copy-btn" type="button" data-copy="#dsCode">Copy</button>
+              </div>
+              <pre id="dsCode"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warn" style="margin-top: 14px;">
+          <strong>DataStore is not a database.</strong> If you need partial queries, joins, indexes, large collections, or referential integrity, choose Room. If you need a handful of settings or one typed profile object, DataStore fits well.
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="files">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Files and cache</p>
+            <h2>Internal files are private bytes; cache is disposable bytes.</h2>
+            <p class="lead">Use files when the app owns the bytes and does not need table queries. Use cache only for data you can rebuild. Raw file I/O is blocking, so Android apps should move it off the main thread.</p>
+          </div>
+          <span class="tag amber">Bytes on disk</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">File location explorer</div>
+            <span class="tag" id="filePathTag">filesDir</span>
+          </div>
+          <div class="tool-body split">
+            <div>
+              <div class="seg" id="fileLocationSeg" role="group" aria-label="File storage location">
+                <button type="button" class="on" data-fileloc="filesDir">filesDir</button>
+                <button type="button" data-fileloc="cacheDir">cacheDir</button>
+                <button type="button" data-fileloc="noBackup">noBackupFilesDir</button>
+                <button type="button" data-fileloc="externalFiles">external app-specific</button>
+              </div>
+              <div class="result-panel" id="fileLocationDetail" style="margin-top: 12px;"></div>
+              <div class="callout" style="margin-top: 12px;">
+                <strong>Main-thread rule:</strong> Room, DataStore, and ContentResolver APIs have coroutine-friendly patterns. Raw <code>File</code> calls are ordinary blocking I/O, so wrap them in <code>Dispatchers.IO</code> or another background mechanism.
+              </div>
+            </div>
+            <div class="code-panel">
+              <div class="code-head">
+                <span>File API snippet</span>
+                <button class="copy-btn" type="button" data-copy="#fileCode">Copy</button>
+              </div>
+              <pre id="fileCode"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="media">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">MediaStore</p>
+            <h2>Shared photos, videos, and audio are addressed through collections and URIs.</h2>
+            <p class="lead">MediaStore lets your app add user-visible media and query media collections. On Android 10 and higher, your app can add its own media without storage permission. Reading other apps' media depends on Photo Picker or media permissions.</p>
+          </div>
+          <span class="tag blue">Shared media</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">Media insert pipeline</div>
+            <span class="tag" id="mediaStepTag">Step 1</span>
+          </div>
+          <div class="tool-body split">
+            <div>
+              <div class="timeline" id="mediaTimeline"></div>
+              <div class="btn-row" style="margin-top: 12px;">
+                <button class="btn primary" type="button" id="mediaNext">Next step</button>
+                <button class="btn ghost" type="button" id="mediaReset">Reset</button>
+              </div>
+              <div class="result-panel" style="margin-top: 12px;">
+                <h3>Collection state</h3>
+                <p class="dense" id="mediaStateText"></p>
+              </div>
+            </div>
+            <div class="code-panel">
+              <div class="code-head">
+                <span>MediaStore operation</span>
+                <button class="copy-btn" type="button" data-copy="#mediaCode">Copy</button>
+              </div>
+              <pre id="mediaCode"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="saf">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Storage Access Framework</p>
+            <h2>SAF is the user-controlled path for arbitrary documents.</h2>
+            <p class="lead">SAF returns a content URI from a system picker. Your app does not need storage permission because the user selects the document or directory. Android 11 and higher restrict broad tree access to sensitive roots such as storage root, Downloads, Android/data, and Android/obb.</p>
+          </div>
+          <span class="tag blue">User selected URI</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">SAF picker restriction explorer</div>
+            <span class="tag" id="safApiTag">API 35</span>
+          </div>
+          <div class="tool-body split">
+            <div>
+              <div class="control">
+                <label for="safApi">Device API</label>
+                <div class="range-wrap">
+                  <input id="safApi" type="range" min="19" max="37" value="35">
+                  <span class="value-badge" id="safApiLabel">35</span>
+                </div>
+              </div>
+              <div class="saf-map" id="safMap" style="margin-top: 12px;"></div>
+              <div class="result-panel" id="safResult" style="margin-top: 12px;"></div>
+            </div>
+            <div class="code-panel">
+              <div class="code-head">
+                <span>SAF intent pattern</span>
+                <button class="copy-btn" type="button" data-copy="#safCode">Copy</button>
+              </div>
+              <pre id="safCode"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="backup">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Backup, privacy, and security</p>
+            <h2>Persistence is not the same thing as secrecy.</h2>
+            <p class="lead">Android's app sandbox prevents casual cross-app reads, but your own storage files are still plain app data unless you encrypt them. Backup behavior is a separate policy decision.</p>
+          </div>
+          <span class="tag red">Risk model</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">Backup and security matrix</div>
+            <span class="tag">Design checklist</span>
+          </div>
+          <div class="tool-body">
+            <div style="overflow:auto;">
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Default privacy boundary</th>
+                    <th>Removed on uninstall?</th>
+                    <th>Auto Backup default?</th>
+                    <th>Security note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Room database</strong></td>
+                    <td>App sandbox</td>
+                    <td><span class="status-dot yes">Yes</span></td>
+                    <td><span class="status-dot maybe">Usually</span></td>
+                    <td>Encrypt separately for sensitive rows; migrations must preserve data.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>DataStore</strong></td>
+                    <td>App sandbox</td>
+                    <td><span class="status-dot yes">Yes</span></td>
+                    <td><span class="status-dot maybe">Usually</span></td>
+                    <td>Great for settings, but not encrypted by default.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>filesDir</strong></td>
+                    <td>App sandbox</td>
+                    <td><span class="status-dot yes">Yes</span></td>
+                    <td><span class="status-dot maybe">Usually</span></td>
+                    <td>Store private app-owned bytes. Avoid secrets in plain files.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>cacheDir</strong></td>
+                    <td>App sandbox</td>
+                    <td><span class="status-dot yes">Yes</span></td>
+                    <td><span class="status-dot no">No</span></td>
+                    <td>System or user can clear it; never trust existence.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>noBackupFilesDir</strong></td>
+                    <td>App sandbox</td>
+                    <td><span class="status-dot yes">Yes</span></td>
+                    <td><span class="status-dot no">No</span></td>
+                    <td>Use for device-local generated keys, sessions, or data that should not restore.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>MediaStore media</strong></td>
+                    <td>User-visible shared collection</td>
+                    <td><span class="status-dot no">No</span></td>
+                    <td><span class="status-dot no">Not app backup</span></td>
+                    <td>User and other allowed apps can see it.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>SAF document</strong></td>
+                    <td>User-selected provider</td>
+                    <td><span class="status-dot no">No</span></td>
+                    <td><span class="status-dot no">Provider owns it</span></td>
+                    <td>Persist URI permissions only when appropriate and offered.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="three" style="margin-top: 14px;">
+              <div class="callout good">
+                <strong>Use least privilege.</strong> Photo Picker and SAF are often enough because the user explicitly grants a URI.
+              </div>
+              <div class="callout warn">
+                <strong>Plan restores.</strong> If backed-up data references files in non-backed-up locations, restore can create dangling references.
+              </div>
+              <div class="callout danger">
+                <strong>Protect secrets.</strong> Tokens, private keys, and health/financial data need a stronger design than "it is in filesDir."
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="quiz">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Knowledge check</p>
+            <h2>Test the mental model with immediate feedback.</h2>
+            <p class="lead">Answer each scenario. The feedback explains the storage boundary and the API shape.</p>
+          </div>
+          <span class="tag green" id="quizScore">0 / 5</span>
+        </div>
+
+        <div class="quiz-grid" id="quizGrid"></div>
+      </div>
+    </section>
+
+    <section class="band" id="sources">
+      <div class="band-inner">
+        <p class="eyebrow">Sources used</p>
+        <h2>Official Android references behind this guide.</h2>
+        <ol class="footnotes">
+          <li><a href="https://developer.android.com/training/data-storage">Data and file storage overview</a></li>
+          <li><a href="https://developer.android.com/training/data-storage/app-specific">Access app-specific files</a></li>
+          <li><a href="https://developer.android.com/training/data-storage/shared">Overview of shared storage</a></li>
+          <li><a href="https://developer.android.com/training/data-storage/shared/media">Access media files from shared storage</a></li>
+          <li><a href="https://developer.android.com/training/data-storage/shared/photo-picker">Photo picker</a></li>
+          <li><a href="https://developer.android.com/training/data-storage/shared/documents-files">Access documents and other files from shared storage</a></li>
+          <li><a href="https://developer.android.com/about/versions/13/behavior-changes-13#granular-media-permissions">Android 13 granular media permissions</a></li>
+          <li><a href="https://developer.android.com/about/versions/14/changes/partial-photo-video-access">Android 14 selected photos access</a></li>
+          <li><a href="https://developer.android.com/topic/libraries/architecture/datastore">Jetpack DataStore</a></li>
+        </ol>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  const code = {
+    setting: `val Context.dataStore by preferencesDataStore("settings")
+
+suspend fun setDarkTheme(enabled: Boolean) {
+    context.dataStore.edit { prefs ->
+        prefs[booleanPreferencesKey("dark_theme")] = enabled
+    }
+}
+
+val darkTheme: Flow<Boolean> =
+    context.dataStore.data.map { it[booleanPreferencesKey("dark_theme")] ?: false }`,
+    profile: `@Serializable
+data class UserProfile(val name: String, val avatar: String)
+
+object ProfileSerializer : Serializer<UserProfile> {
+    override val defaultValue = UserProfile("Ada", "default")
+    override suspend fun readFrom(input: InputStream): UserProfile = json.decodeFromString(input.readBytes().decodeToString())
+    override suspend fun writeTo(t: UserProfile, output: OutputStream) = output.write(json.encodeToString(t).encodeToByteArray())
+}
+
+suspend fun rename(name: String) {
+    profileStore.updateData { it.copy(name = name) }
+}`,
+    records: `@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    val done: Boolean = false,
+    val priority: Priority = Priority.NORMAL
+)
+
+@Dao
+interface NoteDao {
+    @Query("SELECT * FROM notes ORDER BY id DESC")
+    fun observeNotes(): Flow<List<Note>>
+
+    @Insert suspend fun insert(note: Note)
+}`,
+    privateFile: `suspend fun writeScratch(text: String) = withContext(Dispatchers.IO) {
+    File(context.filesDir, "scratch.txt").writeText(text)
+}
+
+suspend fun readScratch(): String = withContext(Dispatchers.IO) {
+    File(context.filesDir, "scratch.txt").takeIf { it.exists() }?.readText().orEmpty()
+}`,
+    cache: `suspend fun cacheThumbnail(bytes: ByteArray) = withContext(Dispatchers.IO) {
+    File(context.cacheDir, "thumb.tmp").writeBytes(bytes)
+}
+
+// Always handle a cache miss.
+val cached = File(context.cacheDir, "thumb.tmp")
+if (!cached.exists()) rebuildThumbnail()`,
+    photo: `val values = ContentValues().apply {
+    put(MediaStore.Images.Media.DISPLAY_NAME, "receipt.jpg")
+    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+    put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Receipts")
+}
+
+val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+resolver.openOutputStream(uri!!)?.use { it.write(jpegBytes) }`,
+    audio: `val values = ContentValues().apply {
+    put(MediaStore.Audio.Media.DISPLAY_NAME, "mix.mp3")
+    put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
+    put(MediaStore.Audio.Media.RELATIVE_PATH, Environment.DIRECTORY_MUSIC + "/MyApp")
+}
+
+resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)`,
+    document: `val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+    addCategory(Intent.CATEGORY_OPENABLE)
+    type = "application/pdf"
+}
+
+// User chooses; app receives a content:// URI.
+launcher.launch(intent)`
+  };
+
+  const layers = [
+    {
+      id: "sandbox",
+      chip: "IN",
+      color: "green",
+      title: "Internal app sandbox",
+      subtitle: "/data/user/0/<package>/ files, databases, DataStore",
+      detail: "Private app-owned data. Use this for Room, DataStore, filesDir, cacheDir, and noBackupFilesDir.",
+      facts: [
+        ["Other apps", "Cannot browse it through normal app APIs."],
+        ["Permission", "No storage permission."],
+        ["Uninstall", "Removed."],
+        ["Best for", "App state, settings, private files, databases, cache."]
+      ]
+    },
+    {
+      id: "external-app",
+      chip: "EA",
+      color: "teal",
+      title: "External app-specific storage",
+      subtitle: "/storage/emulated/0/Android/data/<package>/files",
+      detail: "App-owned files on external storage. Useful for larger app-owned files that do not need to be shared.",
+      facts: [
+        ["Other apps", "Scoped away on modern Android."],
+        ["Permission", "No storage permission on Android 4.4+ for your own app-specific directory."],
+        ["Uninstall", "Removed."],
+        ["Caveat", "External volumes can be unavailable or removable."]
+      ]
+    },
+    {
+      id: "mediastore",
+      chip: "MS",
+      color: "blue",
+      title: "MediaStore shared collections",
+      subtitle: "Images, Video, Audio, Downloads collections",
+      detail: "User-visible media and downloads. Apps work with content URIs and collection metadata rather than raw shared paths.",
+      facts: [
+        ["Other apps", "Can see data when allowed by permissions or user selection."],
+        ["Permission", "Adding your own media on Android 10+ does not require storage permission."],
+        ["Uninstall", "Files remain."],
+        ["Best for", "Photos, videos, audio, files the user expects in gallery/downloads."]
+      ]
+    },
+    {
+      id: "photo-picker",
+      chip: "PP",
+      color: "violet",
+      title: "Photo Picker",
+      subtitle: "System UI returns selected image/video URIs",
+      detail: "Privacy-preserving media selection. Your app receives access to exactly what the user picks without broad gallery permission.",
+      facts: [
+        ["Other apps", "No broad media library access."],
+        ["Permission", "No media permission for picker-selected visual media."],
+        ["Uninstall", "Media remains; app access ends with app lifecycle/grants."],
+        ["Best for", "Attach avatar, upload a receipt, choose photos for a post."]
+      ]
+    },
+    {
+      id: "saf",
+      chip: "SA",
+      color: "amber",
+      title: "Storage Access Framework",
+      subtitle: "System file picker for documents and trees",
+      detail: "The user picks a document or directory from a provider. Your app works through content URIs.",
+      facts: [
+        ["Other apps", "Provider and user control visibility."],
+        ["Permission", "No storage permission because the user chooses."],
+        ["Uninstall", "Document remains; app grants are removed."],
+        ["Best for", "Open PDF, export JSON, let user choose a destination."]
+      ]
+    },
+    {
+      id: "all-files",
+      chip: "AF",
+      color: "red",
+      title: "All files access",
+      subtitle: "MANAGE_EXTERNAL_STORAGE special app access",
+      detail: "A rare broad access mode for file managers, backup apps, antivirus, and similar use cases. It is not a normal shortcut around scoped storage.",
+      facts: [
+        ["Other apps", "Potentially broad shared-storage visibility."],
+        ["Permission", "Special app access and policy-sensitive."],
+        ["Uninstall", "Shared files remain."],
+        ["Best for", "Only narrowly eligible file-management categories."]
+      ]
+    }
+  ];
+
+  let activeLayer = "sandbox";
+
+  function initStorageMap() {
+    const stack = $("#storageStack");
+    stack.innerHTML = layers.map(layer => `
+      <button class="storage-layer ${layer.id === activeLayer ? "active" : ""}" type="button" data-layer="${layer.id}">
+        <span class="layer-chip ${layer.color}">${layer.chip}</span>
+        <span><strong>${layer.title}</strong><span>${layer.subtitle}</span></span>
+        <span class="mini-led"></span>
+      </button>
+    `).join("");
+
+    stack.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-layer]");
+      if (!button) return;
+      activeLayer = button.dataset.layer;
+      renderStorageMap();
+    });
+    renderStorageMap();
+  }
+
+  function renderStorageMap() {
+    $$(".storage-layer").forEach(button => button.classList.toggle("active", button.dataset.layer === activeLayer));
+    const layer = layers.find(item => item.id === activeLayer);
+    $("#layerDetail").innerHTML = `
+      <h3>${layer.title}</h3>
+      <p class="dense">${layer.detail}</p>
+      <div class="fact-list">
+        ${layer.facts.map(([label, value]) => `<div class="fact"><b>${label}</b><span>${value}</span></div>`).join("")}
+      </div>
+    `;
+  }
+
+  const sizeLabels = {
+    1: "bytes",
+    2: "KBs",
+    3: "MBs",
+    4: "100MB+",
+    5: "GBs"
+  };
+
+  function chooserRecommendation() {
+    const kind = $("#dataKind").value;
+    const size = Number($("#sizeRange").value);
+    const mustShare = $("#mustShare").checked;
+    const surviveUninstall = $("#surviveUninstall").checked;
+    const needsQuery = $("#needsQuery").checked;
+    const userChooses = $("#userChooses").checked;
+    const sensitive = $("#sensitive").checked;
+    const offlineReliable = $("#offlineReliable").checked;
+
+    let key = kind;
+    const reasons = [];
+    const warnings = [];
+    let title = "";
+    let tag = "App private";
+
+    if (userChooses || kind === "document") {
+      key = "document";
+      title = "Storage Access Framework";
+      tag = "User selected URI";
+      reasons.push("The user should choose the document or destination.");
+      reasons.push("SAF gives your app a content URI without broad storage permission.");
+    } else if (kind === "photo" || kind === "audio" || mustShare || surviveUninstall) {
+      key = kind === "audio" ? "audio" : "photo";
+      title = kind === "audio" ? "MediaStore Audio" : "MediaStore";
+      tag = "Shared collection";
+      reasons.push("The data should be visible outside your app or remain after uninstall.");
+      reasons.push("MediaStore writes to user-visible shared collections through ContentResolver.");
+    } else if (needsQuery || kind === "records") {
+      key = "records";
+      title = "Room database";
+      tag = "Structured rows";
+      reasons.push("You need queryable rows, sort order, transactions, relationships, or migrations.");
+      reasons.push("Room maps Kotlin entities to SQLite tables and can expose reactive Flow queries.");
+    } else if (kind === "setting") {
+      key = "setting";
+      title = "Preferences DataStore";
+      tag = "Key-value";
+      reasons.push("The data is a small private key-value preference.");
+      reasons.push("DataStore writes are asynchronous and transactional.");
+    } else if (kind === "profile") {
+      key = "profile";
+      title = "Typed DataStore";
+      tag = "Typed object";
+      reasons.push("The data is one app-owned typed object rather than many queryable rows.");
+      reasons.push("A serializer gives you schema control without inventing loose preference keys.");
+    } else if (kind === "cache") {
+      key = "cache";
+      title = "cacheDir";
+      tag = "Disposable";
+      reasons.push("The bytes are re-creatable and may be deleted by the system or user.");
+    } else {
+      key = "privateFile";
+      title = size >= 4 ? "filesDir or external app-specific files" : "filesDir";
+      tag = "Private bytes";
+      reasons.push("The app owns the bytes and does not need database queries.");
+      reasons.push(size >= 4 ? "Large files may fit better in app-specific external storage, if availability checks are acceptable." : "Internal files are reliable and private to the app.");
+    }
+
+    if (sensitive) warnings.push("Sensitive data needs a security design. Room, DataStore, and files are not automatically application-level encryption.");
+    if (offlineReliable && key === "document") warnings.push("SAF documents can depend on the provider. Keep app-critical startup state in private app storage.");
+    if (mustShare && (key === "setting" || key === "profile" || key === "records" || key === "privateFile")) warnings.push("Private app storage is not appropriate when other apps should directly access the data.");
+    if (surviveUninstall && (key === "setting" || key === "profile" || key === "records" || key === "privateFile" || key === "cache")) warnings.push("App-specific data is removed on uninstall. Use shared storage only if the user should keep the file.");
+
+    return { key, title, tag, reasons, warnings };
+  }
+
+  function updateChooser() {
+    $("#sizeLabel").textContent = sizeLabels[$("#sizeRange").value];
+    const rec = chooserRecommendation();
+    $("#chooserResult").innerHTML = `
+      <div class="recommendation-title">
+        <h3>${rec.title}</h3>
+        <span class="tag blue">${rec.tag}</span>
+      </div>
+      <p class="dense">Recommended API surface for the selected constraints.</p>
+      <ul class="why-list">
+        ${rec.reasons.map(reason => `<li>${reason}</li>`).join("")}
+      </ul>
+      ${rec.warnings.length ? `<div class="callout warn" style="margin-top:12px;">${rec.warnings.map(item => `<p><strong>Check:</strong> ${item}</p>`).join("")}</div>` : ""}
+      <div class="code-panel" style="margin-top:12px;">
+        <div class="code-head"><span>Kotlin starting point</span><button class="copy-btn" type="button" data-copy="#chooserCode">Copy</button></div>
+        <pre id="chooserCode">${escapeHtml(code[rec.key])}</pre>
+      </div>
+    `;
+  }
+
+  const life = {
+    run: 1,
+    setting: false,
+    roomRows: 0,
+    filesBytes: 0,
+    cacheBytes: 0,
+    media: 0,
+    safDocs: 0,
+    safGrant: false
+  };
+
+  function initLifecycle() {
+    $("#saveSettingBtn").addEventListener("click", () => {
+      life.setting = !life.setting;
+      lifeMessage("Preferences DataStore wrote dark_theme = " + life.setting + ".");
+      renderLife("datastore");
+    });
+    $("#addRoomBtn").addEventListener("click", () => {
+      life.roomRows += 1;
+      lifeMessage("Room inserted a note row and emitted a new query result.");
+      renderLife("room");
+    });
+    $("#writeFileBtn").addEventListener("click", () => {
+      life.filesBytes += 128;
+      lifeMessage("filesDir scratch.txt grew by 128 bytes.");
+      renderLife("files");
+    });
+    $("#writeCacheBtn").addEventListener("click", () => {
+      life.cacheBytes += 512;
+      lifeMessage("cacheDir received a disposable 512 byte blob.");
+      renderLife("cache");
+    });
+    $("#insertMediaBtn").addEventListener("click", () => {
+      life.media += 1;
+      lifeMessage("MediaStore inserted a shared photo owned by the app.");
+      renderLife("media");
+    });
+    $("#pickDocBtn").addEventListener("click", () => {
+      life.safDocs += 1;
+      life.safGrant = true;
+      lifeMessage("SAF returned a content URI and the app has a document grant.");
+      renderLife("saf");
+    });
+    $("#restartBtn").addEventListener("click", () => {
+      life.run += 1;
+      lifeMessage("Process restarted. Disk-backed state is still present.");
+      renderLife();
+    });
+    $("#clearCacheBtn").addEventListener("click", () => {
+      life.cacheBytes = 0;
+      lifeMessage("Only cacheDir was cleared.");
+      renderLife("cache");
+    });
+    $("#clearStorageBtn").addEventListener("click", () => {
+      life.setting = false;
+      life.roomRows = 0;
+      life.filesBytes = 0;
+      life.cacheBytes = 0;
+      life.safGrant = false;
+      lifeMessage("Clear storage removed app-specific data and URI grants. Shared media and documents remain.");
+      renderLife();
+    });
+    $("#uninstallBtn").addEventListener("click", () => {
+      life.setting = false;
+      life.roomRows = 0;
+      life.filesBytes = 0;
+      life.cacheBytes = 0;
+      life.safGrant = false;
+      life.run = 1;
+      lifeMessage("Uninstall removed app-specific state. Shared media and user documents remain outside the app.");
+      renderLife();
+    });
+    $("#deleteSharedBtn").addEventListener("click", () => {
+      life.media = Math.max(0, life.media - 1);
+      if (life.safDocs > 0) life.safDocs -= 1;
+      lifeMessage("The user removed one shared item. Apps must handle missing URIs gracefully.");
+      renderLife("media");
+    });
+    renderLife();
+  }
+
+  function lifeMessage(text) {
+    $("#lifeLog").textContent = text;
+  }
+
+  function renderLife(pulseKey) {
+    $("#lifeRunBadge").textContent = "Run " + life.run;
+    const rows = [
+      ["datastore", "Preferences DataStore", life.setting ? "dark_theme=true" : "default false", true, true, false, "Removed"],
+      ["room", "Room database", life.roomRows + " note rows", true, true, false, "Removed"],
+      ["files", "filesDir", life.filesBytes + " bytes", true, true, false, "Removed"],
+      ["cache", "cacheDir", life.cacheBytes + " bytes", true, false, false, "Removed"],
+      ["media", "MediaStore", life.media + " shared media items", true, true, true, "Remain"],
+      ["saf", "SAF document", life.safDocs + " docs, grant=" + life.safGrant, true, true, true, "Docs remain, grant removed"]
+    ];
+    $("#lifeTable").innerHTML = `
+      <thead>
+        <tr>
+          <th>Location</th>
+          <th>Current value</th>
+          <th>Restart</th>
+          <th>Clear cache</th>
+          <th>Uninstall</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(row => `
+          <tr class="${row[0] === pulseKey ? "pulse" : ""}">
+            <td><strong>${row[1]}</strong></td>
+            <td>${row[2]}</td>
+            <td><span class="status-dot yes">Yes</span></td>
+            <td><span class="status-dot ${row[4] ? "yes" : "no"}">${row[4] ? "Yes" : "No"}</span></td>
+            <td>${row[6]}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    `;
+  }
+
+  let photoGrant = "selected";
+
+  function permissionText(api, target, operation) {
+    const isT = api >= 33 && target >= 33;
+    const selectedPhotos = api >= 34 && target >= 34;
+    const legacy = api <= 28 || target <= 28;
+
+    const responses = {
+      private: {
+        title: "No storage permission",
+        tag: "App sandbox",
+        body: "Use context.filesDir, cacheDir, Room, or DataStore. The app owns this private storage."
+      },
+      externalApp: {
+        title: api >= 19 ? "No storage permission for your own app-specific external directory" : "Legacy external storage permission may apply",
+        tag: "App-specific external",
+        body: "Use getExternalFilesDir() or getExternalCacheDir(). Check volume state because removable external storage can be unavailable."
+      },
+      addOwnMedia: {
+        title: api >= 29 ? "No permission needed to add your own shared media" : "WRITE_EXTERNAL_STORAGE on older devices",
+        tag: "MediaStore insert",
+        body: api >= 29 ? "Insert through MediaStore. Your app owns the media row it creates." : "Android 9 and lower use legacy external storage permissions."
+      },
+      readImages: {
+        title: isT ? (selectedPhotos ? "Photo Picker or READ_MEDIA_IMAGES / READ_MEDIA_VIDEO, with selected access possible" : "READ_MEDIA_IMAGES and/or READ_MEDIA_VIDEO") : "READ_EXTERNAL_STORAGE on older targets/devices",
+        tag: "Visual media",
+        body: selectedPhotos ? "Android 14+ can let users grant selected photos/videos instead of all visual media. Prefer Photo Picker when the user selects specific items." : "Android 13 introduced granular visual media permissions for apps targeting 33+."
+      },
+      readAudio: {
+        title: isT ? "READ_MEDIA_AUDIO" : "READ_EXTERNAL_STORAGE on older targets/devices",
+        tag: "Audio media",
+        body: "Audio has its own granular runtime permission on Android 13+ for apps targeting 33+."
+      },
+      photoPicker: {
+        title: "No media-library permission",
+        tag: "User-selected media",
+        body: "Launch the system Photo Picker and receive content URIs for the selected images or videos."
+      },
+      safDoc: {
+        title: "No storage permission",
+        tag: "User-selected document",
+        body: "Launch ACTION_OPEN_DOCUMENT, ACTION_CREATE_DOCUMENT, or ACTION_OPEN_DOCUMENT_TREE. The user grants a URI."
+      },
+      allFiles: {
+        title: "MANAGE_EXTERNAL_STORAGE special access",
+        tag: "Restricted broad access",
+        body: "Use only for narrowly eligible file management use cases. It is policy-sensitive and should not replace MediaStore, Photo Picker, or SAF."
+      }
+    };
+
+    const result = responses[operation];
+    if (legacy && operation === "readImages") {
+      result.body += " Because the selected device/target combination is legacy, READ_EXTERNAL_STORAGE behavior is still relevant.";
+    }
+    return result;
+  }
+
+  function initPermissions() {
+    $("#deviceApi").addEventListener("input", updatePermissions);
+    $("#targetApi").addEventListener("input", updatePermissions);
+    $("#operationSelect").addEventListener("change", updatePermissions);
+    $("#photoGrantSeg").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-grant]");
+      if (!button) return;
+      photoGrant = button.dataset.grant;
+      $$("#photoGrantSeg button").forEach(btn => btn.classList.toggle("on", btn === button));
+      updatePhotoGrant();
+    });
+    updatePermissions();
+    updatePhotoGrant();
+  }
+
+  function updatePermissions() {
+    const api = Number($("#deviceApi").value);
+    const target = Number($("#targetApi").value);
+    const operation = $("#operationSelect").value;
+    $("#deviceApiLabel").textContent = api;
+    $("#targetApiLabel").textContent = target;
+    $("#permEraTag").textContent = api >= 34 ? "Android 14+" : api >= 33 ? "Android 13" : api >= 30 ? "Android 11+" : "Legacy";
+    const result = permissionText(api, target, operation);
+    $("#permissionResult").innerHTML = `
+      <div class="recommendation-title">
+        <h3>${result.title}</h3>
+        <span class="tag blue">${result.tag}</span>
+      </div>
+      <p>${result.body}</p>
+      <div class="callout ${operation === "allFiles" ? "danger" : "good"}">
+        <strong>Practical move:</strong> ${operation === "allFiles" ? "Try to redesign around MediaStore, Photo Picker, or SAF before requesting broad access." : "Use the API that matches the data boundary instead of asking for global file access."}
+      </div>
+    `;
+  }
+
+  function updatePhotoGrant() {
+    const count = photoGrant === "none" ? 0 : photoGrant === "all" ? 32 : photoGrant === "picker" ? 5 : 8;
+    const pct = Math.round((count / 32) * 100);
+    $("#permissionMeter").style.width = pct + "%";
+    $("#mediaGrid").innerHTML = Array.from({ length: 32 }, (_, index) => {
+      const cls = index < count ? (photoGrant === "all" ? "full" : "access") : "";
+      return `<span class="media-dot ${cls}" title="Media item ${index + 1}"></span>`;
+    }).join("");
+    const text = {
+      none: "Denied: your app can see none of the other apps' visual media.",
+      selected: "Selected access: your app can see only the images/videos the user selected in the permission prompt.",
+      all: "All media: your app can query the visual media collection allowed by the relevant READ_MEDIA permissions.",
+      picker: "Photo Picker: your app receives only picker-returned URIs and does not need broad media permission."
+    };
+    $("#photoGrantText").textContent = `${count} of 32 items accessible. ${text[photoGrant]}`;
+  }
+
+  const room = {
+    notes: [
+      { id: 1, title: "Open database", priority: "NORMAL", done: false },
+      { id: 2, title: "Observe Flow query", priority: "HIGH", done: false }
+    ],
+    nextId: 3,
+    sortNewest: true,
+    emissions: 0,
+    migrated: false
+  };
+
+  function initRoom() {
+    $("#roomAdd").addEventListener("click", () => {
+      const title = $("#roomTitle").value.trim() || "Untitled note";
+      room.notes.push({ id: room.nextId++, title, priority: $("#roomPriority").value, done: false });
+      emitRoom();
+    });
+    $("#roomSort").addEventListener("click", () => {
+      room.sortNewest = !room.sortNewest;
+      emitRoom();
+    });
+    $("#roomMigrate").addEventListener("click", () => {
+      room.migrated = true;
+      emitRoom();
+    });
+    $("#roomClear").addEventListener("click", () => {
+      room.notes = [];
+      emitRoom();
+    });
+    $("#roomList").addEventListener("click", (event) => {
+      const check = event.target.closest("[data-toggle]");
+      const del = event.target.closest("[data-delete]");
+      if (check) {
+        const note = room.notes.find(item => item.id === Number(check.dataset.toggle));
+        if (note) note.done = !note.done;
+        emitRoom();
+      }
+      if (del) {
+        room.notes = room.notes.filter(item => item.id !== Number(del.dataset.delete));
+        emitRoom();
+      }
+    });
+    renderRoom();
+  }
+
+  function emitRoom() {
+    room.emissions += 1;
+    $("#roomEmitTag").textContent = "Flow emissions: " + room.emissions;
+    $("#roomEmitTag").classList.remove("pulse");
+    void $("#roomEmitTag").offsetWidth;
+    $("#roomEmitTag").classList.add("pulse");
+    renderRoom();
+  }
+
+  function renderRoom() {
+    const sorted = [...room.notes].sort((a, b) => room.sortNewest ? b.id - a.id : a.id - b.id);
+    $("#roomSortCaption").textContent = room.sortNewest ? "DAO query sorted by newest first" : "DAO query sorted by oldest first";
+    $("#roomList").innerHTML = sorted.length ? sorted.map(note => `
+      <div class="note-row">
+        <button class="note-check ${note.done ? "on" : ""}" type="button" data-toggle="${note.id}" aria-label="Toggle ${escapeAttr(note.title)}">${note.done ? "Y" : ""}</button>
+        <div>
+          <div class="note-title">${escapeHtml(note.title)}</div>
+          <div class="note-meta">id=${note.id} priority=${note.priority}${room.migrated ? " archived=false" : ""}</div>
+        </div>
+        <button class="mini-action" type="button" data-delete="${note.id}">Del</button>
+      </div>
+    `).join("") : `<div class="note-row"><div></div><div><div class="note-title">No rows</div><div class="note-meta">The Flow emits an empty list.</div></div></div>`;
+    const sortSql = room.sortNewest ? "DESC" : "ASC";
+    $("#roomCode").textContent = `@Dao
+interface NoteDao {
+    @Query("SELECT * FROM notes ORDER BY id ${sortSql}")
+    fun observeNotes(): Flow<List<Note>>
+
+    @Insert suspend fun insert(note: Note)
+    @Update suspend fun update(note: Note)
+    @Delete suspend fun delete(note: Note)
+}
+
+-- Current query after invalidation:
+SELECT id, title, done, priority${room.migrated ? ", archived" : ""}
+FROM notes
+ORDER BY id ${sortSql};
+
+-- Rows in table: ${room.notes.length}
+-- Schema version: ${room.migrated ? "2 (added archived column)" : "1"}`;
+  }
+
+  const ds = {
+    version: 1,
+    dark: false,
+    sort: "NEWEST",
+    profile: "Ada",
+    log: ["Collect Flow", "Read current preferences", "UI renders state"]
+  };
+
+  function initDataStore() {
+    $("#dsTheme").addEventListener("click", () => {
+      ds.dark = !ds.dark;
+      ds.version += 1;
+      ds.log.unshift(`edit { dark_theme = ${ds.dark} }`);
+      renderDataStore("theme");
+    });
+    $("#dsSort").addEventListener("click", () => {
+      ds.sort = ds.sort === "NEWEST" ? "OLDEST" : "NEWEST";
+      ds.version += 1;
+      ds.log.unshift(`edit { sort_order = ${ds.sort} }`);
+      renderDataStore("sort");
+    });
+    $("#dsProfile").addEventListener("click", () => {
+      ds.profile = ds.profile === "Ada" ? "Grace" : ds.profile === "Grace" ? "Linus" : "Ada";
+      ds.version += 1;
+      ds.log.unshift(`updateData { profile.copy(name = "${ds.profile}") }`);
+      renderDataStore("profile");
+    });
+    $("#dsBurst").addEventListener("click", () => {
+      ["queue write 1", "queue write 2", "queue write 3"].forEach(item => ds.log.unshift(item));
+      ds.version += 3;
+      ds.dark = !ds.dark;
+      ds.sort = ds.sort === "NEWEST" ? "OLDEST" : "NEWEST";
+      renderDataStore("burst");
+    });
+    renderDataStore();
+  }
+
+  function renderDataStore(pulseKey) {
+    $("#dsVersionTag").textContent = "Version " + ds.version;
+    $("#dsThemeValue").textContent = String(ds.dark);
+    $("#dsSortValue").textContent = ds.sort;
+    $("#dsProfileValue").textContent = ds.profile;
+    [["theme", "#dsThemeCell"], ["sort", "#dsSortCell"], ["profile", "#dsProfileCell"]].forEach(([key, selector]) => {
+      const el = $(selector);
+      el.classList.toggle("pulse", pulseKey === key || pulseKey === "burst");
+    });
+    $("#dsTimeline").innerHTML = ds.log.slice(0, 5).map((item, index) => `
+      <div class="time-step ${index === 0 ? "active" : ""}">
+        <div class="time-dot">${index + 1}</div>
+        <div class="time-body"><strong>${escapeHtml(item)}</strong><span>${index === 0 ? "Latest serialized update" : "Previous step"}</span></div>
+      </div>
+    `).join("");
+    $("#dsCode").textContent = `val Context.settings by preferencesDataStore("settings")
+
+val settingsFlow = context.settings.data.map { prefs ->
+    UiSettings(
+        darkTheme = prefs[booleanPreferencesKey("dark_theme")] ?: false,
+        sortOrder = prefs[stringPreferencesKey("sort_order")] ?: "NEWEST"
+    )
+}
+
+suspend fun updateSort(order: String) {
+    context.settings.edit { prefs ->
+        prefs[stringPreferencesKey("sort_order")] = order
+    }
+}
+
+// Current simulated file version: ${ds.version}
+// dark_theme=${ds.dark}, sort_order=${ds.sort}, profile=${ds.profile}`;
+  }
+
+  const fileLocations = {
+    filesDir: {
+      tag: "filesDir",
+      title: "Internal persistent files",
+      body: "Use for app-owned bytes that should survive process death and app restart. Removed when the app is uninstalled.",
+      facts: ["Private app sandbox", "No storage permission", "Usually included in Auto Backup unless excluded", "Use Dispatchers.IO for raw file reads/writes"],
+      snippet: `val file = File(context.filesDir, "scratch.txt")
+
+withContext(Dispatchers.IO) {
+    file.writeText(text)
+}`
+    },
+    cacheDir: {
+      tag: "cacheDir",
+      title: "Internal cache",
+      body: "Use for data you can recreate. The system or user can delete it at any time.",
+      facts: ["Private app sandbox", "No storage permission", "Not for critical state", "Not included in Auto Backup"],
+      snippet: `val cacheFile = File(context.cacheDir, "preview.tmp")
+
+if (!cacheFile.exists()) {
+    rebuildPreview()
+}`
+    },
+    noBackup: {
+      tag: "noBackupFilesDir",
+      title: "Private files excluded from backup",
+      body: "Use for device-local data that should not restore to a different device.",
+      facts: ["Private app sandbox", "No storage permission", "Excluded from Auto Backup", "Removed on uninstall"],
+      snippet: `val localOnly = File(context.noBackupFilesDir, "session.key")
+
+withContext(Dispatchers.IO) {
+    localOnly.writeBytes(generatedBytes)
+}`
+    },
+    externalFiles: {
+      tag: "external app-specific",
+      title: "App-specific external files",
+      body: "Use for app-owned files that may be large and do not need to be shared as user-visible media.",
+      facts: ["No storage permission for your own directory on Android 4.4+", "Removed on uninstall", "External volume can be unavailable", "Use getExternalFilesDir()"],
+      snippet: `val dir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+val file = File(dir, "export.json")
+
+withContext(Dispatchers.IO) {
+    file.writeText(json)
+}`
+    }
+  };
+
+  function initFiles() {
+    $("#fileLocationSeg").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-fileloc]");
+      if (!button) return;
+      $$("#fileLocationSeg button").forEach(btn => btn.classList.toggle("on", btn === button));
+      renderFileLocation(button.dataset.fileloc);
+    });
+    renderFileLocation("filesDir");
+  }
+
+  function renderFileLocation(key) {
+    const item = fileLocations[key];
+    $("#filePathTag").textContent = item.tag;
+    $("#fileLocationDetail").innerHTML = `
+      <h3>${item.title}</h3>
+      <p class="dense">${item.body}</p>
+      <ul class="why-list">${item.facts.map(fact => `<li>${fact}</li>`).join("")}</ul>
+    `;
+    $("#fileCode").textContent = item.snippet;
+  }
+
+  const mediaSteps = [
+    {
+      title: "Build metadata",
+      body: "Create ContentValues: display name, MIME type, and relative path.",
+      code: `val values = ContentValues().apply {
+    put(MediaStore.Images.Media.DISPLAY_NAME, "receipt.jpg")
+    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+    put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Receipts")
+}`
+    },
+    {
+      title: "Insert row",
+      body: "ContentResolver returns a content URI for the new media item.",
+      code: `val uri = contentResolver.insert(
+    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+    values
+) ?: error("Insert failed")`
+    },
+    {
+      title: "Write bytes",
+      body: "Open an output stream for the URI and write the media bytes.",
+      code: `contentResolver.openOutputStream(uri)?.use { stream ->
+    stream.write(jpegBytes)
+}`
+    },
+    {
+      title: "Publish and query",
+      body: "The item is visible through MediaStore queries and gallery-style apps.",
+      code: `val projection = arrayOf(
+    MediaStore.Images.Media._ID,
+    MediaStore.Images.Media.DISPLAY_NAME
+)
+
+contentResolver.query(collection, projection, null, null, null)`
+    }
+  ];
+  let mediaStep = 0;
+
+  function initMedia() {
+    $("#mediaNext").addEventListener("click", () => {
+      mediaStep = (mediaStep + 1) % mediaSteps.length;
+      renderMedia();
+    });
+    $("#mediaReset").addEventListener("click", () => {
+      mediaStep = 0;
+      renderMedia();
+    });
+    renderMedia();
+  }
+
+  function renderMedia() {
+    $("#mediaStepTag").textContent = "Step " + (mediaStep + 1);
+    $("#mediaTimeline").innerHTML = mediaSteps.map((step, index) => `
+      <div class="time-step ${index <= mediaStep ? "active" : ""}">
+        <div class="time-dot">${index + 1}</div>
+        <div class="time-body"><strong>${step.title}</strong><span>${step.body}</span></div>
+      </div>
+    `).join("");
+    $("#mediaStateText").textContent = mediaStep < 1
+      ? "No shared collection row exists yet."
+      : mediaStep < 3
+        ? "A row exists for your app's item. The app should finish writing bytes before treating it as ready."
+        : "The item can be discovered through the shared media collection.";
+    $("#mediaCode").textContent = mediaSteps[mediaStep].code;
+  }
+
+  const safFolders = [
+    { id: "documents", title: "Documents", body: "Allowed through ACTION_OPEN_DOCUMENT or tree picker." },
+    { id: "pictures", title: "Pictures", body: "Usually better through Photo Picker or MediaStore for visual media." },
+    { id: "download", title: "Download directory tree", body: "Directory tree selection is restricted on Android 11+.", blockedApi: 30 },
+    { id: "root", title: "Storage root", body: "Root tree access is restricted on Android 11+.", blockedApi: 30 },
+    { id: "androidData", title: "Android/data", body: "Restricted on Android 11+ for document and tree requests.", blockedApi: 30 },
+    { id: "obb", title: "Android/obb", body: "Restricted on Android 11+ for document and tree requests.", blockedApi: 30 }
+  ];
+  let activeSafFolder = "documents";
+
+  function initSaf() {
+    $("#safApi").addEventListener("input", renderSaf);
+    $("#safMap").addEventListener("click", (event) => {
+      const folder = event.target.closest("[data-folder]");
+      if (!folder) return;
+      activeSafFolder = folder.dataset.folder;
+      renderSaf();
+    });
+    renderSaf();
+  }
+
+  function renderSaf() {
+    const api = Number($("#safApi").value);
+    $("#safApiLabel").textContent = api;
+    $("#safApiTag").textContent = "API " + api;
+    $("#safMap").innerHTML = safFolders.map(folder => {
+      const blocked = folder.blockedApi && api >= folder.blockedApi;
+      return `<button class="folder ${blocked ? "blocked" : ""} ${activeSafFolder === folder.id ? "active" : ""}" type="button" data-folder="${folder.id}">
+        <strong>${folder.title}</strong>
+        <span>${blocked ? "Restricted at this API" : "Selectable pattern"}</span>
+      </button>`;
+    }).join("");
+    const folder = safFolders.find(item => item.id === activeSafFolder);
+    const blocked = folder.blockedApi && api >= folder.blockedApi;
+    $("#safResult").innerHTML = `
+      <h3>${folder.title}</h3>
+      <p>${folder.body}</p>
+      <div class="callout ${blocked ? "danger" : "good"}">
+        <strong>${blocked ? "Blocked or disabled:" : "Allowed pattern:"}</strong>
+        ${blocked ? "On Android 11+ the system picker prevents broad selection of this sensitive location." : "The user grants a content URI. Your app should persist URI permission only when needed and supported."}
+      </div>
+    `;
+    $("#safCode").textContent = blocked
+      ? `// Do not depend on direct or broad SAF access to ${folder.title} on API ${api}.
+// Redesign around app-specific storage, MediaStore, Photo Picker,
+// or a narrower user-selected document URI.`
+      : `val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+    addCategory(Intent.CATEGORY_OPENABLE)
+    type = "*/*"
+}
+
+launcher.launch(intent)
+
+// In the result callback:
+// contentResolver.openInputStream(uri)?.use { ... }`;
+  }
+
+  const quiz = [
+    {
+      q: "You need to store a dark-theme boolean and a sort order for the app.",
+      options: ["Preferences DataStore", "MediaStore", "SAF"],
+      answer: "Preferences DataStore",
+      why: "Small private key-value app state belongs in DataStore."
+    },
+    {
+      q: "You are building notes with categories, search, sorting, and migrations.",
+      options: ["Room", "cacheDir", "Photo Picker"],
+      answer: "Room",
+      why: "Structured queryable rows with relations and migrations are a database problem."
+    },
+    {
+      q: "The user wants to attach one image from their gallery to a post.",
+      options: ["Photo Picker", "MANAGE_EXTERNAL_STORAGE", "filesDir"],
+      answer: "Photo Picker",
+      why: "The picker grants only the selected media URI and avoids broad library access."
+    },
+    {
+      q: "Your app generates thumbnails that can be rebuilt from source images.",
+      options: ["cacheDir", "Room", "Documents provider"],
+      answer: "cacheDir",
+      why: "Re-creatable bytes belong in cache and must tolerate deletion."
+    },
+    {
+      q: "The user chooses where to save an exported PDF invoice.",
+      options: ["ACTION_CREATE_DOCUMENT", "getFilesDir()", "READ_MEDIA_AUDIO"],
+      answer: "ACTION_CREATE_DOCUMENT",
+      why: "SAF lets the user choose a document destination and grants a URI."
+    }
+  ];
+
+  const quizState = new Map();
+
+  function initQuiz() {
+    $("#quizGrid").innerHTML = quiz.map((item, index) => `
+      <div class="quiz-item" data-quiz="${index}">
+        <strong>${index + 1}. ${item.q}</strong>
+        <div class="answer-row">
+          ${item.options.map(option => `<button type="button" data-answer="${escapeAttr(option)}">${option}</button>`).join("")}
+        </div>
+        <p class="dense" style="margin:8px 0 0;" data-feedback></p>
+      </div>
+    `).join("");
+
+    $("#quizGrid").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-answer]");
+      if (!button) return;
+      const item = button.closest("[data-quiz]");
+      const index = Number(item.dataset.quiz);
+      const selected = button.dataset.answer;
+      quizState.set(index, selected);
+      renderQuiz();
+    });
+    renderQuiz();
+  }
+
+  function renderQuiz() {
+    $$(".quiz-item").forEach(item => {
+      const index = Number(item.dataset.quiz);
+      const selected = quizState.get(index);
+      const question = quiz[index];
+      const correct = selected === question.answer;
+      item.classList.toggle("correct", Boolean(selected) && correct);
+      item.classList.toggle("wrong", Boolean(selected) && !correct);
+      $$("[data-answer]", item).forEach(button => button.classList.toggle("selected", button.dataset.answer === selected));
+      const feedback = $("[data-feedback]", item);
+      feedback.textContent = selected ? `${correct ? "Correct." : "Not quite."} ${question.why}` : "";
+    });
+    const score = quiz.reduce((sum, item, index) => sum + (quizState.get(index) === item.answer ? 1 : 0), 0);
+    $("#quizScore").textContent = `${score} / ${quiz.length}`;
+  }
+
+  function initCopyButtons() {
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-copy]");
+      if (!button) return;
+      const target = $(button.dataset.copy);
+      if (!target) return;
+      const text = target.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "Copied";
+        setTimeout(() => { button.textContent = "Copy"; }, 900);
+      } catch {
+        button.textContent = "Select text";
+        setTimeout(() => { button.textContent = "Copy"; }, 1100);
+      }
+    });
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem("storage-lab-theme");
+    if (saved) document.documentElement.dataset.theme = saved;
+    $("#themeToggle").addEventListener("click", () => {
+      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem("storage-lab-theme", next);
+    });
+  }
+
+  function initNavigation() {
+    $("#mobileNav").addEventListener("change", (event) => {
+      location.hash = event.target.value;
+    });
+
+    const links = $$(".nav-link");
+    const sections = links.map(link => $(link.getAttribute("href"))).filter(Boolean);
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      const id = "#" + visible.target.id;
+      links.forEach(link => link.classList.toggle("active", link.getAttribute("href") === id));
+      $("#mobileNav").value = id;
+    }, { threshold: [0.2, 0.5, 0.8] });
+    sections.forEach(section => observer.observe(section));
+
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = max > 0 ? Math.min(100, Math.round((scrollTop / max) * 100)) : 0;
+    $("#progressText").textContent = pct + "%";
+    $("#progressFill").style.width = pct + "%";
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value).replaceAll("`", "&#096;");
+  }
+
+  function initChooser() {
+    ["dataKind", "sizeRange", "mustShare", "surviveUninstall", "needsQuery", "userChooses", "sensitive", "offlineReliable"].forEach(id => {
+      $("#" + id).addEventListener("input", updateChooser);
+      $("#" + id).addEventListener("change", updateChooser);
+    });
+    updateChooser();
+  }
+
+  initTheme();
+  initNavigation();
+  initStorageMap();
+  initChooser();
+  initLifecycle();
+  initPermissions();
+  initRoom();
+  initDataStore();
+  initFiles();
+  initMedia();
+  initSaf();
+  initQuiz();
+  initCopyButtons();
+})();
+</script>
+</body>
+</html>

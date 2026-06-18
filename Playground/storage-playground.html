@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Room Storage Playground — edit DAO calls, see the table &amp; UI live</title>
+<!-- ===========================================================================
+  Room Storage Playground — a SELF-CONTAINED, single-file interactive teaching tool.
+  Companion to the Compose Playground (playground.html) and the Navigation 3
+  Playground (nav-playground.html); same look, different lesson.
+
+  THE ONE BIG IDEA it teaches:
+    Local storage is just OPERATIONS on a persisted table. A Room @Query that
+    returns Flow<List<Note>> re-runs and RE-EMITS on EVERY write, so the UI that
+    collects it re-renders automatically — no manual refresh.
+
+  HOW IT WORKS (two-way):
+    • EDIT the DAO calls as Kotlin on the left (insert / update / delete / clear,
+      plus sortBy) and the table, the generated SQL, and the phone update live.
+    • Or INTERACT: tap a note's checkbox or Delete on the phone — that appends the
+      equivalent update(...) / delete(...) call to the code and logs the SQL.
+
+  It is NOT a real Android runtime. It models the "notes" domain + Room's reactive
+  Flow semantics used by RoomAndPreferences and StorageShowcase, in HTML/CSS.
+=========================================================================== -->
+<style>
+/* --- Design tokens (shared with playground.html / nav-playground.html) ------ */
+:root{
+  --ink:#16212e; --muted:#5b6b7b; --line:#e4e9f0; --bg:#f4f6f9; --card:#ffffff;
+  --accent:#1fa9a0; --accent-deep:#0c7d76; --accent-ink:#053b37;
+  --blue:#2563eb; --blue-soft:#eef4ff; --blue-line:#d3e0ff;
+  --teal-soft:#e6f7f5; --teal-line:#bfe9e5;
+  --warn:#b45309; --warn-soft:#fff7ed; --warn-line:#fde2c0;
+  --code-bg:#0f172a; --code-ink:#e6edf6;
+  --c-comment:#7d8aa0; --c-key:#c792ea; --c-str:#9ae6a6; --c-fn:#82aaff;
+  --c-type:#7fd4ff; --c-num:#f5b86b; --c-anno:#ffcb6b; --c-punct:#8aa0b8;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 8px 24px -16px rgba(15,23,42,.25);
+}
+*{box-sizing:border-box;}
+html{height:100%;}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;}
+
+/* --- Hero ------------------------------------------------------------------- */
+header.hero{background:linear-gradient(135deg,#06201e 0%,#0c4f49 55%,#1fa9a0 175%);
+  color:#fff;padding:18px 22px 16px;border-bottom:4px solid var(--accent);flex:none;}
+header.hero .bartop{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+.eyebrow{letter-spacing:.15em;text-transform:uppercase;font-size:11px;color:#7fe0d6;font-weight:800;margin:0;}
+header.hero h1{margin:2px 0 0;font-size:21px;line-height:1.15;font-weight:850;letter-spacing:-.01em;}
+header.hero p.sub{margin:6px 0 0;color:#cfeae6;font-size:13px;max-width:88ch;}
+header.hero .links{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+header.hero a.back{color:#dcfffb;text-decoration:none;font-size:13px;font-weight:700;
+  border:1px solid rgba(255,255,255,.25);padding:6px 12px;border-radius:8px;white-space:nowrap;}
+header.hero a.back:hover{background:rgba(255,255,255,.1);}
+
+/* --- Toolbar ---------------------------------------------------------------- */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;background:#fff;
+  border-bottom:1px solid var(--line);flex:none;}
+.toolbar .group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.toolbar .lbl{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9aa8b8;margin-right:2px;}
+.chip{font-size:12.5px;font-weight:650;padding:5px 11px;border-radius:999px;background:#eef2f7;color:var(--muted);
+  border:1px solid var(--line);cursor:pointer;transition:.12s;white-space:nowrap;}
+.chip:hover{color:var(--ink);border-color:#c9d4e2;}
+.chip.active{background:var(--teal-soft);color:var(--accent-deep);border-color:var(--accent);}
+.btn{font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:8px;background:#fff;color:var(--ink);
+  border:1px solid var(--line);cursor:pointer;transition:.12s;}
+.btn:hover{border-color:var(--accent);color:var(--accent-deep);}
+.btn:disabled{opacity:.4;cursor:default;}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.primary:hover{filter:brightness(1.05);color:#fff;}
+.spacer{flex:1;}
+
+/* --- Editor | preview row --------------------------------------------------- */
+.main{height:66vh;min-height:440px;display:flex;flex:none;border-bottom:1px solid var(--line);}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;}
+.pane.editor{flex:1;border-right:1px solid var(--line);}
+.pane.preview{flex:1.25;background:#eef1f5;}
+.panehead{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#f7f9fc;border-bottom:1px solid var(--line);
+  font-size:12px;font-weight:750;color:var(--muted);flex:none;}
+.panehead .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none;}
+.panehead .right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+
+/* --- Code editor (transparent textarea over highlighted <pre>) -------------- */
+.editorwrap{position:relative;flex:1;min-height:0;overflow:hidden;background:var(--code-bg);}
+.editorwrap pre, .editorwrap textarea{
+  margin:0;position:absolute;inset:0;width:100%;height:100%;padding:14px 16px;border:0;
+  font:13px/1.6 "SF Mono",ui-monospace,Menlo,Consolas,monospace;tab-size:2;white-space:pre;overflow:auto;}
+.editorwrap pre{color:var(--code-ink);pointer-events:none;z-index:1;}
+.editorwrap textarea{color:transparent;background:transparent;caret-color:#7fe0d6;resize:none;outline:none;z-index:2;white-space:pre;}
+.editorwrap textarea::selection{background:rgba(31,169,160,.35);}
+pre .c{color:var(--c-comment);font-style:italic;}
+pre .k{color:var(--c-key);}
+pre .s{color:var(--c-str);}
+pre .t{color:var(--c-type);}
+pre .a{color:var(--c-anno);}
+pre .n{color:var(--c-num);}
+pre .fn{color:var(--c-fn);}
+pre .px{color:var(--c-punct);}
+
+/* --- Status + op log (left pane) -------------------------------------------- */
+.status{flex:none;padding:7px 14px;font-size:12.5px;border-top:1px solid var(--line);
+  background:#fbfdff;color:var(--accent-deep);font-weight:650;white-space:pre-wrap;}
+.status.err{background:var(--warn-soft);color:#9a3412;}
+.oplog{flex:none;height:120px;overflow:auto;border-top:1px solid var(--line);background:#0f172a;color:#cfe0ff;
+  font:11.5px/1.7 "SF Mono",ui-monospace,Menlo,Consolas,monospace;padding:8px 14px;}
+.oplog .ophead{color:#6f86b0;text-transform:uppercase;letter-spacing:.06em;font-size:10px;font-weight:700;margin-bottom:3px;}
+.oplog .opline{white-space:pre-wrap;}
+.oplog .opline.write .sql{color:#9ae6a6;}
+.oplog .opline.read .sql{color:#7fd4ff;}
+.oplog .opline.emit{color:#ffcb6b;}
+.oplog .opline .cm{color:#6f86b0;}
+
+/* --- Preview stage: SQL + table visualizer + phone -------------------------- */
+.previewscroll{flex:1;min-height:0;overflow:auto;padding:18px;}
+.previewstage{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+.datapanel{width:300px;flex:none;display:flex;flex-direction:column;gap:12px;}
+.dtitle{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#7c8aa0;margin:0 0 6px;}
+.sqlbox{background:#0f172a;border-radius:10px;padding:10px 12px;font:12px/1.6 ui-monospace,Menlo,Consolas,monospace;
+  color:#e6edf6;box-shadow:var(--shadow);}
+.sqlbox .kw{color:#c792ea;} .sqlbox .id{color:#ffcb6b;}
+.flowemit{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;font-weight:700;
+  color:var(--accent-deep);background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:999px;padding:3px 10px;}
+.flowemit.pulse{animation:flp .8s ease;}
+@keyframes flp{0%{}30%{background:#bfe9e5;transform:scale(1.03);}100%{}}
+.dbtable{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;box-shadow:var(--shadow);}
+.dbtable .dcap{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#9aa8b8;
+  padding:6px 10px;background:#f7f9fc;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;}
+.dbtable table{width:100%;border-collapse:collapse;}
+.dbtable th,.dbtable td{padding:5px 9px;text-align:left;font:11.5px/1.5 ui-monospace,Menlo,Consolas,monospace;border-top:1px solid var(--line);}
+.dbtable th{color:#7c8aa0;font-weight:700;background:#fbfdff;}
+.dbtable td.done-1{color:var(--accent-deep);}
+.dbempty{padding:14px;text-align:center;color:#9aa8b8;font-size:12px;font-family:inherit;}
+
+/* the phone (the UI that COLLECTS the Flow) */
+.phone{width:300px;flex:none;border:10px solid #0b1220;border-radius:34px;background:#fff;overflow:hidden;
+  box-shadow:0 20px 50px -20px rgba(2,8,20,.5);display:flex;flex-direction:column;}
+.phone .notch{height:22px;background:#0b1220;border-radius:0 0 12px 12px;width:120px;margin:0 auto;flex:none;}
+.phone .screen{min-height:480px;display:flex;flex-direction:column;flex:1;}
+.napp-bar{padding:14px 16px 12px;font-size:17px;font-weight:800;color:var(--ink);border-bottom:1px solid var(--line);}
+.napp-bar small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:1px;}
+.scrollarea{flex:1;overflow:auto;}
+.note-row{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);}
+.note-row .chk{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);flex:none;margin-top:2px;display:grid;place-items:center;
+  cursor:pointer;color:#fff;font-size:.75rem;font-weight:800;}
+.note-row .chk.on{background:var(--accent);border-color:var(--accent);}
+.note-row .nbody{flex:1;min-width:0;}
+.note-row .nt{font-size:14.5px;font-weight:700;color:var(--ink);}
+.note-row.done .nt{text-decoration:line-through;color:var(--muted);}
+.note-row .nb{font-size:12px;color:var(--muted);}
+.note-row .nid{font-size:10px;color:#b6c2d2;font-family:ui-monospace,monospace;}
+.note-row .del{border:1px solid var(--line);background:#fff;color:#b4474a;border-radius:7px;font-size:11.5px;font-weight:700;
+  padding:3px 9px;cursor:pointer;flex:none;}
+.note-row .del:hover{border-color:#b4474a;}
+.nempty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;text-align:center;padding:24px;}
+
+body.theme-dark .phone{ background:#0f141c; --ink:#e6edf6; --muted:#9aa8b8; --line:#2a3340; }
+body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141821; }
+
+/* --- Catalog ---------------------------------------------------------------- */
+.catalog{flex:none;background:#fff;}
+.catalog .catinner{max-width:1320px;margin:0 auto;padding:18px 22px 48px;}
+.cattitle{font-size:18px;font-weight:850;letter-spacing:-.01em;margin:0 0 2px;}
+.catintro{margin:0 0 12px;color:var(--muted);font-size:13.5px;}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px;}
+.catcard{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#fbfdff;box-shadow:var(--shadow);display:flex;flex-direction:column;}
+.catcard .cathead{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.catcard code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:750;color:var(--accent-deep);font-size:12.5px;}
+.catcard .try{margin-left:auto;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:11.5px;
+  font-weight:750;padding:3px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:.12s;}
+.catcard .try:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--teal-soft);}
+.catcard .catwhat{margin:0;font-size:12.5px;color:var(--ink);}
+
+@media (max-width:900px){
+  .main{flex-direction:column;height:auto;}
+  .pane.editor{border-right:0;border-bottom:1px solid var(--line);}
+  .editorwrap{min-height:220px;}
+  .pane.preview{min-height:620px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="bartop">
+    <div>
+      <p class="eyebrow">Android · Room · SQLite · DataStore</p>
+      <h1>Room Storage Playground</h1>
+    </div>
+    <div class="links">
+      <a class="back" href="../StorageMaster/storage-tutorial.html">📚 Storage Master Lab</a>
+      <a class="back" href="./playground.html">🎨 Compose</a>
+      <a class="back" href="./nav-playground.html">🧭 Navigation</a>
+      <a class="back" href="../homework/projects.html">← Projects</a>
+    </div>
+  </div>
+  <p class="sub">Local storage is just <b>operations on a persisted table</b>. A Room <code style="color:#cffaf5">@Query</code> that returns <code style="color:#cffaf5">Flow&lt;List&lt;Note&gt;&gt;</code> re-runs and <b>re-emits</b> on every write, so the UI re-renders automatically. <b>Edit</b> the DAO calls on the left — or <b>tap</b> a note on the phone — and watch the table, the SQL, and the list update live. (A teaching model, not a real database.)</p>
+</header>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="group"><span class="lbl">Scenarios</span><span id="scenarios"></span></div>
+  <span class="spacer"></span>
+  <div class="group">
+    <button class="btn" id="themeBtn" type="button">◐ Dark preview</button>
+    <button class="btn" id="resetBtn" type="button">↺ Reset</button>
+  </div>
+</div>
+
+<!-- MAIN: editable DAO code | live preview (SQL + table + phone) -->
+<div class="main">
+  <section class="pane editor">
+    <div class="panehead"><span class="dot"></span> DAO calls (editable Kotlin) <span class="right"><button class="btn" id="copyBtn" type="button" style="padding:3px 9px;">Copy</button></span></div>
+    <div class="editorwrap">
+      <pre id="hl" aria-hidden="true"><code></code></pre>
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
+    </div>
+    <div class="status" id="status">Ready.</div>
+    <div class="oplog" id="oplog"><div class="ophead">SQL &amp; Flow log (newest last)</div></div>
+  </section>
+
+  <section class="pane preview">
+    <div class="panehead"><span class="dot"></span> Live preview <span class="right" id="previewMeta"></span></div>
+    <div class="previewscroll">
+      <div class="previewstage">
+        <div class="datapanel">
+          <div>
+            <p class="dtitle">The reactive query (re-runs on every write)</p>
+            <div class="sqlbox" id="sqlbox"></div>
+            <span class="flowemit" id="flowemit">💧 Flow emits List(0)</span>
+          </div>
+          <div>
+            <p class="dtitle">notes table (on disk)</p>
+            <div class="dbtable" id="dbtable"></div>
+          </div>
+        </div>
+        <div>
+          <p class="dtitle">NotesScreen — collects the Flow</p>
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="screen">
+              <div class="napp-bar">Notes <small id="phsub">collectAsStateWithLifecycle()</small></div>
+              <div class="scrollarea" id="phlist"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- CATALOG -->
+<section class="catalog">
+  <div class="catinner">
+    <h3 class="cattitle">DAO operation catalog</h3>
+    <p class="catintro">The calls you can write on the left. Each <code>insert</code>/<code>update</code>/<code>delete</code> is a write that makes the <code>Flow</code> re-emit. Click <b>Try ▸</b> to append one.</p>
+    <div class="catgrid" id="catbody"></div>
+  </div>
+</section>
+
+<script>
+(function(){
+  'use strict';
+
+  // === 0 · helpers + Kotlin highlighter (shared look with the other playgrounds) ===
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function sq(s){ return String(s).replace(/'/g,"''"); }   // escape a SQL single-quote literal
+  var KW = ['val','var','fun','return','if','else','when','true','false','null','by','it','this'];
+  var FN = ['insert','update','delete','clear'];
+  function hlKotlin(code){
+    var re = new RegExp(
+      '(\\/\\/[^\\n]*)' +                            // 1 comment
+      '|("(?:[^"\\\\]|\\\\.)*")' +                    // 2 string
+      '|(@\\w+)' +                                    // 3 annotation
+      '|(\\b\\d[\\d_]*\\b)' +                          // 4 number
+      '|(\\b(?:' + KW.join('|') + ')\\b)' +           // 5 keyword
+      '|(\\b(?:' + FN.join('|') + ')\\b)' +           // 6 op function
+      '|(\\b[A-Z][A-Za-z0-9_]*\\b)', 'g');            // 7 Type
+    return code.replace(re, function(m,c1,c2,c3,c4,c5,c6,c7){
+      if(c1) return '<span class="c">'+m+'</span>';
+      if(c2) return '<span class="s">'+m+'</span>';
+      if(c3) return '<span class="a">'+m+'</span>';
+      if(c4) return '<span class="n">'+m+'</span>';
+      if(c5) return '<span class="k">'+m+'</span>';
+      if(c6) return '<span class="fn">'+m+'</span>';
+      if(c7) return '<span class="t">'+m+'</span>';
+      return m;
+    });
+  }
+
+  // === 1 · PARSE the editable DAO code (tolerant: junk lines are flagged, not thrown) ===
+  function parseArgs(s){
+    var args = {}, re = /(\w+)\s*=\s*("(?:[^"\\]|\\.)*"|true|false|-?\d+)/g, m;
+    while((m = re.exec(s))){
+      var v = m[2];
+      if(v[0] === '"') v = v.slice(1,-1).replace(/\\"/g,'"');
+      else if(v === 'true') v = true;
+      else if(v === 'false') v = false;
+      else v = parseInt(v,10);
+      args[m[1]] = v;
+    }
+    return args;
+  }
+  function parse(src){
+    var ops = [], sortBy = 'id DESC', errors = 0, m;
+    src.split('\n').forEach(function(raw){
+      var line = raw.replace(/\/\/.*$/,'').trim();
+      if(!line) return;
+      if((m = line.match(/^sortBy\s*=\s*"([^"]*)"/))){ sortBy = m[1].trim(); return; }
+      if(/^clear\s*\(\s*\)\s*$/.test(line)){ ops.push({op:'clear'}); return; }
+      if((m = line.match(/^insert\s*\((.*)\)\s*,?\s*$/))){ ops.push({op:'insert', args:parseArgs(m[1])}); return; }
+      if((m = line.match(/^update\s*\((.*)\)\s*,?\s*$/))){ ops.push({op:'update', args:parseArgs(m[1])}); return; }
+      if((m = line.match(/^delete\s*\((.*)\)\s*,?\s*$/))){ ops.push({op:'delete', args:parseArgs(m[1])}); return; }
+      ops.push({op:'?', raw:line}); errors++;
+    });
+    return { ops:ops, sortBy:sortBy, errors:errors };
+  }
+
+  // === 2 · APPLY the ops in order -> the notes table + a SQL/Flow log ===
+  function run(parsed){
+    var table = [], nextId = 1, log = [];
+    parsed.ops.forEach(function(o){
+      if(o.op === 'insert'){
+        var n = { id: nextId++, title: (o.args.title!=null?String(o.args.title):'(untitled)'),
+                  body: (o.args.body!=null?String(o.args.body):''), done: !!o.args.done };
+        table.push(n);
+        log.push({ k:'write', sql:"INSERT INTO notes (title, body, done) VALUES ('"+sq(n.title)+"', '"+sq(n.body)+"', "+(n.done?1:0)+")" });
+        log.push({ k:'emit', text:'↻ observeNotes() re-emits → List('+table.length+')' });
+      } else if(o.op === 'update'){
+        var u = table.filter(function(x){return x.id===o.args.id;})[0];
+        if(u){
+          var sets = [];
+          if('done' in o.args){ u.done = !!o.args.done; sets.push('done = '+(u.done?1:0)); }
+          if('title' in o.args){ u.title = String(o.args.title); sets.push("title = '"+sq(u.title)+"'"); }
+          log.push({ k:'write', sql:"UPDATE notes SET "+(sets.join(', ')||'…')+" WHERE id = "+o.args.id });
+          log.push({ k:'emit', text:'↻ observeNotes() re-emits → List('+table.length+')' });
+        }
+      } else if(o.op === 'delete'){
+        var idx = -1; table.forEach(function(x,i){ if(x.id===o.args.id) idx=i; });
+        if(idx >= 0){
+          table.splice(idx,1);
+          log.push({ k:'write', sql:"DELETE FROM notes WHERE id = "+o.args.id });
+          log.push({ k:'emit', text:'↻ observeNotes() re-emits → List('+table.length+')' });
+        }
+      } else if(o.op === 'clear'){
+        if(table.length){ table = []; log.push({ k:'write', sql:'DELETE FROM notes' }); log.push({ k:'emit', text:'↻ observeNotes() re-emits → List(0)' }); }
+      }
+    });
+    return { table:table, log:log };
+  }
+
+  function byTitle(sortBy){ return /title/i.test(sortBy); }
+  function querySql(sortBy){
+    return byTitle(sortBy) ? 'SELECT * FROM notes ORDER BY title COLLATE NOCASE ASC'
+                           : 'SELECT * FROM notes ORDER BY id DESC';
+  }
+  function sortedView(table, sortBy){
+    var v = table.slice();
+    if(byTitle(sortBy)) v.sort(function(a,b){ var x=a.title.toLowerCase(),y=b.title.toLowerCase(); return x<y?-1:x>y?1:0; });
+    else v.sort(function(a,b){ return b.id - a.id; });
+    return v;
+  }
+  function sqlHl(s){
+    return esc(s).replace(/\b(SELECT|FROM|ORDER|BY|ASC|DESC|COLLATE|NOCASE|WHERE)\b/g,'<span class="kw">$1</span>')
+                 .replace(/\b(notes|title|id)\b/g,'<span class="id">$1</span>');
+  }
+
+  // === 3 · RENDER everything from the current editor text ===
+  var $ = function(id){ return document.getElementById(id); };
+  var lastEmitN = 0;
+  function render(){
+    var src = $('code').value;
+    var parsed = parse(src);
+    var res = run(parsed);
+    var view = sortedView(res.table, parsed.sortBy);
+
+    // SQL + Flow emit pill
+    $('sqlbox').innerHTML = sqlHl(querySql(parsed.sortBy));
+    var fe = $('flowemit'); fe.textContent = '💧 Flow emits List('+res.table.length+')';
+    if(res.table.length !== lastEmitN){ fe.classList.remove('pulse'); void fe.offsetWidth; fe.classList.add('pulse'); lastEmitN = res.table.length; }
+
+    // the table-on-disk visualizer (insertion order = id)
+    var rowsByInsert = res.table.slice().sort(function(a,b){ return a.id-b.id; });
+    var t = '<div class="dcap"><span>id · title · done</span><span>'+res.table.length+' rows</span></div>';
+    if(!rowsByInsert.length){ t += '<div class="dbempty">— empty —</div>'; }
+    else {
+      t += '<table><tr><th>id</th><th>title</th><th>done</th></tr>';
+      rowsByInsert.forEach(function(n){ t += '<tr><td>'+n.id+'</td><td>'+esc(n.title)+'</td><td class="done-'+(n.done?1:0)+'">'+(n.done?1:0)+'</td></tr>'; });
+      t += '</table>';
+    }
+    $('dbtable').innerHTML = t;
+
+    // the phone list (the query RESULT the UI collects, in sort order)
+    var ph = '';
+    if(!view.length){ ph = '<div class="nempty">No notes yet.<br>Add an <code>insert(...)</code> on the left — it appears here the instant the Flow re-emits.</div>'; }
+    else view.forEach(function(n){
+      ph += '<div class="note-row'+(n.done?' done':'')+'" data-id="'+n.id+'">'
+          +   '<div class="chk'+(n.done?' on':'')+'" data-act="toggle" data-id="'+n.id+'">'+(n.done?'✓':'')+'</div>'
+          +   '<div class="nbody"><div class="nt">'+esc(n.title)+' <span class="nid">#'+n.id+'</span></div>'
+          +   (n.body?'<div class="nb">'+esc(n.body)+'</div>':'')+'</div>'
+          +   '<button class="del" data-act="delete" data-id="'+n.id+'">Delete</button>'
+          + '</div>';
+    });
+    $('phlist').innerHTML = ph;
+    $('phsub').textContent = byTitle(parsed.sortBy) ? 'sorted by title ASC' : 'sorted by id DESC';
+    $('previewMeta').textContent = res.table.length + ' note(s) · ' + querySql(parsed.sortBy).replace('SELECT * FROM notes ','');
+
+    // status + op log
+    var st = $('status');
+    if(parsed.errors){ st.className = 'status err'; st.textContent = parsed.errors + ' line(s) not understood — they were skipped. Use insert(...) / update(...) / delete(...) / clear() / sortBy = "…".'; }
+    else { st.className = 'status'; st.textContent = 'OK · '+parsed.ops.length+' operation(s) → '+res.table.length+' row(s) persisted.'; }
+
+    var ol = '<div class="ophead">SQL &amp; Flow log (newest last)</div>';
+    if(!res.log.length) ol += '<div class="opline cm">// no writes yet</div>';
+    res.log.forEach(function(l){
+      if(l.k === 'emit') ol += '<div class="opline emit">'+esc(l.text)+'</div>';
+      else ol += '<div class="opline write"><span class="sql">'+esc(l.sql)+';</span></div>';
+    });
+    var o = $('oplog'); o.innerHTML = ol; o.scrollTop = o.scrollHeight;
+
+    // syntax-highlight the editor
+    $('hl').firstChild.innerHTML = hlKotlin(esc(src));
+  }
+
+  // === 4 · two-way: tapping the phone APPENDS the equivalent DAO call ===
+  function appendOp(line){
+    var ta = $('code');
+    ta.value = ta.value.replace(/\s*$/,'') + '\n' + line + '\n';
+    render();
+  }
+  $('phlist').addEventListener('click', function(e){
+    var el = e.target.closest('[data-act]'); if(!el) return;
+    var id = parseInt(el.getAttribute('data-id'),10);
+    if(el.getAttribute('data-act') === 'toggle'){
+      // figure out the current done state from the row to flip it
+      var row = el.closest('.note-row'); var nowDone = row.classList.contains('done');
+      appendOp('update(id = '+id+', done = '+(!nowDone)+')');
+    } else {
+      appendOp('delete(id = '+id+')');
+    }
+  });
+
+  // === 5 · scenarios + catalog + toolbar wiring ===
+  var SCENARIOS = {
+    'Three notes':
+      '// Edit these DAO calls — the table, SQL, and phone update live.\n' +
+      '// Each write makes observeNotes(): Flow<List<Note>> re-emit.\n\n' +
+      'sortBy = "id DESC"\n\n' +
+      'insert(title = "Buy groceries", body = "Milk, eggs, bread", done = false)\n' +
+      'insert(title = "Read Room docs", body = "Flow queries", done = true)\n' +
+      'insert(title = "Call landlord", body = "", done = false)\n',
+    'Edits & deletes':
+      '// Writes apply top-to-bottom. ids are assigned like AUTOINCREMENT\n' +
+      '// (never reused), so delete(2) then insert(...) gives the new row id 4.\n\n' +
+      'sortBy = "id DESC"\n\n' +
+      'insert(title = "Draft email", done = false)\n' +
+      'insert(title = "Submit report", done = false)\n' +
+      'insert(title = "Water plants", done = false)\n' +
+      'update(id = 2, done = true)\n' +
+      'delete(id = 1)\n' +
+      'insert(title = "Plan weekend", done = false)\n',
+    'Sort by title':
+      '// Change sortBy to swap the @Query the UI collects (flatMapLatest).\n' +
+      '// The table on disk is unchanged — only the SELECT ORDER BY differs.\n\n' +
+      'sortBy = "title ASC"\n\n' +
+      'insert(title = "Zebra facts", done = false)\n' +
+      'insert(title = "Apple pie recipe", done = true)\n' +
+      'insert(title = "Mountain trip", done = false)\n',
+    'Empty': '// A fresh database. Add an insert(...) and watch the Flow emit.\n\nsortBy = "id DESC"\n',
+  };
+  var CATALOG = [
+    { code:'insert(title = "…", done = false)', what:'Add a row. <code>@Insert suspend fun insert(note: Note)</code> → <code>INSERT</code>; the Flow re-emits.', add:'insert(title = "New note", done = false)' },
+    { code:'update(id = N, done = true)', what:'Change a row matched by primary key. <code>@Update</code> → <code>UPDATE … WHERE id = ?</code>.', add:'update(id = 1, done = true)' },
+    { code:'delete(id = N)', what:'Remove a row. <code>@Delete</code> → <code>DELETE … WHERE id = ?</code>.', add:'delete(id = 1)' },
+    { code:'sortBy = "title ASC"', what:'Swap which reactive <code>@Query</code> the UI collects (id DESC ↔ title ASC).', add:'sortBy = "title ASC"' },
+    { code:'clear()', what:'Delete every row (<code>DELETE FROM notes</code>) — the Flow emits an empty list.', add:'clear()' },
+  ];
+  function loadScenario(name){
+    $('code').value = SCENARIOS[name];
+    document.querySelectorAll('#scenarios .chip').forEach(function(c){ c.classList.toggle('active', c.textContent===name); });
+    render();
+  }
+
+  // build scenario chips
+  var sc = $('scenarios');
+  Object.keys(SCENARIOS).forEach(function(name){
+    var b = document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=name;
+    b.addEventListener('click', function(){ loadScenario(name); });
+    sc.appendChild(b);
+  });
+  // build catalog cards
+  var cb = $('catbody');
+  CATALOG.forEach(function(c){
+    var card = document.createElement('div'); card.className='catcard';
+    card.innerHTML = '<div class="cathead"><code>'+esc(c.code)+'</code><button class="try" type="button">Try ▸</button></div><p class="catwhat">'+c.what+'</p>';
+    card.querySelector('.try').addEventListener('click', function(){ appendOp(c.add); });
+    cb.appendChild(card);
+  });
+
+  // toolbar buttons
+  $('themeBtn').addEventListener('click', function(){
+    document.body.classList.toggle('theme-dark');
+    this.textContent = document.body.classList.contains('theme-dark') ? '◑ Light preview' : '◐ Dark preview';
+  });
+  $('resetBtn').addEventListener('click', function(){ loadScenario('Three notes'); });
+  $('copyBtn').addEventListener('click', function(){
+    var ta=$('code'); navigator.clipboard && navigator.clipboard.writeText(ta.value);
+    this.textContent='Copied!'; var b=this; setTimeout(function(){ b.textContent='Copy'; }, 1200);
+  });
+
+  // editor: re-render as you type; keep the highlight layer scroll-synced
+  var ta = $('code');
+  ta.addEventListener('input', render);
+  ta.addEventListener('scroll', function(){ var pre=$('hl'); pre.scrollTop=ta.scrollTop; pre.scrollLeft=ta.scrollLeft; });
+  ta.addEventListener('keydown', function(e){
+    if(e.key === 'Tab'){ e.preventDefault(); var s=ta.selectionStart, en=ta.selectionEnd;
+      ta.value = ta.value.slice(0,s) + '  ' + ta.value.slice(en); ta.selectionStart=ta.selectionEnd=s+2; render(); }
+  });
+
+  // start
+  loadScenario('Three notes');
+})();
+</script>
+</body>
+</html>

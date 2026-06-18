@@ -34,6 +34,32 @@ Studio (`File ▸ Open ▸ <folder>`), or build from its folder with
 | `NavTransitions` | Custom animated screen transitions (forward / pop / predictive-back) | `MainActivity.kt`: `NavDisplay(transitionSpec, popTransitionSpec, predictivePopTransitionSpec)` + a per-entry metadata override |
 | `NavDataLayer` | Screens observe a **repository through a ViewModel** with loading/empty/error/success states | `Repository.kt` (`PlanetRepository` + `InMemoryPlanetRepository`, `Flow`); `PlanetsViewModel.kt` (`sealed PlanetsUiState`) |
 
+## Part 3 — Example project (everything, combined + growing)
+
+| Project | Surface | Teaches |
+|---|---|---|
+| `ExampleProject` | 4 tabs · 7 screens | The **"Wanderlist"** example app: bottom-tab navigation (one back stack per tab), a list → detail drill-down, an Add form, a Stats screen, **two mini-games** (a flip-card deck + an "I spy" tap-to-guess), and a **storage** preview (local + simulated cloud) |
+
+> `ExampleProject` uses a **"travel" domain** (a list of `Destination`s) rather than
+> planets, because — unlike every demo above — its data is **editable at runtime**
+> (add / remove / toggle visited). It reuses the `NavBottomTabs` "multiple back stacks"
+> pattern and the `NavFourScreen` drill-down, and adds the broadest Material 3 component
+> sampler in the set. Beyond nav + Compose it also introduces:
+>
+> - **A 🎮 Play tab** with its own drill-down into two games — **Flashcards** (a 3D flip
+>   via `animateFloatAsState` + `graphicsLayer`) and **Guess** (an "I spy" game with real
+>   **coordinate hit-testing** via `pointerInput` / `detectTapGestures`).
+> - **A storage layer** (a peek at the persistence topic): a `DestinationStore` interface
+>   with a real **local** implementation (SharedPreferences + JSON) and a **simulated cloud**
+>   one (suspend + delay + loading/error), wired to a Save/Load/Push/Pull card on Stats.
+>
+> The code is split across small, single-purpose files (`data/` · `data/storage/` ·
+> `navigation/` · `ui/screens/` · `ui/theme/`) to model real-world structure, and it ships
+> with a full **design document** — [`ExampleProject/design.html`](./ExampleProject/design.html)
+> — that shows the design done *before* the code. Note: app data lives in plain `remember`,
+> so it resets on rotation unless you Save/Load — deliberately, to motivate persistence and a
+> ViewModel next.
+
 ---
 
 ## Suggested teaching order
@@ -47,6 +73,9 @@ Studio (`File ▸ Open ▸ <folder>`), or build from its folder with
    (parallel stacks; sub-flows).
 5. **NavDeepLinks** — entering the app from outside and reconstructing a sensible stack.
 6. **NavTransitions** — polish: animating the moves between screens.
+7. **ExampleProject** — the capstone: once the patterns above click, study how they
+   combine into one small app (bottom tabs + drill-down + form + editable state), then build
+   your own on top of it.
 
 ---
 

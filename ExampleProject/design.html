@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wanderlist — Design Document</title>
+<style>
+  :root{
+    --ink:#15202b; --muted:#5b6b7a; --line:#e3e9f0; --card:#ffffff; --bg:#f6f8fb;
+    --accent:#0f9d58; --accent-deep:#0b7a44; --accent-soft:#eafaf1;
+    --blue:#2b6cb0; --blue-soft:#e8f1fb; --amber:#b7791f; --amber-soft:#fdf6e3;
+    --red:#c0392b; --red-soft:#fdecea; --code:#0b2230; --codebg:#0f2233;
+    --shadow:0 6px 22px rgba(20,40,70,.08);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-deep);}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
+    background:#eef3f7;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#0a3b53;}
+
+  /* Header */
+  header.hero{background:linear-gradient(135deg,#0b3d2e,#0f9d58);color:#fff;padding:42px 0 34px;
+    border-bottom:5px solid var(--accent-deep);}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+  .hero h1{margin:0 0 6px;font-size:34px;letter-spacing:-.4px;}
+  .hero .sub{font-size:18px;opacity:.95;margin:0 0 16px;}
+  .hero .meta{display:flex;flex-wrap:wrap;gap:8px;}
+  .hero .meta span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+    color:#eafaf1;font-size:12.5px;padding:5px 11px;border-radius:999px;}
+
+  /* Layout */
+  .shell{max-width:1120px;margin:0 auto;padding:26px 24px 80px;display:grid;
+    grid-template-columns:236px 1fr;gap:30px;align-items:start;}
+  nav.toc{position:sticky;top:18px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:14px 12px;box-shadow:var(--shadow);max-height:calc(100vh - 36px);overflow:auto;}
+  nav.toc h4{margin:4px 8px 8px;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+  nav.toc a{display:block;text-decoration:none;color:var(--muted);font-size:13.5px;font-weight:600;
+    padding:6px 9px;border-radius:8px;}
+  nav.toc a:hover{background:var(--accent-soft);color:var(--accent-deep);}
+  main{min-width:0;}
+
+  section.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:26px 28px;margin:0 0 22px;box-shadow:var(--shadow);}
+  section.card>h2{margin:0 0 4px;font-size:23px;letter-spacing:-.2px;display:flex;align-items:center;gap:10px;}
+  section.card>h2 .n{background:var(--accent);color:#fff;font-size:14px;font-weight:800;
+    width:30px;height:30px;border-radius:9px;display:inline-grid;place-items:center;flex:none;}
+  section.card>.lede{color:var(--muted);margin:0 0 16px;font-size:15px;}
+  h3{font-size:16.5px;margin:22px 0 8px;}
+  ul,ol{padding-left:22px;margin:8px 0;}
+  li{margin:5px 0;}
+  p{margin:10px 0;}
+
+  /* Callouts */
+  .callout{border:1px solid var(--line);border-left-width:5px;border-radius:10px;padding:12px 16px;margin:14px 0;font-size:14.5px;}
+  .callout b{display:block;margin-bottom:2px;}
+  .callout.info{background:var(--blue-soft);border-left-color:var(--blue);}
+  .callout.tip{background:var(--accent-soft);border-left-color:var(--accent);}
+  .callout.warn{background:var(--amber-soft);border-left-color:var(--amber);}
+  .callout.next{background:#f3eefc;border-left-color:#7c4dff;}
+
+  /* Diagrams */
+  pre.diagram{background:var(--codebg);color:#d7e6ef;border-radius:12px;padding:18px 18px;overflow:auto;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.6px;line-height:1.5;
+    border:1px solid #0a1a26;}
+  pre.diagram .hl{color:#7ee0a8;font-weight:700;}
+  pre.diagram .dim{color:#6f8595;}
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0;}
+  th,td{text-align:left;padding:9px 11px;border-top:1px solid var(--line);vertical-align:top;}
+  thead th{background:#f1f5f9;border-top:0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  tbody tr:hover{background:#fafcfe;}
+  .pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;}
+  .must{background:var(--accent-soft);color:var(--accent-deep);}
+  .should{background:var(--blue-soft);color:var(--blue);}
+  .could{background:var(--amber-soft);color:var(--amber);}
+  .wont{background:#eceff1;color:#607d8b;}
+
+  /* Process stepper */
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:8px 0 4px;}
+  .step{background:#f7fbf9;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;}
+  .step .num{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+    background:var(--accent);color:#fff;font-weight:800;font-size:13px;margin-bottom:6px;}
+  .step .t{font-weight:700;font-size:13.5px;}
+  .step .d{font-size:12px;color:var(--muted);}
+  .arrow{color:var(--accent);font-weight:800;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:900px){.shell{grid-template-columns:1fr;}nav.toc{position:static;max-height:none;}
+    .grid2{grid-template-columns:1fr;}}
+  .tag{font-size:11px;font-weight:700;color:var(--accent-deep);background:var(--accent-soft);
+    border:1px solid #bfe6cf;border-radius:6px;padding:1px 7px;}
+  footer{max-width:1120px;margin:0 auto;padding:24px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>🧭 Wanderlist — Design Document</h1>
+    <p class="sub">A worked example of the design that comes <em>before</em> the code.</p>
+    <div class="meta">
+      <span>Project: ExampleProject</span>
+      <span>Status: Reference / teaching</span>
+      <span>Stack: Jetpack Compose · Navigation 3 · Material 3</span>
+      <span>Audience: students building their own apps</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc">
+    <h4>Contents</h4>
+    <a href="#why">Why design first?</a>
+    <a href="#process">The design process</a>
+    <a href="#problem">1 · Problem &amp; goals</a>
+    <a href="#users">2 · Users &amp; stories</a>
+    <a href="#scope">3 · Scope (features)</a>
+    <a href="#map">4 · Screen map</a>
+    <a href="#wireframes">5 · Wireframes</a>
+    <a href="#data">6 · Data model</a>
+    <a href="#nav">7 · Navigation</a>
+    <a href="#state">8 · State plan</a>
+    <a href="#arch">9 · Architecture</a>
+    <a href="#storage">10 · Storage</a>
+    <a href="#components">11 · Components</a>
+    <a href="#edge">12 · Edge cases</a>
+    <a href="#nfr">13 · Quality goals</a>
+    <a href="#trace">14 · Design → code</a>
+    <a href="#yours">15 · Apply to your app</a>
+    <a href="#open">16 · Open questions</a>
+  </nav>
+
+  <main>
+
+  <!-- WHY -->
+  <section class="card" id="why">
+    <h2><span class="n">★</span> Why design before coding?</h2>
+    <p class="lede">A design document is a plan. It is far cheaper to change a diagram than to rewrite working code — and a plan keeps you (and your teammates) pointed at the same goal.</p>
+    <ul>
+      <li><b>It surfaces decisions early.</b> "How many screens? What data does each need? Where does state live?" are answered on paper, before they cost you a rewrite.</li>
+      <li><b>It is a shared language.</b> A screen map and a data model let two people build different parts that still fit together.</li>
+      <li><b>It exposes the hard parts.</b> Writing "the cloud sync can fail and be slow" forces you to plan a loading spinner and an error message <em>before</em> you hit them.</li>
+      <li><b>It is a checklist.</b> When the design lists every screen, state, and edge case, "done" becomes measurable.</li>
+    </ul>
+    <div class="callout tip"><b>The rule of thumb</b>You should be able to explain your whole app — screens, data, navigation, state — using only this document, without opening the code. If you can't, the design isn't finished yet.</div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="card" id="process">
+    <h2><span class="n">↳</span> The design process</h2>
+    <p class="lede">Each step answers a question and feeds the next. Code is the <em>last</em> step, not the first.</p>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><div class="t">Problem</div><div class="d">What &amp; why?</div></div>
+      <div class="step"><div class="num">2</div><div class="t">Users</div><div class="d">For whom?</div></div>
+      <div class="step"><div class="num">3</div><div class="t">Features</div><div class="d">What's in scope?</div></div>
+      <div class="step"><div class="num">4</div><div class="t">Flows</div><div class="d">Screens &amp; nav</div></div>
+      <div class="step"><div class="num">5</div><div class="t">Data &amp; state</div><div class="d">What's stored?</div></div>
+      <div class="step"><div class="num">6</div><div class="t">Architecture</div><div class="d">How is it split?</div></div>
+      <div class="step"><div class="num">7</div><div class="t">Code</div><div class="d">Now build it</div></div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="card" id="problem">
+    <h2><span class="n">1</span> Problem &amp; goals</h2>
+    <p><b>Problem.</b> Travelers keep a mental "someday" list of places, but it lives in their heads — easy to forget, impossible to see progress on, and never with them when they need it.</p>
+    <p><b>Goal.</b> A small app to <em>collect</em> places you want to visit, <em>track</em> which you've been to, and <em>play</em> with the list — that also serves as a teaching reference for Compose + Navigation.</p>
+    <div class="grid2">
+      <div>
+        <h3>Goals (what success looks like)</h3>
+        <ul>
+          <li>Browse a list of places and open one for details.</li>
+          <li>Add and remove places; mark them visited.</li>
+          <li>See progress (how many visited) at a glance.</li>
+          <li>Two light "games" built from the same data.</li>
+          <li>Save the list so it survives closing the app.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Non-goals (deliberately out of scope)</h3>
+        <ul>
+          <li>User accounts / login.</li>
+          <li>Maps, real photos, or GPS.</li>
+          <li>Sharing or social features.</li>
+          <li>A production backend (cloud is <em>simulated</em>).</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout info"><b>Why write non-goals?</b>Saying what you <em>won't</em> build is as important as what you will. It stops scope creep and keeps the first version finishable.</div>
+  </section>
+
+  <!-- USERS -->
+  <section class="card" id="users">
+    <h2><span class="n">2</span> Users &amp; user stories</h2>
+    <p class="lede">A <b>user story</b> states a need in one sentence: "As a &lt;role&gt;, I want &lt;goal&gt;, so that &lt;reason&gt;." Each one should map to something you can build and check.</p>
+    <table>
+      <thead><tr><th style="width:55%">User story</th><th>Satisfied by</th></tr></thead>
+      <tbody>
+        <tr><td>As a traveler, I want to see all my places in one list, so I don't forget them.</td><td>Explore screen</td></tr>
+        <tr><td>As a traveler, I want to open a place to read more and mark it visited.</td><td>Detail screen</td></tr>
+        <tr><td>As a traveler, I want to add a new place quickly.</td><td>Add form</td></tr>
+        <tr><td>As a traveler, I want to see how many I've visited.</td><td>Stats screen (progress bar)</td></tr>
+        <tr><td>As a learner, I want to quiz myself on the places.</td><td>Flashcards &amp; Guess games</td></tr>
+        <tr><td>As a traveler, I want my list to still be there next time I open the app.</td><td>Local storage (Save/Load)</td></tr>
+        <tr><td>As a traveler, I want my list on another device.</td><td>Cloud sync (simulated)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SCOPE -->
+  <section class="card" id="scope">
+    <h2><span class="n">3</span> Scope — feature list (MoSCoW)</h2>
+    <p class="lede">Sort features by priority so you build the essentials first. <b>MoSCoW</b> = Must / Should / Could / Won't.</p>
+    <table>
+      <thead><tr><th>Feature</th><th style="width:120px">Priority</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Browse list + open detail</td><td><span class="pill must">Must</span></td><td>The core loop.</td></tr>
+        <tr><td>Add / remove / mark visited</td><td><span class="pill must">Must</span></td><td>Editable data.</td></tr>
+        <tr><td>Progress &amp; stats</td><td><span class="pill must">Must</span></td><td>Derived from the list.</td></tr>
+        <tr><td>Bottom-tab navigation</td><td><span class="pill must">Must</span></td><td>4 tabs, each its own back stack.</td></tr>
+        <tr><td>Flashcards game</td><td><span class="pill should">Should</span></td><td>Reuses the list; teaches animation.</td></tr>
+        <tr><td>Guess (tap-to-find) game</td><td><span class="pill should">Should</span></td><td>Teaches coordinate hit-testing.</td></tr>
+        <tr><td>Local storage (save on device)</td><td><span class="pill should">Should</span></td><td>Preview of the persistence topic.</td></tr>
+        <tr><td>Cloud sync</td><td><span class="pill could">Could</span></td><td>Simulated; shows async + loading/error.</td></tr>
+        <tr><td>Dark theme toggle</td><td><span class="pill could">Could</span></td><td>State above the theme.</td></tr>
+        <tr><td>Accounts, maps, photos, sharing</td><td><span class="pill wont">Won't</span></td><td>Out of scope for v1.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SCREEN MAP -->
+  <section class="card" id="map">
+    <h2><span class="n">4</span> Information architecture — the screen map</h2>
+    <p class="lede">Before any UI, decide what screens exist and how you move between them. Four bottom tabs; two of them drill one level deeper.</p>
+<pre class="diagram">
+                         <span class="hl">Wanderlist (one Activity)</span>
+                                  │
+        ┌──────────────┬──────────┴───────┬───────────────┐
+   <span class="hl">[ 🧭 Explore ]</span>   <span class="hl">[ 🎮 Play ]</span>        <span class="hl">[ ➕ Add ]</span>       <span class="hl">[ 📊 Stats ]</span>
+        │                │                  │                │
+   Explore list     Play menu            Add form        Stats + Storage
+        │              ┌─┴───┐             <span class="dim">(leaf)</span>          <span class="dim">(leaf)</span>
+   tap a place    Flashcards  Guess
+        │           <span class="dim">(leaf)</span>     <span class="dim">(leaf)</span>
+   <span class="hl">Detail</span> <span class="dim">(leaf)</span>
+
+   <span class="dim">Each tab keeps its OWN history (back stack). Switching tabs preserves</span>
+   <span class="dim">where you were; re-tapping the current tab returns it to its root.</span>
+</pre>
+    <div class="callout info"><b>Reading it</b>A "leaf" is a screen with nowhere deeper to go. Only Explore and Play have a second level, so only their back stacks ever hold two keys.</div>
+  </section>
+
+  <!-- WIREFRAMES -->
+  <section class="card" id="wireframes">
+    <h2><span class="n">5</span> Wireframes (low-fidelity)</h2>
+    <p class="lede">Wireframes are rough sketches of layout — boxes and labels, no colors or polish. Their job is to settle <em>what goes where</em> before you fuss over looks.</p>
+
+    <h3>Explore &nbsp;<span class="tag">Tab 0</span></h3>
+<pre class="diagram">
+┌─────────────────────────────┐
+│ Wanderlist                  │  &lt;- top app bar (title only)
+├─────────────────────────────┤
+│ Places visited              │
+│ [▓▓▓▓▓░░░░░]  2 of 8         │  &lt;- progress header
+├─────────────────────────────┤
+│ ⛩️  Kyoto                    │
+│     Japan · Asia   [Visited] │  &lt;- card: tap body = detail,
+│     Temples, gardens…        │     tap chip = toggle visited
+│ ─────────────────────────── │
+│ 🌅  Santorini      [ To go ] │
+│     Greece · Europe          │
+│        … more cards …        │
+│                        ( ＋ )│  &lt;- FAB: jump to Add
+├──[🧭]──[🎮]──[➕]──[📊]──────┤  &lt;- bottom navigation
+└─────────────────────────────┘
+</pre>
+
+    <div class="grid2">
+      <div>
+        <h3>Detail &nbsp;<span class="tag">Explore › leaf</span></h3>
+<pre class="diagram">
+┌─────────────────────────────┐
+│ ‹  Kyoto                     │ &lt;- back arrow + place name
+├─────────────────────────────┤
+│         ⛩️                   │
+│  Kyoto                       │
+│  Japan · Asia                │
+│  Excitement: ★★★★★           │
+│  Best season: Spring…        │
+│  Notes: Wander Fushimi…      │
+│                              │
+│  [ Mark as visited ]         │
+│  [ Back to list ]            │
+│  [ Remove from list ]——▶ ⚠ dialog
+└─────────────────────────────┘
+</pre>
+      </div>
+      <div>
+        <h3>Add &nbsp;<span class="tag">Tab 2</span></h3>
+<pre class="diagram">
+┌─────────────────────────────┐
+│ Add a place                  │
+├─────────────────────────────┤
+│ Place name [____________]    │ &lt;- Next ⟶
+│ Country    [____________]    │ &lt;- Done
+│ Continent  (Asia)(Europe)…   │ &lt;- chips, single-select
+│ Excitement ●──────  ★★★☆☆    │ &lt;- slider 1–5
+│ Been here?            [ ●— ] │ &lt;- switch
+│                              │
+│ [ Add to Wanderlist ]        │ &lt;- disabled until valid
+└─────────────────────────────┘
+</pre>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <h3>Play menu &amp; Flashcard &nbsp;<span class="tag">Tab 1</span></h3>
+<pre class="diagram">
+ Play menu            Flashcard
+┌──────────────┐    ┌──────────────┐
+│ 🃏 Flashcards│    │ Card 1 of 8  │
+│ 🔍 Guess     │    │ ┌──────────┐ │
+└──────────────┘    │ │   ⛩️     │ │ &lt;- tap to
+                    │ │ Where is │ │    FLIP (3D)
+                    │ │  this?   │ │
+                    │ └──────────┘ │
+                    │ [Prev][Next] │
+                    └──────────────┘
+</pre>
+      </div>
+      <div>
+        <h3>Guess &nbsp;<span class="tag">Play › leaf</span></h3>
+<pre class="diagram">
+┌─────────────────────────────┐
+│ Score: 3                     │
+│ I spy…  Kyoto  in Japan      │
+│ ┌────────┬────────┬────────┐ │
+│ │  ⛩️    │  🌅    │  🏔️    │ │ &lt;- one tap on the
+│ │ Kyoto  │Santorini│ Banff │ │    GRID; we compute
+│ ├────────┼────────┼────────┤ │    which cell from
+│ │  🕌    │  🪂    │  🌋    │ │    the (x,y) offset
+│ └────────┴────────┴────────┘ │
+│ ✅ Correct — that's Kyoto!   │
+└─────────────────────────────┘
+</pre>
+      </div>
+    </div>
+
+    <h3>Stats + Storage &nbsp;<span class="tag">Tab 3</span></h3>
+<pre class="diagram">
+┌─────────────────────────────┐
+│ Your stats                   │
+│ [ 8 ] [ 2 ] [ 6 ]            │ &lt;- Places / Visited / To go
+│ 25% visited [▓▓░░░░░░]       │
+│ By continent: Asia 1/1 …     │
+│ ┌─ Dark theme         [●—] ┐ │ &lt;- switch re-themes app
+│ ┌─ Storage (next week)     ┐ │
+│ │ On device:  [Save][Load] │ │
+│ │ In cloud:   [Push][Pull] ⟳│ │ &lt;- spinner while syncing
+│ └──────────────────────────┘ │
+└─────────────────────────────┘
+</pre>
+  </section>
+
+  <!-- DATA -->
+  <section class="card" id="data">
+    <h2><span class="n">6</span> Data model</h2>
+    <p class="lede">One entity drives the whole app: a <code>Destination</code>. Design the data <em>before</em> the screens, because every screen is just a different view of this list.</p>
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Purpose / used by</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>Int</td><td>Stable identity; travels in the nav key; list keys.</td></tr>
+        <tr><td><code>name</code></td><td>String</td><td>List, Detail, Flashcard answer, Guess prompt.</td></tr>
+        <tr><td><code>country</code> / <code>continent</code></td><td>String</td><td>Detail; Stats groups by continent.</td></tr>
+        <tr><td><code>emoji</code></td><td>String</td><td>Stand-in for a photo (no image dependency).</td></tr>
+        <tr><td><code>blurb</code> / <code>notes</code></td><td>String</td><td>Short (list) and long (detail) descriptions.</td></tr>
+        <tr><td><code>bestSeason</code></td><td>String</td><td>Detail.</td></tr>
+        <tr><td><code>priority</code></td><td>Int (1–5)</td><td>"Excitement" stars; set by the Add slider.</td></tr>
+        <tr><td><code>visited</code></td><td>Boolean</td><td>Toggled on list + detail; drives all progress numbers.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><b>Design choice: immutable data.</b>Every field is a <code>val</code>. To "change" a place we don't edit it in place — we replace it with a <code>.copy(visited = …)</code>. Immutable data + an observable list is the idiomatic Compose way, and it makes "what changed?" obvious.</div>
+    <p><b>Storage shape.</b> The whole list is serialized to one JSON string (via <code>@Serializable</code>) and written to local storage or "the cloud":</p>
+<pre class="diagram">
+List&lt;Destination&gt;  ──encodeToString()──▶  "[ {id:1,name:\"Kyoto\",…}, … ]"  ──▶  device / cloud
+List&lt;Destination&gt;  ◀──decodeFromString()──  "[ … ]"                       ◀──  device / cloud
+</pre>
+  </section>
+
+  <!-- NAVIGATION -->
+  <section class="card" id="nav">
+    <h2><span class="n">7</span> Navigation design</h2>
+    <p class="lede">Navigation 3 models navigation as a <b>back stack of keys</b>. Each screen has a key; pushing a key goes forward, popping goes back.</p>
+    <h3>The keys (one per screen)</h3>
+    <table>
+      <thead><tr><th>Key</th><th>Kind</th><th>Screen</th></tr></thead>
+      <tbody>
+        <tr><td><code>ExploreKey</code></td><td>data object</td><td>Explore list (Tab 0 root)</td></tr>
+        <tr><td><code>DetailKey(destinationId)</code></td><td>data class</td><td>Detail — carries which place</td></tr>
+        <tr><td><code>PlayKey</code></td><td>data object</td><td>Play menu (Tab 1 root)</td></tr>
+        <tr><td><code>FlashcardKey</code> / <code>GuessKey</code></td><td>data object</td><td>The two games</td></tr>
+        <tr><td><code>AddKey</code></td><td>data object</td><td>Add form (Tab 2 root)</td></tr>
+        <tr><td><code>StatsKey</code></td><td>data object</td><td>Stats (Tab 3 root)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout info"><b>object vs class.</b>A screen that needs an argument (which place?) is a <code>data class</code> that carries it. A screen with one instance and no arguments is a <code>data object</code> singleton.</div>
+    <h3>Rules</h3>
+    <ul>
+      <li><b>One back stack per tab.</b> All four exist at once, so each tab remembers its place.</li>
+      <li><b>Back</b> pops the active tab's stack. <b>Re-tapping</b> the current tab pops it to its root.</li>
+      <li>The top app bar's title and Back arrow, and the FAB, are <em>derived from</em> the top key — no separate "current screen" variable to keep in sync.</li>
+    </ul>
+  </section>
+
+  <!-- STATE -->
+  <section class="card" id="state">
+    <h2><span class="n">8</span> State management plan</h2>
+    <p class="lede">Decide <em>what</em> state exists and <em>where</em> it lives <b>before</b> coding — this is where most beginner bugs come from.</p>
+    <table>
+      <thead><tr><th>State</th><th>Lives in</th><th>How</th><th>Survives rotation?</th></tr></thead>
+      <tbody>
+        <tr><td>The list of places (app data)</td><td>WanderlistApp</td><td><code>remember { …toMutableStateList() }</code></td><td>No — by design (see note)</td></tr>
+        <tr><td>Selected tab</td><td>WanderlistApp</td><td><code>rememberSaveable</code></td><td>Yes</td></tr>
+        <tr><td>Dark theme</td><td>MainActivity (above the theme)</td><td><code>rememberSaveable</code></td><td>Yes</td></tr>
+        <tr><td>Each tab's back stack</td><td>WanderlistApp</td><td><code>rememberNavBackStack</code></td><td>Yes</td></tr>
+        <tr><td>Dialog open? / card flipped? / form fields</td><td>The individual screen</td><td><code>remember</code> (local UI state)</td><td>Mostly no — momentary</td></tr>
+      </tbody>
+    </table>
+    <h3>Unidirectional data flow</h3>
+<pre class="diagram">
+   <span class="hl">WanderlistApp</span>  (owns the list — the single source of truth)
+        │  data flows DOWN (places, callbacks)
+        ▼
+   <span class="hl">Screens</span>  (stateless: render data, report taps)
+        │  events flow UP (onToggleVisited, onAdd, onDelete)
+        ▼
+   <span class="hl">Edit helpers</span>  (the only code that changes the list)
+        └──────────────▶ list changes ▶ screens recompose
+</pre>
+    <div class="callout warn"><b>Design decision (and its honest trade-off).</b>The list uses plain <code>remember</code>, so it <em>resets on rotation</em>. That's intentional: it sets up the next topics — <b>persistence</b> (the Storage card) and a <b>ViewModel</b> — which is exactly the kind of trade-off a design doc should record on purpose, not stumble into.</div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section class="card" id="arch">
+    <h2><span class="n">9</span> Architecture &amp; file structure</h2>
+    <p class="lede">Split code by <b>concern</b> so each file has one job and the dependencies point one way. This is the "not everything in one file" lesson.</p>
+<pre class="diagram">
+com.example.exampleproject
+│
+├─ MainActivity.kt            <span class="dim">entry point + this project map</span>
+│
+├─ data/                      <span class="hl">the model + storage (no UI)</span>
+│   ├─ Destination.kt         <span class="dim">model, sample data, helper</span>
+│   └─ storage/
+│       ├─ DestinationStore.kt        <span class="dim">interface</span>
+│       ├─ LocalDestinationStore.kt   <span class="dim">device (SharedPreferences)</span>
+│       └─ CloudDestinationStore.kt   <span class="dim">simulated remote</span>
+│
+├─ navigation/                <span class="hl">keys + the nav host</span>
+│   ├─ NavKeys.kt
+│   └─ WanderlistApp.kt       <span class="dim">state, back stacks, Scaffold</span>
+│
+└─ ui/
+    ├─ screens/               <span class="hl">one file per screen</span>
+    │   ├─ ExploreScreen.kt   DetailScreen.kt
+    │   ├─ PlayMenuScreen.kt  FlashcardScreen.kt  GuessScreen.kt
+    │   ├─ AddDestinationScreen.kt   StatsScreen.kt
+    └─ theme/                 <span class="dim">Color · Theme · Type</span>
+
+   <span class="dim">Dependency direction (one-way):</span>
+   ui/screens ──▶ data        navigation ──▶ ui/screens + data
+   <span class="dim">Screens never reach "up" into navigation — they take data + callbacks.</span>
+</pre>
+  </section>
+
+  <!-- STORAGE -->
+  <section class="card" id="storage">
+    <h2><span class="n">10</span> Storage design <span class="tag">next topic</span></h2>
+    <p class="lede">The key idea: depend on an <b>interface</b>, not a storage technology. The UI calls <code>save()</code>/<code>load()</code> and doesn't care where the bytes go.</p>
+<pre class="diagram">
+                <span class="hl">DestinationStore</span>  (interface)
+                 suspend save(list)
+                 suspend load(): list?
+                  ┌──────────┴───────────┐
+        <span class="hl">LocalDestinationStore</span>     <span class="hl">CloudDestinationStore</span>
+        (this device,              (a remote server —
+         SharedPreferences          SIMULATED here with a
+         + JSON)                    delay; real = Firebase
+                                    or a REST API)
+</pre>
+    <h3>Local vs cloud</h3>
+    <table>
+      <thead><tr><th></th><th>Local</th><th>Cloud</th></tr></thead>
+      <tbody>
+        <tr><td>Where</td><td>On the device only</td><td>A server (shared across devices)</td></tr>
+        <tr><td>Speed</td><td>Fast (disk)</td><td>Slow (network) — needs a spinner</td></tr>
+        <tr><td>Can fail?</td><td>Rarely</td><td>Yes (offline, auth) — needs error handling</td></tr>
+        <tr><td>In this app</td><td>Real (SharedPreferences + JSON)</td><td>Simulated (in-memory + <code>delay</code>)</td></tr>
+        <tr><td>Real-world tool</td><td>DataStore / Room</td><td>Firebase Firestore / Retrofit</td></tr>
+      </tbody>
+    </table>
+    <div class="callout next"><b>Why both are <code>suspend</code>.</b>Saving/loading can be slow, so it must run off the main thread or the UI freezes. Marking the functions <code>suspend</code> forces callers to run them in a coroutine — and lets the cloud version show a spinner and handle errors, exactly like real life. Push then Pull behaves like syncing two devices through one cloud document.</div>
+    <div class="callout warn"><b>Constraint recorded in the design.</b>We can't ship real Firebase keys in a teaching repo, so cloud is <em>simulated</em>. The code's shape is identical to the real thing — the comments in <code>CloudDestinationStore.kt</code> show the exact Firestore/Retrofit calls that would replace the fake one.</div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section class="card" id="components">
+    <h2><span class="n">11</span> Component inventory</h2>
+    <p class="lede">Listing the Material 3 components per screen up front means no surprises mid-build, and shows where to reuse.</p>
+    <table>
+      <thead><tr><th>Screen</th><th>Key components</th></tr></thead>
+      <tbody>
+        <tr><td>App frame</td><td>Scaffold, TopAppBar, NavigationBar(Item), FloatingActionButton, SnackbarHost</td></tr>
+        <tr><td>Explore</td><td>LazyColumn, Card, FilterChip, LinearProgressIndicator, HorizontalDivider</td></tr>
+        <tr><td>Detail</td><td>verticalScroll, FilledTonalButton, OutlinedButton, TextButton, AlertDialog</td></tr>
+        <tr><td>Play menu</td><td>ElevatedCard (clickable)</td></tr>
+        <tr><td>Flashcard</td><td>ElevatedCard, graphicsLayer (3D flip), animateFloatAsState, Button</td></tr>
+        <tr><td>Guess</td><td>Box + pointerInput/detectTapGestures, weighted grid, background+shape</td></tr>
+        <tr><td>Add</td><td>OutlinedTextField (+ IME), FilterChip, Slider, Switch, Button (validation)</td></tr>
+        <tr><td>Stats</td><td>Card/ElevatedCard, Switch, CircularProgressIndicator, Button/OutlinedButton</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- EDGE CASES -->
+  <section class="card" id="edge">
+    <h2><span class="n">12</span> Edge cases &amp; states</h2>
+    <p class="lede">Real apps spend most of their code on the "unhappy paths". Plan them now.</p>
+    <ul>
+      <li><b>Empty list.</b> Explore shows "No places yet — tap ＋". The games show "add some places first".</li>
+      <li><b>Deleting the open place.</b> Detail pops first, <em>then</em> removes — so it never renders a place that's gone. Resolution uses <code>firstOrNull</code> + a null guard.</li>
+      <li><b>Invalid form.</b> The Add button stays disabled until name + country are filled.</li>
+      <li><b>Slow / failed cloud.</b> A spinner shows and buttons disable while syncing; failures surface as a Snackbar (try/catch/finally).</li>
+      <li><b>Nothing saved yet.</b> Load reports "nothing saved" rather than crashing or clearing the list.</li>
+      <li><b>Corrupt saved data.</b> Local load is wrapped in <code>runCatching</code> so a bad value can't crash the app.</li>
+    </ul>
+  </section>
+
+  <!-- NFR -->
+  <section class="card" id="nfr">
+    <h2><span class="n">13</span> Quality goals (non-functional)</h2>
+    <div class="grid2">
+      <div>
+        <h3>Accessibility &amp; theming</h3>
+        <ul>
+          <li>Material 3 colors → readable contrast in light &amp; dark.</li>
+          <li>Dark mode is a real toggle; the theme is just state.</li>
+          <li>Text uses the type scale (<code>titleMedium</code>, …), so it respects the user's font size.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Performance &amp; build</h3>
+        <ul>
+          <li><code>LazyColumn</code> with stable <code>key = { it.id }</code> — only visible rows compose.</li>
+          <li>Disk/network work runs off the main thread (<code>Dispatchers.IO</code>, <code>suspend</code>).</li>
+          <li>Zero image/icon dependencies (emoji) — keeps the build simple &amp; green.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRACE -->
+  <section class="card" id="trace">
+    <h2><span class="n">14</span> Design → code traceability</h2>
+    <p class="lede">Every design decision should land in a specific file. This table is the bridge from "the plan" to "the code".</p>
+    <table>
+      <thead><tr><th>Design decision</th><th>Implemented in</th></tr></thead>
+      <tbody>
+        <tr><td>Data model + sample data</td><td><code>data/Destination.kt</code></td></tr>
+        <tr><td>Storage abstraction + local + cloud</td><td><code>data/storage/*.kt</code></td></tr>
+        <tr><td>Screen keys</td><td><code>navigation/NavKeys.kt</code></td></tr>
+        <tr><td>Nav host, state, back stacks, storage wiring</td><td><code>navigation/WanderlistApp.kt</code></td></tr>
+        <tr><td>Each screen + its preview</td><td><code>ui/screens/*.kt</code></td></tr>
+        <tr><td>Theme / dark mode</td><td><code>ui/theme/Theme.kt</code> + <code>MainActivity.kt</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><b>Want the line-by-line version?</b>The interactive walkthrough (<code>projects.html</code> → <b>ExampleProject</b>) shows the real code for each of these decisions, by exact line range.</div>
+  </section>
+
+  <!-- APPLY TO YOURS -->
+  <section class="card" id="yours">
+    <h2><span class="n">15</span> Apply this to your project</h2>
+    <p class="lede">Your apps are different on the surface but share this skeleton: a list of items, a detail/answer view, a way to add, and a score/progress view. Map your idea onto the same design.</p>
+    <table>
+      <thead><tr><th>Your app</th><th>What maps from Wanderlist</th><th>The new bit to design</th></tr></thead>
+      <tbody>
+        <tr><td>🌱 Garden</td><td>Plant = Destination · list/detail/add/stats · "watered" = "visited"</td><td>Watering schedule</td></tr>
+        <tr><td>🧠 Flashcards</td><td>Card list + the flip screen + add form + deck progress</td><td>Shuffle / known-unknown</td></tr>
+        <tr><td>❓ Two-answer quiz</td><td>Question model · two Buttons · score (Stats) · feedback (Snackbar)</td><td>Right/wrong scoring rules</td></tr>
+        <tr><td>🔍 I-Spy</td><td>The Guess screen's tap hit-testing · score · rounds</td><td>Real image + hotspot rects</td></tr>
+      </tbody>
+    </table>
+    <div class="callout info"><b>Start here.</b>For your app, fill in Sections 1–8 of this template first (problem, users, features, screen map, wireframes, data, navigation, state). Only then open Android Studio.</div>
+  </section>
+
+  <!-- OPEN -->
+  <section class="card" id="open">
+    <h2><span class="n">16</span> Open questions &amp; future work</h2>
+    <ul>
+      <li><b>Persistence done right.</b> Move the list into a <b>ViewModel</b> + <b>Room/DataStore</b> so it survives rotation and process death automatically (today it needs an explicit Save/Load).</li>
+      <li><b>Real cloud.</b> Replace <code>CloudDestinationStore</code> with Firebase Firestore or a REST API; add accounts so each user has their own list.</li>
+      <li><b>Images.</b> Swap emoji for real photos (<code>Image</code> + a loader like Coil); the Guess game's hit-testing already works on coordinates, so it ports to real images directly.</li>
+      <li><b>Conflict handling.</b> What if local and cloud disagree? Define a sync/merge rule (last-write-wins? newest timestamp?).</li>
+    </ul>
+    <div class="callout tip"><b>Remember:</b>a design document is a living thing. Update it when the design changes — a stale design doc is worse than none.</div>
+  </section>
+
+  </main>
+</div>
+
+<footer class="wrap">
+  Wanderlist design document · part of <b>ExampleProject</b> in the Android teaching repo ·
+  pair it with the line-by-line code walkthrough in <code>homework/projects.html</code>.
+</footer>
+
+</body>
+</html>

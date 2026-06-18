@@ -41,7 +41,6 @@ import androidx.activity.compose.setContent                  // installs a Compo
 import androidx.activity.enableEdgeToEdge                    // draw behind the system bars for a modern look
 
 // --- Compose foundation: layout + scrolling ----------------------------------
-import androidx.compose.foundation.layout.Arrangement        // spacing BETWEEN children on the main axis
 import androidx.compose.foundation.layout.Box                // overlap/center a single child (used for placeholders)
 import androidx.compose.foundation.layout.Column             // stack children vertically
 import androidx.compose.foundation.layout.Row                // place children horizontally (one settings row)
@@ -145,10 +144,6 @@ fun SettingRow(
     //          otherwise show Text("›", fontSize = 24.sp) for a NAV row.
     // (See Labs 6 & 8 for Row cross-axis alignment + weight.)
     //
-    // Placeholder (delete when you build the real row): shows the label so the
-    // screen is readable, but with no icon, no weight, and no control yet.
-
-
     // TODO 2
     Row(
         modifier = Modifier
@@ -259,7 +254,6 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 )
             }
 
-            Spacer(modifier = Modifier.width(0.dp))           // harmless spacer; remove freely
         }
     }
 }

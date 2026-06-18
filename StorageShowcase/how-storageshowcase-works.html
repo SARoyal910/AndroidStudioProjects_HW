@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Storage Showcase Works — Project Architecture Walkthrough</title>
+<meta name="description" content="A detailed, file-by-file walkthrough of the Storage Showcase Android app: how Room, Preferences DataStore, a typed DataStore, and internal files are wired through one StorageViewModel into a reactive Jetpack Compose UI.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">SS</div>
+      <div>
+        <div class="brand-title">Storage Showcase</div>
+        <div class="brand-subtitle">How the project works</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">Walkthrough</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>Overview</span></a>
+      <a class="nav-link" href="#architecture"><span class="nav-num">2</span><span>Architecture</span></a>
+      <a class="nav-link" href="#map"><span class="nav-num">3</span><span>Project map</span></a>
+      <a class="nav-link" href="#dataflow"><span class="nav-num">4</span><span>The reactive spine</span></a>
+      <div class="nav-title">The four mechanisms</div>
+      <a class="nav-link" href="#room"><span class="nav-num">5</span><span>Room · Notes</span></a>
+      <a class="nav-link" href="#prefs"><span class="nav-num">6</span><span>Preferences · Settings</span></a>
+      <a class="nav-link" href="#typed"><span class="nav-num">7</span><span>Typed store · Profile</span></a>
+      <a class="nav-link" href="#files"><span class="nav-num">8</span><span>Files · Files tab</span></a>
+      <div class="nav-title">The glue</div>
+      <a class="nav-link" href="#viewmodel"><span class="nav-num">9</span><span>The ViewModel</span></a>
+      <a class="nav-link" href="#ui"><span class="nav-num">10</span><span>The UI layer</span></a>
+      <div class="nav-title">Around the code</div>
+      <a class="nav-link" href="#build"><span class="nav-num">11</span><span>Build &amp; tooling</span></a>
+      <a class="nav-link" href="#data-at-rest"><span class="nav-num">12</span><span>Where data lives</span></a>
+      <a class="nav-link" href="#lifecycle"><span class="nav-num">13</span><span>What survives</span></a>
+      <a class="nav-link" href="#testing"><span class="nav-num">14</span><span>Test &amp; run</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      Runnable capstone behind the lessons.
+      <a href="../StorageMaster/storage-tutorial.html">Storage Master Lab →</a>
+      <a href="android-storage-lab.html">Android Storage Lab →</a>
+      <a href="../Playground/storage-playground.html">Room Playground →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">SS</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · Overview</option>
+        <option value="#architecture">2 · Architecture</option>
+        <option value="#map">3 · Project map</option>
+        <option value="#dataflow">4 · The reactive spine</option>
+        <option value="#room">5 · Room · Notes</option>
+        <option value="#prefs">6 · Preferences · Settings</option>
+        <option value="#typed">7 · Typed store · Profile</option>
+        <option value="#files">8 · Files · Files tab</option>
+        <option value="#viewmodel">9 · The ViewModel</option>
+        <option value="#ui">10 · The UI layer</option>
+        <option value="#build">11 · Build &amp; tooling</option>
+        <option value="#data-at-rest">12 · Where data lives</option>
+        <option value="#lifecycle">13 · What survives</option>
+        <option value="#testing">14 · Test &amp; run</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Project walkthrough</p>
+        <h1>How Storage Showcase works</h1>
+        <p class="lead">
+          Storage Showcase is a single Jetpack Compose teaching app that demonstrates <strong>every
+          common on-device storage technique in one place</strong>. It has four tabs, one storage
+          mechanism each, and everything you change survives an app restart because it is written to
+          the device. This page is a file-by-file walkthrough of how the project is built and how data
+          flows from a tap on the screen down to the disk and reactively back up again.
+        </p>
+
+        <div class="statgrid">
+          <div class="stat"><div class="s-num2">4</div><div class="s-lab">storage mechanisms, one per tab</div></div>
+          <div class="stat"><div class="s-num2">~1,100</div><div class="s-lab">lines of commented Kotlin</div></div>
+          <div class="stat"><div class="s-num2">1</div><div class="s-lab">ViewModel ties it all together</div></div>
+          <div class="stat"><div class="s-num2">100%</div><div class="s-lab">reactive — UI never goes stale</div></div>
+        </div>
+
+        <h3>The four tabs at a glance</h3>
+        <table class="tbl">
+          <thead><tr><th>Tab</th><th>Mechanism</th><th>Good for</th><th>What it shows off</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="tag green">Notes</span></td>
+              <td><strong>Room</strong> (SQLite)</td>
+              <td>Structured / relational records you query</td>
+              <td><code>@Entity</code> Note + Category, a <code>@ForeignKey</code> + <code>@Index</code> relation, <code>@Relation</code>, a <code>@TypeConverter</code>, reactive <code>Flow</code> queries, and a real <code>Migration(1,2)</code>.</td>
+            </tr>
+            <tr>
+              <td><span class="tag blue">Settings</span></td>
+              <td><strong>Preferences DataStore</strong></td>
+              <td>A handful of simple key/value settings</td>
+              <td>Dark-theme flag + notes sort order — reactive <code>Flow</code> reads, transactional <code>edit { }</code> writes. The modern replacement for <code>SharedPreferences</code>.</td>
+            </tr>
+            <tr>
+              <td><span class="tag violet">Profile</span></td>
+              <td><strong>Typed DataStore</strong></td>
+              <td>One typed object with a schema</td>
+              <td>A single <code>@Serializable UserProfile</code> stored as JSON through a custom <code>Serializer&lt;T&gt;</code> + <code>updateData { }</code> — type-safe, not loose keys.</td>
+            </tr>
+            <tr>
+              <td><span class="tag amber">Files</span></td>
+              <td><strong>Internal files</strong></td>
+              <td>Free-form bytes / text blobs</td>
+              <td>A scratch note in <code>filesDir</code> (persists, gone on uninstall) and a <code>cacheDir</code> blob (evictable); raw file I/O dispatched to <code>Dispatchers.IO</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <span class="callout-label">The one idea to take away</span>
+          Each tab writes to a <em>different</em> place on disk, but they all reach the screen the same
+          way: a <strong>persistence <code>Flow</code> → a UI <code>StateFlow</code> → <code>collectAsStateWithLifecycle()</code>
+          → recomposition</strong>. Pick the storage that matches your data shape; the reactive plumbing above it never changes.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. ARCHITECTURE ============ -->
+    <section class="band anchor" id="architecture">
+      <div class="band-inner">
+        <p class="eyebrow">The shape of the app</p>
+        <h2>Architecture: five layers, one direction</h2>
+        <p class="dense">
+          The app is a clean, unidirectional stack. The UI never touches a database or a file directly —
+          it only reads <code>StateFlow</code>s and calls functions on the ViewModel. The ViewModel never
+          formats anything for the screen — it just turns persistence into observable state and forwards
+          user intents to the repositories. Reads flow <strong>up</strong>; user actions flow <strong>down</strong>.
+        </p>
+
+        <div class="layers">
+          <div class="layer ui">
+            <div class="l-name">① Compose UI <span class="tag blue">@Composable</span></div>
+            <div class="l-desc">A <code>Scaffold</code> with a bottom <code>NavigationBar</code> and four tab composables. Reads state with <code>collectAsStateWithLifecycle()</code>; calls <code>vm.addNote(…)</code>, <code>vm.setDarkTheme(…)</code>, etc.</div>
+            <div class="l-files"><code>MainActivity.kt</code><code>ui/theme/Theme.kt</code></div>
+          </div>
+          <div class="arrow">▲ state &nbsp;&nbsp; ▼ intents</div>
+          <div class="layer vm">
+            <div class="l-name">② StorageViewModel <span class="tag violet">AndroidViewModel</span></div>
+            <div class="l-desc">Turns each persistence <code>Flow</code> into a cached <code>StateFlow</code> via <code>stateIn(…)</code>; <code>flatMapLatest</code> swaps the Room query when the sort setting changes; launches writes on <code>viewModelScope</code>.</div>
+            <div class="l-files"><code>StorageViewModel.kt</code></div>
+          </div>
+          <div class="arrow">▲ Flow &nbsp;&nbsp; ▼ suspend calls</div>
+          <div class="layer repo">
+            <div class="l-name">③ Repositories &amp; DAO <span class="tag teal">data layer</span></div>
+            <div class="l-desc">One small class per mechanism. Each exposes reactive reads (<code>Flow</code>) and suspend writes, hiding the storage API from the ViewModel.</div>
+            <div class="l-files"><code>NoteDao.kt</code><code>SettingsRepository.kt</code><code>ProfileRepository.kt</code><code>FileStore.kt</code><code>StorageLocations.kt</code></div>
+          </div>
+          <div class="arrow">▲ rows / bytes &nbsp;&nbsp; ▼ SQL / I/O</div>
+          <div class="layer engine">
+            <div class="l-name">④ Storage engines</div>
+            <div class="l-desc">Room/SQLite, Preferences DataStore, a typed DataStore, and <code>java.io</code> file calls. Three of the four move work off the main thread for you; raw files do not.</div>
+            <div class="l-files"><code>StorageDatabase.kt</code><code>Converters.kt</code><code>Models.kt</code></div>
+          </div>
+          <div class="arrow">▼ persists to</div>
+          <div class="layer disk">
+            <div class="l-name">⑤ App-private internal storage <span class="tag green">/data/data/&lt;pkg&gt;/</span></div>
+            <div class="l-desc">No permissions, encrypted on Android 10+, wiped only on uninstall. Each store gets its own file.</div>
+            <div class="l-files"><code>databases/storage.db</code><code>files/datastore/settings.preferences_pb</code><code>files/datastore/user_profile.json</code><code>files/scratch.txt</code><code>cache/</code></div>
+          </div>
+        </div>
+
+        <div class="callout good">
+          <span class="callout-label">Single source of truth</span>
+          The disk is the source of truth — not in-memory variables. A write goes to disk, the storage
+          engine re-emits on its <code>Flow</code>, and the UI updates as a consequence. There is no
+          “update the screen and also save it” double-bookkeeping, so the UI can never disagree with what
+          is actually stored.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. PROJECT MAP ============ -->
+    <section class="band anchor" id="map">
+      <div class="band-inner">
+        <p class="eyebrow">Every file, one line each</p>
+        <h2>Project map</h2>
+        <p class="dense">The whole app lives under one package. The <code>data/</code> folder is the persistence layer; the two files above it are the glue and the screen.</p>
+        <div class="tree">
+<span class="dir">StorageShowcase/</span>
+├─ <span class="f">build.gradle.kts</span>            <span class="note">// 4 plugins (app, compose, KSP, serialization) + the persistence deps</span>
+├─ <span class="f">gradle/libs.versions.toml</span>   <span class="note">// version catalog — Room 2.7.2, DataStore 1.1.7, Kotlin 2.2.10…</span>
+├─ <span class="f">gradle.properties</span>          <span class="note">// android.disallowKotlinSourceSets=false so KSP can add generated sources</span>
+├─ <span class="dir">src/main/</span>
+│  ├─ <span class="f">AndroidManifest.xml</span>      <span class="note">// one launcher activity; allowBackup=true</span>
+│  ├─ <span class="dir">java/com/example/storageshowcase/</span>
+│  │  ├─ <span class="f">MainActivity.kt</span>       <span class="note">// ⑩ Compose UI — Scaffold + 4 tabs, reads StateFlows</span>
+│  │  ├─ <span class="f">StorageViewModel.kt</span>   <span class="note">// ⑨ the glue — Flow→StateFlow, flatMapLatest, writes</span>
+│  │  ├─ <span class="dir">data/</span>
+│  │  │  ├─ <span class="f">Models.kt</span>          <span class="note">// ⑤ @Entity Note + Category, @Relation, Priority enum</span>
+│  │  │  ├─ <span class="f">Converters.kt</span>      <span class="note">// ⑤ @TypeConverter: List&lt;String&gt;↔JSON, enum↔name</span>
+│  │  │  ├─ <span class="f">NoteDao.kt</span>         <span class="note">// ⑤ @Dao — reactive Flow reads + suspend writes</span>
+│  │  │  ├─ <span class="f">StorageDatabase.kt</span> <span class="note">// ⑤ @Database holder, singleton, Migration(1,2)</span>
+│  │  │  ├─ <span class="f">SettingsRepository.kt</span> <span class="note">// ⑥ Preferences DataStore (dark theme + sort)</span>
+│  │  │  ├─ <span class="f">ProfileRepository.kt</span>  <span class="note">// ⑦ Typed DataStore (UserProfile as JSON) + Serializer</span>
+│  │  │  ├─ <span class="f">FileStore.kt</span>       <span class="note">// ⑧ filesDir / cacheDir raw file I/O</span>
+│  │  │  └─ <span class="f">StorageLocations.kt</span> <span class="note">// resolves the real on-disk path of every store</span>
+│  │  └─ <span class="dir">ui/theme/</span>          <span class="note">// Material 3 theme; dark mode driven by the saved setting</span>
+│  └─ <span class="dir">res/xml/</span>             <span class="note">// Auto Backup / data-extraction rules (defaults)</span>
+└─ <span class="dir">src/test/…/</span><span class="f">ConvertersTest.kt</span>  <span class="note">// JVM unit test — the type converters round-trip</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. REACTIVE SPINE ============ -->
+    <section class="band anchor" id="dataflow">
+      <div class="band-inner">
+        <p class="eyebrow">The crown jewel</p>
+        <h2>The reactive spine</h2>
+        <p class="dense">
+          This is the single most important pattern in the project. Once you understand it, all four
+          tabs read the same way. Two journeys matter: how data on disk reaches the screen (<em>the read
+          path</em>), and how a tap persists data and the screen updates without anyone telling it to
+          (<em>the write path</em>).
+        </p>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">⬆ Read path — disk → screen</span></div>
+            <div class="card-body">
+              <ol class="kicker-list">
+                <li>A storage engine exposes a <strong><code>Flow</code></strong> that re-emits whenever its data changes (Room watches the table; DataStore watches the file).</li>
+                <li>The repository/DAO surfaces that <code>Flow</code> (e.g. <code>dao.observeNotes()</code>, <code>settings.darkTheme</code>).</li>
+                <li>The ViewModel converts it to a hot, cached <strong><code>StateFlow</code></strong> with <code>stateIn(viewModelScope, …, initialValue)</code> — so it always has a value and is shared across collectors.</li>
+                <li>A composable reads it with <strong><code>collectAsStateWithLifecycle()</code></strong>, which only collects while the screen is visible.</li>
+                <li>A new emission flips the backing Compose <code>State</code>, which <strong>recomposes</strong> just the parts that read it.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">⬇ Write path — tap → disk → back up</span></div>
+            <div class="card-body">
+              <ol class="kicker-list">
+                <li>The UI calls a plain function on the ViewModel, e.g. <code>vm.addNote(…)</code>.</li>
+                <li>The ViewModel launches a coroutine on <strong><code>viewModelScope</code></strong> and calls a <strong><code>suspend</code></strong> write on the repository/DAO.</li>
+                <li>The write lands on disk (a Room <code>INSERT</code>, a DataStore <code>edit{}</code>/<code>updateData{}</code>, or a file write on <code>Dispatchers.IO</code>).</li>
+                <li>That write makes the engine’s <code>Flow</code> <strong>re-emit</strong> — the same <code>Flow</code> the read path is already collecting.</li>
+                <li>The <code>StateFlow</code> updates, the screen recomposes. <em>The UI is never updated by hand.</em></li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <h3>Trace it live: changing the notes sort order</h3>
+        <p class="dense">
+          The sort order is the best example because it touches <em>two</em> mechanisms at once: a
+          Preferences-DataStore write triggers a <strong>Room query swap</strong> via
+          <code>flatMapLatest</code>. Step through the exact chain the code follows.
+        </p>
+
+        <div class="stepper" id="sortStepper">
+          <div class="stepper-head">
+            <span class="s-title">Scenario: user taps “Notes sort order” → list re-sorts</span>
+            <div class="stepper-ctrl">
+              <button id="stepPrev" type="button">‹ Prev</button>
+              <span class="s-count" id="stepCount">1 / 9</span>
+              <button id="stepNext" type="button">Next ›</button>
+            </div>
+          </div>
+          <ol class="steps" id="stepList">
+            <li class="step" data-step><div class="s-num">1</div><div class="s-body">User taps the sort button in the <strong>Settings</strong> tab.<span class="s-where">MainActivity.kt · Button(onClick = { vm.cycleSortOrder() })</span></div></li>
+            <li class="step" data-step><div class="s-num">2</div><div class="s-body"><code>cycleSortOrder()</code> launches on <code>viewModelScope</code> and calls <code>settings.setSortOrder(TITLE_ASC)</code>.<span class="s-where">StorageViewModel.kt · cycleSortOrder()</span></div></li>
+            <li class="step" data-step><div class="s-num">3</div><div class="s-body">The repository runs a transactional <code>dataStore.edit { it[KEY_SORT_ORDER] = order.name }</code> — the string <code>"TITLE_ASC"</code> is written to disk.<span class="s-where">SettingsRepository.kt · settings.preferences_pb</span></div></li>
+            <li class="step" data-step><div class="s-num">4</div><div class="s-body">Writing makes the Preferences DataStore re-emit on <code>.data</code>, so the <code>sortOrder</code> <code>Flow</code> emits <code>SortOrder.TITLE_ASC</code>.<span class="s-where">SettingsRepository.kt · val sortOrder: Flow&lt;SortOrder&gt;</span></div></li>
+            <li class="step" data-step><div class="s-num">5</div><div class="s-body">In the ViewModel, <code>notes</code> is built from <code>settings.sortOrder.flatMapLatest { … }</code>. The new value <strong>cancels the old inner Flow</strong> and switches the query.<span class="s-where">StorageViewModel.kt · flatMapLatest</span></div></li>
+            <li class="step" data-step><div class="s-num">6</div><div class="s-body">It now collects <code>dao.observeNotesByTitle()</code>, which runs <code>SELECT * FROM notes ORDER BY title COLLATE NOCASE ASC</code> and emits the re-sorted rows.<span class="s-where">NoteDao.kt · observeNotesByTitle()</span></div></li>
+            <li class="step" data-step><div class="s-num">7</div><div class="s-body"><code>.stateIn(viewModelScope, …)</code> caches that as the new value of the <code>notes</code> <code>StateFlow</code>.<span class="s-where">StorageViewModel.kt · stateIn</span></div></li>
+            <li class="step" data-step><div class="s-num">8</div><div class="s-body">Two collectors react to that one emission: the Settings button label flips to “Title A–Z” instantly, and <code>NotesTab</code>’s <code>vm.notes.collectAsStateWithLifecycle()</code> re-renders the <code>LazyColumn</code> in the new order when you switch back to Notes.<span class="s-where">MainActivity.kt · SettingsTab + NotesTab</span></div></li>
+            <li class="step" data-step><div class="s-num">9</div><div class="s-body">Because step 3 wrote the choice to disk, the order is <strong>still TITLE_ASC after an app restart</strong> — no extra save code needed.<span class="s-where">persisted in settings.preferences_pb</span></div></li>
+          </ol>
+        </div>
+
+        <div class="callout violet">
+          <span class="callout-label">Why <code>flatMapLatest</code> and not <code>map</code></span>
+          The sort setting doesn’t transform a value — it chooses a <em>different ongoing Flow</em> (a
+          different live query). <code>flatMapLatest</code> subscribes to the newest inner Flow and cancels
+          the previous one, so you’re never accidentally listening to both the old and new query at once.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. ROOM ============ -->
+    <section class="band anchor" id="room">
+      <div class="band-inner">
+        <p class="eyebrow">Mechanism 1 · the Notes tab</p>
+        <h2>Room — structured, relational storage</h2>
+        <div class="tag-row">
+          <span class="tag green">SQLite</span><span class="tag">@Entity</span><span class="tag">@Dao</span>
+          <span class="tag">@Relation</span><span class="tag">@TypeConverter</span><span class="tag">Migration</span>
+        </div>
+        <p class="dense">
+          Room is an object-mapping layer over SQLite. You describe <em>tables</em> as annotated data
+          classes, <em>queries</em> as annotated interface methods, and Room generates the SQLite-backed
+          implementation at build time (that is what KSP does). The Notes tab uses Room because notes are
+          structured records with a relationship and queries — exactly what a relational store is for.
+        </p>
+
+        <h3>Tables: two entities with a real relationship</h3>
+        <p class="dense"><code>Category</code> is the parent; <code>Note</code> is the child and references its category through a foreign key. The non-primitive columns (the tag list and the priority enum) are handled by type converters.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/Models.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">enum class Priority { LOW, NORMAL, HIGH }
+
+@Entity(
+    tableName = "notes",
+    foreignKeys = [
+        ForeignKey(
+            entity = Category::class,
+            parentColumns = ["id"],
+            childColumns = ["categoryId"],
+            onDelete = ForeignKey.CASCADE,   // delete a category -> its notes go too
+        )
+    ],
+    indices = [Index("categoryId"), Index("title")],
+)
+data class Note(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    val body: String,
+    val done: Boolean = false,                 // INTEGER 0/1
+    val categoryId: Long,                      // FK -&gt; categories.id (indexed)
+    val priority: Priority = Priority.NORMAL,  // enum -&gt; TEXT via Converters
+    val tags: List&lt;String&gt; = emptyList(),      // List -&gt; JSON TEXT via Converters
+    val createdAt: Long = 0L,                  // epoch millis; set by the ViewModel
+)</pre>
+        </div>
+        <ul class="kicker-list">
+          <li><strong><code>@ForeignKey … onDelete = CASCADE</code></strong> enforces referential integrity in SQLite: a note’s <code>categoryId</code> must point at an existing category, and deleting a category deletes its notes automatically.</li>
+          <li><strong><code>@Index("categoryId")</code></strong> indexes the foreign-key column. Room warns if you don’t — without it, every parent delete/update does a full table scan of <code>notes</code>.</li>
+          <li><strong>The enum is stored by name</strong> and the list as JSON — neither is a primitive SQLite column, so they need converters (next).</li>
+        </ul>
+
+        <h3>The <code>@Relation</code> read object</h3>
+        <p class="dense">To read “a category and all its notes” in one shot, Room fills a POJO with a second query. The DAO method that returns it must be <code>@Transaction</code> so parent and children are one consistent snapshot.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/Models.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">data class CategoryWithNotes(
+    @Embedded val category: Category,
+    @Relation(parentColumn = "id", entityColumn = "categoryId")
+    val notes: List&lt;Note&gt;,
+)</pre>
+        </div>
+        <div class="callout warn">
+          <span class="callout-label">Honest caveat: demonstrated, not yet wired</span>
+          <code>CategoryWithNotes</code> — and the DAO methods <code>observeCategoriesWithNotes()</code> and
+          <code>findCategoryByName()</code> — are included to teach the <code>@Relation</code> pattern, but the current UI
+          doesn’t call them: the Notes tab reads notes and categories as two flat lists. They’re a worked example
+          to wire up, not part of the live data flow.
+        </div>
+
+        <h3>Type converters: teaching SQLite about richer types</h3>
+        <p class="dense">SQLite only stores TEXT / INTEGER / REAL / BLOB / NULL. A <code>@TypeConverter</code> is a pair of functions Room calls to map your type to a supported one and back.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/Converters.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class Converters {
+    // List&lt;String&gt; &lt;-&gt; JSON TEXT
+    @TypeConverter fun fromTags(tags: List&lt;String&gt;): String = Json.encodeToString(tags)
+    @TypeConverter fun toTags(json: String): List&lt;String&gt; =
+        if (json.isBlank()) emptyList() else Json.decodeFromString(json)
+
+    // Priority enum &lt;-&gt; TEXT — store the NAME, never the ordinal
+    @TypeConverter fun fromPriority(p: Priority): String = p.name
+    @TypeConverter fun toPriority(value: String): Priority =
+        runCatching { Priority.valueOf(value) }.getOrDefault(Priority.NORMAL)
+}</pre>
+        </div>
+        <div class="callout warn">
+          <span class="callout-label">Why name, not ordinal</span>
+          Storing the enum’s <code>ordinal</code> (its position) would silently corrupt every saved row the
+          day someone reorders or inserts an enum constant. Storing <code>p.name</code> is stable across
+          source changes, and <code>toPriority</code> falls back to <code>NORMAL</code> for unknown text instead of crashing.
+        </div>
+
+        <h3>The DAO: reactive reads, suspend writes</h3>
+        <p class="dense">A <code>@Dao</code> is an interface — Room generates the implementation. The return type decides behaviour: <code>Flow</code> is a live, re-emitting query; <code>suspend</code> is a one-shot that runs off the main thread on Room’s own executor.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/NoteDao.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Dao
+interface NoteDao {
+    // reactive reads — re-emit whenever the table changes
+    @Query("SELECT * FROM notes ORDER BY id DESC")
+    fun observeNotes(): Flow&lt;List&lt;Note&gt;&gt;
+
+    @Query("SELECT * FROM notes ORDER BY title COLLATE NOCASE ASC")
+    fun observeNotesByTitle(): Flow&lt;List&lt;Note&gt;&gt;
+
+    @Query("SELECT COUNT(*) FROM notes")
+    fun observeCount(): Flow&lt;Int&gt;
+
+    @Transaction
+    @Query("SELECT * FROM categories ORDER BY name COLLATE NOCASE ASC")
+    fun observeCategoriesWithNotes(): Flow&lt;List&lt;CategoryWithNotes&gt;&gt;
+
+    // suspend writes — one-shot, off the main thread
+    @Insert suspend fun insert(note: Note): Long
+    @Update suspend fun update(note: Note)
+    @Delete suspend fun delete(note: Note)
+
+    // duplicate category name is silently skipped (returns -1)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertCategory(category: Category): Long
+}</pre>
+        </div>
+
+        <h3>The database holder, singleton, and a real migration</h3>
+        <p class="dense">The abstract <code>@Database</code> ties the entities + DAO to one SQLite file (<code>storage.db</code>), registers the converters, and is built once as a thread-safe singleton.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/StorageDatabase.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Database(entities = [Note::class, Category::class], version = 2, exportSchema = false)
+@TypeConverters(Converters::class)
+abstract class StorageDatabase : RoomDatabase() {
+    abstract fun noteDao(): NoteDao
+
+    companion object {
+        @Volatile private var INSTANCE: StorageDatabase? = null
+
+        // v1 -&gt; v2: add the `tags` column. ALTER TABLE ADD COLUMN needs a default
+        // for a NOT NULL column, so existing rows decode to an empty tag list.
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
+            }
+        }
+
+        fun getInstance(context: Context): StorageDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext, StorageDatabase::class.java, "storage.db",
+                ).addMigrations(MIGRATION_1_2).build().also { INSTANCE = it }
+            }
+    }
+}</pre>
+        </div>
+        <div class="callout danger">
+          <span class="callout-label">Why shipping the migration is mandatory</span>
+          A <em>fresh</em> install is created at version 2 directly, so <code>MIGRATION_1_2</code> only runs for
+          users upgrading from a v1 build. But you must still ship it: if a v1 user updates and no migration
+          path exists, Room throws <code>IllegalStateException</code> (“A migration from 1 to 2 was required but
+          not found”) and the app crashes on launch.
+        </div>
+        <div class="callout">
+          <span class="callout-label">The <code>@Volatile</code> + <code>synchronized</code> double-check</span>
+          <code>getInstance</code> is the classic thread-safe singleton: check the volatile field, and only if
+          it’s null take the lock and check again, so two threads racing on first launch can’t build two
+          databases pointing at the same file.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. PREFERENCES ============ -->
+    <section class="band anchor" id="prefs">
+      <div class="band-inner">
+        <p class="eyebrow">Mechanism 2 · the Settings tab</p>
+        <h2>Preferences DataStore — simple key/value settings</h2>
+        <div class="tag-row">
+          <span class="tag blue">key/value</span><span class="tag">Flow reads</span><span class="tag">edit { } writes</span><span class="tag">replaces SharedPreferences</span>
+        </div>
+        <p class="dense">
+          For a handful of loose settings, Preferences DataStore is the modern replacement for
+          <code>SharedPreferences</code>: it’s fully asynchronous (no <code>apply()</code>/<code>commit()</code> on
+          the main thread), reads are a reactive <code>Flow</code>, and writes are transactional. The Settings
+          tab stores two things — the dark-theme flag and the notes sort order.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/SettingsRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">enum class SortOrder { NEWEST_FIRST, TITLE_ASC }
+
+// one app-wide DataStore named "settings", created lazily at FILE scope
+private val Context.settingsDataStore: DataStore&lt;Preferences&gt;
+    by preferencesDataStore(name = "settings")
+
+class SettingsRepository(context: Context) {
+    private val dataStore = context.applicationContext.settingsDataStore
+
+    private companion object {
+        val KEY_DARK_THEME = booleanPreferencesKey("dark_theme")
+        val KEY_SORT_ORDER = stringPreferencesKey("sort_order")
+    }
+
+    // reactive reads
+    val darkTheme: Flow&lt;Boolean&gt; = dataStore.data.map { it[KEY_DARK_THEME] ?: false }
+    val sortOrder: Flow&lt;SortOrder&gt; = dataStore.data.map { prefs -&gt;
+        runCatching { SortOrder.valueOf(prefs[KEY_SORT_ORDER] ?: SortOrder.NEWEST_FIRST.name) }
+            .getOrDefault(SortOrder.NEWEST_FIRST)
+    }
+
+    // transactional writes
+    suspend fun setDarkTheme(enabled: Boolean) { dataStore.edit { it[KEY_DARK_THEME] = enabled } }
+    suspend fun setSortOrder(order: SortOrder) { dataStore.edit { it[KEY_SORT_ORDER] = order.name } }
+}</pre>
+        </div>
+        <ul class="kicker-list">
+          <li><strong>Typed keys.</strong> <code>booleanPreferencesKey(…)</code> / <code>stringPreferencesKey(…)</code> tie a name to a type, so reads and writes can’t disagree about what a key holds.</li>
+          <li><strong>The <code>by preferencesDataStore</code> delegate is file-scoped on purpose.</strong> One instance per file for the whole process — creating a second DataStore for the same file throws <code>IllegalStateException</code>. That’s why it’s a top-level <code>Context</code> extension, not something you <code>new</code> up per screen.</li>
+          <li><strong>Defaults live in the read.</strong> <code>?: false</code> and the <code>runCatching … getOrDefault</code> mean a missing or unparseable value yields a sane default rather than a crash — and again the enum is stored by name.</li>
+        </ul>
+        <div class="callout">
+          <span class="callout-label">This is half of the sort-swap trace</span>
+          <code>setSortOrder</code> is step 3 of the <a href="#dataflow">reactive-spine trace</a>; the <code>sortOrder</code>
+          <code>Flow</code> here is what the ViewModel’s <code>flatMapLatest</code> listens to. One write, and Room’s
+          query swaps — across two different storage mechanisms.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. TYPED DATASTORE ============ -->
+    <section class="band anchor" id="typed">
+      <div class="band-inner">
+        <p class="eyebrow">Mechanism 3 · the Profile tab</p>
+        <h2>Typed DataStore — one object with a schema</h2>
+        <div class="tag-row">
+          <span class="tag violet">@Serializable</span><span class="tag">Serializer&lt;T&gt;</span><span class="tag">JSON</span><span class="tag">updateData { }</span>
+        </div>
+        <p class="dense">
+          When your settings are really <em>one typed object</em>, a typed DataStore beats a bag of loose keys.
+          You supply a <code>Serializer&lt;T&gt;</code> that turns the object into bytes and back — here, JSON via
+          kotlinx.serialization. Reads are a <code>Flow&lt;UserProfile&gt;</code> with real field defaults; writes are
+          the transactional <code>updateData { }</code>.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/ProfileRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Serializable
+data class UserProfile(
+    val displayName: String = "Guest",
+    val accentSeed: Int = 0,
+    val notesCreated: Int = 0,
+)
+
+object UserProfileSerializer : Serializer&lt;UserProfile&gt; {
+    override val defaultValue = UserProfile()   // returned when the file doesn't exist yet
+
+    override suspend fun readFrom(input: InputStream): UserProfile =
+        try {
+            Json.decodeFromString(UserProfile.serializer(), input.readBytes().decodeToString())
+        } catch (e: SerializationException) {
+            throw CorruptionException("Cannot read UserProfile JSON.", e)
+        }
+
+    override suspend fun writeTo(t: UserProfile, output: OutputStream) {
+        output.write(Json.encodeToString(UserProfile.serializer(), t).encodeToByteArray())
+    }
+}
+
+private val Context.profileDataStore: DataStore&lt;UserProfile&gt;
+    by dataStore(fileName = "user_profile.json", serializer = UserProfileSerializer)
+
+class ProfileRepository(context: Context) {
+    private val dataStore = context.applicationContext.profileDataStore
+    val profile: Flow&lt;UserProfile&gt; = dataStore.data            // reactive, type-safe read
+
+    suspend fun setDisplayName(name: String) =
+        dataStore.updateData { it.copy(displayName = name.ifBlank { "Guest" }) }
+    suspend fun incrementNotesCreated() =
+        dataStore.updateData { it.copy(notesCreated = it.notesCreated + 1) }
+}</pre>
+        </div>
+        <ul class="kicker-list">
+          <li><strong>Type safety end to end.</strong> You read and write a real <code>UserProfile</code>, not <code>get("displayName")</code> string lookups. The compiler catches typos and type mismatches.</li>
+          <li><strong><code>updateData { it.copy(...) }</code> is read-modify-write in one transaction.</strong> <code>incrementNotesCreated</code> reads the current count and writes count + 1 atomically — no lost updates if two writes race.</li>
+          <li><strong><code>CorruptionException</code> is the contract</strong> for “this file is unreadable.” Throwing it (instead of letting a random exception escape) lets DataStore apply its corruption-handling policy rather than crashing.</li>
+        </ul>
+        <div class="callout violet">
+          <span class="callout-label">Preferences vs. Typed — same library, different fit</span>
+          Both are DataStore and both expose a <code>Flow</code>. Reach for <strong>Preferences</strong> when you have a
+          few independent flags; reach for <strong>Typed</strong> when the data is a cohesive object with a schema and
+          invariants. Profile is one object (<code>displayName</code>, <code>accentSeed</code>, <code>notesCreated</code>), so it’s typed.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8. FILES ============ -->
+    <section class="band anchor" id="files">
+      <div class="band-inner">
+        <p class="eyebrow">Mechanism 4 · the Files tab</p>
+        <h2>Internal files — free-form blobs</h2>
+        <div class="tag-row">
+          <span class="tag amber">filesDir</span><span class="tag">cacheDir</span><span class="tag">java.io</span><span class="tag red">Dispatchers.IO (manual)</span>
+        </div>
+        <p class="dense">
+          For bytes or text that aren’t rows or key/value pairs, write straight to internal storage.
+          The Files tab keeps a persistent scratch note in <code>filesDir</code> and a throwaway blob in
+          <code>cacheDir</code> to show the difference. The <code>FileStore</code> itself is plain, blocking
+          <code>java.io</code> — which is the key teaching point.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/FileStore.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class FileStore(context: Context) {
+    private val app = context.applicationContext
+    private val scratchFile: File get() = File(app.filesDir, "scratch.txt")
+
+    fun readScratch(): String = if (scratchFile.exists()) scratchFile.readText() else ""
+    fun writeScratch(text: String) { scratchFile.writeText(text) }        // survives restart, gone on uninstall
+
+    fun writeCacheBlob(): File =
+        File.createTempFile("blob", ".tmp", app.cacheDir).apply { writeText("cacheable scratch data") }
+
+    fun clearCache() { app.cacheDir.listFiles()?.forEach { it.delete() } }  // what "Clear cache" does
+
+    fun info(): FileInfo = FileInfo(
+        path = scratchFile.absolutePath,
+        scratchBytes = if (scratchFile.exists()) scratchFile.length() else 0L,
+        cacheBytes = app.cacheDir.listFiles()?.sumOf { it.length() } ?: 0L,
+    )
+}</pre>
+        </div>
+        <div class="callout danger">
+          <span class="callout-label">The one place you must thread by hand</span>
+          Room and DataStore move work off the main thread for you. Raw <code>java.io</code> calls are
+          <strong>blocking and are not</strong> — so the ViewModel wraps every <code>FileStore</code> call in
+          <code>withContext(Dispatchers.IO)</code>. Forgetting that is how you get jank or an ANR.
+        </div>
+        <div class="grid2">
+          <div class="card"><div class="card-head"><span class="card-title">filesDir</span></div><div class="card-body"><p class="dense">Persistent, private, no permission, encrypted on Android 10+. Removed only on uninstall (and is included in Auto Backup). The scratch note lives here.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">cacheDir</span></div><div class="card-body"><p class="dense">Re-creatable scratch space. The system may evict it under storage pressure and the user can clear it anytime — so always existence-check before reading. Never included in Auto Backup.</p></div></div>
+        </div>
+
+        <h3>Showing the learner exactly <em>where</em> data goes</h3>
+        <p class="dense">A small helper resolves the real absolute path of every store, so each tab can print “💾 Saved to …”. It’s the concrete payoff of the whole project — you can see the four different files.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/StorageLocations.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun of(context: Context): StoragePaths {
+    val c = context.applicationContext
+    return StoragePaths(
+        roomDb      = c.getDatabasePath("storage.db").absolutePath,          // databases/storage.db
+        preferences = dataStoreFile(c, "settings.preferences_pb"),           // files/datastore/…
+        profile     = dataStoreFile(c, "user_profile.json"),                 // files/datastore/…
+        scratchFile = File(c.filesDir, "scratch.txt").absolutePath,          // files/scratch.txt
+        cacheDir    = c.cacheDir.absolutePath,                               // cache/
+    )
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 9. VIEWMODEL ============ -->
+    <section class="band anchor" id="viewmodel">
+      <div class="band-inner">
+        <p class="eyebrow">The glue · part 1</p>
+        <h2>StorageViewModel — where persistence becomes UI state</h2>
+        <p class="dense">
+          One <code>AndroidViewModel</code> owns all four data sources and exposes them to the UI as
+          <code>StateFlow</code>s. It needs the <code>Application</code> context to build the database and the
+          DataStores, which is exactly what <code>AndroidViewModel</code> provides. It survives configuration
+          changes (rotation), so the live queries aren’t torn down and rebuilt every rotate.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">StorageViewModel.kt — construction &amp; reads</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class StorageViewModel(app: Application) : AndroidViewModel(app) {
+    private val dao = StorageDatabase.getInstance(app).noteDao()
+    private val settings = SettingsRepository(app)
+    private val profileRepo = ProfileRepository(app)
+    private val fileStore = FileStore(app)
+
+    val paths: StoragePaths = StoragePaths.of(app)            // shown in the UI
+    private val started = SharingStarted.WhileSubscribed(5_000)
+
+    // Room — the sort SETTING chooses which live query feeds the list
+    val notes: StateFlow&lt;List&lt;Note&gt;&gt; = settings.sortOrder
+        .flatMapLatest { order -&gt;
+            when (order) {
+                SortOrder.NEWEST_FIRST -&gt; dao.observeNotes()
+                SortOrder.TITLE_ASC    -&gt; dao.observeNotesByTitle()
+            }
+        }
+        .stateIn(viewModelScope, started, emptyList())
+
+    val darkTheme: StateFlow&lt;Boolean&gt;     = settings.darkTheme.stateIn(viewModelScope, started, false)
+    val sortOrder: StateFlow&lt;SortOrder&gt;   = settings.sortOrder.stateIn(viewModelScope, started, NEWEST_FIRST)
+    val profile:   StateFlow&lt;UserProfile&gt; = profileRepo.profile.stateIn(viewModelScope, started, UserProfile())
+    val noteCount: StateFlow&lt;Int&gt;         = dao.observeCount().stateIn(viewModelScope, started, 0)
+}</pre>
+        </div>
+        <ul class="kicker-list">
+          <li><strong><code>stateIn(scope, started, initial)</code></strong> converts a cold <code>Flow</code> into a hot <code>StateFlow</code>: it always has a current value (the <code>initial</code> until the first real emission) and multiplexes one upstream collection to many UI collectors.</li>
+          <li><strong><code>SharingStarted.WhileSubscribed(5_000)</code></strong> keeps the upstream query alive for 5 seconds after the last collector leaves. That window means a quick rotation or tab switch reuses the existing query instead of tearing it down and restarting it.</li>
+          <li><strong><code>flatMapLatest</code> is the only place two mechanisms meet</strong> — a Preferences value selects a Room query. Everything else is a straight <code>repository Flow → stateIn</code>.</li>
+        </ul>
+
+        <h3>Writes: launched on <code>viewModelScope</code>, persisted, never hand-applied</h3>
+        <p class="dense">Every user action is a plain function that fires a coroutine and calls a suspend write. Note how a single intent can touch two stores, and how file I/O is the only one wrapped in <code>Dispatchers.IO</code>.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">StorageViewModel.kt — writes</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun addNote(title: String, body: String, categoryId: Long, tags: List&lt;String&gt;, priority: Priority) {
+    val clean = title.trim()
+    if (clean.isEmpty()) return
+    viewModelScope.launch {
+        dao.insert(Note(title = clean, body = body.trim(), categoryId = categoryId,
+                        tags = tags, priority = priority, createdAt = System.currentTimeMillis()))
+        profileRepo.incrementNotesCreated()      // also bumps the typed profile object
+    }
+}
+
+fun cycleSortOrder() = viewModelScope.launch {
+    settings.setSortOrder(
+        if (sortOrder.value == SortOrder.NEWEST_FIRST) SortOrder.TITLE_ASC else SortOrder.NEWEST_FIRST
+    )
+}
+
+// raw file I/O — the ONE thing that must be moved off the main thread by hand
+fun saveScratch() = viewModelScope.launch {
+    withContext(Dispatchers.IO) { fileStore.writeScratch(_scratch.value) }
+    refreshFileInfo()
+}</pre>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Note vs. file state</span>
+          The Room/DataStore values are <em>derived</em> from disk via <code>stateIn</code>, so there’s no local copy to
+          keep in sync. The scratch text is different: it’s an editable draft, so the ViewModel holds it in a
+          <code>MutableStateFlow</code> (<code>_scratch</code>) that updates as you type and is only flushed to disk on “Save”.
+        </div>
+
+        <h3>Constructing it: a tiny factory</h3>
+        <p class="dense">Because the ViewModel needs the <code>Application</code>, it’s created through a one-method <code>ViewModelProvider.Factory</code> — no DI framework required.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">StorageViewModel.kt — factory</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">companion object {
+    fun factory(app: Application): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun &lt;T : ViewModel&gt; create(modelClass: Class&lt;T&gt;): T = StorageViewModel(app) as T
+    }
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. UI ============ -->
+    <section class="band anchor" id="ui">
+      <div class="band-inner">
+        <p class="eyebrow">The glue · part 2</p>
+        <h2>The UI layer — one screen, four tabs</h2>
+        <p class="dense">
+          <code>MainActivity</code> is the whole UI. It obtains the ViewModel, wraps everything in the app
+          theme (driven by the persisted dark-mode flag), and renders a <code>Scaffold</code> with a bottom
+          <code>NavigationBar</code>. Each tab is a composable that <em>only</em> reads <code>StateFlow</code>s and calls
+          ViewModel functions — it knows nothing about Room, DataStore, or files.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt — entry point</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            val vm: StorageViewModel = viewModel(factory = StorageViewModel.factory(application))
+            // the theme follows the PERSISTED Preferences-DataStore flag — survives restart
+            val darkTheme by vm.darkTheme.collectAsStateWithLifecycle()
+            StorageShowcaseTheme(darkTheme = darkTheme, dynamicColor = false) {
+                StorageShowcaseApp(vm)
+            }
+        }
+    }
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt — the tab scaffold</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">private enum class Tab(val title: String, val icon: String) {
+    NOTES("Notes", "🗃️"), SETTINGS("Settings", "⚙️"), PROFILE("Profile", "🧑"), FILES("Files", "📁")
+}
+
+@Composable
+fun StorageShowcaseApp(vm: StorageViewModel) {
+    var tab by remember { mutableStateOf(Tab.NOTES) }     // which tab is showing (UI-only state)
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("Storage Showcase") }) },
+        bottomBar = {
+            NavigationBar {
+                Tab.entries.forEach { t -&gt;
+                    NavigationBarItem(selected = tab == t, onClick = { tab = t },
+                        icon = { Text(t.icon) }, label = { Text(t.title) })
+                }
+            }
+        },
+    ) { inner -&gt;
+        Column(Modifier.padding(inner).fillMaxSize()) {
+            when (tab) {
+                Tab.NOTES    -&gt; NotesTab(vm)
+                Tab.SETTINGS -&gt; SettingsTab(vm)
+                Tab.PROFILE  -&gt; ProfileTab(vm)
+                Tab.FILES    -&gt; FilesTab(vm)
+            }
+        }
+    }
+}</pre>
+        </div>
+        <p class="dense">A tab reads its state at the top and renders from it. Here’s the Notes tab’s core — note that adding a note is a one-liner that delegates straight to the ViewModel, and the list comes from a <code>StateFlow</code>:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt — NotesTab (excerpt)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Composable
+fun NotesTab(vm: StorageViewModel) {
+    val notes by vm.notes.collectAsStateWithLifecycle()           // live, re-sorted list
+    val categories by vm.categories.collectAsStateWithLifecycle()
+    // …text-field state held locally with remember { mutableStateOf("") }…
+
+    Button(onClick = {
+        val tags = tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        vm.addNote(title, body, catId, tags, priority)            // -&gt; Room INSERT
+        title = ""; body = ""; tagsText = ""                       // clear the form
+    }) { Text("Add note (Room INSERT)") }
+
+    LazyColumn {
+        items(notes, key = { it.id }) { note -&gt;                    // key = stable id for good diffing
+            NoteCard(note, categoryName[note.categoryId] ?: "?",
+                onToggleDone = { vm.toggleDone(note) }, onDelete = { vm.deleteNote(note) })
+        }
+    }
+}</pre>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Why <code>collectAsStateWithLifecycle()</code></span></div>
+            <div class="card-body"><p class="dense">It collects the <code>StateFlow</code> only while the screen is at least <code>STARTED</code>, and pauses when the app is backgrounded — so a database that keeps changing in the background won’t needlessly recompose an invisible UI or keep work alive. Pair it with <code>WhileSubscribed</code> in the ViewModel and the upstream query stops too.</p></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Theming closes the loop</span></div>
+            <div class="card-body"><p class="dense"><code>StorageShowcaseTheme</code> takes the <code>darkTheme</code> boolean read from the Settings store. Toggle the switch → DataStore write → <code>darkTheme</code> <code>StateFlow</code> emits → the theme recomposes the whole app — and it’s still dark after a restart. <code>dynamicColor = false</code> keeps the dark/light contrast obvious on Android 12+.</p></div>
+          </div>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">Where the “Saved to …” banner comes from</span>
+          Each tab shows <code>vm.paths.roomDb</code> / <code>.preferences</code> / <code>.profile</code> / <code>.scratchFile</code> in a
+          monospace banner. That’s <code>StorageLocations</code> surfaced through the ViewModel — the app literally
+          points at the file it’s writing.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. BUILD ============ -->
+    <section class="band anchor" id="build">
+      <div class="band-inner">
+        <p class="eyebrow">Around the code · build</p>
+        <h2>Build &amp; tooling</h2>
+        <p class="dense">Four Gradle plugins make the persistence stack work, and the version catalog pins every library. Two of the plugins are easy to forget and cause confusing runtime/build failures if missing.</p>
+
+        <table class="tbl">
+          <thead><tr><th>Plugin</th><th>Why it’s here</th></tr></thead>
+          <tbody>
+            <tr><td><code>com.android.application</code></td><td>The Android app plugin (AGP 9.2.1).</td></tr>
+            <tr><td><code>kotlin.plugin.compose</code></td><td>The Compose compiler — required for <code>@Composable</code>.</td></tr>
+            <tr><td><code>com.google.devtools.ksp</code></td><td><strong>Runs Room’s annotation processor.</strong> KSP generates the concrete <code>StorageDatabase_Impl</code> / <code>NoteDao_Impl</code> at build time. Without it the app fails (“cannot find implementation for StorageDatabase”).</td></tr>
+            <tr><td><code>kotlin.plugin.serialization</code></td><td>Lets <code>@Serializable</code> data classes (<code>UserProfile</code>) be encoded to JSON, which the typed DataStore’s serializer needs.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.gradle.kts — the persistence dependencies</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// Room: structured/relational storage (notes + categories, a relation &amp; a migration)
+implementation(libs.androidx.room.runtime)
+implementation(libs.androidx.room.ktx)          // suspend + Flow DAO return types
+ksp(libs.androidx.room.compiler)                // KSP generates the SQLite-backed impls
+// DataStore: key/value settings (Preferences) + a typed object store
+implementation(libs.androidx.datastore.preferences)
+implementation(libs.androidx.datastore)
+// JSON for the typed DataStore's Serializer&lt;UserProfile&gt;
+implementation(libs.kotlinx.serialization.json)
+// viewModel() + collectAsStateWithLifecycle()
+implementation(libs.androidx.lifecycle.viewmodel.compose)
+implementation(libs.androidx.lifecycle.runtime.compose)</pre>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Pinned versions (libs.versions.toml)</span></div>
+            <div class="card-body">
+              <table class="tbl" style="margin:0;">
+                <tbody>
+                  <tr><td>Kotlin</td><td><code>2.2.10</code></td></tr>
+                  <tr><td>AGP</td><td><code>9.2.1</code></td></tr>
+                  <tr><td>Room</td><td><code>2.7.2</code></td></tr>
+                  <tr><td>KSP</td><td><code>2.2.10-2.0.2</code></td></tr>
+                  <tr><td>DataStore</td><td><code>1.1.7</code></td></tr>
+                  <tr><td>kotlinx.serialization</td><td><code>1.7.3</code></td></tr>
+                  <tr><td>Compose BOM</td><td><code>2026.02.01</code></td></tr>
+                  <tr><td>compileSdk / minSdk</td><td><code>37</code> / <code>24</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Two gotchas worth knowing</span></div>
+            <div class="card-body">
+              <p class="dense"><strong>KSP version is compound.</strong> <code>2.2.10-2.0.2</code> — the prefix <em>must</em> equal the Kotlin version; the suffix is KSP’s own release for that Kotlin. A mismatch fails the build.</p>
+              <p class="dense"><strong>The <code>gradle.properties</code> line.</strong> AGP 9’s built-in Kotlin forbids adding sources via the <code>kotlin.sourceSets</code> DSL — but that’s exactly how KSP registers Room’s generated code. So the project sets <code>android.disallowKotlinSourceSets=false</code>; without it, <code>assembleDebug</code> fails.</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Build scaffolding worth a glance</span>
+          The wrapper pins <strong>Gradle 9.4.1</strong> and the build daemon runs on a <strong>JDK 21</strong> toolchain
+          (<code>gradle-daemon-jvm.properties</code>), even though the app compiles to <strong>Java 17</strong> bytecode.
+          R8 keep rules now live in <code>src/main/keepRules/rules.keep</code> (the AGP 9 replacement for
+          <code>proguard-rules.pro</code>), and <code>room-testing</code> is on the classpath for a future
+          <code>MigrationTestHelper</code> test that isn’t written yet — today the only test is the JVM
+          <code>ConvertersTest</code>. (The leftover template <code>res/values/colors.xml</code> palette is unused; the
+          Compose theme uses <code>ui/theme/Color.kt</code>.)
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12. WHERE DATA LIVES ============ -->
+    <section class="band anchor" id="data-at-rest">
+      <div class="band-inner">
+        <p class="eyebrow">Around the code · on disk</p>
+        <h2>Where each store actually writes</h2>
+        <p class="dense">Everything lands in the app’s private internal storage under <code>/data/data/&lt;package&gt;/</code> — no permissions needed, encrypted at rest on Android 10+. These are the exact paths the “Saved to …” banners print.</p>
+        <table class="tbl">
+          <thead><tr><th>Tab / store</th><th>Mechanism</th><th>File on disk</th></tr></thead>
+          <tbody>
+            <tr><td>Notes</td><td>Room (SQLite)</td><td><code>databases/storage.db</code></td></tr>
+            <tr><td>Settings</td><td>Preferences DataStore</td><td><code>files/datastore/settings.preferences_pb</code></td></tr>
+            <tr><td>Profile</td><td>Typed DataStore</td><td><code>files/datastore/user_profile.json</code></td></tr>
+            <tr><td>Files (scratch)</td><td>Internal file</td><td><code>files/scratch.txt</code></td></tr>
+            <tr><td>Files (cache blob)</td><td>Cache</td><td><code>cache/blob*.tmp</code></td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <span class="callout-label">See it yourself</span>
+          Open <strong>Android Studio ▸ View ▸ Tool Windows ▸ App Inspection ▸ Database Inspector</strong> and load
+          <code>storage.db</code> to watch rows appear live as you add notes. The Device Explorer shows the
+          <code>datastore/</code> and <code>files/</code> entries next to it.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 13. LIFECYCLE ============ -->
+    <section class="band anchor" id="lifecycle">
+      <div class="band-inner">
+        <p class="eyebrow">Around the code · durability</p>
+        <h2>What survives what</h2>
+        <p class="dense">The whole point of the app is that changes persist. But “persist” has degrees — here’s exactly which store survives which event. (Auto Backup applies because the manifest sets <code>allowBackup="true"</code> with default rules.)</p>
+        <table class="tbl">
+          <thead><tr><th>Store</th><th>App restart</th><th>“Clear cache”</th><th>“Clear storage / data”</th><th>Uninstall</th><th>In Auto Backup</th></tr></thead>
+          <tbody>
+            <tr><td>Room <code>storage.db</code></td><td><span class="dot yes">✓</span></td><td><span class="dot yes">✓</span></td><td><span class="dot no">✗</span></td><td><span class="dot no">✗</span></td><td><span class="dot yes">✓</span></td></tr>
+            <tr><td>Preferences DataStore</td><td><span class="dot yes">✓</span></td><td><span class="dot yes">✓</span></td><td><span class="dot no">✗</span></td><td><span class="dot no">✗</span></td><td><span class="dot yes">✓</span></td></tr>
+            <tr><td>Typed DataStore</td><td><span class="dot yes">✓</span></td><td><span class="dot yes">✓</span></td><td><span class="dot no">✗</span></td><td><span class="dot no">✗</span></td><td><span class="dot yes">✓</span></td></tr>
+            <tr><td><code>filesDir</code> scratch</td><td><span class="dot yes">✓</span></td><td><span class="dot yes">✓</span></td><td><span class="dot no">✗</span></td><td><span class="dot no">✗</span></td><td><span class="dot yes">✓</span></td></tr>
+            <tr><td><code>cacheDir</code> blob</td><td><span class="dot maybe">~</span></td><td><span class="dot no">✗</span></td><td><span class="dot no">✗</span></td><td><span class="dot no">✗</span></td><td><span class="dot no">✗</span></td></tr>
+          </tbody>
+        </table>
+        <p class="foot"><span class="dot maybe" style="min-width:20px">~</span> The cache blob survives a restart <em>until</em> the system evicts it under storage pressure — that’s the defining difference from <code>filesDir</code>.</p>
+      </div>
+    </section>
+
+    <!-- ============ 14. TEST & RUN ============ -->
+    <section class="band anchor" id="testing">
+      <div class="band-inner">
+        <p class="eyebrow">Around the code · verify</p>
+        <h2>Test &amp; run</h2>
+        <p class="dense">The converters are pure logic, so they get a fast JVM unit test (no device, no Room). It guards the round-trips that everything stored in Room depends on.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">src/test/…/ConvertersTest.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class ConvertersTest {
+    private val c = Converters()
+
+    @Test fun tags_roundTrip() {
+        val tags = listOf("home", "urgent", "with,comma")     // comma inside a tag survives JSON
+        assertEquals(tags, c.toTags(c.fromTags(tags)))
+    }
+
+    @Test fun priority_roundTripByName() {
+        Priority.entries.forEach { p -&gt; assertEquals(p, c.toPriority(c.fromPriority(p))) }
+        assertEquals(Priority.NORMAL, c.toPriority("NOPE"))   // unknown text -&gt; NORMAL, never crashes
+    }
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash">./gradlew :compileDebugKotlin     # type-check + run Room's KSP processor
+./gradlew :testDebugUnitTest      # run the converter unit tests
+./gradlew installDebug            # build &amp; install on a running device/emulator</pre>
+        </div>
+
+        <div class="callout good">
+          <span class="callout-label">The mental model to keep</span>
+          Choose the store by the <em>shape</em> of the data — relational rows (Room), loose settings (Preferences),
+          one typed object (typed DataStore), or raw bytes (files). The reactive plumbing above all four is
+          identical: a persistence <code>Flow</code> becomes a <code>StateFlow</code> becomes recomposition, and every write
+          goes to disk first so the screen can never disagree with what’s stored.
+        </div>
+
+        <p class="foot" style="margin-top:18px;">
+          Related in this repo:
+          <a href="../StorageMaster/storage-tutorial.html">Storage Master Lab</a> ·
+          <a href="android-storage-lab.html">Android Storage Lab</a> ·
+          <a href="../Playground/storage-playground.html">Room Storage Playground</a> ·
+          <a href="../RoomAndPreferences">RoomAndPreferences</a> ·
+          <a href="README.md">project README</a>
+        </p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+</body>
+</html>

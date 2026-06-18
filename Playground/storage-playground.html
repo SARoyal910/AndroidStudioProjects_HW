@@ -179,6 +179,18 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   .editorwrap{min-height:220px;}
   .pane.preview{min-height:620px;}
 }
+
+/* --- Room building blocks (detailed reference) ------------------------------ */
+.roomsec{flex:none;background:#f7f9fc;border-top:1px solid var(--line);}
+.rblock{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:14px;margin-top:6px;}
+.rcard{border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;}
+.rcard .rhead{padding:13px 16px 11px;}
+.rcard .rhead h4{margin:0 0 5px;font-size:15px;font-weight:800;}
+.rcard .rhead h4 code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--accent-deep);font-size:12.5px;font-weight:750;}
+.rcard .rhead p{margin:0;color:var(--muted);font-size:13px;line-height:1.55;}
+.rcard .rhead p code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--accent-deep);font-size:12px;}
+.rcard pre.rcode{margin:0;background:var(--code-bg);color:var(--code-ink);padding:13px 16px;overflow-x:auto;
+  font:12.5px/1.62 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;flex:1;}
 </style>
 </head>
 <body>
@@ -262,6 +274,15 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   </div>
 </section>
 
+<!-- ROOM BUILDING BLOCKS — the full picture in code + plain topics -->
+<section class="catalog roomsec">
+  <div class="catinner">
+    <h3 class="cattitle">The full Room picture: every building block</h3>
+    <p class="catintro">The playground above is the live <code>@Dao</code> calls. Here is the rest of Room — the pieces those calls depend on — each in plain words and real Kotlin. This is the same code as the runnable <b>StorageShowcase</b> app.</p>
+    <div class="rblock" id="roomBlocks"></div>
+  </div>
+</section>
+
 <script>
 (function(){
   'use strict';
@@ -269,7 +290,7 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   // === 0 · helpers + Kotlin highlighter (shared look with the other playgrounds) ===
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function sq(s){ return String(s).replace(/'/g,"''"); }   // escape a SQL single-quote literal
-  var KW = ['val','var','fun','return','if','else','when','true','false','null','by','it','this'];
+  var KW = ['package','import','class','interface','object','data','enum','annotation','abstract','override','val','var','fun','suspend','companion','return','if','else','when','for','while','true','false','null','by','it','this','in','is','as','private','public','internal'];
   var FN = ['insert','update','delete','clear'];
   function hlKotlin(code){
     var re = new RegExp(
@@ -520,6 +541,111 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
     if(e.key === 'Tab'){ e.preventDefault(); var s=ta.selectionStart, en=ta.selectionEnd;
       ta.value = ta.value.slice(0,s) + '  ' + ta.value.slice(en); ta.selectionStart=ta.selectionEnd=s+2; render(); }
   });
+
+  // === 6 · Room building blocks reference (static, highlighted with the same colours) ===
+  var ROOM_BLOCKS = [
+    { title:"1 · The entity (your table)", tag:"@Entity",
+      topic:"An <code>@Entity</code> is a table. Each property is a column, and <code>@PrimaryKey</code> is the unique id for a row. This is the shape of one record.",
+      code:`@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,  // unique id, auto-numbered
+    val title: String,                                  // TEXT column
+    val body: String,                                   // TEXT column
+    val done: Boolean = false,                          // stored as INTEGER 0/1
+    val createdAt: Long = 0L,                           // epoch millis (INTEGER)
+)` },
+    { title:"2 · The DAO (your queries)", tag:"@Dao",
+      topic:"A <code>@Dao</code> is an interface of database methods; Room writes the real code and checks every query at build time. A <code>Flow</code> return re-emits on every change; a <code>suspend</code> write runs off the main thread.",
+      code:`@Dao
+interface NoteDao {
+    // reactive read: re-emits the whole list whenever the table changes
+    @Query("SELECT * FROM notes ORDER BY id DESC")
+    fun observeNotes(): Flow<List<Note>>
+
+    @Query("SELECT * FROM notes WHERE done = 0 ORDER BY title")
+    fun observeUndone(): Flow<List<Note>>
+
+    // one-shot writes (suspend = run on Room's background thread)
+    @Insert  suspend fun insert(note: Note): Long
+    @Update  suspend fun update(note: Note)
+    @Delete  suspend fun delete(note: Note)
+}` },
+    { title:"3 · The database", tag:"@Database",
+      topic:"The <code>@Database</code> ties your entities and DAOs to one file on disk, names it, and sets a version. Build it once and reuse it (a singleton) so the app never opens the file twice.",
+      code:`@Database(entities = [Note::class, Category::class], version = 2)
+@TypeConverters(Converters::class)
+abstract class StorageDatabase : RoomDatabase() {
+    abstract fun noteDao(): NoteDao
+
+    companion object {
+        @Volatile private var INSTANCE: StorageDatabase? = null
+        fun getInstance(context: Context): StorageDatabase =
+            INSTANCE ?: synchronized(this) {
+                Room.databaseBuilder(context, StorageDatabase::class.java, "storage.db")
+                    .addMigrations(MIGRATION_1_2)
+                    .build().also { INSTANCE = it }
+            }
+    }
+}` },
+    { title:"4 · Relationships (linking tables)", tag:"@ForeignKey + @Relation",
+      topic:"Real apps link tables: one Category has many Notes. A <code>@ForeignKey</code> makes each note point at a category (and <code>CASCADE</code> deletes its notes if the category is removed). <code>@Relation</code> reads a category plus all its notes in one shot.",
+      code:`@Entity(
+    tableName = "notes",
+    foreignKeys = [ForeignKey(
+        entity = Category::class,
+        parentColumns = ["id"], childColumns = ["categoryId"],
+        onDelete = ForeignKey.CASCADE,     // delete a category -> its notes go too
+    )],
+    indices = [Index("categoryId")],       // index the FK (Room warns otherwise)
+)
+data class Note(
+    // ...title, body, done, createdAt...
+    val categoryId: Long,                  // foreign key -> categories.id
+)
+
+// a read object: one category + the notes that point at it
+data class CategoryWithNotes(
+    @Embedded val category: Category,
+    @Relation(parentColumn = "id", entityColumn = "categoryId")
+    val notes: List<Note>,
+)` },
+    { title:"5 · Type converters (richer types)", tag:"@TypeConverter",
+      topic:"SQLite only stores text, numbers, and blobs. To store a <code>List</code> or an <code>enum</code>, give Room a <code>@TypeConverter</code>: a pair of functions that turn your type into text and back. Register them on the <code>@Database</code>.",
+      code:`class Converters {
+    // List<String>  <->  JSON text
+    @TypeConverter fun fromTags(tags: List<String>): String =
+        Json.encodeToString(tags)
+    @TypeConverter fun toTags(json: String): List<String> =
+        if (json.isBlank()) emptyList() else Json.decodeFromString(json)
+
+    // enum  <->  its NAME (store the name, never the number)
+    @TypeConverter fun fromPriority(p: Priority): String = p.name
+    @TypeConverter fun toPriority(v: String): Priority = Priority.valueOf(v)
+}` },
+    { title:"6 · Migrations (changing the schema)", tag:"Migration",
+      topic:"Once the app ships you cannot just change an <code>@Entity</code> — phones already hold the old table. Bump the version and give Room a <code>Migration</code> with SQL to upgrade the old data. Skip it and the app crashes on launch for upgraders.",
+      code:`// version 1 had no "tags" column; version 2 adds it.
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
+    }
+}
+
+// wire it into the builder (see block 3):
+Room.databaseBuilder(context, StorageDatabase::class.java, "storage.db")
+    .addMigrations(MIGRATION_1_2)
+    .build()` },
+  ];
+  (function renderRoomBlocks(){
+    var host = $('roomBlocks'); if(!host) return;
+    ROOM_BLOCKS.forEach(function(b){
+      var card = document.createElement('div'); card.className = 'rcard';
+      card.innerHTML =
+        '<div class="rhead"><h4>' + esc(b.title) + ' &nbsp;<code>' + esc(b.tag) + '</code></h4><p>' + b.topic + '</p></div>' +
+        '<pre class="rcode"><code>' + hlKotlin(esc(b.code)) + '</code></pre>';
+      host.appendChild(card);
+    });
+  })();
 
   // start
   loadScenario('Three notes');

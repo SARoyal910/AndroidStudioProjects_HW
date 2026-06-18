@@ -48,6 +48,7 @@ import androidx.compose.foundation.layout.fillMaxWidth       // modifier: take a
 import androidx.compose.foundation.layout.height             // modifier: force a specific height
 import androidx.compose.foundation.layout.padding            // modifier: add empty space AROUND content
 import androidx.compose.foundation.layout.size               // modifier: force a specific width AND height
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape         // a perfect-circle shape (for the avatar + dot)
 
 // --- Material 3 ---------------------------------------------------------------
@@ -168,13 +169,16 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
                 // does NOT pin it yet: with no .align it sits at the Box's default
                 // TOP-START corner. Your job is to make it GREEN and add
                 // .align(Alignment.BottomEnd) so it lands on the bottom-right.
+
+                // TODO1
                 Box(
                     modifier = Modifier
+                        .align(Alignment.BottomEnd)
                         .size(16.dp)
+                        .border(2.dp, Color.White, CircleShape)
                         .clip(CircleShape)
-                        .background(Color.LightGray),
+                        .background(Online)
                 )
-                // ─────────────────────────────────────────────────
             }
 
             // ---- NAME + HANDLE · ROLE -------------------------------------------
@@ -227,14 +231,32 @@ private fun StatsRow(profile: Profile) {
         //   • TIP: write one small StatCell(number, label) composable and call it
         //     three times so you don't repeat yourself.
         // Until you build it, this single placeholder fills the row:
+
+        //TODO 2
+        StatCell(profile.posts.toString(), "Posts", Modifier.weight(1f))
+        StatCell(profile.followers.toString(), "Followers", Modifier.weight(1f))
+        StatCell(profile.following.toString(), "Following", Modifier.weight(1f))
+        // ───────────────────────────────────────────────
+    }
+}
+
+@Composable
+private fun StatCell(number: String, label: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
-            text = "TODO 2 — stats row (Posts / Followers / Following)",
+            text = number,
+            fontWeight = FontWeight.Bold,
+            fontSize = 22.sp
+        )
+        Text(
+            text = label,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
         )
-        // ───────────────────────────────────────────────
     }
 }
 
@@ -244,7 +266,9 @@ private fun StatsRow(profile: Profile) {
 @Composable
 private fun ActionButtons() {
     // A full-width Row to hold the two buttons next to each other.
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
 
         // ─────────── TODO 3 (you): Action buttons ───────────
         // Put TWO equal-width buttons in this Row:
@@ -257,13 +281,21 @@ private fun ActionButtons() {
         //     evenly (each takes half the row).
         //   • onClick can stay empty for now: onClick = { }
         // Until you build it, this placeholder marks the spot:
-        Text(
-            text = "TODO 3 — Follow / Message buttons",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
+
+        //TODO 3
+        Button(
+            onClick = {},
+            modifier = Modifier.weight(1F)
+        ) {
+            Text("Follow")
+        }
+        OutlinedButton(
+            onClick = {},
+            modifier = Modifier.weight(1F)
+        ) {
+            Text("Message")
+        }
+
         // ─────────────────────────────────────────────────────
 
         // (Once you've written the real buttons above, you can DELETE the

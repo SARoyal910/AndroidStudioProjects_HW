@@ -147,10 +147,42 @@ fun SettingRow(
     //
     // Placeholder (delete when you build the real row): shows the label so the
     // screen is readable, but with no icon, no weight, and no control yet.
-    Text(
-        "TODO 2 — row: ${item.label}",
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-    )
+
+
+    // TODO 2
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Display the emoji icon.
+        Text(
+            text = item.icon,
+            fontSize = 22.sp
+        )
+
+        Spacer(
+            modifier = Modifier.width(16.dp)
+        )
+
+        Text(
+            text = item.label,
+            modifier = Modifier.weight(1f)
+        )
+
+        if (item.kind == Kind.TOGGLE) {
+            Switch(
+                checked = isOn,
+                onCheckedChange = onToggle
+            )
+        } else {
+            Text(
+                text = "›",
+                fontSize = 24.sp
+            )
+        }
+    }
 }
 
 // ===========================================================================
@@ -211,12 +243,21 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             //
             // Placeholders below (replace with your real list). They keep the screen
             // compiling and visible until you implement TODO 1/3/4:
-            Text(
-                "TODO 1 — render all ${settings.size} settings here",
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-            )
-            // One sample row so you can see SettingRow render before TODO 1 is done.
-            SettingRow(item = settings.first(), isOn = settings.first().initiallyOn, onToggle = {})
+
+            //TODO 1
+            settings.forEach { item ->
+
+                // TODO 3 - Each toggle row remembers its own on/off state.
+                var on by remember {
+                    mutableStateOf(item.initiallyOn)
+                }
+
+                SettingRow(
+                    item = item,
+                    isOn = on,
+                    onToggle = { on = it }
+                )
+            }
 
             Spacer(modifier = Modifier.width(0.dp))           // harmless spacer; remove freely
         }

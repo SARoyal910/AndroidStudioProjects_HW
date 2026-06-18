@@ -191,6 +191,34 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
 .rcard .rhead p code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--accent-deep);font-size:12px;}
 .rcard pre.rcode{margin:0;background:var(--code-bg);color:var(--code-ink);padding:13px 16px;overflow-x:auto;
   font:12.5px/1.62 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;flex:1;}
+
+/* --- Interactive schema / database builder (Step 1) ------------------------- */
+.stephdr{max-width:1320px;margin:0 auto;padding:16px 22px 0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-deep);}
+.builder{flex:none;background:#fff;}
+.builder .binner{max-width:1320px;margin:0 auto;padding:4px 22px 6px;}
+.bgrid{display:grid;grid-template-columns:minmax(320px,390px) 1fr;gap:18px;align-items:start;margin-top:10px;}
+@media(max-width:900px){.bgrid{grid-template-columns:1fr;}}
+.bcontrols{display:flex;flex-direction:column;gap:12px;}
+.bcard{border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:#fbfdff;}
+.bcard .bch{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#9aa8b8;margin-bottom:8px;}
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap;}
+.brow:last-child{margin-bottom:0;}
+.brow input[type=text],.brow input[type=number],.brow select{font:inherit;font-size:12.5px;padding:4px 7px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);}
+.brow input.dbname{width:124px;} .brow input.ver{width:50px;} .brow input.cname{width:100px;}
+.brow select{cursor:pointer;}
+.brow label{font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;cursor:pointer;white-space:nowrap;}
+.brow .mini{font-size:11px;color:#9aa8b8;}
+.brow .rm{margin-left:auto;border:1px solid var(--line);background:#fff;color:#b4474a;border-radius:6px;font-size:14px;line-height:1;padding:1px 8px;cursor:pointer;}
+.brow .rm:hover{border-color:#b4474a;}
+.brow.pkrow{background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:8px;padding:6px 8px;}
+.baddcol{margin-top:2px;font-size:12px;font-weight:700;color:var(--accent-deep);background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:8px;padding:6px 12px;cursor:pointer;}
+.bcode{display:flex;flex-direction:column;gap:12px;min-width:0;}
+.bcode .lbl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#7c8aa0;margin:0 0 5px;}
+.bcode pre{margin:0;background:var(--code-bg);color:var(--code-ink);padding:12px 14px;border-radius:10px;overflow-x:auto;
+  font:12.5px/1.6 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre;box-shadow:var(--shadow);}
+.bcode pre .kw{color:#c792ea;} .bcode pre .id{color:#ffcb6b;}
+.bflow{font-size:12px;color:var(--muted);line-height:1.7;margin:4px 0 0;}
+.bflow b{color:var(--ink);} .bflow code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--accent-deep);font-size:11px;}
 </style>
 </head>
 <body>
@@ -222,6 +250,25 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   </div>
 </div>
 
+<!-- STEP 1: interactive — create the table & database -->
+<div class="stephdr">Step 1 · Create the database &amp; table — interactive</div>
+<section class="builder">
+  <div class="binner">
+    <p class="catintro" style="margin:6px 0 0;">Before you can <code>insert</code> a row you need a <b>table</b> and a <b>database</b>. Add or edit columns and the database settings on the left, and watch Room's three creation artifacts regenerate live: the <code>@Entity</code> (the table described as a class), the <code>CREATE TABLE</code> SQL Room runs, and the <code>@Database</code> + <code>databaseBuilder</code> that creates the file.</p>
+    <div class="bgrid">
+      <div class="bcontrols" id="bcontrols"></div>
+      <div class="bcode">
+        <div><p class="lbl">① @Entity — the table, described as a Kotlin class</p><pre id="genEntity"><code></code></pre></div>
+        <div><p class="lbl">② CREATE TABLE — the SQL Room generates &amp; runs</p><pre class="sql" id="genCreate"><code></code></pre></div>
+        <div><p class="lbl">③ @Database + databaseBuilder — create the file</p><pre id="genDb"><code></code></pre></div>
+        <p class="bflow" id="bflow"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 2: the existing live operations playground -->
+<div class="stephdr">Step 2 · Operate on the live table</div>
 <!-- MAIN: editable DAO code | live preview (SQL + table + phone) -->
 <div class="main">
   <section class="pane editor">
@@ -646,6 +693,105 @@ Room.databaseBuilder(context, StorageDatabase::class.java, "storage.db")
       host.appendChild(card);
     });
   })();
+
+  // === 7 · INTERACTIVE schema/database builder (Step 1) ===
+  var TYPES = ['String','Long','Int','Boolean','Double','ByteArray'];
+  var AFFINITY = { String:'TEXT', Long:'INTEGER', Int:'INTEGER', Boolean:'INTEGER', Double:'REAL', ByteArray:'BLOB' };
+  var schema = {
+    dbName:'notes.db', version:1, exportSchema:false, className:'Note', tableName:'notes',
+    cols:[
+      { name:'id', type:'Long', pk:true, autoGen:true },
+      { name:'title', type:'String', nullable:false, index:false },
+      { name:'body', type:'String', nullable:true, index:false },
+      { name:'done', type:'Boolean', nullable:false, index:false },
+    ],
+  };
+  function bel(t,c){ var e=document.createElement(t); if(c) e.className=c; return e; }
+  function bSpan(t){ var s=bel('span','mini'); s.textContent=t; return s; }
+  function bText(val,cls,on){ var i=bel('input',cls); i.type='text'; i.value=val; i.addEventListener('input',on); return i; }
+  function bNum(val,cls,on){ var i=bel('input',cls); i.type='number'; i.min='1'; i.value=val; i.addEventListener('input',on); return i; }
+  function bChk(checked,label,on){ var l=bel('label'); var i=bel('input'); i.type='checkbox'; i.checked=checked; i.addEventListener('change',on); l.appendChild(i); l.appendChild(document.createTextNode(' '+label)); return l; }
+  function bSel(opts,val,on){ var s=bel('select'); opts.forEach(function(o){ var op=bel('option'); op.value=o; op.textContent=o; if(o===val) op.selected=true; s.appendChild(op); }); s.addEventListener('change',on); return s; }
+
+  function genEntity(){
+    var idx = schema.cols.filter(function(c){ return c.index && !c.pk; }).map(function(c){ return 'Index(value = ["'+c.name+'"])'; });
+    var ann = ['tableName = "'+schema.tableName+'"']; if(idx.length) ann.push('indices = ['+idx.join(', ')+']');
+    var out = '@Entity('+ann.join(', ')+')\ndata class '+schema.className+'(\n';
+    schema.cols.forEach(function(c){
+      var pre = c.pk ? '@PrimaryKey('+(c.autoGen?'autoGenerate = true':'')+') ' : '';
+      var def = (c.pk && c.autoGen) ? ' = 0' : (c.type==='Boolean' && !c.pk ? ' = false' : '');
+      out += '    '+pre+'val '+c.name+': '+c.type+((c.nullable && !c.pk)?'?':'')+def+',\n';
+    });
+    return out + ')';
+  }
+  function genCreate(){
+    var lines = schema.cols.map(function(c){
+      var s = '`'+c.name+'` '+(AFFINITY[c.type]||'TEXT');
+      if(c.pk){ s += ' PRIMARY KEY'+(c.autoGen?' AUTOINCREMENT':'')+' NOT NULL'; }
+      else if(!c.nullable){ s += ' NOT NULL'; }
+      return '  '+s;
+    });
+    var out = 'CREATE TABLE IF NOT EXISTS `'+schema.tableName+'` (\n'+lines.join(',\n')+'\n);';
+    schema.cols.filter(function(c){ return c.index && !c.pk; }).forEach(function(c){
+      out += '\nCREATE INDEX IF NOT EXISTS `index_'+schema.tableName+'_'+c.name+'`\n  ON `'+schema.tableName+'` (`'+c.name+'`);';
+    });
+    return out + '\n-- affinity: String→TEXT · Int/Long/Boolean→INTEGER · Double→REAL · ByteArray→BLOB';
+  }
+  function genDb(){
+    var dao = schema.className+'Dao';
+    var accessor = schema.className.charAt(0).toLowerCase()+schema.className.slice(1)+'Dao';
+    return '@Database(entities = ['+schema.className+'::class], version = '+schema.version+', exportSchema = '+schema.exportSchema+')\n'
+      + 'abstract class AppDatabase : RoomDatabase() {\n'
+      + '    abstract fun '+accessor+'(): '+dao+'\n'
+      + '}\n\n'
+      + 'val db = Room.databaseBuilder(context, AppDatabase::class.java, "'+schema.dbName+'")\n'
+      + '    .build()   // a singleton in real code';
+  }
+  function hlDdl(code){
+    return esc(code)
+      .replace(/(--[^\n]*)/g,'<span class="c">$1</span>')
+      .replace(/`([^`]*)`/g,'`<span class="id">$1</span>`')
+      .replace(/\b(CREATE|TABLE|INDEX|IF|NOT|EXISTS|PRIMARY|KEY|AUTOINCREMENT|NULL|INTEGER|TEXT|REAL|BLOB|DEFAULT|ON|UNIQUE)\b/g,'<span class="kw">$1</span>');
+  }
+  function regen(){
+    $('genEntity').firstChild.innerHTML = hlKotlin(esc(genEntity()));
+    $('genCreate').firstChild.innerHTML = hlDdl(genCreate());
+    $('genDb').firstChild.innerHTML = hlKotlin(esc(genDb()));
+    $('bflow').innerHTML = '<b>How Room builds it:</b> ① describe the table as an <code>@Entity</code> → ② list it in <code>@Database(entities = […])</code> → ③ <code>Room.databaseBuilder(…, "'+esc(schema.dbName)+'").build()</code> → ④ the first time the file is opened, Room runs the <code>CREATE TABLE</code> into <code>'+esc(schema.dbName)+'</code> (its own private file). Editing a column re-shapes all three.';
+  }
+  function renderControls(){
+    var host = $('bcontrols'); host.innerHTML='';
+    var db = bel('div','bcard'); var h=bel('div','bch'); h.textContent='Database'; db.appendChild(h);
+    var r1 = bel('div','brow'); r1.appendChild(bSpan('file')); r1.appendChild(bText(schema.dbName,'dbname',function(){ schema.dbName=this.value||'app.db'; regen(); }));
+    r1.appendChild(bSpan('version')); r1.appendChild(bNum(schema.version,'ver',function(){ schema.version=parseInt(this.value,10)||1; regen(); })); db.appendChild(r1);
+    var r2 = bel('div','brow'); r2.appendChild(bChk(schema.exportSchema,'exportSchema',function(){ schema.exportSchema=this.checked; regen(); })); db.appendChild(r2);
+    var r3 = bel('div','brow'); r3.appendChild(bSpan('class')); r3.appendChild(bText(schema.className,'cname',function(){ schema.className=this.value||'Note'; regen(); }));
+    r3.appendChild(bSpan('table')); r3.appendChild(bText(schema.tableName,'cname',function(){ schema.tableName=this.value||'notes'; regen(); })); db.appendChild(r3);
+    host.appendChild(db);
+
+    var cc = bel('div','bcard'); var h2=bel('div','bch'); h2.textContent='Columns — each becomes a table column'; cc.appendChild(h2);
+    schema.cols.forEach(function(c,i){
+      var row = bel('div','brow'+(c.pk?' pkrow':''));
+      if(c.pk) row.appendChild(bSpan('🔑 PK'));
+      row.appendChild(bText(c.name,'cname',function(){ c.name=this.value; regen(); }));
+      row.appendChild(bSel(c.pk?['Long','Int']:TYPES, c.type, function(){ c.type=this.value; regen(); }));
+      if(c.pk){
+        row.appendChild(bChk(c.autoGen,'autoGenerate',function(){ c.autoGen=this.checked; regen(); }));
+      } else {
+        row.appendChild(bChk(c.nullable,'nullable',function(){ c.nullable=this.checked; regen(); }));
+        row.appendChild(bChk(c.index,'@Index',function(){ c.index=this.checked; regen(); }));
+        var rm = bel('button','rm'); rm.type='button'; rm.textContent='×'; rm.title='remove column';
+        rm.addEventListener('click',function(){ schema.cols.splice(i,1); renderControls(); regen(); });
+        row.appendChild(rm);
+      }
+      cc.appendChild(row);
+    });
+    var add = bel('button','baddcol'); add.type='button'; add.textContent='+ Add column';
+    add.addEventListener('click',function(){ schema.cols.push({ name:'column'+schema.cols.length, type:'String', nullable:false, index:false }); renderControls(); regen(); });
+    cc.appendChild(add);
+    host.appendChild(cc);
+  }
+  renderControls(); regen();
 
   // start
   loadScenario('Three notes');

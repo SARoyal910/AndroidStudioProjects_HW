@@ -41,8 +41,8 @@ const GROUPS = [
   },
   {
     id: 'notes', label: '5 · Android concepts', short: 'Concepts track', track: 'notes',
-    blurb: 'A second track of standalone concept demos: UI fundamentals, the full component catalog, modifiers & layout, lists, networking, real-time WebSockets, location, MVVM, storage, release.',
-    projects: ['ComposeModernUI', 'ComposeCatalog', 'ComposeModifiers', 'ComposeLists', 'NetworkParsing', 'WebSocketLive', 'LocationServices', 'MvvmState', 'RoomAndPreferences', 'AppReleaseBasics'],
+    blurb: 'A second track of standalone concept demos: UI fundamentals, the full component catalog, modifiers & layout, lists, networking, real-time WebSockets, location, MVVM, storage, release — plus a build-it-yourself memory-match game.',
+    projects: ['ComposeModernUI', 'ComposeCatalog', 'ComposeModifiers', 'ComposeLists', 'NetworkParsing', 'WebSocketLive', 'LocationServices', 'MvvmState', 'RoomAndPreferences', 'AppReleaseBasics', 'MatchMania'],
   },
   {
     id: 'capstone', label: '6 · Capstone', short: 'Capstone', track: 'nav',
@@ -369,7 +369,7 @@ function overviewPanel() {
       </div>
       <div class="trackcol notes">
         <div class="trackhead">🗒️ Android-concepts track <span>standalone concept demos</span></div>
-        ${stepCards(['ComposeModernUI','ComposeCatalog','ComposeModifiers','ComposeLists','NetworkParsing','WebSocketLive','LocationServices','MvvmState','RoomAndPreferences','AppReleaseBasics'])}
+        ${stepCards(['ComposeModernUI','ComposeCatalog','ComposeModifiers','ComposeLists','NetworkParsing','WebSocketLive','LocationServices','MvvmState','RoomAndPreferences','AppReleaseBasics','MatchMania'])}
       </div>
     </div>
 

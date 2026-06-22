@@ -1,0 +1,112 @@
+{
+  "name": "MatchMania",
+  "tagline": "A memory / pairs-matching game you finish yourself: a grid of face-down tiles, pure game rules, and JVM unit tests — the same three-layer shape as every Compose app.",
+  "whatItDoes": "MatchMania is a build-it-yourself starter (the assignment for Homework 7), not a finished demo. It already compiles and launches: you see a top bar, a Pairs / Moves stats line, a placeholder where the board goes, and New Game / Reset / Check buttons. The data model and the screen frame are provided; you implement the game. The finished game lays 16 tiles (8 symbols, each used twice) face-down in a 4x4 grid; tapping flips a tile up, a second tap reveals another, a matching pair locks, a mismatch shows then clears, and matching every pair wins. Your work is three pure functions in MatchLogic.kt (newBoard, flip, reset), the real tappable tile grid in MainActivity.kt, and the JUnit tests in MatchLogicTest.kt.",
+  "mentalModel": "A game screen is just state + pure rules + a UI that draws the state and forwards taps. Model the board as an immutable value, change it only by returning a NEW board, and the Compose UI stays a thin, testable render layer.",
+  "domain": "none",
+  "estTime": "60-90 min",
+  "screens": [
+    {
+      "name": "MatchManiaScreen",
+      "role": "The single stateful screen: holds the board in remembered state, draws the top bar, stats line, board area, and the New Game / Reset / Check buttons, and turns every action into a new board."
+    },
+    {
+      "name": "BoardPlaceholder",
+      "role": "A temporary stand-in shown by the starter so the app runs before you build anything — you replace it (task C2) with the real 4x4 grid of tappable tiles."
+    }
+  ],
+  "concepts": [
+    {
+      "term": "Pure logic, separate from the UI",
+      "plain": "MatchLogic.kt has no Android or Compose imports, so the rules can be exercised by plain JVM unit tests in milliseconds. The Compose layer just renders the board and forwards taps."
+    },
+    {
+      "term": "Immutable state updates",
+      "plain": "Functions never edit a board in place; they build and return a NEW Board (via list.map / copy()). Reassigning that new value into state is exactly what makes Compose redraw, and what makes the rules easy to test."
+    },
+    {
+      "term": "State hoisting with remember + mutableStateOf",
+      "plain": "The screen owns the board as 'var board by remember { mutableStateOf(newBoard(...)) }'. State lives at the top and flows down; a tap flows up and becomes a new board stored back in that same state."
+    },
+    {
+      "term": "A three-state tile (a small state machine)",
+      "plain": "Each tile is FaceDown, FaceUp, or Matched. The flip rules decide the next board from how many tiles are currently face-up (0, 1, or 2) — that branching is the heart of the game."
+    },
+    {
+      "term": "Seeded Random for testability",
+      "plain": "newBoard takes a Random parameter (defaulting to the system RNG). Tests pass Random(seed) so the shuffle is repeatable and assertions are stable — dependency injection in its simplest form."
+    },
+    {
+      "term": "A 4-column grid",
+      "plain": "The 16 tiles render as a fixed 4-column grid of square, tappable cells whose look depends on the tile's state — the layout you build in task C2."
+    },
+    {
+      "term": "JVM unit testing with JUnit",
+      "plain": "Because the rules are pure, MatchLogicTest.kt verifies generation, flipping, matching, mismatch-then-clear, win, and reset with assertEquals / assertTrue — no emulator needed."
+    }
+  ],
+  "files": [
+    {
+      "path": "MatchMania/app/src/main/java/com/example/matchmania/MatchLogic.kt",
+      "role": "The pure game rules: the constants, the symbol pool, the TileState / Tile / Board model with its helpers, and the three functions you implement — newBoard, flip, reset."
+    },
+    {
+      "path": "MatchMania/app/src/main/java/com/example/matchmania/MainActivity.kt",
+      "role": "The Compose UI: the Activity, the Scaffold + top bar, the hoisted board state, the stats line and buttons (provided), and the board placeholder you replace with the real grid."
+    },
+    {
+      "path": "MatchMania/app/src/test/java/com/example/matchmania/MatchLogicTest.kt",
+      "role": "The JVM unit tests: two passing examples plus the checklist of behaviors you write tests for (composition, determinism, flip, match, mismatch, immutability, win, reset)."
+    },
+    {
+      "path": "MatchMania/app/build.gradle.kts",
+      "role": "The module build file — plain Compose + Material 3 (no extra dependencies), with the JUnit test setup the unit tests run on."
+    }
+  ],
+  "highlights": [
+    {
+      "title": "The data model: a tile's state and the whole board (provided)",
+      "file": "MatchMania/app/src/main/java/com/example/matchmania/MatchLogic.kt",
+      "start": 33,
+      "end": 63,
+      "explain": "This is given to you. A tile has a face plus one of three states (FaceDown / FaceUp / Matched); a Board is just the list of 16 tiles and a moves counter. The init block fails loudly if the size is ever wrong. The three helpers — faceUpIndices() (what your flip logic branches on), isSolved() (the win test), and pairsFound() (for the stats line) — are used by both the rules and the UI, so they live on the board itself."
+    },
+    {
+      "title": "flip(): the heart of the game — you implement this",
+      "file": "MatchMania/app/src/main/java/com/example/matchmania/MatchLogic.kt",
+      "start": 82,
+      "end": 91,
+      "explain": "The starter ships flip() as a no-op stub (return this) so tapping never crashes. Your job is to apply the tap rules and return a NEW board: the outcome depends on how many tiles are currently face-up — 0 reveals one, 1 reveals a second and compares (match locks both, mismatch leaves both up and bumps moves), and a leftover mismatch is cleared by the next tap. Crucially you change only the tiles involved and never mutate the board you were given."
+    },
+    {
+      "title": "The screen owns the board as hoisted state (provided)",
+      "file": "MatchMania/app/src/main/java/com/example/matchmania/MainActivity.kt",
+      "start": 73,
+      "end": 82,
+      "explain": "'var board by remember { mutableStateOf(newBoard(DEFAULT_SYMBOLS)) }' is the single source of truth for the screen. remember caches it across recompositions; reassigning board to the new value your MatchLogic functions return is what triggers Compose to redraw. Every button and (once you build it) every tile tap ends in 'board = ...'."
+    },
+    {
+      "title": "Pure rules mean fast JVM unit tests",
+      "file": "MatchMania/app/src/test/java/com/example/matchmania/MatchLogicTest.kt",
+      "start": 23,
+      "end": 36,
+      "explain": "These two example tests pass out of the box because they only check structure the starter already satisfies: a fresh board has 16 tiles, starts with moves at 0, is not solved, and every tile is FaceDown. No Activity, no emulator — just call newBoard() and assert. You add the rest (flipping, matching, mismatch-then-clear, win, reset) the same way as you implement the logic."
+    }
+  ],
+  "newVsPrev": "The other Android-concepts projects each isolate one idea you read; MatchMania asks you to combine several and build the result yourself. It reuses the immutable-state-update and state-hoisting patterns (remember + mutableStateOf), the separation of pure logic from UI, and JVM unit testing — assembled into a small, complete game whose rules you write and test. There is no solution file: the model and screen frame are provided, the game is yours.",
+  "tryThis": [
+    "Implement newBoard so it shuffles: take the first PAIR_COUNT symbols, double them, shuffle with the passed-in random, and map each to a FaceDown tile. Re-run and tap New Game a few times to see different layouts.",
+    "Implement flip() following the tap rules, then implement reset(). Tapping should now reveal tiles, lock matches, and clear mismatches; Reset should turn the same layout all face-down.",
+    "Replace BoardPlaceholder (task C2) with a 4-column LazyVerticalGrid of square, tappable cells whose background changes with tile.state (hidden / showing its face / matched).",
+    "Add the win banner (task C3): when board.isSolved() is true, show a celebratory message that includes board.moves.",
+    "Swap DEFAULT_SYMBOLS for your own theme (fruit, flags, planets) — keep at least PAIR_COUNT distinct symbols.",
+    "Write the remaining unit tests in MatchLogicTest.kt (composition, determinism, flip/match/mismatch, immutability, win, reset) and watch them go green as your logic lands."
+  ],
+  "gotchas": [
+    "This is a STARTER, not a finished app: it compiles and launches, but the game does not play until you implement newBoard, flip, and reset — those ship as safe stubs (newBoard returns the pairs unshuffled; flip and reset return the board unchanged).",
+    "Glyphs are plain emoji in a Text (e.g. the New Game button), not Icons.Filled.* — the material-icons artifact is not reliably available in this course setup, and an emoji keeps the build green.",
+    "Every rule function must return a NEW Board and leave the original untouched; mutating the list in place will not trigger recomposition and will break the immutability unit test.",
+    "The data model and the three Board helpers (faceUpIndices / isSolved / pairsFound) are provided — read them rather than rewriting them; your work is the three free functions plus the grid and the tests."
+  ],
+  "runTest": "Open the MatchMania folder in Android Studio and Run, or from the project root: ./gradlew installDebug (build + install) or ./gradlew assembleDebug (just compile). On first launch — before you change anything — you should see the top bar, a 'Pairs: 0 / 8 . Moves: 0' line, a 'TODO (C2): build the board' placeholder, and the three buttons. Run the unit tests with ./gradlew testDebugUnitTest; the two provided example tests pass immediately, and the rest go green as you implement the logic."
+}

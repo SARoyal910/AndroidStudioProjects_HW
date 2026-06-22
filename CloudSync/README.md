@@ -12,7 +12,7 @@ push automatically when the network returns.
 >
 > 🕹️ **Interactive explainer:** [CloudSync explorer](cloudsync-explorer.html) — a live
 > offline-first simulator (toggle the network, add/edit/delete, watch rows queue as **Pending**
-> and drain to **Synced**), a clickable architecture map, a sync-engine stepper, the Real/Fake
+> and drain to **Synced**), a clickable architecture map, a last-write-wins conflict demo, the Real/Fake
 > switch, a glossary, and a quiz.
 
 ## Learning goal

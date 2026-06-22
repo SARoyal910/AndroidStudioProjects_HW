@@ -205,7 +205,7 @@
         <tr><td>As a traveler, I want to add a new place quickly.</td><td>Add form</td></tr>
         <tr><td>As a traveler, I want to see how many I've visited.</td><td>Stats screen (progress bar)</td></tr>
         <tr><td>As a learner, I want to quiz myself on the places.</td><td>Flashcards &amp; Guess games</td></tr>
-        <tr><td>As a traveler, I want my list to still be there next time I open the app.</td><td>Local storage (Save/Load)</td></tr>
+        <tr><td>As a traveler, I want my list to still be there next time I open the app.</td><td>Local storage (auto-save + reload on launch)</td></tr>
         <tr><td>As a traveler, I want my list on another device.</td><td>Cloud sync (simulated)</td></tr>
       </tbody>
     </table>
@@ -224,7 +224,8 @@
         <tr><td>Bottom-tab navigation</td><td><span class="pill must">Must</span></td><td>4 tabs, each its own back stack.</td></tr>
         <tr><td>Flashcards game</td><td><span class="pill should">Should</span></td><td>Reuses the list; teaches animation.</td></tr>
         <tr><td>Guess (tap-to-find) game</td><td><span class="pill should">Should</span></td><td>Teaches coordinate hit-testing.</td></tr>
-        <tr><td>Local storage (save on device)</td><td><span class="pill should">Should</span></td><td>Preview of the persistence topic.</td></tr>
+        <tr><td>Local storage (save on device)</td><td><span class="pill must">Must</span></td><td>Auto-saves the list on every edit; reloads on launch.</td></tr>
+        <tr><td>Persist the dark-theme setting</td><td><span class="pill should">Should</span></td><td>The "preferences" counterpart, via <code>SettingsStore</code>.</td></tr>
         <tr><td>Cloud sync</td><td><span class="pill could">Could</span></td><td>Simulated; shows async + loading/error.</td></tr>
         <tr><td>Dark theme toggle</td><td><span class="pill could">Could</span></td><td>State above the theme.</td></tr>
         <tr><td>Accounts, maps, photos, sharing</td><td><span class="pill wont">Won't</span></td><td>Out of scope for v1.</td></tr>
@@ -358,10 +359,10 @@
 │ [ 8 ] [ 2 ] [ 6 ]            │ &lt;- Places / Visited / To go
 │ 25% visited [▓▓░░░░░░]       │
 │ By continent: Asia 1/1 …     │
-│ ┌─ Dark theme         [●—] ┐ │ &lt;- switch re-themes app
-│ ┌─ Storage (next week)     ┐ │
-│ │ On device:  [Save][Load] │ │
-│ │ In cloud:   [Push][Pull] ⟳│ │ &lt;- spinner while syncing
+│ ┌─ Dark theme         [●—] ┐ │ &lt;- switch re-themes app (saved)
+│ ┌─ Storage                 ┐ │ &lt;- list auto-saves + reloads
+│ │ On device: [Save now][Reset]│
+│ │ In cloud:  [Push][Pull]  ⟳│ │ &lt;- spinner while syncing
 │ └──────────────────────────┘ │
 └─────────────────────────────┘
 </pre>
@@ -424,9 +425,9 @@ List&lt;Destination&gt;  ◀──decodeFromString()──  "[ … ]"           
     <table>
       <thead><tr><th>State</th><th>Lives in</th><th>How</th><th>Survives rotation?</th></tr></thead>
       <tbody>
-        <tr><td>The list of places (app data)</td><td>WanderlistApp</td><td><code>remember { …toMutableStateList() }</code></td><td>No — by design (see note)</td></tr>
+        <tr><td>The list of places (app data)</td><td>WanderlistApp</td><td><code>remember { … }</code> + <code>LocalDestinationStore</code> (auto-save on edit, reload on launch)</td><td>Yes — reloaded from disk</td></tr>
         <tr><td>Selected tab</td><td>WanderlistApp</td><td><code>rememberSaveable</code></td><td>Yes</td></tr>
-        <tr><td>Dark theme</td><td>MainActivity (above the theme)</td><td><code>rememberSaveable</code></td><td>Yes</td></tr>
+        <tr><td>Dark theme</td><td>MainActivity (above the theme)</td><td><code>rememberSaveable</code> + <code>SettingsStore</code> (persisted)</td><td>Yes (and full restart)</td></tr>
         <tr><td>Each tab's back stack</td><td>WanderlistApp</td><td><code>rememberNavBackStack</code></td><td>Yes</td></tr>
         <tr><td>Dialog open? / card flipped? / form fields</td><td>The individual screen</td><td><code>remember</code> (local UI state)</td><td>Mostly no — momentary</td></tr>
       </tbody>
@@ -442,7 +443,7 @@ List&lt;Destination&gt;  ◀──decodeFromString()──  "[ … ]"           
    <span class="hl">Edit helpers</span>  (the only code that changes the list)
         └──────────────▶ list changes ▶ screens recompose
 </pre>
-    <div class="callout warn"><b>Design decision (and its honest trade-off).</b>The list uses plain <code>remember</code>, so it <em>resets on rotation</em>. That's intentional: it sets up the next topics — <b>persistence</b> (the Storage card) and a <b>ViewModel</b> — which is exactly the kind of trade-off a design doc should record on purpose, not stumble into.</div>
+    <div class="callout next"><b>Design decision (and its honest trade-off).</b>The list lives in a plain <code>remember</code>, but it's backed by storage: it auto-saves on every edit and reloads on launch, so it survives rotation <em>and</em> a full restart. The remaining trade-off — recorded on purpose — is that the state still lives in <code>WanderlistApp</code>, not a <b>ViewModel</b>, and the local store is SharedPreferences rather than <b>Room/DataStore</b>. Those are the next upgrades (see §16), not bugs.</div>
   </section>
 
   <!-- ARCHITECTURE -->
@@ -457,9 +458,10 @@ com.example.exampleproject
 ├─ data/                      <span class="hl">the model + storage (no UI)</span>
 │   ├─ Destination.kt         <span class="dim">model, sample data, helper</span>
 │   └─ storage/
-│       ├─ DestinationStore.kt        <span class="dim">interface</span>
+│       ├─ DestinationStore.kt        <span class="dim">interface (the list)</span>
 │       ├─ LocalDestinationStore.kt   <span class="dim">device (SharedPreferences)</span>
-│       └─ CloudDestinationStore.kt   <span class="dim">simulated remote</span>
+│       ├─ CloudDestinationStore.kt   <span class="dim">simulated remote</span>
+│       └─ SettingsStore.kt           <span class="dim">dark-theme preference</span>
 │
 ├─ navigation/                <span class="hl">keys + the nav host</span>
 │   ├─ NavKeys.kt
@@ -480,7 +482,7 @@ com.example.exampleproject
 
   <!-- STORAGE -->
   <section class="card" id="storage">
-    <h2><span class="n">10</span> Storage design <span class="tag">next topic</span></h2>
+    <h2><span class="n">10</span> Storage design <span class="tag">implemented</span></h2>
     <p class="lede">The key idea: depend on an <b>interface</b>, not a storage technology. The UI calls <code>save()</code>/<code>load()</code> and doesn't care where the bytes go.</p>
 <pre class="diagram">
                 <span class="hl">DestinationStore</span>  (interface)
@@ -506,6 +508,7 @@ com.example.exampleproject
     </table>
     <div class="callout next"><b>Why both are <code>suspend</code>.</b>Saving/loading can be slow, so it must run off the main thread or the UI freezes. Marking the functions <code>suspend</code> forces callers to run them in a coroutine — and lets the cloud version show a spinner and handle errors, exactly like real life. Push then Pull behaves like syncing two devices through one cloud document.</div>
     <div class="callout warn"><b>Constraint recorded in the design.</b>We can't ship real Firebase keys in a teaching repo, so cloud is <em>simulated</em>. The code's shape is identical to the real thing — the comments in <code>CloudDestinationStore.kt</code> show the exact Firestore/Retrofit calls that would replace the fake one.</div>
+    <div class="callout tip"><b>How it's wired in (the integrated part).</b><code>WanderlistApp</code> loads the saved list once on launch (a <code>LaunchedEffect</code>) and calls <code>persistLocal()</code> after every add / toggle / delete, so screen and disk never drift. Two KINDS of data get two stores: the <b>list</b> → <code>DestinationStore</code> (whole-list, <code>suspend</code>, off the main thread); a single <b>setting</b> (dark theme) → <code>SettingsStore</code> (one boolean, read synchronously at startup). The Stats card's <b>Save now</b> / <b>Reset</b> / <b>Push</b> / <b>Pull</b> just expose those operations to the user.</div>
   </section>
 
   <!-- COMPONENTS -->
@@ -572,9 +575,10 @@ com.example.exampleproject
       <thead><tr><th>Design decision</th><th>Implemented in</th></tr></thead>
       <tbody>
         <tr><td>Data model + sample data</td><td><code>data/Destination.kt</code></td></tr>
-        <tr><td>Storage abstraction + local + cloud</td><td><code>data/storage/*.kt</code></td></tr>
+        <tr><td>Storage abstraction + local + cloud (the list)</td><td><code>data/storage/DestinationStore.kt</code>, <code>Local…</code>, <code>Cloud…</code></td></tr>
+        <tr><td>Persisted dark-theme setting</td><td><code>data/storage/SettingsStore.kt</code> + <code>MainActivity.kt</code></td></tr>
         <tr><td>Screen keys</td><td><code>navigation/NavKeys.kt</code></td></tr>
-        <tr><td>Nav host, state, back stacks, storage wiring</td><td><code>navigation/WanderlistApp.kt</code></td></tr>
+        <tr><td>Nav host, state, back stacks, auto-save/load wiring</td><td><code>navigation/WanderlistApp.kt</code></td></tr>
         <tr><td>Each screen + its preview</td><td><code>ui/screens/*.kt</code></td></tr>
         <tr><td>Theme / dark mode</td><td><code>ui/theme/Theme.kt</code> + <code>MainActivity.kt</code></td></tr>
       </tbody>
@@ -602,7 +606,7 @@ com.example.exampleproject
   <section class="card" id="open">
     <h2><span class="n">16</span> Open questions &amp; future work</h2>
     <ul>
-      <li><b>Persistence done right.</b> Move the list into a <b>ViewModel</b> + <b>Room/DataStore</b> so it survives rotation and process death automatically (today it needs an explicit Save/Load).</li>
+      <li><b>Persistence done right.</b> The list already auto-saves (SharedPreferences + JSON) and the theme uses a <code>SettingsStore</code>. The next upgrade is to move the list into a <b>ViewModel</b> + <b>Room/DataStore</b> — structured queries, migrations, and a reactive <code>Flow</code> instead of rewriting the whole JSON blob each time.</li>
       <li><b>Real cloud.</b> Replace <code>CloudDestinationStore</code> with Firebase Firestore or a REST API; add accounts so each user has their own list.</li>
       <li><b>Images.</b> Swap emoji for real photos (<code>Image</code> + a loader like Coil); the Guess game's hit-testing already works on coordinates, so it ports to real images directly.</li>
       <li><b>Conflict handling.</b> What if local and cloud disagree? Define a sync/merge rule (last-write-wins? newest timestamp?).</li>

@@ -33,6 +33,7 @@ import androidx.compose.material3.SnackbarHostState         // the state object 
 import androidx.compose.material3.Text                      // draws text
 import androidx.compose.material3.TopAppBar                 // the top header bar (title + optional Back arrow)
 import androidx.compose.runtime.Composable                  // marks a function as emitting UI
+import androidx.compose.runtime.LaunchedEffect              // runs a suspend block once when the composable enters
 import androidx.compose.runtime.getValue                    // property-delegate read for State<T> (the `by` getter)
 import androidx.compose.runtime.mutableIntStateOf           // observable Int state (the selected tab index)
 import androidx.compose.runtime.mutableStateOf              // observable state holder (the "syncing" flag)
@@ -111,9 +112,12 @@ fun WanderlistApp(
     // `destinations` is an OBSERVABLE list (SnapshotStateList): when we add,
     // remove, or replace an element, every screen reading it recomposes.
     //
-    // ⚠️ It uses plain `remember`, NOT rememberSaveable, so it RESETS on rotation —
-    //    deliberately, to motivate persistence (the Storage card on Stats, and the
-    //    ViewModel topic, both address this). selectedTab DOES use rememberSaveable.
+    // It's seeded with the starter list, but that's just the FIRST-FRAME value: a
+    // LaunchedEffect below replaces it with whatever was saved on the device. Every
+    // edit then auto-saves (see persistLocal()), so the list survives both rotation
+    // AND a full app restart — the saved copy is reloaded each time the app starts.
+    // (selectedTab uses rememberSaveable; the list relies on disk reload instead,
+    //  which avoids serializing the whole list into the rotation bundle.)
     // ───────────────────────────────────────────────────────────────────────
     val destinations = remember { initialDestinations.toMutableStateList() }
 
@@ -147,6 +151,40 @@ fun WanderlistApp(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // ───────────────────────────────────────────────────────────────────────
+    // ON-DEVICE PERSISTENCE — the list is saved here so it outlives the app.
+    //
+    // Two implementations behind one DestinationStore interface: local (this
+    // device, SharedPreferences + JSON) and cloud (simulated, with fake latency).
+    // localStore/cloudStore are remembered so there's exactly one of each; `syncing`
+    // drives the cloud spinner while a fake network request is in flight.
+    // ───────────────────────────────────────────────────────────────────────
+    val context = LocalContext.current
+    val localStore = remember { LocalDestinationStore(context) }
+    val cloudStore = remember { CloudDestinationStore() }
+    var syncing by remember { mutableStateOf(false) }
+
+    // Persist the whole list to this device. Called after EVERY edit, so what's on
+    // screen and what's on disk never drift apart. We snapshot first (toList()) so
+    // the background save sees a stable copy even if the list changes meanwhile.
+    fun persistLocal() {
+        scope.launch { localStore.save(destinations.toList()) }
+    }
+
+    // LOAD ON LAUNCH — runs once when the app enters. Replace the starter seed with
+    // the saved list if there is one; on the very first run (nothing saved yet),
+    // write the starter list out so it's there next time. This (plus persistLocal()
+    // on every edit) is what makes the list survive rotation AND a full restart.
+    LaunchedEffect(Unit) {
+        val saved = localStore.load()
+        if (saved != null) {
+            destinations.clear()
+            destinations.addAll(saved)
+        } else {
+            localStore.save(destinations.toList())
+        }
+    }
+
     Log.d(
         TAG,
         "tab=$selectedTab top=$topKey  depths → explore=${exploreBackStack.size} " +
@@ -160,12 +198,13 @@ fun WanderlistApp(
     // ───────────────────────────────────────────────────────────────────────
 
     // Flip one place's `visited` flag by replacing it with a .copy() (Destination
-    // is immutable), which recomposes every screen showing it.
+    // is immutable), which recomposes every screen showing it — then save.
     fun toggleVisited(id: Int) {
         val index = destinations.indexOfFirst { it.id == id }
         if (index >= 0) {
             val current = destinations[index]
             destinations[index] = current.copy(visited = !current.visited)
+            persistLocal()                                  // edit → write through to disk
         }
     }
 
@@ -188,42 +227,41 @@ fun WanderlistApp(
                 visited = visited,
             ),
         )
+        persistLocal()                                      // edit → write through to disk
     }
 
     // Remove a place by id. Used by the Detail screen's delete action.
     fun removeDestination(id: Int) {
         destinations.removeAll { it.id == id }
+        persistLocal()                                      // edit → write through to disk
     }
 
     // ───────────────────────────────────────────────────────────────────────
-    // STORAGE (⏭️ a preview of the next topic). Two implementations behind the
-    // same DestinationStore interface: local (this device) and cloud (simulated).
-    // The four helpers below launch the suspend save/load calls in `scope` and
-    // report the result via a Snackbar; `syncing` drives a spinner on the cloud
-    // buttons while the fake network request is in flight.
+    // EXPLICIT STORAGE ACTIONS (surfaced on the Stats screen). The list already
+    // auto-saves on every edit (persistLocal()), so these are about giving the user
+    // — and the learner reading the code — VISIBLE control over it: force a save
+    // now, reset back to the starter list, or sync with the simulated cloud.
+    // Each launches its suspend work in `scope` and reports via a Snackbar.
     // ───────────────────────────────────────────────────────────────────────
-    val context = LocalContext.current
-    val localStore = remember { LocalDestinationStore(context) }
-    val cloudStore = remember { CloudDestinationStore() }
-    var syncing by remember { mutableStateOf(false) }
 
+    // Force an immediate save and confirm it — the same write persistLocal() does
+    // silently after each edit, but with a snackbar so it's easy to SEE it happen.
     fun saveLocal() {
         scope.launch {
-            val snapshot = destinations.toList()            // snapshot once: hand it off AND report ITS size
+            val snapshot = destinations.toList()            // snapshot once: save it AND report ITS size
             localStore.save(snapshot)                        // (the list could change during the suspend call)
             snackbarHostState.showSnackbar("Saved ${snapshot.size} places to this device")
         }
     }
 
-    fun loadLocal() {
+    // Reset the list back to the starter places and persist that, replacing whatever
+    // was saved. Handy for demos, and it shows that "storage" includes overwriting.
+    fun resetToStarter() {
+        destinations.clear()
+        destinations.addAll(initialDestinations)
         scope.launch {
-            val loaded = localStore.load()
-            if (loaded != null) {
-                destinations.clear(); destinations.addAll(loaded)
-                snackbarHostState.showSnackbar("Loaded ${loaded.size} places from this device")
-            } else {
-                snackbarHostState.showSnackbar("Nothing saved on this device yet")
-            }
+            localStore.save(destinations.toList())
+            snackbarHostState.showSnackbar("Reset to the starter list")
         }
     }
 
@@ -249,6 +287,7 @@ fun WanderlistApp(
                 val loaded = cloudStore.load()
                 if (loaded != null) {
                     destinations.clear(); destinations.addAll(loaded)
+                    localStore.save(loaded)                  // persist the pulled list so it's the new local copy
                     snackbarHostState.showSnackbar("Pulled ${loaded.size} places from the cloud")
                 } else {
                     snackbarHostState.showSnackbar("Nothing in the cloud yet — push first")
@@ -409,7 +448,7 @@ fun WanderlistApp(
                         onToggleDarkTheme = onToggleDarkTheme,
                         syncing = syncing,
                         onSaveLocal = { saveLocal() },
-                        onLoadLocal = { loadLocal() },
+                        onReset = { resetToStarter() },
                         onPushCloud = { pushCloud() },
                         onPullCloud = { pullCloud() },
                     )

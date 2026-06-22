@@ -48,8 +48,8 @@ import kotlin.math.roundToInt                               // rounds the comple
  * @param darkTheme         current theme flag (drives the switch position).
  * @param onToggleDarkTheme flips the app-wide theme.
  * @param syncing           true while a cloud push/pull is in flight (drives the spinner).
- * @param onSaveLocal       save the list to this device.
- * @param onLoadLocal       load the list from this device.
+ * @param onSaveLocal       force an immediate save of the list to this device.
+ * @param onReset           reset the list back to the starter places (and save that).
  * @param onPushCloud       upload the list to the (simulated) cloud.
  * @param onPullCloud       download the list from the (simulated) cloud.
  * @param modifier          optional layout modifier supplied by the caller.
@@ -61,7 +61,7 @@ fun StatsScreen(
     onToggleDarkTheme: () -> Unit,
     syncing: Boolean,
     onSaveLocal: () -> Unit,
-    onLoadLocal: () -> Unit,
+    onReset: () -> Unit,
     onPushCloud: () -> Unit,
     onPullCloud: () -> Unit,
     modifier: Modifier = Modifier,
@@ -138,26 +138,29 @@ fun StatsScreen(
         }
         Spacer(Modifier.height(16.dp))
 
-        // Storage card — ⏭️ a preview of next week's topic (persistence). The
-        // buttons call back UP to WanderlistApp, which runs the (suspend) save/load
-        // on the DestinationStore implementations and replaces the list on load.
+        // Storage card. Persistence is now a real feature: every edit auto-saves to
+        // this device and the list reloads on launch. The buttons call back UP to
+        // WanderlistApp, which runs the (suspend) save/reset/sync work on the
+        // DestinationStore implementations.
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Storage — a peek at next week", style = MaterialTheme.typography.titleMedium)
+                Text("Storage", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Your edits live only in memory right now (they reset on rotation). " +
-                        "Saving writes them somewhere that survives.",
+                    "Your list auto-saves to this device and reloads when you reopen " +
+                        "the app — your dark-theme choice is remembered too.",
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Spacer(Modifier.height(12.dp))
 
-                // LOCAL — saves on this device (SharedPreferences + JSON).
+                // LOCAL — auto-saved on this device (SharedPreferences + JSON). These
+                // buttons just make the saving visible (force a save) and let you wipe
+                // it back to the starter list.
                 Text("On this device (local)", style = MaterialTheme.typography.labelLarge)
                 Spacer(Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onSaveLocal, modifier = Modifier.weight(1f)) { Text("Save") }
-                    OutlinedButton(onClick = onLoadLocal, modifier = Modifier.weight(1f)) { Text("Load") }
+                    Button(onClick = onSaveLocal, modifier = Modifier.weight(1f)) { Text("Save now") }
+                    OutlinedButton(onClick = onReset, modifier = Modifier.weight(1f)) { Text("Reset") }
                 }
                 Spacer(Modifier.height(12.dp))
 
@@ -190,9 +193,10 @@ fun StatsScreen(
                 Text("About Wanderlist", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "A sample app combining Jetpack Compose and Navigation 3: " +
-                        "bottom-tab navigation, a list → detail drill-down, a form, " +
-                        "and hoisted state — split across small, single-purpose files.",
+                    "A sample app combining Jetpack Compose, Navigation 3, and " +
+                        "persistence: bottom-tab navigation, a list → detail drill-down, " +
+                        "a form, hoisted state, and on-device storage — split across " +
+                        "small, single-purpose files.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -233,7 +237,7 @@ fun StatsScreenPreview() {
             onToggleDarkTheme = {},
             syncing = false,
             onSaveLocal = {},
-            onLoadLocal = {},
+            onReset = {},
             onPushCloud = {},
             onPullCloud = {},
         )

@@ -3,7 +3,8 @@
 //
 // "Wanderlist" is a multi-screen sample app (a travel bucket list, two mini-games,
 // and a storage demo) that pulls together what the course has covered — Jetpack
-// Compose + Navigation 3 — and previews what's next (persistence). Unlike the
+// Compose + Navigation 3 + persistence. Your list AND your theme choice are saved
+// on the device, so they're still there the next time you open the app. Unlike the
 // single-concept demos, the code here is split across SEVERAL files by concern,
 // to show how a real app is organized. Not everything goes in one file!
 //
@@ -16,8 +17,9 @@
 //   data/
 //     Destination.kt           ← the DATA layer: the Destination model, the
 //                                starter list, and a formatting helper. No UI.
-//     storage/                 ← ⏭️ persistence (next topic): DestinationStore (the
-//                                interface) + Local (device) and Cloud (simulated).
+//     storage/                 ← persistence: DestinationStore (the interface) +
+//                                Local (device) and Cloud (simulated) for the LIST,
+//                                plus SettingsStore for the dark-theme preference.
 //
 //   navigation/
 //     NavKeys.kt               ← the seven @Serializable NavKeys (one per screen).
@@ -49,8 +51,11 @@ import androidx.activity.compose.setContent                 // bridges an Activi
 import androidx.activity.enableEdgeToEdge                    // lets the app draw behind the system bars
 import androidx.compose.runtime.getValue                    // property-delegate read for State<T> (the `by` getter)
 import androidx.compose.runtime.mutableStateOf              // observable state holder (the dark-theme flag)
+import androidx.compose.runtime.remember                    // keeps the SettingsStore across recompositions
 import androidx.compose.runtime.saveable.rememberSaveable   // remembers state ACROSS rotation / process death
 import androidx.compose.runtime.setValue                    // property-delegate write for MutableState<T>
+import androidx.compose.ui.platform.LocalContext            // the Android Context (needed to open SettingsStore)
+import com.example.exampleproject.data.storage.SettingsStore // persists the dark-theme preference on device
 import com.example.exampleproject.navigation.WanderlistApp  // the nav host (navigation/WanderlistApp.kt)
 import com.example.exampleproject.ui.theme.ExampleProjectTheme // the Material theme wrapper (ui/theme/Theme.kt)
 
@@ -65,6 +70,10 @@ import com.example.exampleproject.ui.theme.ExampleProjectTheme // the Material t
  * DARK-THEME flag. It must sit OUTSIDE the theme it controls — the theme reads
  * `darkTheme`, so the state has to be created before (and above)
  * ExampleProjectTheme. Flipping it recomposes the whole app under a new scheme.
+ *
+ * That flag is also PERSISTED (via SettingsStore): we seed it from the saved value
+ * at startup and write every change back, so the user's theme choice survives a
+ * full app restart — not just a rotation.
  */
 class MainActivity : ComponentActivity() {
     // onCreate runs once when the Activity is first created. This is where we
@@ -73,10 +82,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)                 // always call through to the framework first
         enableEdgeToEdge()                                 // draw under the status/navigation bars for a modern look
         setContent {                                       // everything inside is the Compose UI
-            // The app-wide dark-mode flag. rememberSaveable so the choice survives
-            // rotation and process death. Because it lives ABOVE the theme, the
-            // Stats screen can toggle it and the entire app re-colors instantly.
-            var darkTheme by rememberSaveable { mutableStateOf(false) }
+            // The on-device settings store. `remember` keeps the one instance across
+            // recompositions; LocalContext gives it the Context it needs.
+            val context = LocalContext.current
+            val settingsStore = remember { SettingsStore(context) }
+
+            // The app-wide dark-mode flag, SEEDED from the persisted value: reading
+            // settingsStore.darkTheme here is a single, cheap, synchronous prefs read
+            // at startup. rememberSaveable then keeps it across rotation; every toggle
+            // below also writes it back to disk, so it survives a full app restart too.
+            var darkTheme by rememberSaveable { mutableStateOf(settingsStore.darkTheme) }
 
             // Apply our app theme. We pass dynamicColor = false so the in-app
             // dark-mode switch produces an obvious, device-independent color flip
@@ -86,10 +101,14 @@ class MainActivity : ComponentActivity() {
                 // The whole app is WanderlistApp (navigation/WanderlistApp.kt). We
                 // hand it the current theme flag and a callback to flip it — classic
                 // state hoisting: the STATE lives here, the SWITCH that changes it
-                // lives down in StatsScreen.
+                // lives down in StatsScreen. The callback flips the flag AND persists
+                // it, keeping the in-memory state and the saved setting in lock-step.
                 WanderlistApp(
                     darkTheme = darkTheme,
-                    onToggleDarkTheme = { darkTheme = !darkTheme },
+                    onToggleDarkTheme = {
+                        darkTheme = !darkTheme
+                        settingsStore.darkTheme = darkTheme   // persist the new choice
+                    },
                 )
             }
         }

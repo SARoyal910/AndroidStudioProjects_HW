@@ -13,6 +13,18 @@
     horizontalAlignment: ["Start", "CenterHorizontally", "End"],
     boxContentAlignment: ["TopStart", "TopCenter", "TopEnd", "CenterStart", "Center", "CenterEnd", "BottomStart", "BottomCenter", "BottomEnd"],
     background: ["Coral", "Teal", "Indigo", "Amber", "Slate"],
+    snapshotStateMode: ["MutableState", "SnapshotList", "MutationPolicy", "DerivedState", "SnapshotFlow", "StateHolder"],
+    predictiveBackMode: ["SystemBack", "NavHost", "SharedElementNav3", "ManualProgress", "MaterialSurface"],
+    richInputMode: ["DragSource", "DropTarget", "Clipboard", "RichContent", "Stylus", "DesktopInput"],
+    advancedMotionMode: ["SingleValue", "Transition", "AnimatedContent", "Visibility", "AnimatableGesture", "TestClock"],
+    adaptiveCanonicalMode: ["NavigationSuite", "ListDetail", "SupportingPane", "Feed", "AntiPattern", "TestMatrix"],
+    advancedTextMode: ["AnnotatedString", "Links", "Selection", "Paragraph", "CanvasMeasure", "FontsEmoji"],
+    activityResultMode: ["GetContent", "PhotoPicker", "OpenDocument", "Permission", "Notifications", "AntiPattern"],
+    stateHolderMode: ["RouteBoundary", "HiltViewModel", "SavedState", "Factory", "LifecycleCollect", "AntiPattern"],
+    compositionIdentityMode: ["CallSite", "KeyedLoop", "LazyIdentity", "MovableContent", "SaveableHolder", "Retain"],
+    advancedLayoutMode: ["BoxWithConstraints", "MeasurePolicy", "Subcompose", "Lookahead", "AntiPattern"],
+    compositionLocalPattern: ["TrackedTheme", "StaticTokens", "NestedOverride", "ExplicitParameter", "BadViewModelLocal"],
+    customModifierStrategy: ["ChainedFactory", "ComposableFactory", "ModifierNode", "LocalAwareNode", "DelegatingNode"],
     fontWeight: ["Normal", "Medium", "SemiBold", "Bold"],
     textAlign: ["Start", "Center", "End", "Justify"],
     buttonStyle: ["Filled", "Tonal", "Outlined", "Elevated", "Text"],
@@ -31,7 +43,10 @@
     constraintMode: ["InlineRefs", "ConstraintSet", "Guideline", "Barrier", "Chain"],
     chainStyle: ["Spread", "SpreadInside", "Packed"],
     visibilityTracking: ["VisibilityChanged", "FirstVisibleOnce", "LayoutRectChanged", "LazyListImpression"],
+    stabilityScenario: ["ImmutableModel", "MutableModel", "StableAnnotation", "StrongSkipping", "PhaseRead"],
     perfMeasurement: ["Macrobenchmark", "BaselineProfile", "JankStats", "CompilerReports"],
+    effectMode: ["LaunchedEffect", "EventScope", "DisposableEffect", "ProduceState", "SnapshotFlow", "DerivedStateOf", "SideEffect"],
+    semanticsContract: ["MergedRow", "CustomActions", "LiveRegion", "TraversalGroup", "ErrorProgress"],
     interopMode: ["ComposeView", "AndroidView", "AndroidFragment", "AbstractComposeView"],
     nav3Mode: ["Basic", "Saved", "Decorators", "Scenes"],
   };
@@ -43,6 +58,7 @@
     cornerRadius: [0, 48, 2, 12], borderWidth: [0, 8, 1, 0], aspectRatio: [0.5, 2.5, 0.1, 1],
     fillFraction: [0.1, 1, 0.05, 1], fontSize: [10, 40, 2, 18], maxLines: [1, 5, 1, 2],
     itemCount: [2, 12, 1, 6], childCount: [1, 8, 1, 3], columns: [1, 5, 1, 3], progressValue: [0, 100, 5, 65],
+    availableWidth: [240, 960, 40, 560],
     cardElevation: [0, 12, 1, 2], nestDepth: [1, 4, 1, 2], startupMs: [100, 900, 25, 325], frameMs: [8, 40, 1, 22],
   };
   const TOGGLES = ["fillMaxWidth", "fillMaxHeight", "clip", "scroll", "orderSwap",
@@ -50,10 +66,25 @@
     "animateItems", "paging", "fullSpanHeader", "imageDescription", "imageClip", "imagePlaceholder", "imageTint",
     "surfaceVisible", "destructiveAction", "hasUndo", "richContent", "partialSheet",
     "showBadges", "wideWindow", "drawerOpen", "scrollBehavior", "secondaryTabs",
+    "rememberSaveableState", "mutatePlainCollection", "structuralEquality", "derivedThreshold", "flowOperators", "stateHolderSaver",
+    "rootBackIntercept", "popTransitions", "sharedBoundsContainer", "overlayClip", "cancelAwareBack", "materialBackState",
+    "globalDrag", "rememberDropTarget", "externalDropPermission", "sensitiveClipboard", "richContentReceiver", "stylusCancel", "hoverFeedback", "rightClickMenu",
+    "springSpec", "contentTargetParam", "visibilityTransitionOwned", "gestureSnapStop", "animationLabels", "testClockControl",
+    "navSuiteScaffold", "saveableDestination", "paneParcelableKey", "supportingPaneNavigator", "avoidStretching", "adaptivePreviewMatrix",
+    "linkAnnotation", "selectionContainer", "paragraphLineBreaks", "cacheTextMeasure", "fontFallbacks", "emojiCompat",
+    "unconditionalLauncher", "launchFromEvent", "photoPickerContract", "persistUriPermission", "permissionRationale", "permissionGracefulDeny", "notificationApiGate",
+    "lifecycleCollection", "hiltInjection", "savedStateHandle", "whileSubscribedFlow", "contentStateless", "repositoryInjected", "creationExtrasFactory",
+    "stableIdentityKeys", "contentTypeHints", "rememberMovableContent", "saveableStateHolder", "retainAcrossConfig", "stateKeyedById",
+    "componentLocalConstraints", "avoidItemSubcompose", "singleMeasurePass", "lookaheadApproach", "boundedBreakpoints", "intrinsicFallback",
     "expandedSearch", "multiSelect", "modalPicker", "rangePicker", "inputMode", "removableChip",
     "determinateProgress", "refreshing", "customIndicator", "supportingText", "withDividers", "carouselUncontained",
     "showGuidelines", "composeAlternative", "trackFirstOnly", "useDebounce", "overlayViewport",
     "baselineProfile", "physicalDevice", "includeStartupProfile", "jankState", "compilerReports",
+    "strongSkippingEnabled", "immutableCollections", "stableAnnotation", "drawPhaseRead", "lazyStableKeys", "lambdaMemoization",
+    "constantEffectKey", "wrapLatestCallback", "cleanupEffect", "distinctFlow",
+    "mergeSemantics", "clearSemantics", "customA11yActions", "liveRegion", "traversalGroup", "accessibilityChecks",
+    "nestedProvider", "staticLocal", "localBadDependency", "localPreviewDefault",
+    "preserveChain", "dataClassElement", "readLocalInNode", "manualInvalidation",
     "lifecycleStrategy", "viewReuse", "nestedScrollInterop", "serializableKeys", "entryDecorators", "sceneMetadata"];
 
   const JUSTIFY = { Top: "flex-start", Bottom: "flex-end", Start: "flex-start", End: "flex-end", Center: "center", SpaceBetween: "space-between", SpaceAround: "space-around", SpaceEvenly: "space-evenly" };
@@ -81,13 +112,30 @@
     stateHoisting: ["Where to hoist state", "https://developer.android.com/develop/ui/compose/state-hoisting"],
     composeArchitecture: ["Compose UI Architecture", "https://developer.android.com/develop/ui/compose/architecture"],
     viewModelOverview: ["ViewModel overview", "https://developer.android.com/topic/libraries/architecture/viewmodel"],
+    stateHolders: ["State holders and UI state", "https://developer.android.com/topic/architecture/ui-layer/stateholders"],
+    lifecycleCompose: ["Lifecycle in Jetpack Compose", "https://developer.android.com/topic/libraries/architecture/lifecycle"],
+    lifecycleCoroutines: ["Lifecycle-aware coroutines", "https://developer.android.com/topic/libraries/architecture/coroutines"],
+    viewModelScoping: ["ViewModel scoping APIs", "https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-apis"],
+    viewModelFactories: ["Create ViewModels with dependencies", "https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-factories"],
+    savedStateViewModel: ["Saved State module for ViewModel", "https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate"],
+    hiltJetpack: ["Use Hilt with other Jetpack libraries", "https://developer.android.com/training/dependency-injection/hilt-jetpack"],
+    hiltReleases: ["Hilt release notes", "https://developer.android.com/jetpack/androidx/releases/hilt"],
+    snapshotMutationPolicy: ["SnapshotMutationPolicy API reference", "https://developer.android.com/reference/kotlin/androidx/compose/runtime/SnapshotMutationPolicy"],
+    snapshotStateList: ["SnapshotStateList API reference", "https://developer.android.com/reference/kotlin/androidx/compose/runtime/snapshots/SnapshotStateList"],
     sideEffects: ["Side-effects in Compose", "https://developer.android.com/develop/ui/compose/side-effects"],
     phases: ["Jetpack Compose phases", "https://developer.android.com/develop/ui/compose/phases"],
     performance: ["Compose performance best practices", "https://developer.android.com/develop/ui/compose/performance/bestpractices"],
     modifiers: ["Compose modifiers", "https://developer.android.com/develop/ui/compose/modifiers"],
+    customModifiers: ["Create custom modifiers", "https://developer.android.com/develop/ui/compose/custom-modifiers"],
+    modifiersList: ["List of Compose modifiers", "https://developer.android.com/develop/ui/compose/modifiers-list"],
+    composeApiGuidelines: ["Style guidelines for Jetpack Compose APIs", "https://developer.android.com/develop/ui/compose/api-guidelines"],
     constraints: ["Constraints and modifier order", "https://developer.android.com/develop/ui/compose/layouts/constraints-modifiers"],
     layouts: ["Compose layout basics", "https://developer.android.com/develop/ui/compose/layouts/basics"],
     customLayouts: ["Custom layouts", "https://developer.android.com/develop/ui/compose/layouts/custom"],
+    advancedLayoutsQuickGuide: ["Advanced layouts in Compose", "https://developer.android.com/develop/ui/compose/quick-guides/content/video/advanced-layouts-compose"],
+    lookaheadScopeApi: ["LookaheadScope API reference", "https://developer.android.com/reference/kotlin/androidx/compose/ui/layout/LookaheadScope"],
+    approachLayoutNodeApi: ["ApproachLayoutModifierNode API reference", "https://developer.android.com/reference/kotlin/androidx/compose/ui/layout/ApproachLayoutModifierNode"],
+    composePerformanceCodelab: ["Practical performance problem solving in Compose", "https://developer.android.com/codelabs/jetpack-compose-performance"],
     constraintLayout: ["ConstraintLayout in Compose", "https://developer.android.com/develop/ui/compose/layouts/constraintlayout"],
     visibilityModifiers: ["Visibility tracking in Compose", "https://developer.android.com/develop/ui/compose/layouts/visibility-modifiers"],
     composeUiLayoutApi: ["androidx.compose.ui.layout API reference", "https://developer.android.com/reference/kotlin/androidx/compose/ui/layout/package-summary"],
@@ -150,6 +198,13 @@
     navigationRail: ["Navigation rail", "https://developer.android.com/develop/ui/compose/components/navigation-rail"],
     navigationDrawer: ["Navigation drawer", "https://developer.android.com/develop/ui/compose/components/drawer"],
     tabsComponent: ["Tabs", "https://developer.android.com/develop/ui/compose/components/tabs"],
+    textOverview: ["Text in Compose", "https://developer.android.com/develop/ui/compose/text"],
+    textStyle: ["Style text", "https://developer.android.com/develop/ui/compose/text/style-text"],
+    textParagraph: ["Style paragraphs", "https://developer.android.com/develop/ui/compose/text/style-paragraph"],
+    textLayout: ["Configure text layout", "https://developer.android.com/develop/ui/compose/text/configure-layout"],
+    textInteractions: ["Text user interactions", "https://developer.android.com/develop/ui/compose/text/user-interactions"],
+    textFonts: ["Work with fonts", "https://developer.android.com/develop/ui/compose/text/fonts"],
+    textEmoji: ["Display emoji", "https://developer.android.com/develop/ui/compose/text/emoji"],
     textFields: ["Text fields", "https://developer.android.com/develop/ui/compose/text/user-input"],
     textFieldMigration: ["Migrate to state-based text fields", "https://developer.android.com/develop/ui/compose/text/migrate-state-based"],
     autofill: ["Autofill in Compose", "https://developer.android.com/develop/ui/compose/text/autofill"],
@@ -161,6 +216,11 @@
     nestedScroll: ["Nested scrolling modifiers", "https://developer.android.com/develop/ui/compose/touch-input/scroll/nested-scroll-modifiers"],
     scroll2d: ["Two-dimensional scrolling", "https://developer.android.com/develop/ui/compose/touch-input/scroll/two-dimensional-scrolling"],
     interactions: ["Handling user interactions", "https://developer.android.com/develop/ui/compose/touch-input/user-interactions/handling-interactions"],
+    dragAndDrop: ["Drag and drop", "https://developer.android.com/develop/ui/compose/touch-input/user-interactions/drag-and-drop"],
+    copyPaste: ["Copy and paste", "https://developer.android.com/develop/ui/compose/touch-input/copy-and-paste"],
+    stylusInput: ["About stylus input", "https://developer.android.com/develop/ui/compose/touch-input/stylus-input"],
+    advancedStylus: ["Advanced stylus features", "https://developer.android.com/develop/ui/compose/touch-input/stylus-input/advanced-stylus-features"],
+    largeScreenInput: ["Input compatibility on large screens", "https://developer.android.com/develop/ui/compose/touch-input/input-compatibility-on-large-screens"],
     focusOverview: ["Focus in Compose", "https://developer.android.com/develop/ui/compose/touch-input/focus"],
     focusTraversal: ["Change focus traversal order", "https://developer.android.com/develop/ui/compose/touch-input/focus/change-focus-traversal-order"],
     focusBehavior: ["Change focus behavior", "https://developer.android.com/develop/ui/compose/touch-input/focus/change-focus-behavior"],
@@ -174,7 +234,13 @@
     materialInsets: ["Use Material 3 insets", "https://developer.android.com/develop/ui/compose/system/material-insets"],
     insetsInterop: ["Use insets in Views and Compose", "https://developer.android.com/develop/ui/compose/system/insets-views-compose"],
     stateSaving: ["Save UI state in Compose", "https://developer.android.com/develop/ui/compose/state-saving"],
+    stateLifespans: ["State lifespans in Compose", "https://developer.android.com/develop/ui/compose/state-lifespans"],
     lifecycle: ["Lifecycle of composables", "https://developer.android.com/develop/ui/compose/lifecycle"],
+    keyApi: ["key API reference", "https://developer.android.com/reference/kotlin/androidx/compose/runtime/key.composable"],
+    movableContentApi: ["movableContentOf API reference", "https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary#movableContentOf(kotlin.Function0)"],
+    saveableStateHolderApi: ["SaveableStateHolder API reference", "https://developer.android.com/reference/kotlin/androidx/compose/runtime/saveable/SaveableStateHolder"],
+    retainPackageApi: ["androidx.compose.runtime.retain API reference", "https://developer.android.com/reference/kotlin/androidx/compose/runtime/retain/package-summary"],
+    composeRuntimeReleases: ["Compose Runtime release notes", "https://developer.android.com/jetpack/androidx/releases/compose-runtime"],
     stability: ["Stability in Compose", "https://developer.android.com/develop/ui/compose/performance/stability"],
     stabilityFix: ["Fix stability issues", "https://developer.android.com/develop/ui/compose/performance/stability/fix"],
     strongSkipping: ["Strong skipping mode", "https://developer.android.com/develop/ui/compose/performance/stability/strongskipping"],
@@ -185,6 +251,9 @@
     baselineProfileMeasure: ["Benchmark Baseline Profiles", "https://developer.android.com/topic/performance/baselineprofiles/measure-baselineprofile"],
     jankStats: ["JankStats Library", "https://developer.android.com/topic/performance/jankstats"],
     semantics: ["Semantics", "https://developer.android.com/develop/ui/compose/accessibility/semantics"],
+    accessibilityTraversal: ["Modify accessibility traversal order", "https://developer.android.com/develop/ui/compose/accessibility/traversal"],
+    accessibilityMergingClearing: ["Merging and clearing semantics", "https://developer.android.com/develop/ui/compose/accessibility/merging-clearing"],
+    accessibilityInspectDebug: ["Inspect and debug accessibility", "https://developer.android.com/develop/ui/compose/accessibility/inspect-debug"],
     accessibility: ["Accessibility in Jetpack Compose", "https://developer.android.com/develop/ui/compose/accessibility"],
     accessibilityTesting: ["Accessibility testing", "https://developer.android.com/develop/ui/compose/accessibility/testing"],
     composeTesting: ["Test your Compose layout", "https://developer.android.com/develop/ui/compose/testing"],
@@ -197,6 +266,13 @@
     testingV2: ["Migrate to Compose testing v2 APIs", "https://developer.android.com/develop/ui/compose/testing/migrate-v2"],
     animationIntro: ["Animations in Compose", "https://developer.android.com/develop/ui/compose/animation/introduction"],
     animationChoose: ["Choose an animation API", "https://developer.android.com/develop/ui/compose/animation/choose-api"],
+    animationQuickGuide: ["Quick guide to animations", "https://developer.android.com/develop/ui/compose/animation/quick-guide"],
+    animationComposablesModifiers: ["Animation modifiers and composables", "https://developer.android.com/develop/ui/compose/animation/composables-modifiers"],
+    animationValueBased: ["Value-based animations", "https://developer.android.com/develop/ui/compose/animation/value-based"],
+    animationCustomize: ["Customize animations", "https://developer.android.com/develop/ui/compose/animation/customize"],
+    animationTesting: ["Test animations", "https://developer.android.com/develop/ui/compose/animation/testing"],
+    animationTooling: ["Animation tooling support", "https://developer.android.com/develop/ui/compose/animation/tooling"],
+    composeAnimationReleases: ["Compose Animation release notes", "https://developer.android.com/jetpack/androidx/releases/compose-animation"],
     composeTooling: ["Tools for Compose", "https://developer.android.com/develop/ui/compose/tooling"],
     previews: ["Preview your UI", "https://developer.android.com/develop/ui/compose/tooling/previews"],
     animationPreview: ["Animation Preview", "https://developer.android.com/develop/ui/compose/tooling/animation-preview"],
@@ -213,16 +289,38 @@
     navigation3Scenes: ["Navigation 3 Scenes", "https://developer.android.com/guide/navigation/navigation-3/scenes"],
     navigation3Migration: ["Migrate from Navigation 2 to Navigation 3", "https://developer.android.com/guide/navigation/navigation-3/migration-guide"],
     navigation3Releases: ["Navigation3 release notes", "https://developer.android.com/jetpack/androidx/releases/navigation3"],
+    predictiveBack: ["About predictive back", "https://developer.android.com/develop/ui/compose/system/predictive-back"],
+    predictiveBackSetup: ["Set up predictive back", "https://developer.android.com/develop/ui/compose/system/predictive-back-setup"],
+    predictiveBackProgress: ["Access predictive back progress manually", "https://developer.android.com/develop/ui/compose/system/predictive-back-progress"],
+    sharedElements: ["Shared element transitions in Compose", "https://developer.android.com/develop/ui/compose/animation/shared-elements"],
+    sharedElementsNavigation: ["Navigation with shared elements", "https://developer.android.com/develop/ui/compose/animation/shared-elements/navigation"],
+    sharedElementsCustomize: ["Customize shared element transitions", "https://developer.android.com/develop/ui/compose/animation/shared-elements/customize"],
     adaptiveStart: ["Get started with adaptive apps", "https://developer.android.com/develop/ui/compose/layouts/adaptive/get-started-with-adaptive-apps"],
+    adaptiveDosDonts: ["Adaptive do's and don'ts", "https://developer.android.com/develop/ui/compose/layouts/adaptive/adaptive-dos-and-donts"],
     adaptiveWindowSizeClasses: ["Use window size classes", "https://developer.android.com/develop/ui/compose/layouts/adaptive/use-window-size-classes"],
     adaptiveDisplay: ["Support different display sizes", "https://developer.android.com/develop/ui/compose/layouts/adaptive/support-different-display-sizes"],
+    adaptiveQueryInfo: ["Query information for adaptive layouts", "https://developer.android.com/develop/ui/compose/layouts/adaptive/query-window-size-classes"],
+    adaptiveCanonicalLayouts: ["Canonical layouts", "https://developer.android.com/develop/ui/compose/layouts/adaptive/canonical-layouts"],
     adaptiveListDetail: ["Build a list-detail layout", "https://developer.android.com/develop/ui/compose/layouts/adaptive/list-detail"],
+    adaptiveSupportingPane: ["Build a supporting pane layout", "https://developer.android.com/develop/ui/compose/layouts/adaptive/build-a-supporting-pane-layout"],
+    adaptiveNavigation: ["Build adaptive navigation", "https://developer.android.com/develop/ui/compose/layouts/adaptive/build-adaptive-navigation"],
+    composeLibraries: ["Compose and other libraries", "https://developer.android.com/develop/ui/compose/libraries"],
+    activityResults: ["Get a result from an activity", "https://developer.android.com/training/basics/intents/result"],
+    rememberLauncherApi: ["rememberLauncherForActivityResult API", "https://developer.android.com/reference/kotlin/androidx/activity/compose/rememberLauncherForActivityResult.composable"],
+    photoPicker: ["Photo picker", "https://developer.android.com/training/data-storage/shared/photo-picker"],
+    runtimePermissions: ["Request runtime permissions", "https://developer.android.com/training/permissions/requesting"],
+    notificationPermission: ["Notification runtime permission in Compose", "https://developer.android.com/develop/ui/compose/notifications/notification-permission"],
   };
   const SECTION_REFS = {
     composables: ["mentalModel", "state", "stateHoisting", "sideEffects"],
+    "snapshot-state-runtime": ["state", "stateHoisting", "sideEffects", "snapshotMutationPolicy", "snapshotStateList"],
+    "composition-identity-retention": ["lifecycle", "keyApi", "lists", "stateSaving", "stateLifespans", "movableContentApi", "saveableStateHolderApi", "retainPackageApi", "navigation3SaveState", "composeRuntimeReleases"],
     "state-hoisting-udf": ["state", "stateHoisting", "composeArchitecture", "viewModelOverview", "stateSaving"],
+    "viewmodel-lifecycle-di": ["stateHolders", "viewModelOverview", "viewModelScoping", "lifecycleCompose", "lifecycleCoroutines", "savedStateViewModel", "viewModelFactories", "hiltJetpack", "hiltReleases"],
+    "compositionlocal-scope": ["compositionLocal", "state", "stateHoisting", "composeArchitecture", "customDesignSystem"],
     modifiers: ["modifiers", "constraints"],
     "modifier-order": ["constraints", "modifiers"],
+    "custom-modifiers": ["customModifiers", "modifiers", "modifiersList", "composeApiGuidelines", "performance"],
     units: ["layouts", "phases"],
     sizing: ["layouts", "constraints"],
     "aspect-ratio": ["modifiers", "constraints"],
@@ -233,6 +331,7 @@
     row: ["layouts", "modifiers"],
     box: ["layouts", "modifiers"],
     "custom-layouts": ["customLayouts", "intrinsicMeasurements", "alignmentLines", "constraints", "phases"],
+    "advanced-layout-adaptation": ["layouts", "constraints", "customLayouts", "advancedLayoutsQuickGuide", "intrinsicMeasurements", "phases", "composeUiLayoutApi", "lookaheadScopeApi", "approachLayoutNodeApi", "composeAnimationReleases", "composePerformanceCodelab"],
     "constraint-layout": ["constraintLayout", "layouts", "constraints", "customLayouts", "intrinsicMeasurements"],
     "visibility-tracking": ["visibilityModifiers", "composeUiLayoutApi", "relativeLayoutBoundsApi", "foundationReleases", "modifiers", "lists", "sideEffects"],
     arrangement: ["layouts", "modifiers"],
@@ -245,7 +344,8 @@
     "lazy-lists": ["lists", "performance"],
     "lazy-collections-scale": ["lists", "pager", "flowLayouts", "pagingCompose", "performance", "sideEffects"],
     "theming-design-system": ["material3", "customDesignSystem", "compositionLocal"],
-    text: ["material3", "components"],
+    text: ["textOverview", "textStyle", "textParagraph", "textLayout", "material3", "components"],
+    "advanced-text-typography": ["textStyle", "textParagraph", "textLayout", "textInteractions", "textFonts", "textEmoji", "graphicsOverview", "accessibility"],
     buttons: ["buttons", "material3"],
     card: ["cards", "material3"],
     controls: ["switchCtl", "checkbox", "radio"],
@@ -255,14 +355,18 @@
     "transient-surfaces": ["dialogs", "snackbars", "bottomSheets", "bottomSheetsPartial", "menus", "tooltips", "badges", "scaffold", "sideEffects"],
     "navigation-surfaces": ["appBars", "appBarNavigate", "appBarDynamic", "navigationBarComponent", "navigationRail", "navigationDrawer", "tabsComponent", "scaffold", "adaptiveStart", "adaptiveWindowSizeClasses"],
     "pointer-input-gestures": ["pointerInput", "gesturesUnderstand", "tapPress", "dragSwipeFling", "multiTouch", "nestedScroll", "scroll2d", "interactions"],
+    "advanced-input-rich-content": ["dragAndDrop", "copyPaste", "stylusInput", "advancedStylus", "largeScreenInput", "pointerInput", "gesturesUnderstand", "interactions"],
     "focus-keyboard-input": ["focusOverview", "focusTraversal", "focusBehavior", "focusReact", "keyboardActions", "keyboardShortcuts", "textFields"],
     nesting: ["mentalModel", "phases"],
     scaffold: ["material3", "components"],
     "edge-to-edge-insets": ["edgeToEdge", "windowInsets", "windowInsetsUi", "keyboardImeAnimations", "materialInsets", "insetsInterop"],
+    "activity-results-permissions": ["composeLibraries", "activityResults", "rememberLauncherApi", "photoPicker", "runtimePermissions", "notificationPermission", "stateHoisting"],
     "interop-migration": ["composeMigrationStrategy", "interopApis", "composeInViews", "viewsInCompose", "migrationOther", "recyclerMigration", "nestedScroll"],
     "navigation-compose": ["navigation", "navigationTypeSafety", "stateSaving"],
     "navigation3-state": ["navigation3Overview", "navigation3GetStarted", "navigation3Basics", "navigation3SaveState", "navigation3Metadata", "navigation3Scenes", "navigation3Migration", "navigation3Releases"],
+    "predictive-back-shared-transitions": ["predictiveBack", "predictiveBackSetup", "predictiveBackProgress", "sharedElements", "sharedElementsNavigation", "sharedElementsCustomize", "navigation", "navigation3Overview"],
     "adaptive-layouts": ["adaptiveStart", "adaptiveDisplay", "adaptiveListDetail"],
+    "adaptive-canonical-navigation": ["adaptiveDosDonts", "adaptiveWindowSizeClasses", "adaptiveDisplay", "adaptiveQueryInfo", "adaptiveCanonicalLayouts", "adaptiveListDetail", "adaptiveSupportingPane", "adaptiveNavigation", "previews"],
     "profile-row": ["layouts", "material3", "stateHoisting"],
     "state-saving": ["stateSaving", "state", "stateHoisting"],
     "effects-lifecycle": ["sideEffects", "lifecycle", "phases"],
@@ -270,8 +374,10 @@
     "performance-measurement": ["macrobenchmark", "baselineProfileCreate", "baselineProfileMeasure", "composeBaselineProfiles", "jankStats", "stabilityDiagnose", "compositionTracing", "performance"],
     "previews-tooling": ["previews", "composeTooling", "animationPreview", "toolingDebug", "compositionTracing", "composeLint"],
     "accessibility-testing": ["accessibility", "semantics", "accessibilityTesting"],
+    "advanced-semantics": ["semantics", "accessibilityTraversal", "accessibilityMergingClearing", "accessibilityInspectDebug", "accessibilityTesting", "composeTesting"],
     "compose-ui-testing": ["composeTesting", "testingApis", "testingSemantics", "testingSync", "testingPatterns", "testingDebug", "testingV2", "testingCheatsheet"],
-    "animation-motion": ["animationIntro", "animationChoose"],
+    "animation-motion": ["animationIntro", "animationChoose", "animationQuickGuide", "animationComposablesModifiers"],
+    "advanced-animation-motion": ["animationChoose", "animationValueBased", "animationComposablesModifiers", "animationCustomize", "animationTesting", "animationTooling", "composeTesting", "performance"],
   };
   const CATEGORY_REFS = {
     Foundations: ["mentalModel", "state", "stateHoisting", "modifiers"],
@@ -282,39 +388,75 @@
     Decoration: ["modifiers", "graphicsOverview", "graphicsModifiers", "resourcesCompose", "imagesOverview", "imageLoading"],
     Scrolling: ["lists", "performance"],
     Theming: ["material3", "customDesignSystem", "compositionLocal"],
-    Text: ["material3", "components"],
+    Text: ["textOverview", "textStyle", "textParagraph", "textLayout", "textInteractions", "textFonts", "textEmoji", "graphicsOverview"],
     Components: ["material3", "components", "pointerInput"],
-    Composition: ["mentalModel", "phases"],
+    Composition: ["mentalModel", "lifecycle", "keyApi", "stateLifespans", "phases"],
     "App structure": ["material3", "components", "navigation", "navigation3Overview", "adaptiveStart", "interopApis"],
     Recipes: ["layouts", "stateHoisting"],
-    State: ["state", "stateHoisting", "composeArchitecture", "viewModelOverview", "stateSaving"],
+    State: ["state", "stateHoisting", "composeArchitecture", "viewModelOverview", "stateHolders", "lifecycleCompose", "stateSaving"],
     Runtime: ["sideEffects", "lifecycle", "phases"],
     Performance: ["stability", "performance", "phases"],
     Tooling: ["previews", "composeTooling", "toolingDebug", "composeLint"],
     Input: ["pointerInput", "interactions", "focusOverview", "keyboardActions"],
-    "System UI": ["edgeToEdge", "windowInsets", "windowInsetsUi", "materialInsets"],
+    "System UI": ["edgeToEdge", "windowInsets", "windowInsetsUi", "materialInsets", "composeLibraries", "activityResults", "runtimePermissions"],
     Quality: ["accessibility", "semantics", "accessibilityTesting", "composeTesting", "testingApis", "testingSync"],
     Motion: ["animationIntro", "animationChoose"],
   };
   const COURSE_PATH = [
-    ["Mental model", ["composables", "state-hoisting-udf", "modifiers", "modifier-order", "units"], "Learn the runtime contract before memorizing APIs."],
-    ["Layout engine", ["sizing", "aspect-ratio", "padding", "spacing", "offset", "column", "row", "box", "custom-layouts", "constraint-layout", "visibility-tracking"], "Predict size, position, and space from constraints."],
+    ["Mental model", ["composables", "snapshot-state-runtime", "composition-identity-retention", "state-hoisting-udf", "viewmodel-lifecycle-di", "compositionlocal-scope", "modifiers", "modifier-order", "custom-modifiers", "units"], "Learn the runtime contract before memorizing APIs."],
+    ["Layout engine", ["sizing", "aspect-ratio", "padding", "spacing", "offset", "column", "row", "box", "custom-layouts", "advanced-layout-adaptation", "constraint-layout", "visibility-tracking"], "Predict size, position, and space from constraints."],
     ["Distribution", ["arrangement", "alignment", "weight", "background-shape", "drawing-graphics", "images-resources", "scroll", "lazy-lists", "lazy-collections-scale"], "Control empty space, overflow, clipping, drawing, and lists."],
-    ["Production UI", ["theming-design-system", "text", "buttons", "card", "controls", "selection-inputs", "status-content", "textfields", "transient-surfaces", "navigation-surfaces", "pointer-input-gestures", "focus-keyboard-input", "nesting", "scaffold", "edge-to-edge-insets", "interop-migration", "navigation-compose", "navigation3-state", "adaptive-layouts", "profile-row"], "Compose themed Material 3 components into app-ready screens."],
-    ["Advanced practice", ["state-saving", "effects-lifecycle", "stability-performance", "performance-measurement", "previews-tooling", "accessibility-testing", "compose-ui-testing", "animation-motion"], "Ship screens that survive lifecycle changes, test well, perform, and move clearly."],
+    ["Production UI", ["theming-design-system", "text", "advanced-text-typography", "buttons", "card", "controls", "selection-inputs", "status-content", "textfields", "transient-surfaces", "navigation-surfaces", "pointer-input-gestures", "advanced-input-rich-content", "focus-keyboard-input", "nesting", "scaffold", "edge-to-edge-insets", "activity-results-permissions", "interop-migration", "navigation-compose", "navigation3-state", "predictive-back-shared-transitions", "adaptive-layouts", "adaptive-canonical-navigation", "profile-row"], "Compose themed Material 3 components into app-ready screens."],
+    ["Advanced practice", ["state-saving", "effects-lifecycle", "stability-performance", "performance-measurement", "previews-tooling", "accessibility-testing", "advanced-semantics", "compose-ui-testing", "animation-motion", "advanced-animation-motion"], "Ship screens that survive lifecycle changes, test well, perform, and move clearly."],
   ];
   const GLOSSARY = [
     ["Composition", "The tree-building phase where composable functions emit the UI description.", "composables"],
     ["Composable", "A @Composable function that emits UI for its inputs instead of returning a View.", "composables"],
     ["Recomposition", "Re-running only the invalidated composable scopes after observed state changes.", "composables"],
-    ["Snapshot state", "Observable state read by Compose so changes can invalidate the right scopes.", "composables"],
-    ["remember", "Stores an object across recompositions while the call remains in the composition.", "composables"],
+    ["Snapshot state", "Observable state read by Compose so changes can invalidate the right scopes.", "snapshot-state-runtime"],
+    ["remember", "Stores an object across recompositions while the call remains in the composition.", "snapshot-state-runtime"],
+    ["MutableState", "A Compose-observable state holder whose value writes invalidate composable scopes that read it.", "snapshot-state-runtime"],
+    ["mutableStateOf", "Creates MutableState and optionally accepts a SnapshotMutationPolicy to decide whether assignments are changes.", "snapshot-state-runtime"],
+    ["SnapshotStateList", "An observable MutableList implementation produced by mutableStateListOf.", "snapshot-state-runtime"],
+    ["mutableStateListOf", "Creates a snapshot-aware list whose adds, removes, and item changes can invalidate readers.", "snapshot-state-runtime"],
+    ["SnapshotMutationPolicy", "The policy used by mutableStateOf to decide whether values are equivalent and how snapshot conflicts merge.", "snapshot-state-runtime"],
+    ["structuralEqualityPolicy", "A stock SnapshotMutationPolicy that treats equal values as equivalent.", "snapshot-state-runtime"],
+    ["referentialEqualityPolicy", "A stock SnapshotMutationPolicy that treats only the same instance as equivalent.", "snapshot-state-runtime"],
+    ["neverEqualPolicy", "A stock SnapshotMutationPolicy that treats every assignment as a change.", "snapshot-state-runtime"],
+    ["Call-site identity", "The source location plus local execution context Compose uses to match a composable instance across recompositions.", "composition-identity-retention"],
+    ["key", "A composable grouping API that supplies extra identity values when the same call site emits reordered or repeated content.", "composition-identity-retention"],
+    ["Stable item key", "A saveable, unique item identifier that lets lazy layouts move remembered state with the logical item instead of its position.", "composition-identity-retention"],
+    ["movableContentOf", "A runtime API for moving a remembered composable subtree to a different place in the composition while preserving its internal state.", "composition-identity-retention"],
+    ["rememberSaveableStateHolder", "Creates a SaveableStateHolder so dynamic destinations, tabs, or pages can keep saveable child state by key while temporarily removed.", "composition-identity-retention"],
+    ["SaveableStateProvider", "A SaveableStateHolder scope that saves and restores rememberSaveable values for content identified by a caller-provided key.", "composition-identity-retention"],
+    ["retain", "A Compose runtime-retain API that keeps non-serializable values across configuration changes but not process death.", "composition-identity-retention"],
     ["State hoisting", "Moving state to the caller and passing value down plus events up.", "state-hoisting-udf"],
     ["Unidirectional data flow", "A Compose architecture pattern where state flows down to UI and events flow back up to the owner.", "state-hoisting-udf"],
     ["State holder", "The composable, plain class, or ViewModel that owns UI state and exposes events to change it.", "state-hoisting-udf"],
     ["StateFlow", "A hot observable stream often exposed by a ViewModel and collected as Compose State at the route boundary.", "state-hoisting-udf"],
     ["collectAsStateWithLifecycle", "The Android lifecycle-aware way to convert Flow or StateFlow values into Compose State.", "state-hoisting-udf"],
+    ["Route composable", "The screen-boundary composable that obtains app state holders, collects UI state, and passes plain values and events to content.", "viewmodel-lifecycle-di"],
+    ["viewModel()", "The lifecycle-viewmodel-compose helper that retrieves a ViewModel scoped to the nearest ViewModelStoreOwner.", "viewmodel-lifecycle-di"],
+    ["hiltViewModel()", "The Hilt Compose helper that retrieves a @HiltViewModel scoped to a navigation destination or supplied owner.", "viewmodel-lifecycle-di"],
+    ["@HiltViewModel", "A Hilt annotation that lets Hilt generate the ViewModel factory and inject constructor dependencies.", "viewmodel-lifecycle-di"],
+    ["SavedStateHandle", "A ViewModel key-value saved state handle for small restoration keys and UI element state across system process death.", "viewmodel-lifecycle-di"],
+    ["CreationExtras", "A ViewModel factory input bundle that exposes owners, default args, application, and saved-state creation helpers.", "viewmodel-lifecycle-di"],
+    ["stateIn", "A Flow operator that turns a cold upstream into a StateFlow in a scope with an initial value and sharing policy.", "viewmodel-lifecycle-di"],
+    ["SharingStarted.WhileSubscribed", "A StateFlow sharing policy that keeps upstream work active while collectors exist and can delay stopping briefly.", "viewmodel-lifecycle-di"],
+    ["ViewModelStoreOwner", "The owner that defines the lifetime and identity scope of a ViewModel instance.", "viewmodel-lifecycle-di"],
+    ["CompositionLocalProvider", "The composable that binds a CompositionLocal value for a specific subtree.", "compositionlocal-scope"],
+    ["compositionLocalOf", "A tracked CompositionLocal factory: changing the provided value invalidates only scopes that read current.", "compositionlocal-scope"],
+    ["staticCompositionLocalOf", "An untracked CompositionLocal factory for values that rarely or never change; provider changes recompose the provider content.", "compositionlocal-scope"],
+    ["LocalFoo.current", "The read of the nearest provided CompositionLocal value in the current composition scope.", "compositionlocal-scope"],
     ["Modifier", "An ordered immutable chain that sizes, draws, clips, positions, and handles input.", "modifiers"],
+    ["Modifier factory", "An extension function on Modifier that exposes an idiomatic chainable API and appends a modifier element.", "custom-modifiers"],
+    ["Modifier.Node", "The lower-level, reusable modifier implementation API used by Compose for high-performance custom behavior.", "custom-modifiers"],
+    ["ModifierNodeElement", "A stateless element that creates and updates stateful Modifier.Node instances and must implement equality correctly.", "custom-modifiers"],
+    ["DrawModifierNode", "A Modifier.Node type that draws inside the layout space.", "custom-modifiers"],
+    ["LayoutModifierNode", "A Modifier.Node type that measures and places wrapped content.", "custom-modifiers"],
+    ["CompositionLocalConsumerModifierNode", "A Modifier.Node type that reads CompositionLocal values at the modifier usage site.", "custom-modifiers"],
+    ["DelegatingNode", "A Modifier.Node that delegates to other nodes so related behavior can share state.", "custom-modifiers"],
+    ["composed", "An older custom modifier API that is no longer recommended for new custom modifier behavior because of performance costs.", "custom-modifiers"],
     ["Constraint", "The min and max width/height a parent gives a child during measurement.", "sizing"],
     ["dp", "Density-independent pixels for layout and touch target sizes.", "units"],
     ["sp", "Scale-independent pixels for text; respects density and user font scale.", "units"],
@@ -327,6 +469,11 @@
     ["Placeable", "A measured child with width, height, alignment lines, and place/placeRelative functions.", "custom-layouts"],
     ["Intrinsic measurement", "A pre-measure query for the size a child needs under hypothetical constraints.", "custom-layouts"],
     ["AlignmentLine", "A layout-provided coordinate such as FirstBaseline that parents can read after measuring.", "custom-layouts"],
+    ["BoxWithConstraints", "A layout that exposes incoming min/max constraints to composition so a component can choose content for its actual available space.", "advanced-layout-adaptation"],
+    ["SubcomposeLayout", "A lower-level layout that composes slots during measurement when later content genuinely depends on earlier measured results.", "advanced-layout-adaptation"],
+    ["LookaheadScope", "A layout scope that computes destination measurements and placements ahead of time so layout changes can be approached smoothly.", "advanced-layout-adaptation"],
+    ["ApproachLayoutModifierNode", "A Modifier.Node layout API for interpolating measurement or placement toward a destination calculated by lookahead.", "advanced-layout-adaptation"],
+    ["local constraints", "The actual constraints a component receives from its parent, pane, sheet, grid cell, or window, distinct from global window size.", "advanced-layout-adaptation"],
     ["ConstraintLayout", "A Compose layout from constraintlayout-compose that positions children relative to parent, siblings, guidelines, barriers, or chains.", "constraint-layout"],
     ["constrainAs", "The modifier that assigns a ConstraintLayout reference to a child and declares its links.", "constraint-layout"],
     ["ConstraintSet", "A decoupled set of constraints that can be swapped by configuration or animated while children use matching layoutId values.", "constraint-layout"],
@@ -372,9 +519,30 @@
     ["NavEntry", "Navigation 3 content resolved from a key, optionally carrying metadata for animation, scenes, dialogs, or layout policy.", "navigation3-state"],
     ["entryProvider", "A Navigation 3 DSL that maps NavKey types to NavEntry content.", "navigation3-state"],
     ["Scene", "A Navigation 3 layout unit that can render one or more NavEntry instances, enabling adaptive and multi-pane navigation.", "navigation3-state"],
+    ["Predictive back", "Android's gesture back model that lets users preview where a back swipe will take them.", "predictive-back-shared-transitions"],
+    ["PredictiveBackHandler", "A Compose activity API for intercepting predictive back and collecting BackEventCompat gesture progress.", "predictive-back-shared-transitions"],
+    ["BackEventCompat", "The predictive-back progress event containing progress plus touch coordinates for a gesture frame.", "predictive-back-shared-transitions"],
+    ["popEnterTransition", "A NavHost transition used specifically when the back stack is popped, including predictive back gestures.", "predictive-back-shared-transitions"],
+    ["popExitTransition", "A NavHost transition used for the exiting destination during a pop or predictive back gesture.", "predictive-back-shared-transitions"],
+    ["SharedTransitionLayout", "The top-level layout that provides SharedTransitionScope for Compose shared element and shared bounds transitions.", "predictive-back-shared-transitions"],
+    ["SharedTransitionScope", "The scope required by sharedElement and sharedBounds modifiers so matching content can animate through an overlay.", "predictive-back-shared-transitions"],
+    ["sharedElement", "A modifier for matching the same visual content, such as a hero image, between two composable states.", "predictive-back-shared-transitions"],
+    ["sharedBounds", "A modifier for matching container bounds when the entering and exiting content can look different.", "predictive-back-shared-transitions"],
+    ["rememberSharedContentState", "The shared-transition state keyed to the logical element that should match across destinations or content states.", "predictive-back-shared-transitions"],
+    ["LocalNavAnimatedContentScope", "A Navigation 3 CompositionLocal that exposes the AnimatedContentScope used by NavDisplay for shared transitions.", "predictive-back-shared-transitions"],
     ["Window size class", "A compact, medium, expanded, large, or extra-large classification of the app window used for layout decisions.", "adaptive-layouts"],
     ["Pane", "A content region in an adaptive layout; large windows can show multiple panes at once.", "adaptive-layouts"],
     ["List-detail", "An adaptive pattern that shows a list and selected detail together when space allows.", "adaptive-layouts"],
+    ["NavigationSuiteScaffold", "A Material 3 adaptive scaffold that switches top-level navigation between bar, rail, and drawer-style presentations from adaptive info.", "adaptive-canonical-navigation"],
+    ["NavigationSuiteType", "The selected navigation presentation type used by NavigationSuiteScaffold, either calculated from adaptive info or overridden for a product rule.", "adaptive-canonical-navigation"],
+    ["NavigationSuiteScaffoldDefaults", "Defaults for deriving NavigationSuiteType and colors for adaptive navigation suite surfaces.", "adaptive-canonical-navigation"],
+    ["ListDetailPaneScaffold", "A Material 3 adaptive canonical layout for a list pane, detail pane, and optional extra pane.", "adaptive-canonical-navigation"],
+    ["SupportingPaneScaffold", "A Material 3 adaptive canonical layout that keeps primary content central while exposing related tools or context in a supporting pane.", "adaptive-canonical-navigation"],
+    ["NavigableSupportingPaneScaffold", "A supporting-pane scaffold variant with built-in pane navigation and predictive-back-aware behavior.", "adaptive-canonical-navigation"],
+    ["ThreePaneScaffoldNavigator", "Navigator state for moving among list/detail/supporting/extra panes while preserving pane destination state.", "adaptive-canonical-navigation"],
+    ["WindowAdaptiveInfo", "The Material 3 adaptive info object that combines window size class and posture-related information for layout decisions.", "adaptive-canonical-navigation"],
+    ["HingeInfo", "Foldable hinge information supplied by adaptive APIs for posture-aware layout decisions.", "adaptive-canonical-navigation"],
+    ["Posture", "Device posture information such as tabletop or book-like modes that can affect navigation and pane layout.", "adaptive-canonical-navigation"],
     ["Insets", "System UI, display cutout, and keyboard space that content must avoid or handle.", "scaffold"],
     ["Edge-to-edge", "Drawing app content behind transparent system bars while protecting critical content and gestures with insets.", "edge-to-edge-insets"],
     ["WindowInsets", "The Compose API describing status bars, navigation bars, caption bars, cutouts, IME, gestures, and safe content regions.", "edge-to-edge-insets"],
@@ -382,6 +550,17 @@
     ["imePadding", "A modifier that pads content by the software keyboard inset and participates in animated inset consumption.", "edge-to-edge-insets"],
     ["imeNestedScroll", "A modifier for scrolling containers that lets IME movement coordinate with nested scroll when the keyboard opens or closes.", "edge-to-edge-insets"],
     ["consumeWindowInsets", "A modifier that marks inset space as consumed so descendants or siblings do not apply the same inset twice.", "edge-to-edge-insets"],
+    ["rememberLauncherForActivityResult", "The Activity Compose API that remembers an ActivityResultLauncher and registers its callback for a composable call site.", "activity-results-permissions"],
+    ["ManagedActivityResultLauncher", "The launcher returned by rememberLauncherForActivityResult; use launch from events and let Compose manage registration.", "activity-results-permissions"],
+    ["ActivityResultContract", "A typed contract that defines the launch input and result output for a platform or custom activity result flow.", "activity-results-permissions"],
+    ["ActivityResultContracts.GetContent", "A content-picking contract that returns one Uri for a requested MIME type.", "activity-results-permissions"],
+    ["ActivityResultContracts.OpenDocument", "A document-picking contract for long-lived document access, often paired with persistable URI permissions.", "activity-results-permissions"],
+    ["PickVisualMedia", "The Activity Result contract for Android's privacy-preserving photo picker.", "activity-results-permissions"],
+    ["PickVisualMediaRequest", "The request object that selects image, video, or MIME-type filtering for the photo picker contract.", "activity-results-permissions"],
+    ["RequestPermission", "The Activity Result contract for requesting one runtime permission and receiving a Boolean grant result.", "activity-results-permissions"],
+    ["RequestMultiplePermissions", "The Activity Result contract for requesting several runtime permissions and receiving a map of grant results.", "activity-results-permissions"],
+    ["shouldShowRequestPermissionRationale", "The platform signal used to decide whether a permission request needs an explanatory UI before launching the system prompt.", "activity-results-permissions"],
+    ["takePersistableUriPermission", "A ContentResolver call that persists read or write access to a document Uri returned by OpenDocument.", "activity-results-permissions"],
     ["ComposeView", "A View host that lets existing View screens render composable content through setContent.", "interop-migration"],
     ["ViewCompositionStrategy", "The policy that decides when a ComposeView composition is disposed relative to its host View or lifecycle.", "interop-migration"],
     ["AndroidView", "A composable wrapper for embedding a traditional Android View inside Compose when no Compose equivalent exists.", "interop-migration"],
@@ -394,6 +573,22 @@
     ["CompositionLocal", "A tree-scoped implicit value channel used for theme tokens and other broadly consumed local context.", "theming-design-system"],
     ["Design token", "A named semantic design value such as a color role, text style, shape, spacing, or elevation.", "theming-design-system"],
     ["Dynamic color", "Material You color schemes generated from user personalization on supported Android versions.", "theming-design-system"],
+    ["AnnotatedString", "A text value that can carry span styles, paragraph styles, annotations, and links inside one Text composable.", "advanced-text-typography"],
+    ["SpanStyle", "Inline styling for a range of characters, such as color, font weight, font style, or decoration.", "advanced-text-typography"],
+    ["ParagraphStyle", "Paragraph-level styling for alignment, indentation, line breaks, and related block text behavior.", "advanced-text-typography"],
+    ["LinkAnnotation", "The modern annotation type for clickable parts of text, including URL links and custom click behavior.", "advanced-text-typography"],
+    ["TextLinkStyles", "The style bundle used by LinkAnnotation to describe link appearance across normal, hovered, focused, or pressed states.", "advanced-text-typography"],
+    ["SelectionContainer", "A foundation wrapper that makes descendant text selectable and copyable.", "advanced-text-typography"],
+    ["DisableSelection", "A wrapper used inside SelectionContainer to opt a specific text subtree out of selection.", "advanced-text-typography"],
+    ["LineBreak", "A paragraph text-layout setting that controls line-breaking strategy for readable multi-line text.", "advanced-text-typography"],
+    ["Hyphens", "A paragraph text-layout setting that enables automatic hyphenation where platform support is available.", "advanced-text-typography"],
+    ["LineHeightStyle", "Controls how line-height space is aligned and trimmed above or below text lines.", "advanced-text-typography"],
+    ["TextMeasurer", "A Compose text measurement service used when drawing or positioning text manually outside Text.", "advanced-text-typography"],
+    ["rememberTextMeasurer", "A composable helper that remembers TextMeasurer for draw and Canvas text measurement work.", "advanced-text-typography"],
+    ["drawText", "A DrawScope API for rendering text layouts manually after measuring them with TextMeasurer.", "advanced-text-typography"],
+    ["GoogleFont.Provider", "A downloadable-font provider definition used by Compose font APIs to load Google Fonts with certificates.", "advanced-text-typography"],
+    ["FontVariation", "A font API for selecting variable font axes such as weight or width on supported Android versions.", "advanced-text-typography"],
+    ["Emoji support", "Compose text support for modern emoji through platform and emoji compatibility behavior down to older API levels.", "advanced-text-typography"],
     ["Content padding", "Padding passed into scrolling content so items clear bars without clipping scroll.", "scaffold"],
     ["TextFieldState", "The state holder for state-based text fields; it owns text, selection, composition, and edit synchronization.", "textfields"],
     ["rememberTextFieldState", "A saveable helper that creates TextFieldState for composables and restores it through configuration and process recreation.", "textfields"],
@@ -440,6 +635,22 @@
     ["Touch slop", "The motion threshold that separates an intentional drag from small accidental pointer movement.", "pointer-input-gestures"],
     ["Nested scroll", "A protocol that lets scrollable parents and children share pre-scroll, node-consumed, and post-scroll deltas.", "pointer-input-gestures"],
     ["scrollable2D", "A low-level modifier for pointer-driven movement across both x and y axes.", "pointer-input-gestures"],
+    ["dragAndDropSource", "A modifier that starts Compose drag operations and supplies DragAndDropTransferData.", "advanced-input-rich-content"],
+    ["dragAndDropTarget", "A modifier that filters incoming drag events and routes accepted drops to a remembered DragAndDropTarget.", "advanced-input-rich-content"],
+    ["DragAndDropTransferData", "The data package for a Compose drag source, including ClipData and optional drag flags.", "advanced-input-rich-content"],
+    ["DragAndDropTarget", "The callback object for drag lifecycle events such as onStarted, onEntered, onExited, onDrop, and onEnded.", "advanced-input-rich-content"],
+    ["ClipData", "Android clipboard and drag payload data, usually carrying text, HTML, intents, or content URIs.", "advanced-input-rich-content"],
+    ["ClipEntry", "Compose's clipboard entry wrapper around platform ClipData.", "advanced-input-rich-content"],
+    ["contentReceiver", "A modifier that lets a composable receive rich pasted, dragged, or IME-inserted content.", "advanced-input-rich-content"],
+    ["TransferableContent", "The rich content object delivered to a content receiver, including media type helpers and remaining content.", "advanced-input-rich-content"],
+    ["MediaType", "A Compose content-transfer classifier such as MediaType.Image used to decide which rich payloads to consume.", "advanced-input-rich-content"],
+    ["pointerInteropFilter", "A low-level modifier that exposes Android MotionEvent data to Compose input code.", "advanced-input-rich-content"],
+    ["MotionEvent", "The platform pointer event object that exposes stylus axes, tool type, hover distance, and cancellation flags.", "advanced-input-rich-content"],
+    ["ACTION_CANCEL", "A MotionEvent action meaning the current gesture or stroke should be canceled rather than committed.", "advanced-input-rich-content"],
+    ["FLAG_CANCELED", "A MotionEvent flag that can mark an up event as canceled, often used for palm rejection and unwanted input.", "advanced-input-rich-content"],
+    ["AXIS_PRESSURE", "A MotionEvent axis for stylus pressure, commonly used to vary ink stroke width or opacity.", "advanced-input-rich-content"],
+    ["hoverable", "A high-level Compose modifier for hover interactions backed by an InteractionSource.", "advanced-input-rich-content"],
+    ["PointerEventType", "The Compose pointer event type used by awaitPointerEvent loops to distinguish press, release, move, enter, exit, scroll, and related events.", "advanced-input-rich-content"],
     ["FocusRequester", "An object used to move focus to a specific focus target from an event or effect after composition.", "focus-keyboard-input"],
     ["focusGroup", "A modifier that keeps traversal inside a logical group before focus leaves that group.", "focus-keyboard-input"],
     ["focusProperties", "A modifier for overriding focus traversal, enter, exit, or focusability rules on a node.", "focus-keyboard-input"],
@@ -451,7 +662,18 @@
     ["ViewModel", "A screen-level state holder for UI state and business logic across configuration changes.", "state-saving"],
     ["LaunchedEffect", "Runs a coroutine after composition and restarts it when its keys change.", "effects-lifecycle"],
     ["DisposableEffect", "Registers side effects that need cleanup when keys change or composition leaves.", "effects-lifecycle"],
+    ["rememberCoroutineScope", "Returns a CoroutineScope tied to the call site's composition lifecycle for event-triggered coroutines.", "effects-lifecycle"],
+    ["SideEffect", "Publishes Compose state to non-Compose code after every successful composition.", "effects-lifecycle"],
+    ["rememberUpdatedState", "Keeps the latest value visible to a long-running effect without restarting that effect.", "effects-lifecycle"],
+    ["produceState", "Converts external or suspending sources into Compose State using a producer coroutine and keys.", "effects-lifecycle"],
+    ["snapshotFlow", "Converts Compose state reads into a cold Flow that emits distinct values while collected.", "effects-lifecycle"],
+    ["derivedStateOf", "Creates derived Compose State that updates only when the derived result changes, useful for high-frequency inputs crossing thresholds.", "effects-lifecycle"],
     ["Skippability", "Compose's ability to avoid re-running a composable whose stable inputs did not change.", "stability-performance"],
+    ["Strong skipping", "Compose compiler mode, enabled by default in Kotlin 2.0.20, that makes restartable composables skippable even with unstable parameters.", "stability-performance"],
+    ["Restartable", "A composable that can serve as a recomposition entry point when observed state changes.", "stability-performance"],
+    ["@Immutable", "A contract annotation telling the Compose compiler a type's public values cannot change after construction.", "stability-performance"],
+    ["@Stable", "A contract annotation telling the Compose compiler that mutations notify Compose and equality is safe to use for skipping.", "stability-performance"],
+    ["Immutable collections", "Kotlinx persistent collection types that the Compose compiler can treat as immutable, unlike List, Set, and Map interfaces.", "stability-performance"],
     ["Macrobenchmark", "A Jetpack test library for measuring app startup, scrolling, animations, trace sections, and frame timing on a device.", "performance-measurement"],
     ["Baseline Profile", "A generated ART profile that precompiles critical startup and runtime paths for faster first-run performance.", "performance-measurement"],
     ["CompilationMode", "The Macrobenchmark setting that controls how much app code is compiled before measurement, including None, Partial, Full, and Ignore.", "performance-measurement"],
@@ -465,11 +687,34 @@
     ["Layout Inspector", "An Android Studio tool for inspecting a running Compose hierarchy, semantics, recomposition counts, and skipped compositions.", "previews-tooling"],
     ["Compose UI Check", "A Compose Preview mode that audits accessibility and adaptive issues across display sizes and orientations.", "previews-tooling"],
     ["Semantics tree", "The accessibility and testing representation of what UI elements mean and can do.", "accessibility-testing"],
+    ["customActions", "Semantics actions that move secondary row actions, such as dismiss or bookmark, into the accessibility action menu.", "advanced-semantics"],
+    ["CustomAccessibilityAction", "A labeled semantics action that returns true when the accessibility-triggered action is handled.", "advanced-semantics"],
+    ["liveRegion", "A semantics property for announcing important changing content without requiring focus to move to it.", "advanced-semantics"],
+    ["paneTitle", "A semantics property that identifies newly appeared panes or window-like surfaces such as bottom sheets.", "advanced-semantics"],
+    ["traversalIndex", "A semantics ordering hint used with traversal groups when default TalkBack order does not match the intended reading path.", "advanced-semantics"],
+    ["clearAndSetSemantics", "A modifier that removes descendant semantics and replaces them with a deliberate semantic contract.", "advanced-semantics"],
+    ["progressBarRangeInfo", "A semantics property that communicates current progress, range, and step count to assistive technologies.", "advanced-semantics"],
     ["ComposeTestRule", "The JUnit rule that hosts Compose content, finds semantic nodes, performs actions, and synchronizes assertions.", "compose-ui-testing"],
     ["SemanticsMatcher", "A matcher that finds Compose test nodes by semantic properties such as text, role, state, or test tag.", "compose-ui-testing"],
     ["MainTestClock", "The virtual clock Compose UI tests use to advance recomposition, animations, and gestures deterministically.", "compose-ui-testing"],
     ["Test tag", "A semantic property for stable test lookup when visible text or content descriptions are not the right selector.", "compose-ui-testing"],
     ["AnimatedVisibility", "A composable for animating content entering and leaving the hierarchy.", "animation-motion"],
+    ["AnimatedContent", "A composable that animates between target content states and keys content from its target-state lambda parameter.", "advanced-animation-motion"],
+    ["ContentTransform", "The enter-plus-exit transition object used by AnimatedContent, usually built with togetherWith.", "advanced-animation-motion"],
+    ["SizeTransform", "An AnimatedContent transform that controls how container size changes between initial and target content.", "advanced-animation-motion"],
+    ["animateContentSize", "A modifier that animates layout size changes and should appear before the size modifiers whose changes it animates.", "advanced-animation-motion"],
+    ["updateTransition", "A state-driven API that creates a Transition for coordinating multiple animated values from one target state.", "advanced-animation-motion"],
+    ["Transition", "A coordinated animation state machine whose child animations update every frame as target state changes.", "advanced-animation-motion"],
+    ["MutableTransitionState", "A transition state holder that can start an enter animation immediately when content enters composition.", "advanced-animation-motion"],
+    ["AnimationSpec", "The timing or physics model for an animation, such as spring, tween, keyframes, repeatable, or snap.", "advanced-animation-motion"],
+    ["spring", "A physics-based AnimationSpec that preserves velocity continuity when animation targets are interrupted.", "advanced-animation-motion"],
+    ["tween", "A duration-based AnimationSpec with easing, useful for deliberate fixed-time motion.", "advanced-animation-motion"],
+    ["keyframes", "An AnimationSpec for staged values at explicit times within a duration.", "advanced-animation-motion"],
+    ["rememberInfiniteTransition", "A composable API for continuously repeating animations that remain active while in composition.", "advanced-animation-motion"],
+    ["InfiniteTransition", "The transition object behind rememberInfiniteTransition for indefinitely repeating child animations.", "advanced-animation-motion"],
+    ["Animatable", "A coroutine-controlled animation value for gesture, fling, decay, and imperative animation jobs.", "advanced-animation-motion"],
+    ["snapTo", "An Animatable suspending call that immediately moves the value, useful while input directly controls the animation state.", "advanced-animation-motion"],
+    ["animateDecay", "An Animatable suspending call that continues motion from a velocity using a decay spec, often for fling-like release.", "advanced-animation-motion"],
   ];
   const DECISION_GUIDES = [
     {
@@ -481,10 +726,38 @@
     },
     {
       area: "State",
+      question: "A local value, list, or derived threshold must trigger recomposition reliably.",
+      use: "Use MutableState for scalar values, SnapshotStateList/Map for observable in-place collections, derivedStateOf for fewer output changes, and snapshotFlow when Compose state must enter Flow.",
+      avoid: "Do not put a plain MutableList inside MutableState and mutate it in place; replace the value or use a snapshot-aware collection.",
+      section: "snapshot-state-runtime",
+    },
+    {
+      area: "Composition",
+      question: "Internal state, effects, or saveable child state must stay attached while content reorders, moves, switches tabs, or survives configuration changes.",
+      use: "Preserve logical identity with key, lazy item keys, contentType, remembered movableContentOf, SaveableStateHolder, or retain based on the lifespan you need.",
+      avoid: "Do not key repeated content by index, allocate random keys, recreate movable content every recomposition, or expect remember to survive removal from composition.",
+      section: "composition-identity-retention",
+    },
+    {
+      area: "State",
       question: "Several composables need the same value, a ViewModel exposes StateFlow, or a component must be previewable.",
       use: "Choose one state owner, expose immutable state plus events, and collect Flow as Compose State at the route boundary.",
       avoid: "Do not pass ViewModels through reusable UI or keep duplicate local and screen-level sources of truth.",
       section: "state-hoisting-udf",
+    },
+    {
+      area: "Architecture",
+      question: "A screen needs a ViewModel, Hilt injection, lifecycle-aware Flow collection, SavedStateHandle, or a custom ViewModel factory.",
+      use: "Keep ViewModel or hiltViewModel calls in the route/destination boundary, collect with collectAsStateWithLifecycle, expose immutable UI state, and save only minimal restoration keys.",
+      avoid: "Do not construct repositories or ViewModels in reusable composables, manually collect Flow for UI data, or save loaded screen data in SavedStateHandle.",
+      section: "viewmodel-lifecycle-di",
+    },
+    {
+      area: "Architecture",
+      question: "Many descendants need the same tree-scoped context such as theme tokens, locale-like configuration, or a design-system policy.",
+      use: "Use CompositionLocal with a safe default and a narrow provider scope; choose compositionLocalOf for changing values and staticCompositionLocalOf for values that rarely change.",
+      avoid: "Do not use CompositionLocal to hide ViewModels, repositories, navigation controllers, or ordinary screen UI state.",
+      section: "compositionlocal-scope",
     },
     {
       area: "Layout",
@@ -492,6 +765,13 @@
       use: "Read the modifier chain in order; every modifier wraps the result of the modifiers before it.",
       avoid: "Do not reorder modifiers just for style without checking what size, draw, and input area changed.",
       section: "modifier-order",
+    },
+    {
+      area: "API design",
+      question: "A behavior is repeated across components or needs custom draw, layout, pointer, semantics, or CompositionLocal-aware modifier behavior.",
+      use: "Start by chaining existing modifiers; use a composable modifier factory only when higher-level Compose APIs are needed; use Modifier.Node for reusable custom behavior.",
+      avoid: "Do not break the chain, rely on composed for new behavior, or implement ModifierNodeElement without correct equality and update.",
+      section: "custom-modifiers",
     },
     {
       area: "Layout",
@@ -513,6 +793,13 @@
       use: "Write a custom Layout or layout modifier with one measure per child, explicit parent size, placement, and intrinsics/alignment lines only when needed.",
       avoid: "Do not measure the same child repeatedly or create a custom layout for behavior a built-in container already handles.",
       section: "custom-layouts",
+    },
+    {
+      area: "Layout internals",
+      question: "A reusable component must adapt to its own available width, compose dependent slots after measurement, or animate a large layout reflow.",
+      use: "Use BoxWithConstraints for component-local breakpoints, custom Layout for one-pass measurement, SubcomposeLayout only when slot composition depends on measured results, and LookaheadScope for approach-style layout motion.",
+      avoid: "Do not query global window size from leaf UI, place BoxWithConstraints/SubcomposeLayout in every lazy item without proof, or measure children repeatedly to discover sizes.",
+      section: "advanced-layout-adaptation",
     },
     {
       area: "Layout internals",
@@ -555,6 +842,13 @@
       use: "Put color, type, shape, and extra semantic tokens in MaterialTheme or a small theme wrapper backed by CompositionLocal.",
       avoid: "Do not hard-code component colors or use CompositionLocal to hide ordinary screen state and dependencies.",
       section: "theming-design-system",
+    },
+    {
+      area: "Text",
+      question: "A surface needs inline styles, partial links, copyable text, readable paragraphs, manually drawn labels, downloadable fonts, or modern emoji.",
+      use: "Use AnnotatedString for rich spans, LinkAnnotation for links, SelectionContainer for copyable text, LineBreak/Hyphens for paragraphs, TextMeasurer with drawWithCache for custom drawing, and font fallback plus emoji checks for resilient typography.",
+      avoid: "Do not split one sentence into multiple Text nodes, make the whole Text clickable for one link, remeasure text every draw, ship a single-font family without fallback, or strip unsupported emoji.",
+      section: "advanced-text-typography",
     },
     {
       area: "Layout",
@@ -606,6 +900,13 @@
       section: "edge-to-edge-insets",
     },
     {
+      area: "System UI",
+      question: "A composable needs to pick content, open the photo picker, request a runtime permission, or receive a result from another app.",
+      use: "Register rememberLauncherForActivityResult unconditionally, launch from a user or business event, prefer Photo Picker for media, persist OpenDocument access when needed, and model denied permissions as UI state.",
+      avoid: "Do not call startActivityForResult, conditionally register launchers, launch from composition, request broad media permissions for selected photos, or crash/loop when a permission is denied.",
+      section: "activity-results-permissions",
+    },
+    {
       area: "Migration",
       question: "An existing View or Fragment screen must host Compose, Compose must host a legacy View, or a team is migrating one feature at a time.",
       use: "Use ComposeView with the right ViewCompositionStrategy, AndroidView only for missing View components, AndroidView onReset in lazy layouts, and explicit state ownership across the boundary.",
@@ -627,11 +928,25 @@
       section: "navigation3-state",
     },
     {
+      area: "Motion",
+      question: "Back navigation should preview the destination, coordinate with NavHost or NavDisplay, or visually connect shared content.",
+      use: "Use supported back APIs, Navigation Compose pop transitions, SharedTransitionLayout with sharedElement/sharedBounds, and PredictiveBackHandler only for custom progress-driven surfaces.",
+      avoid: "Do not intercept root back, omit pop transitions for custom navigation motion, or use sharedElement without the shared transition and animated visibility scopes.",
+      section: "predictive-back-shared-transitions",
+    },
+    {
       area: "Adaptive",
       question: "The same feature must work on phones, tablets, foldables, desktop windows, and split screen.",
       use: "Base the top-level layout on the current app window size class, then pass simple pane/configuration state down.",
       avoid: "Do not branch from physical screen size or let leaf components query global window state independently.",
       section: "adaptive-layouts",
+    },
+    {
+      area: "Adaptive",
+      question: "A production app needs top-level adaptive navigation, list-detail, supporting panes, or large-window quality checks.",
+      use: "Use NavigationSuiteScaffold for primary destinations, Material 3 canonical pane scaffolds for content, save pane destination state, and test compact through expanded windows plus posture changes.",
+      avoid: "Do not hand-roll bar versus rail switching everywhere, stretch single-column content across expanded windows, lock orientation, or use deprecated Display metrics.",
+      section: "adaptive-canonical-navigation",
     },
     {
       area: "Components",
@@ -646,6 +961,13 @@
       use: "Start with semantic components and high-level gesture modifiers, then drop to pointerInput only for custom gestures.",
       avoid: "Do not replace clickable, selectable, draggable, scrollable, or transformable with raw pointer code unless you also rebuild semantics, keyboard, hover, focus, and consumption behavior.",
       section: "pointer-input-gestures",
+    },
+    {
+      area: "Input",
+      question: "A feature needs drag-and-drop, clipboard, rich paste, stylus data, hover, or right-click support.",
+      use: "Use dragAndDropSource/dragAndDropTarget with ClipData and remembered targets, ClipboardManager plus ClipEntry for copy/paste, contentReceiver for rich payloads, MotionEvent only for stylus axes, and explicit hover/right-click affordances on large screens.",
+      avoid: "Do not ignore drag permissions, copy sensitive values without marking the clip, commit canceled stylus strokes, or make context menus available only through touch long-press.",
+      section: "advanced-input-rich-content",
     },
     {
       area: "Input",
@@ -671,8 +993,8 @@
     {
       area: "Performance",
       question: "The screen janks, recomposes too much, or skips less often than expected.",
-      use: "Check stability, defer state reads when useful, keep lazy item keys stable, and avoid unnecessary work during composition.",
-      avoid: "Do not assume recomposition itself is the bug before measuring what is invalidating and what is expensive.",
+      use: "Measure first, inspect compiler stability reports, account for strong skipping, keep models immutable, and defer state reads when the later phase can own the work.",
+      avoid: "Do not add @Stable or @Immutable to silence reports unless the type really satisfies the stability contract.",
       section: "stability-performance",
     },
     {
@@ -704,6 +1026,13 @@
       section: "accessibility-testing",
     },
     {
+      area: "Quality",
+      question: "A custom component has secondary actions, dynamic announcements, non-linear reading order, progress, errors, or replaced visual content.",
+      use: "Write an explicit semantics contract with customActions, liveRegion, paneTitle, traversal groups, error/progress semantics, and merge or clear behavior only where it improves the user model.",
+      avoid: "Do not clear semantics from interactive UI without replacing role, state, label, action, and test coverage.",
+      section: "advanced-semantics",
+    },
+    {
       area: "Testing",
       question: "A Compose screen needs reliable UI tests for behavior, state, animation, or asynchronous updates.",
       use: "Host the smallest useful surface with ComposeTestRule, find nodes through semantics, perform user actions, and let the rule synchronize or control mainClock explicitly.",
@@ -717,6 +1046,13 @@
       avoid: "Do not animate layout-critical changes without checking readability, accessibility, and interrupted states.",
       section: "animation-motion",
     },
+    {
+      area: "Motion",
+      question: "Motion needs coordinated values, content transforms, gesture interruption, deterministic tests, or Animation Preview inspection.",
+      use: "Use updateTransition for related values, AnimatedContent with its target-state parameter for content swaps, Animatable for coroutine-controlled gesture motion, labels for tooling, and ComposeTestRule.mainClock for tests.",
+      avoid: "Do not read stale outer state inside AnimatedContent, start Animatable jobs from the composable body, hide exit work from AnimatedVisibility, or test animation timing with sleeps.",
+      section: "advanced-animation-motion",
+    },
   ];
 
   // ----- tiny DOM + util -----
@@ -729,7 +1065,7 @@
   function sectionText(s) {
     return [
       s.title, s.category, s.summary, stripHtml(s.explanation_html), (s.key_points || []).join(" "),
-      stripHtml(s.gotchas_html), s.canonical_code
+      stripHtml(s.gotchas_html), (s.gotchas_code && s.gotchas_code.code) || "", s.canonical_code
     ].join(" ");
   }
   function wordCount(s) { const words = sectionText(s).trim().split(/\s+/).filter(Boolean); return words.length; }
@@ -782,7 +1118,7 @@
       return true;
     });
   }
-  function refsFor(s) { return uniqueRefs(refKeysFor(s).slice(0, 8)); }
+  function refsFor(s) { return uniqueRefs(refKeysFor(s).slice(0, 12)); }
   function readProgress() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -1173,6 +1509,414 @@
     return "@Composable\nfun InlineConstraintProfile(modifier: Modifier = Modifier) {\n  ConstraintLayout(modifier.fillMaxWidth()) {\n    val (avatar, title, subtitle, action) = createRefs()\n\n    ProfilePhoto(Modifier.constrainAs(avatar) {\n      start.linkTo(parent.start, 16.dp)\n      top.linkTo(parent.top, 16.dp)\n    })\n    Text(\"Ada Lovelace\", Modifier.constrainAs(title) {\n      start.linkTo(avatar.end, 12.dp)\n      top.linkTo(avatar.top)\n      end.linkTo(action.start, 12.dp)\n      width = Dimension.fillToConstraints\n    })\n    Text(\"Online\", Modifier.constrainAs(subtitle) {\n      start.linkTo(title.start)\n      top.linkTo(title.bottom, 4.dp)\n    })\n    Button(onClick = { }, Modifier.constrainAs(action) {\n      end.linkTo(parent.end, 16.dp)\n      top.linkTo(parent.top, 16.dp)\n    }) { Text(\"Follow\") }\n  }\n}";
   }
 
+  function pvAdvancedLayoutAdaptation(pg, v, stage) {
+    const mode = v.advancedLayoutMode || "BoxWithConstraints";
+    const width = Math.max(240, Math.min(960, Math.round(num(v.availableWidth, 560))));
+    const compact = width < 420;
+    const expanded = width >= 680;
+    stage.classList.add("layadapt-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "layadapt-shell layadapt-" + mode.toLowerCase());
+    const status = {
+      BoxWithConstraints: v.componentLocalConstraints === "true" ? "local constraints" : "global size leak",
+      MeasurePolicy: v.singleMeasurePass === "true" ? "single-pass measure" : "double measure",
+      Subcompose: v.avoidItemSubcompose === "true" ? "bounded subcompose" : "per-item overhead",
+      Lookahead: v.lookaheadApproach === "true" ? "approach motion" : "snap reflow",
+      AntiPattern: "review traps",
+    }[mode] || "layout";
+    shell.appendChild(h("div", "layadapt-top", "<b>" + esc(mode) + "</b><span>" + esc(status) + "</span>"));
+    const body = h("div", "layadapt-body");
+    if (mode === "AntiPattern") {
+      const traps = ["WindowSize in leaf", "BoxWithConstraints per item", "measure child twice", "snap reflow"];
+      const grid = h("div", "layadapt-traps");
+      traps.forEach(function (trap) { grid.appendChild(h("span", null, esc(trap))); });
+      body.appendChild(grid);
+    } else if (mode === "BoxWithConstraints") {
+      const card = h("div", v.componentLocalConstraints === "true" ? "layadapt-card good" : "layadapt-card warn");
+      card.appendChild(h("b", null, v.componentLocalConstraints === "true" ? "Component reads maxWidth" : "Leaf queries window"));
+      card.appendChild(h("span", null, (compact ? "compact" : expanded ? "expanded" : "medium") + " at " + width + "dp"));
+      const meter = h("div", "layadapt-meter");
+      const fill = h("i");
+      fill.style.width = Math.max(22, Math.min(100, Math.round((width - 200) / 8))) + "%";
+      meter.appendChild(fill);
+      card.appendChild(meter);
+      body.appendChild(card);
+    } else if (mode === "MeasurePolicy") {
+      const flow = h("div", "layadapt-flow");
+      [["constraints", v.boundedBreakpoints === "true" ? "bounded" : "raw"], ["measure", v.singleMeasurePass === "true" ? "once" : "twice"], ["place", v.intrinsicFallback === "true" ? "baseline aware" : "simple"]].forEach(function (item) {
+        flow.appendChild(h("section", item[1] === "twice" ? "warn" : "good", "<i>" + esc(item[0]) + "</i><b>" + esc(item[1]) + "</b>"));
+      });
+      body.appendChild(flow);
+    } else if (mode === "Subcompose") {
+      const slots = h("div", "layadapt-slots");
+      [["Header", "measure first"], ["Body", "depends on header"], ["Footer", "optional slot"]].forEach(function (slot, idx) {
+        slots.appendChild(h("section", v.avoidItemSubcompose === "true" || idx === 0 ? "good" : "warn", "<b>" + esc(slot[0]) + "</b><span>" + esc(slot[1]) + "</span>"));
+      });
+      body.appendChild(slots);
+    } else {
+      const before = h("div", "layadapt-look before", "<b>compact</b><span>old placement</span>");
+      const after = h("div", v.lookaheadApproach === "true" ? "layadapt-look after good" : "layadapt-look after warn", "<b>expanded</b><span>" + (v.lookaheadApproach === "true" ? "approach target" : "snap target") + "</span>");
+      body.appendChild(before);
+      body.appendChild(after);
+    }
+    shell.appendChild(body);
+    const chips = h("div", "layadapt-chips");
+    [
+      width + "dp",
+      v.componentLocalConstraints === "true" ? "component-local" : "window query",
+      v.avoidItemSubcompose === "true" ? "bounded subcompose" : "per-item subcompose",
+      v.singleMeasurePass === "true" ? "single measure" : "double measure",
+      v.lookaheadApproach === "true" ? "lookahead" : "snap",
+    ].forEach(function (chip) { chips.appendChild(h("span", null, esc(chip))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genAdvancedLayoutAdaptation(pg, v) {
+    const mode = v.advancedLayoutMode || "BoxWithConstraints";
+    const width = Math.round(num(v.availableWidth, 560));
+    if (mode === "BoxWithConstraints") {
+      if (v.componentLocalConstraints !== "true") {
+        return "import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun MetricCard(metric: MetricUi) {\n  // BUG: a reusable card may live in a pane, grid cell, sheet, or split window.\n  val windowSize = currentWindowAdaptiveInfo().windowSizeClass\n  val wide = windowSize.isWidthAtLeastBreakpoint(840)\n\n  MetricCardContent(metric = metric, wide = wide)\n}\n\n// Prefer BoxWithConstraints or a parent-provided layout mode based on actual space.";
+      }
+      const breakpoints = v.boundedBreakpoints === "true"
+        ? "    val columns = when {\n      maxWidth >= 720.dp -> 4\n      maxWidth >= 480.dp -> 2\n      else -> 1\n    }"
+        : "    val columns = if (maxWidth > 0.dp) 4 else 1 // BUG: unbounded or meaningless breakpoint.";
+      return "import androidx.compose.foundation.layout.BoxWithConstraints\nimport androidx.compose.foundation.layout.fillMaxWidth\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.unit.dp\n\n@Composable\nfun MetricStrip(\n  metrics: List<MetricUi>,\n  modifier: Modifier = Modifier\n) {\n  BoxWithConstraints(modifier.fillMaxWidth()) {\n" + breakpoints + "\n\n    MetricGrid(\n      metrics = metrics,\n      columns = columns,\n      maxCardWidth = maxWidth / columns\n    )\n  }\n}\n\n// Preview this component at " + width + "dp, plus compact, medium, and expanded parent widths.";
+    }
+    if (mode === "MeasurePolicy") {
+      if (v.singleMeasurePass !== "true") {
+        return "import androidx.compose.runtime.Composable\nimport androidx.compose.ui.layout.Layout\n\n@Composable\nfun DoubleMeasureTrap(content: @Composable () -> Unit) {\n  Layout(content = content) { measurables, constraints ->\n    val first = measurables.first().measure(constraints)\n    val second = measurables.first().measure(constraints.copy(minWidth = 0))\n    // BUG: measuring the same Measurable twice in one pass can throw.\n    layout(maxOf(first.width, second.width), first.height + second.height) {\n      first.place(0, 0)\n      second.place(0, first.height)\n    }\n  }\n}";
+      }
+      const intrinsic = v.intrinsicFallback === "true" ? "\n// Add minIntrinsicWidth/minIntrinsicHeight overrides if a parent needs pre-measure answers." : "";
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.layout.Layout\n\n@Composable\nfun WrappingBadgeRow(\n  modifier: Modifier = Modifier,\n  content: @Composable () -> Unit\n) {\n  Layout(content = content, modifier = modifier) { measurables, constraints ->\n    val loose = constraints.copy(minWidth = 0, minHeight = 0)\n    val placeables = measurables.map { measurable -> measurable.measure(loose) }\n    val maxWidth = constraints.maxWidth\n    var x = 0\n    var y = 0\n    var lineHeight = 0\n    val positions = placeables.map { placeable ->\n      if (x > 0 && x + placeable.width > maxWidth) {\n        x = 0\n        y += lineHeight\n        lineHeight = 0\n      }\n      val position = x to y\n      x += placeable.width\n      lineHeight = maxOf(lineHeight, placeable.height)\n      position\n    }\n    val height = (y + lineHeight).coerceIn(constraints.minHeight, constraints.maxHeight)\n\n    layout(width = maxWidth, height = height) {\n      placeables.forEachIndexed { index, placeable ->\n        val (px, py) = positions[index]\n        placeable.placeRelative(px, py)\n      }\n    }\n  }\n}" + intrinsic;
+    }
+    if (mode === "Subcompose") {
+      if (v.avoidItemSubcompose !== "true") {
+        return "import androidx.compose.foundation.layout.BoxWithConstraints\nimport androidx.compose.foundation.lazy.LazyColumn\nimport androidx.compose.foundation.lazy.items\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.unit.dp\n\n@Composable\nfun FeedWithPerItemSubcompose(cards: List<CardUi>) {\n  LazyColumn {\n    items(cards, key = { it.id }) { card ->\n      // BUG: BoxWithConstraints is subcomposition; avoid putting it in every item unless measured proof says it is needed.\n      BoxWithConstraints {\n        FeedCard(card, wide = maxWidth > 420.dp)\n      }\n    }\n  }\n}";
+      }
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.layout.SubcomposeLayout\n\nprivate enum class ProfileSlot { Header, Body }\n\n@Composable\nfun CollapsingProfileLayout(\n  header: @Composable () -> Unit,\n  body: @Composable (availableHeight: Int) -> Unit,\n  modifier: Modifier = Modifier\n) {\n  SubcomposeLayout(modifier) { constraints ->\n    val headerPlaceables = subcompose(ProfileSlot.Header, header)\n      .map { measurable -> measurable.measure(constraints.copy(minHeight = 0)) }\n    val headerHeight = headerPlaceables.maxOfOrNull { it.height } ?: 0\n    val bodyConstraints = constraints.copy(\n      minHeight = 0,\n      maxHeight = (constraints.maxHeight - headerHeight).coerceAtLeast(0)\n    )\n    val bodyPlaceables = subcompose(ProfileSlot.Body) { body(bodyConstraints.maxHeight) }\n      .map { measurable -> measurable.measure(bodyConstraints) }\n\n    layout(constraints.maxWidth, headerHeight + bodyPlaceables.sumOf { it.height }) {\n      var y = 0\n      headerPlaceables.forEach { it.placeRelative(0, y) }\n      y += headerHeight\n      bodyPlaceables.forEach { placeable ->\n        placeable.placeRelative(0, y)\n        y += placeable.height\n      }\n    }\n  }\n}\n\n// Use subcomposition when later slots truly depend on earlier measured results.";
+    }
+    if (mode === "Lookahead") {
+      if (v.lookaheadApproach !== "true") {
+        return "import androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun ReflowingActions(expanded: Boolean, actions: List<ActionUi>) {\n  // BUG: large layout changes snap between placements with no destination-aware approach.\n  if (expanded) {\n    Row { actions.forEach { ActionChip(it) } }\n  } else {\n    Column { actions.forEach { ActionChip(it) } }\n  }\n}";
+      }
+      return "import androidx.compose.animation.animateBounds\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.layout.LookaheadScope\n\n@Composable\nfun ReflowingActions(\n  expanded: Boolean,\n  actions: List<ActionUi>,\n  modifier: Modifier = Modifier\n) {\n  LookaheadScope {\n    val animated = Modifier.animateBounds(lookaheadScope = this)\n\n    if (expanded) {\n      Row(modifier) {\n        actions.forEach { action -> ActionChip(action, modifier = animated) }\n      }\n    } else {\n      Column(modifier) {\n        actions.forEach { action -> ActionChip(action, modifier = animated) }\n      }\n    }\n  }\n}\n\n// Lookahead calculates the destination layout; animateBounds approaches size and position changes.";
+    }
+    return "import androidx.compose.foundation.layout.BoxWithConstraints\nimport androidx.compose.foundation.lazy.LazyColumn\nimport androidx.compose.foundation.lazy.items\nimport androidx.compose.material3.adaptive.currentWindowAdaptiveInfo\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun LayoutAntiPatterns(cards: List<CardUi>) {\n  val window = currentWindowAdaptiveInfo().windowSizeClass\n\n  LazyColumn {\n    items(cards) { card ->\n      BoxWithConstraints {\n        // BUG: global window policy plus per-item subcomposition plus no stable key.\n        FeedCard(card, wide = window.isWidthAtLeastBreakpoint(840) || maxWidth > 420.dp)\n      }\n    }\n  }\n}\n\n@Composable\nfun MeasuringTrap(content: @Composable () -> Unit) {\n  Layout(content = content) { measurables, constraints ->\n    val a = measurables.first().measure(constraints)\n    val b = measurables.first().measure(constraints.copy(minWidth = 0)) // BUG\n    layout(a.width, a.height + b.height) { a.place(0, 0); b.place(0, a.height) }\n  }\n}";
+  }
+
+  function pvCompositionIdentity(pg, v, stage) {
+    const mode = v.compositionIdentityMode || "CallSite";
+    const stable = v.stableIdentityKeys === "true";
+    const holder = v.saveableStateHolder === "true";
+    const movable = v.rememberMovableContent === "true";
+    const retained = v.retainAcrossConfig === "true";
+    const good = mode === "MovableContent" ? movable : mode === "SaveableHolder" ? holder : mode === "Retain" ? retained : mode === "CallSite" ? v.stateKeyedById === "true" : stable;
+    stage.classList.add("identity-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "identity-shell" + (good ? " is-good" : " is-warn"));
+    const status = good ? "logical identity" : "positional state";
+    shell.appendChild(h("div", "identity-top", "<b>" + esc(mode) + "</b><span>" + esc(status) + "</span>"));
+    const body = h("div", "identity-body");
+
+    if (mode === "CallSite") {
+      const flow = h("div", "identity-flow");
+      [["call site", "ProfileCard()"], ["slot", v.stateKeyedById === "true" ? "key(user.id)" : "execution order"], ["state", v.stateKeyedById === "true" ? "moves with Ada" : "stays at position"]].forEach(function (item, idx) {
+        flow.appendChild(h("section", idx === 2 && v.stateKeyedById !== "true" ? "warn" : "good", "<span>" + esc(item[0]) + "</span><b>" + esc(item[1]) + "</b>"));
+      });
+      body.appendChild(flow);
+    } else if (mode === "KeyedLoop" || mode === "LazyIdentity") {
+      const list = h("div", "identity-list");
+      const rows = v.orderSwap === "true" ? [["c3", "Chen"], ["a1", "Ada"], ["b2", "Bo"]] : [["a1", "Ada"], ["b2", "Bo"], ["c3", "Chen"]];
+      rows.forEach(function (row, idx) {
+        const label = stable ? row[0] : String(idx);
+        list.appendChild(h("div", stable ? "identity-row good" : "identity-row warn", "<i>" + esc(label) + "</i><b>" + esc(row[1]) + "</b><span>" + esc(stable ? "remember follows id" : "remember follows index") + "</span>"));
+      });
+      if (mode === "LazyIdentity") {
+        const chips = h("div", "identity-mini");
+        chips.appendChild(h("span", stable ? "good" : "warn", stable ? "key = id" : "key = index"));
+        chips.appendChild(h("span", v.contentTypeHints === "true" ? "good" : "warn", v.contentTypeHints === "true" ? "contentType" : "mixed reuse"));
+        list.appendChild(chips);
+      }
+      body.appendChild(list);
+    } else if (mode === "MovableContent") {
+      const move = h("div", "identity-move");
+      const panel = h("div", movable ? "identity-panel good" : "identity-panel warn", "<b>SearchField</b><span>" + esc(movable ? "same subtree moves" : "new subtree each branch") + "</span>");
+      move.appendChild(h("section", "slot", "<span>compact</span>"));
+      move.appendChild(panel);
+      move.appendChild(h("section", "slot", "<span>expanded</span>"));
+      body.appendChild(move);
+    } else if (mode === "SaveableHolder") {
+      const tabs = h("div", "identity-tabs");
+      [["inbox", "Inbox", "draft=reply"], ["sent", "Sent", "scroll=42"], ["drafts", "Drafts", holder ? "restored" : "forgotten"]].forEach(function (tab) {
+        tabs.appendChild(h("section", holder ? "good" : "warn", "<b>" + esc(tab[1]) + "</b><span>" + esc(tab[0]) + "</span><em>" + esc(tab[2]) + "</em>"));
+      });
+      body.appendChild(tabs);
+    } else {
+      const lanes = h("div", "identity-retain");
+      [["remember", "recomposition only", "warn"], ["retain", retained ? "config change" : "not installed", retained ? "good" : "warn"], ["rememberSaveable", "process saveable", "good"], ["ViewModel", "screen logic", "good"]].forEach(function (lane) {
+        lanes.appendChild(h("section", lane[2], "<span>" + esc(lane[0]) + "</span><b>" + esc(lane[1]) + "</b>"));
+      });
+      body.appendChild(lanes);
+    }
+
+    shell.appendChild(body);
+    const chips = h("div", "identity-chips");
+    [
+      stable ? "stable keys" : "positional keys",
+      v.contentTypeHints === "true" ? "contentType hints" : "no contentType",
+      movable ? "remember movable" : "inline movable",
+      holder ? "SaveableStateHolder" : "no holder",
+      retained ? "retain" : "remember only",
+    ].forEach(function (chip) { chips.appendChild(h("span", null, esc(chip))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genCompositionIdentity(pg, v) {
+    const mode = v.compositionIdentityMode || "CallSite";
+    const stable = v.stableIdentityKeys === "true";
+    if (mode === "CallSite") {
+      if (v.stateKeyedById !== "true") {
+        return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.setValue\n\n@Composable\nfun ProfilePane(selected: UserUi) {\n  // BUG: when different users reuse the same call site, remembered state belongs to the slot.\n  var expanded by remember { mutableStateOf(false) }\n  ProfileCard(user = selected, expanded = expanded, onExpandedChange = { expanded = it })\n}\n\n// If the remembered state is supposed to belong to each user, key it by selected.id or hoist it.";
+      }
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.key\n\n@Composable\nfun ProfilePane(selected: UserUi) {\n  key(selected.id) {\n    StatefulProfileCard(user = selected)\n  }\n}\n\n@Composable\nfun UserSwitcher(users: List<UserUi>) {\n  users.forEach { user ->\n    key(user.id) {\n      StatefulUserChip(user = user)\n    }\n  }\n}\n\n// key values only need to be unique among invocations at this call site.";
+    }
+    if (mode === "KeyedLoop") {
+      if (!stable) {
+        return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\n\n@Composable\nfun ReorderablePeople(people: List<PersonUi>) {\n  people.forEachIndexed { index, person ->\n    // BUG: state and effects are associated with the loop position, not the person.\n    val selected = remember { mutableStateOf(false) }\n    PersonRow(person = person, selected = selected.value, onSelected = { selected.value = it })\n  }\n}\n\n// Inserting at the top can move remembered state to the wrong row.";
+      }
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.key\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\n\n@Composable\nfun ReorderablePeople(people: List<PersonUi>) {\n  people.forEach { person ->\n    key(person.id) {\n      val selected = remember { mutableStateOf(false) }\n      PersonRow(person = person, selected = selected.value, onSelected = { selected.value = it })\n    }\n  }\n}\n\n// Reorder, insert, and remove operations preserve the row's logical identity.";
+    }
+    if (mode === "LazyIdentity") {
+      if (!stable) {
+        return "import androidx.compose.foundation.lazy.LazyColumn\nimport androidx.compose.foundation.lazy.itemsIndexed\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun MessageList(messages: List<MessageUi>) {\n  LazyColumn {\n    itemsIndexed(messages, key = { index, _ -> index }) { _, message ->\n      MessageRow(message)\n    }\n  }\n}\n\n// BUG: index keys are positional; remembered state, animations, and effects can move to the wrong message.";
+      }
+      const contentType = v.contentTypeHints === "true" ? ",\n      contentType = { message -> if (message.isAd) \"ad\" else \"message\" }" : "";
+      return "import androidx.compose.foundation.lazy.LazyColumn\nimport androidx.compose.foundation.lazy.items\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun MessageList(messages: List<MessageUi>) {\n  LazyColumn {\n    items(\n      items = messages,\n      key = { message -> message.id }" + contentType + "\n    ) { message ->\n      MessageRow(message)\n    }\n  }\n}\n\n// Use Bundle-compatible stable keys when item state must survive Activity recreation.";
+    }
+    if (mode === "MovableContent") {
+      if (v.rememberMovableContent !== "true") {
+        return "import androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.movableContentOf\n\n@Composable\nfun ResponsiveProfile(expanded: Boolean, user: UserUi) {\n  // BUG: this creates a new movable content instance during each recomposition.\n  val actions = movableContentOf<UserUi> { current -> ProfileActions(current) }\n\n  if (expanded) Row { ProfileSummary(user); actions(user) }\n  else Column { ProfileSummary(user); actions(user) }\n}\n\n// Wrap movableContentOf in remember so the movable subtree has stable identity.";
+      }
+      return "import androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.movableContentOf\nimport androidx.compose.runtime.remember\n\n@Composable\nfun ResponsiveProfile(expanded: Boolean, user: UserUi) {\n  val actions = remember {\n    movableContentOf<UserUi> { current ->\n      ProfileActions(current)\n    }\n  }\n\n  if (expanded) {\n    Row { ProfileSummary(user); actions(user) }\n  } else {\n    Column { ProfileSummary(user); actions(user) }\n  }\n}\n\n// The same remembered content instance moves without losing internal remembered state.";
+    }
+    if (mode === "SaveableHolder") {
+      if (v.saveableStateHolder !== "true") {
+        return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.saveable.rememberSaveable\n\n@Composable\nfun TabContent(selectedTab: TabUi) {\n  // BUG: when a tab leaves composition, its local rememberSaveable state can be removed.\n  var query by rememberSaveable { mutableStateOf(\"\") }\n  SearchableTab(tab = selectedTab, query = query, onQueryChange = { query = it })\n}\n\n// Dynamic tabs, pages, and small custom back stacks usually need SaveableStateHolder.";
+      }
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.saveable.rememberSaveableStateHolder\n\n@Composable\nfun TabHost(selectedTab: TabUi) {\n  val holder = rememberSaveableStateHolder()\n\n  holder.SaveableStateProvider(selectedTab.id) {\n    TabContent(selectedTab)\n  }\n}\n\n@Composable\nfun TabContent(tab: TabUi) {\n  SearchableTab(tab)\n}\n\n// Each tab id owns its small rememberSaveable child state while the tab is temporarily absent.";
+    }
+    if (v.retainAcrossConfig !== "true") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.DisposableEffect\nimport androidx.compose.runtime.remember\n\n@Composable\nfun CameraPreviewSurface() {\n  // BUG: remember does not survive configuration changes.\n  val controller = remember { CameraController() }\n\n  DisposableEffect(controller) {\n    controller.start()\n    onDispose { controller.stop() }\n  }\n}\n\n// Use a ViewModel for screen logic, rememberSaveable for small Bundle state, or retain for composition-scoped non-serializable objects.";
+    }
+    return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.DisposableEffect\nimport androidx.compose.runtime.retain.retain\n\n@Composable\nfun CameraPreviewSurface() {\n  val controller = retain { CameraController() }\n\n  DisposableEffect(controller) {\n    controller.start()\n    onDispose { controller.stop() }\n  }\n}\n\n// retain survives configuration changes, does not survive process death, and should not hold Activity, View, Fragment, Lifecycle, or Context objects.";
+  }
+
+  function pvCompositionLocal(pg, v, stage) {
+    const mode = v.compositionLocalPattern || "TrackedTheme";
+    stage.classList.add("local-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const bad = mode === "BadViewModelLocal" || v.localBadDependency === "true";
+    const shell = h("div", "local-shell" + (bad ? " is-bad" : ""));
+    const tracked = mode === "StaticTokens" || v.staticLocal === "true" ? "static read" : "tracked read";
+    shell.appendChild(h("div", "local-top", "<b>" + esc(mode) + "</b><span>" + tracked + "</span>"));
+    const tree = h("div", "local-tree");
+    tree.appendChild(h("div", "local-node provider", "<span>Provider</span><b>" + esc(bad ? "LocalProfileViewModel" : mode === "StaticTokens" ? "LocalMotionTokens" : "LocalElevations") + "</b>"));
+    const branches = h("div", "local-branches");
+    branches.appendChild(h("div", "local-node reader", "<span>Reader</span><b>Card</b><em>" + esc(bad ? "implicit VM" : "current") + "</em>"));
+    branches.appendChild(h("div", "local-node reader", "<span>Reader</span><b>Sheet</b><em>" + esc(v.nestedProvider === "true" || mode === "NestedOverride" ? "override" : "inherited") + "</em>"));
+    tree.appendChild(branches);
+    if (v.nestedProvider === "true" || mode === "NestedOverride") {
+      tree.appendChild(h("div", "local-node nested", "<span>Nested provider</span><b>compact tokens</b>"));
+    }
+    shell.appendChild(tree);
+    const chips = h("div", "local-chips");
+    [
+      v.localPreviewDefault === "true" ? "preview-safe default" : "required provider",
+      mode === "ExplicitParameter" ? "explicit state" : "implicit context",
+      mode === "StaticTokens" || v.staticLocal === "true" ? "rarely changes" : "can change",
+      bad ? "hidden dependency" : "tree-scoped",
+    ].forEach(function (label) { chips.appendChild(h("span", null, esc(label))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genCompositionLocal(pg, v) {
+    const mode = v.compositionLocalPattern || "TrackedTheme";
+    if (mode === "StaticTokens") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.Immutable\nimport androidx.compose.runtime.CompositionLocalProvider\nimport androidx.compose.runtime.staticCompositionLocalOf\n\n@Immutable\ndata class MotionTokens(\n  val fast: Int = 120,\n  val normal: Int = 220\n)\n\n// Use staticCompositionLocalOf only when provider changes are rare.\nval LocalMotionTokens = staticCompositionLocalOf { MotionTokens() }\n\n@Composable\nfun ProductTheme(content: @Composable () -> Unit) {\n  CompositionLocalProvider(\n    LocalMotionTokens provides MotionTokens(fast = 100, normal = 200)\n  ) {\n    content()\n  }\n}\n\n@Composable\nfun MotionAwareCard() {\n  val motion = LocalMotionTokens.current\n  FadeIn(durationMillis = motion.normal)\n}";
+    }
+    if (mode === "NestedOverride") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.CompositionLocalProvider\nimport androidx.compose.runtime.compositionLocalOf\n\nval LocalContentDensity = compositionLocalOf { ContentDensity.Comfortable }\n\nenum class ContentDensity { Comfortable, Compact }\n\n@Composable\nfun SettingsScreen() {\n  CompositionLocalProvider(LocalContentDensity provides ContentDensity.Comfortable) {\n    SettingsSection(title = \"General\")\n\n    CompositionLocalProvider(LocalContentDensity provides ContentDensity.Compact) {\n      SettingsSection(title = \"Advanced\")\n    }\n  }\n}\n\n@Composable\nfun SettingsSection(title: String) {\n  when (LocalContentDensity.current) {\n    ContentDensity.Comfortable -> ComfortableSection(title)\n    ContentDensity.Compact -> CompactSection(title)\n  }\n}";
+    }
+    if (mode === "ExplicitParameter") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.lifecycle.compose.collectAsStateWithLifecycle\n\n@Composable\nfun ProfileRoute(\n  viewModel: ProfileViewModel,\n  onBack: () -> Unit\n) {\n  val uiState by viewModel.uiState.collectAsStateWithLifecycle()\n\n  ProfileScreen(\n    uiState = uiState,\n    onFollowClick = viewModel::follow,\n    onBack = onBack\n  )\n}\n\n@Composable\nfun ProfileScreen(\n  uiState: ProfileUiState,\n  onFollowClick: () -> Unit,\n  onBack: () -> Unit\n) {\n  ProfileHeader(uiState.user, onBack)\n  FollowButton(following = uiState.following, onClick = onFollowClick)\n}\n\n// Ordinary screen state and dependencies stay explicit.\n// CompositionLocal is not a shortcut around state hoisting.";
+    }
+    if (mode === "BadViewModelLocal") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.compositionLocalOf\nimport androidx.compose.runtime.getValue\nimport androidx.lifecycle.compose.collectAsStateWithLifecycle\n\n// BUG: screen dependencies are now implicit and hard to preview/test.\nval LocalProfileViewModel = compositionLocalOf<ProfileViewModel> {\n  error(\"No ProfileViewModel provided\")\n}\n\n@Composable\nfun ProfileScreen() {\n  val viewModel = LocalProfileViewModel.current\n  val state by viewModel.uiState.collectAsStateWithLifecycle()\n\n  ProfileHeader(state.user)\n  FollowButton(onClick = viewModel::follow)\n}\n\n// Prefer a route that owns the ViewModel and passes uiState + events down.";
+    }
+    return "import androidx.compose.foundation.isSystemInDarkTheme\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.CompositionLocalProvider\nimport androidx.compose.runtime.Immutable\nimport androidx.compose.runtime.compositionLocalOf\nimport androidx.compose.ui.unit.Dp\nimport androidx.compose.ui.unit.dp\n\n@Immutable\ndata class Elevations(\n  val card: Dp = 0.dp,\n  val dialog: Dp = 6.dp\n)\n\n// compositionLocalOf tracks current reads and invalidates only readers.\nval LocalElevations = compositionLocalOf { Elevations() }\n\n@Composable\nfun AppTheme(content: @Composable () -> Unit) {\n  val elevations = if (isSystemInDarkTheme()) {\n    Elevations(card = 1.dp, dialog = 8.dp)\n  } else {\n    Elevations(card = 0.dp, dialog = 6.dp)\n  }\n\n  CompositionLocalProvider(LocalElevations provides elevations) {\n    content()\n  }\n}\n\n@Composable\nfun ProductCard() {\n  val elevation = LocalElevations.current.card\n  ElevatedCard(elevation = elevation) { ProductSummary() }\n}";
+  }
+
+  function pvSnapshotState(pg, v, stage) {
+    const mode = v.snapshotStateMode || "MutableState";
+    const badCollection = v.mutatePlainCollection === "true";
+    const derived = mode === "DerivedState";
+    const flow = mode === "SnapshotFlow";
+    stage.classList.add("snap-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "snap-shell" + (badCollection ? " warn" : ""));
+    shell.appendChild(h("div", "snap-top", "<b>" + esc(mode) + "</b><span>" + (v.rememberSaveableState === "true" ? "saveable" : "composition") + "</span>"));
+    const cycle = h("div", "snap-cycle");
+    [
+      ["read", flow ? "snapshotFlow" : derived ? "derivedStateOf" : "State<T>"],
+      ["track", "scope"],
+      ["write", badCollection ? "plain mutate" : "observable write"],
+      ["result", badCollection ? "missed update" : "invalidate"],
+    ].forEach(function (item, idx) {
+      const cell = h("div", "snap-cell" + (idx === 2 && badCollection ? " warn" : "") + (idx === 3 && !badCollection ? " active" : ""));
+      cell.appendChild(h("span", null, esc(item[0])));
+      cell.appendChild(h("b", null, esc(item[1])));
+      cycle.appendChild(cell);
+    });
+    shell.appendChild(cycle);
+    const lanes = h("div", "snap-lanes");
+    [
+      ["container", mode === "SnapshotList" ? (badCollection ? "MutableList in State" : "SnapshotStateList") : mode],
+      ["policy", mode === "MutationPolicy" ? (v.structuralEquality === "true" ? "structural" : "never equal") : "default"],
+      ["emissions", flow ? (v.flowOperators === "true" ? "gated Flow" : "raw ticks") : derived ? (v.derivedThreshold === "true" ? "threshold only" : "same as input") : "state reads"],
+    ].forEach(function (item) {
+      const row = h("div", "snap-lane");
+      row.appendChild(h("span", null, esc(item[0])));
+      row.appendChild(h("b", null, esc(item[1])));
+      lanes.appendChild(row);
+    });
+    shell.appendChild(lanes);
+    const note = badCollection
+      ? "Plain mutable collections hide in-place writes from Compose."
+      : mode === "MutationPolicy"
+        ? "Policy decides whether assignment is a real change."
+        : flow
+          ? "Collect Compose state as Flow from a scoped coroutine."
+          : derived
+            ? "Use only when output changes less often than input."
+            : "Observable writes recompose only scopes that read state.";
+    shell.appendChild(h("div", "snap-note", esc(note)));
+    const chips = h("div", "snap-chips");
+    [
+      v.rememberSaveableState === "true" ? "rememberSaveable" : "remember",
+      v.stateHolderSaver === "true" ? "Saver" : "no saver",
+      v.derivedThreshold === "true" ? "threshold" : "plain expression",
+      v.flowOperators === "true" ? "Flow operators" : "raw values",
+    ].forEach(function (label) { chips.appendChild(h("span", null, esc(label))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genSnapshotState(pg, v) {
+    const mode = v.snapshotStateMode || "MutableState";
+    const saveable = v.rememberSaveableState === "true";
+    const badCollection = v.mutatePlainCollection === "true";
+    if (mode === "SnapshotList") {
+      if (badCollection) {
+        return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\n\n@Composable\nfun BrokenTodoList() {\n  val todos = remember { mutableStateOf(mutableListOf<Todo>()) }\n\n  // BUG: mutating the same MutableList instance is not an observable state write.\n  Button(onClick = { todos.value.add(Todo(\"new\")) }) {\n    Text(\"Add\")\n  }\n\n  TodoColumn(todos.value)\n}";
+      }
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.mutableStateListOf\nimport androidx.compose.runtime.remember\n\n@Composable\nfun TodoListState() {\n  val todos = remember { mutableStateListOf<Todo>() }\n\n  Button(onClick = { todos.add(Todo(\"new\")) }) {\n    Text(\"Add\")\n  }\n\n  TodoColumn(\n    todos = todos,\n    onRemove = { todo -> todos.remove(todo) }\n  )\n}\n\n// SnapshotStateList is observable; add/remove/set operations notify readers.";
+    }
+    if (mode === "MutationPolicy") {
+      const policy = v.structuralEquality === "true" ? "structuralEqualityPolicy()" : "neverEqualPolicy()";
+      const importPolicy = v.structuralEquality === "true" ? "structuralEqualityPolicy" : "neverEqualPolicy";
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.setValue\nimport androidx.compose.runtime." + importPolicy + "\n\n@Composable\nfun DraftEditor() {\n  var draft by remember {\n    mutableStateOf(\n      value = Draft(title = \"\"),\n      policy = " + policy + "\n    )\n  }\n\n  TitleField(\n    value = draft.title,\n    onValueChange = { title -> draft = draft.copy(title = title) }\n  )\n}\n\n// The mutation policy decides whether an assignment counts as a change.";
+    }
+    if (mode === "DerivedState") {
+      return "import androidx.compose.foundation.lazy.rememberLazyListState\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.derivedStateOf\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.remember\n\n@Composable\nfun JumpButtonState() {\n  val listState = rememberLazyListState()\n  val showJump by remember {\n    derivedStateOf { " + (v.derivedThreshold === "true" ? "listState.firstVisibleItemIndex > 0" : "listState.firstVisibleItemIndex + listState.firstVisibleItemScrollOffset") + " }\n  }\n\n  Feed(listState)\n  JumpToTopButton(visible = showJump)\n}\n\n// Use derivedStateOf when many input changes collapse into fewer output changes.";
+    }
+    if (mode === "SnapshotFlow") {
+      return "import androidx.compose.foundation.lazy.LazyListState\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.LaunchedEffect\nimport androidx.compose.runtime.snapshotFlow\nimport kotlinx.coroutines.flow.distinctUntilChanged\nimport kotlinx.coroutines.flow.filter\nimport kotlinx.coroutines.flow.map\n\n@Composable\nfun ScrollAnalytics(\n  listState: LazyListState,\n  analytics: Analytics\n) {\n  LaunchedEffect(listState) {\n    snapshotFlow { listState.firstVisibleItemIndex }" + (v.flowOperators === "true" ? "\n      .map { index -> index > 0 }\n      .distinctUntilChanged()\n      .filter { it }" : "") + "\n      .collect { analytics.scrolledPastFirstItem() }\n  }\n}";
+    }
+    if (mode === "StateHolder") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.Stable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.saveable.Saver\nimport androidx.compose.runtime.saveable.rememberSaveable\nimport androidx.compose.runtime.setValue\n\n@Stable\nclass SearchUiState(initialQuery: String = \"\") {\n  var query by mutableStateOf(initialQuery)\n    private set\n\n  fun updateQuery(value: String) {\n    query = value\n  }\n\n  companion object {\n    val Saver: Saver<SearchUiState, String> = Saver(\n      save = { it.query },\n      restore = { SearchUiState(it) }\n    )\n  }\n}\n\n@Composable\nfun rememberSearchUiState(): SearchUiState = " + (v.stateHolderSaver === "true" ? "rememberSaveable(saver = SearchUiState.Saver) {\n  SearchUiState()\n}" : "remember { SearchUiState() }") + "\n\n@Composable\nfun SearchRoute() {\n  val state = rememberSearchUiState()\n  SearchField(value = state.query, onValueChange = state::updateQuery)\n}";
+    }
+    return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime." + (saveable ? "saveable.rememberSaveable" : "remember") + "\nimport androidx.compose.runtime.setValue\n\n@Composable\nfun Counter() {\n  var count by " + (saveable ? "rememberSaveable" : "remember") + " { mutableStateOf(0) }\n\n  Button(onClick = { count++ }) {\n    Text(\"Count: $count\")\n  }\n}\n\n// Writing count schedules recomposition for scopes that read count.";
+  }
+
+  function pvCustomModifier(pg, v, stage) {
+    const mode = v.customModifierStrategy || "ChainedFactory";
+    stage.classList.add("modauth-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "modauth-shell");
+    shell.appendChild(h("div", "modauth-top", "<b>" + esc(mode) + "</b><span>" + (v.preserveChain === "true" ? "chain preserved" : "chain broken") + "</span>"));
+    const pipe = h("div", "modauth-pipe");
+    [
+      ["Caller", v.preserveChain === "true" ? "this" : "Modifier"],
+      ["Factory", mode === "ComposableFactory" ? "@Composable" : "fun Modifier.*"],
+      ["Element", mode === "ChainedFactory" ? "built-ins" : (v.dataClassElement === "true" ? "data class" : "class")],
+      ["Node", mode === "ModifierNode" ? "Draw/Layout" : mode === "LocalAwareNode" ? "currentValueOf" : mode === "DelegatingNode" ? "delegates" : "existing modifiers"],
+    ].forEach(function (item) {
+      const cell = h("div", "modauth-cell");
+      cell.appendChild(h("span", null, esc(item[0])));
+      cell.appendChild(h("b", null, esc(item[1])));
+      pipe.appendChild(cell);
+    });
+    shell.appendChild(pipe);
+    const demo = h("div", "modauth-demo");
+    demo.style.setProperty("--r", Math.round(num(v.cornerRadius, 14)) + "px");
+    demo.style.setProperty("--bw", Math.max(1, Math.round(num(v.borderWidth, 3))) + "px");
+    demo.appendChild(h("div", "modauth-card", "<b>Modifier.Node</b><span>" + esc(mode === "LocalAwareNode" ? "reads local at use site" : mode === "DelegatingNode" ? "shared interaction state" : mode === "ComposableFactory" ? "uses animate*AsState" : "updates existing node") + "</span>"));
+    shell.appendChild(demo);
+    const flags = h("div", "modauth-flags");
+    [
+      v.dataClassElement === "true" ? "stable equality" : "manual equality needed",
+      v.readLocalInNode === "true" ? "CompositionLocal in node" : "factory value",
+      v.manualInvalidation === "true" ? "manual invalidation" : "auto invalidation",
+    ].forEach(function (label) { flags.appendChild(h("span", null, esc(label))); });
+    shell.appendChild(flags);
+    stage.appendChild(shell);
+  }
+
+  function genCustomModifier(pg, v) {
+    const mode = v.customModifierStrategy || "ChainedFactory";
+    const preserve = v.preserveChain !== "false";
+    const radius = Math.round(num(v.cornerRadius, 14));
+    const stroke = Math.max(1, Math.round(num(v.borderWidth, 3)));
+    const chainReceiver = preserve ? "this" : "Modifier /* BUG: drops incoming chain */";
+    const nodePrefix = chainReceiver + " then ";
+    if (mode === "ChainedFactory") {
+      return "fun Modifier.fancyCard(\n  color: Color,\n  radius: Dp = " + radius + ".dp,\n  strokeWidth: Dp = " + stroke + ".dp\n): Modifier =\n  " + chainReceiver + "\n    .clip(RoundedCornerShape(radius))\n    .background(color)\n    .border(strokeWidth, Color.Black.copy(alpha = 0.12f), RoundedCornerShape(radius))\n    .padding(16.dp)";
+    }
+    if (mode === "ComposableFactory") {
+      return "@Composable\nfun Modifier.fadeWhenDisabled(enabled: Boolean): Modifier {\n  val alpha by animateFloatAsState(\n    targetValue = if (enabled) 1f else 0.45f,\n    label = \"disabled alpha\"\n  )\n\n  return " + nodePrefix + "Modifier.graphicsLayer {\n    this.alpha = alpha\n  }\n}";
+    }
+    if (mode === "LocalAwareNode") {
+      return "fun Modifier.localAwareBorder(width: Dp = " + stroke + ".dp): Modifier =\n  " + nodePrefix + "LocalAwareBorderElement(width)\n\nprivate data class LocalAwareBorderElement(\n  val width: Dp\n) : ModifierNodeElement<LocalAwareBorderNode>() {\n  override fun create() = LocalAwareBorderNode(width)\n  override fun update(node: LocalAwareBorderNode) {\n    node.width = width\n  }\n}\n\nprivate class LocalAwareBorderNode(\n  var width: Dp\n) : DrawModifierNode, CompositionLocalConsumerModifierNode, Modifier.Node() {\n  override fun ContentDrawScope.draw() {\n    drawContent()\n    val color = if (" + (v.readLocalInNode === "true" ? "true" : "false") + ") {\n      currentValueOf(LocalContentColor)\n    } else {\n      Color.Black\n    }\n    drawRoundRect(\n      color = color,\n      style = Stroke(width.toPx())\n    )\n  }\n}";
+    }
+    if (mode === "DelegatingNode") {
+      return "fun Modifier.focusablePressable(\n  interactionSource: MutableInteractionSource,\n  onClick: () -> Unit\n): Modifier = " + nodePrefix + "PressableElement(interactionSource, onClick)\n\nprivate data class PressableElement(\n  val interactionSource: MutableInteractionSource,\n  val onClick: () -> Unit\n) : ModifierNodeElement<PressableNode>() {\n  override fun create() = PressableNode(interactionSource, onClick)\n  override fun update(node: PressableNode) {\n    node.interactionSource = interactionSource\n    node.onClick = onClick\n  }\n}\n\nprivate class PressableNode(\n  var interactionSource: MutableInteractionSource,\n  var onClick: () -> Unit\n) : DelegatingNode() {\n  private val focusable = delegate(FocusableNode(interactionSource))\n  private val pointer = delegate(PressPointerNode(interactionSource) { onClick() })\n}";
+    }
+    const elementDecl = v.dataClassElement === "true"
+      ? "private data class CircleElement(val color: Color) : ModifierNodeElement<CircleNode>()"
+      : "private class CircleElement(val color: Color) : ModifierNodeElement<CircleNode>()";
+    const invalidation = v.manualInvalidation === "true"
+      ? "\n  override val shouldAutoInvalidate: Boolean = false"
+      : "";
+    const updateBody = v.manualInvalidation === "true"
+      ? "    if (node.color != color) {\n      node.color = color\n      node.invalidateDraw()\n    }"
+      : "    node.color = color";
+    return "fun Modifier.circle(color: Color): Modifier = " + nodePrefix + "CircleElement(color)\n\n" + elementDecl + " {\n  override fun create() = CircleNode(color)\n\n  override fun update(node: CircleNode) {\n" + updateBody + "\n  }" + (v.dataClassElement === "true" ? "" : "\n\n  // If this is not a data class, implement equals() and hashCode() correctly.") + "\n}\n\nprivate class CircleNode(\n  var color: Color\n) : DrawModifierNode, Modifier.Node() {" + invalidation + "\n  override fun ContentDrawScope.draw() {\n    drawContent()\n    drawCircle(color)\n  }\n}";
+  }
+
   function pvVisibilityTracking(pg, v, stage) {
     const mode = v.visibilityTracking || "VisibilityChanged";
     const visible = Math.max(0, Math.min(1, num(v.visibleFraction, 0.65)));
@@ -1234,6 +1978,91 @@
       ? "\n  val viewportBounds = remember { LayoutBoundsHolder() }\n\n  Box(Modifier.layoutBounds(viewportBounds)) {\n    TrackedCard(\n      modifier = Modifier.onVisibilityChanged(\n        viewportBounds = viewportBounds,\n        minFractionVisible = " + minFraction + ",\n        minDurationMs = " + minDuration + "\n      ) { visible ->\n        onVisibilityChanged(visible)\n      }\n    )\n  }"
       : "\n  TrackedCard(\n    modifier = modifier.onVisibilityChanged(\n      minFractionVisible = " + minFraction + ",\n      minDurationMs = " + minDuration + "\n    ) { visible ->\n      onVisibilityChanged(visible)\n    }\n  )";
     return "@Composable\nfun VisibilityAwareSurface(\n  onVisibilityChanged: (Boolean) -> Unit,\n  modifier: Modifier = Modifier\n) {" + viewport + "\n}\n\n@Composable\nprivate fun TrackedCard(modifier: Modifier = Modifier) {\n  Card(modifier.fillMaxWidth()) {\n    Text(\"Tracked visibility\", Modifier.padding(16.dp))\n  }\n}";
+  }
+
+  function pvStabilityLab(pg, v, stage) {
+    const scenario = v.stabilityScenario || "ImmutableModel";
+    const strong = v.strongSkippingEnabled !== "false";
+    const immutable = scenario === "ImmutableModel" || v.immutableCollections === "true";
+    const mutable = scenario === "MutableModel";
+    const annotation = scenario === "StableAnnotation" || v.stableAnnotation === "true";
+    const phase = scenario === "PhaseRead";
+    const drawPhase = phase && v.drawPhaseRead !== "false";
+    const skippable = strong || immutable || annotation;
+    stage.classList.add("stab-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "stab-shell");
+    shell.appendChild(h("div", "stab-top", "<b>" + esc(scenario) + "</b><span>" + (strong ? "strong skipping" : "classic skipping") + "</span>"));
+    const report = h("div", "stab-report");
+    [
+      ["type", mutable ? "unstable" : immutable ? "immutable" : annotation ? "@Stable contract" : "runtime stability"],
+      ["function", skippable ? "restartable skippable" : "restartable only"],
+      ["compare", !skippable ? "no skip" : (mutable && strong ? "instance ===" : "equals()")],
+      ["phase", drawPhase ? "draw only" : phase ? "composition read" : "composition"],
+    ].forEach(function (item) {
+      const row = h("div", "stab-row" + (item[1].indexOf("unstable") >= 0 || item[1] === "composition read" || item[1] === "no skip" ? " warn" : ""));
+      row.appendChild(h("span", null, esc(item[0])));
+      row.appendChild(h("b", null, esc(item[1])));
+      report.appendChild(row);
+    });
+    shell.appendChild(report);
+    const phases = h("div", "stab-phases");
+    [
+      ["compose", phase && !drawPhase],
+      ["layout", false],
+      ["draw", drawPhase],
+    ].forEach(function (item) {
+      phases.appendChild(h("span", item[1] ? "active" : null, esc(item[0])));
+    });
+    shell.appendChild(phases);
+    const note = mutable && !strong
+      ? "unstable params force recomposition with classic skipping"
+      : mutable && strong
+        ? "restartable composables can still skip by instance equality"
+        : annotation
+          ? "annotation is a contract, not a fix by itself"
+          : drawPhase
+            ? "high-frequency value is read in draw phase"
+            : "stable value can be skipped when equal";
+    shell.appendChild(h("div", "stab-note", esc(note)));
+    const chips = h("div", "stab-chips");
+    [
+      v.immutableCollections === "true" ? "persistent collections" : "standard collection risk",
+      v.lazyStableKeys === "true" ? "stable lazy keys" : "index identity risk",
+      v.lambdaMemoization !== "false" ? "lambda memoization" : "manual lambda churn",
+      v.stableAnnotation === "true" ? "contract checked" : "no annotation",
+    ].forEach(function (label) { chips.appendChild(h("span", null, esc(label))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genStabilityLab(pg, v) {
+    const scenario = v.stabilityScenario || "ImmutableModel";
+    const strong = v.strongSkippingEnabled !== "false";
+    const immutableCollections = v.immutableCollections !== "false";
+    const stableAnnotation = v.stableAnnotation === "true";
+    const lazyKeys = v.lazyStableKeys !== "false";
+    const lambdaMemo = v.lambdaMemoization !== "false";
+    const drawPhase = v.drawPhaseRead !== "false";
+    if (scenario === "MutableModel") {
+      return "import androidx.compose.runtime.Composable\n\n// BUG: Compose cannot observe ordinary mutable properties.\ndata class ArticleUi(\n  val id: String,\n  var title: String,\n  val tags: MutableSet<String>\n)\n\n@Composable\nfun ArticleRow(article: ArticleUi) {\n  // Compiler report likely says this parameter is unstable.\n  // Mutating article.title or article.tags in place can leave the UI stale.\n  Text(article.title)\n}\n\n// Prefer a new immutable value when article content changes.";
+    }
+    if (scenario === "StableAnnotation") {
+      return stableAnnotation
+        ? "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.Stable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.setValue\n\n@Stable\nclass PlaybackState(\n  initialTitle: String,\n  initialPlaying: Boolean\n) {\n  var title by mutableStateOf(initialTitle)\n    private set\n  var isPlaying by mutableStateOf(initialPlaying)\n    private set\n\n  fun play() { isPlaying = true }\n  fun rename(title: String) { this.title = title }\n}\n\n@Composable\nfun PlayerHeader(state: PlaybackState) {\n  // @Stable is safe here because public changes notify Compose State.\n  Text(if (state.isPlaying) \"Playing ${state.title}\" else state.title)\n}"
+        : "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.Stable\n\n@Stable // BUG: this promise is false.\ndata class ArticleUi(\n  var title: String,\n  val tags: MutableSet<String>\n)\n\n@Composable\nfun ArticleRow(article: ArticleUi) {\n  // Incorrect @Stable can make recomposition skip when UI should update.\n  Text(article.title)\n}";
+    }
+    if (scenario === "StrongSkipping") {
+      return "// Strong skipping is enabled by default with Kotlin 2.0.20+.\n// For older Compose compiler modules:\ncomposeCompiler {\n  enableStrongSkippingMode = " + strong + "\n}\n\n@Composable\nfun FeedRoute(\n  filter: FeedFilter,\n  analytics: Analytics,\n  articles: List<ArticleUi>\n) {\n  ArticleList(\n    articles = articles,\n    onOpen = " + (lambdaMemo ? "{ id ->\n      analytics.openArticle(filter, id)\n    }" : "@DontMemoize { id ->\n      analytics.openArticle(filter, id)\n    }") + "\n  )\n}\n\n// With strong skipping, restartable composables become skippable.\n// Stable params compare with equals(); unstable params compare with instance equality.";
+    }
+    if (scenario === "PhaseRead") {
+      return drawPhase
+        ? "import androidx.compose.foundation.Canvas\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.drawWithContent\n\n@Composable\nfun ScrollGlow(\n  scrollFraction: () -> Float,\n  modifier: Modifier = Modifier\n) {\n  Canvas(\n    modifier.drawWithContent {\n      drawContent()\n      drawRect(\n        color = Color.Cyan.copy(alpha = scrollFraction()),\n        size = size\n      )\n    }\n  )\n}\n\n// The high-frequency value is read while drawing, so composition and layout can stay skipped."
+        : "import androidx.compose.foundation.background\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\n\n@Composable\nfun ScrollGlow(scrollFraction: Float, modifier: Modifier = Modifier) {\n  // This read happens in composition, so every fraction change can recompose.\n  Box(\n    modifier\n      .fillMaxWidth()\n      .height(4.dp)\n      .background(Color.Cyan.copy(alpha = scrollFraction))\n  )\n}";
+    }
+    return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.Immutable\n" + (immutableCollections ? "import kotlinx.collections.immutable.ImmutableList\nimport kotlinx.collections.immutable.ImmutableSet\nimport kotlinx.collections.immutable.persistentSetOf\n" : "") + "\n@Immutable\ndata class ArticleUi(\n  val id: String,\n  val title: String,\n  val bookmarked: Boolean,\n  val tags: " + (immutableCollections ? "ImmutableSet<String> = persistentSetOf()" : "Set<String> = emptySet() // standard collections are inferred unstable") + "\n)\n\n@Composable\nfun ArticleList(articles: " + (immutableCollections ? "ImmutableList<ArticleUi>" : "List<ArticleUi> // standard List is inferred unstable") + ") {\n  LazyColumn {\n    items(\n      items = articles" + (lazyKeys ? ",\n      key = { article -> article.id },\n      contentType = { \"article-row\" }" : "") + "\n    ) { article ->\n      ArticleRow(article = article)\n    }\n  }\n}\n\n@Composable\nfun ArticleRow(article: ArticleUi, modifier: Modifier = Modifier) {\n  Text(article.title, modifier)\n}";
   }
 
   function pvPerformanceMeasurement(pg, v, stage) {
@@ -1324,6 +2153,84 @@
       return "// build.gradle.kts\n// Turn this on only after a measured performance problem points to stability.\nplugins {\n  id(\"org.jetbrains.kotlin.plugin.compose\")\n}\n\ncomposeCompiler {\n  reportsDestination = layout.buildDirectory.dir(\"compose_compiler/reports\")\n  metricsDestination = layout.buildDirectory.dir(\"compose_compiler/metrics\")\n}\n\n// Run a release-like build, then inspect classes.txt and composables.txt:\n// ./gradlew :app:assembleRelease\n// Look for unstable parameters that explain the measured recomposition or skipping issue.\n" + (compilerReports ? "\n// Pair the report with Layout Inspector, traces, and Macrobenchmark output." : "\n// Leave reports disabled in normal builds unless you are diagnosing an issue.");
     }
     return deviceNote + "import androidx.benchmark.macro.BaselineProfileMode\nimport androidx.benchmark.macro.CompilationMode\nimport androidx.benchmark.macro.FrameTimingMetric\nimport androidx.benchmark.macro.StartupMode\nimport androidx.benchmark.macro.StartupTimingMetric\nimport androidx.benchmark.macro.junit4.MacrobenchmarkRule\nimport androidx.test.ext.junit.runners.AndroidJUnit4\nimport androidx.test.uiautomator.By\nimport androidx.test.uiautomator.Direction\nimport androidx.test.uiautomator.Until\nimport org.junit.Rule\nimport org.junit.Test\nimport org.junit.runner.RunWith\n\nprivate const val TargetPackage = \"com.example.app\"\n\n@RunWith(AndroidJUnit4::class)\nclass ComposeJourneyBenchmark {\n  @get:Rule\n  val benchmarkRule = MacrobenchmarkRule()\n\n  @Test\n  fun coldStartup() = benchmarkRule.measureRepeated(\n    packageName = TargetPackage,\n    metrics = listOf(StartupTimingMetric()),\n    compilationMode = " + compilation + ",\n    startupMode = StartupMode.COLD,\n    iterations = 10,\n    setupBlock = { pressHome() }\n  ) {\n    startActivityAndWait()\n    device.wait(Until.hasObject(By.res(TargetPackage, \"feed\")), 5_000)\n  }\n\n  @Test\n  fun feedScrollFrames() = benchmarkRule.measureRepeated(\n    packageName = TargetPackage,\n    metrics = listOf(FrameTimingMetric()),\n    compilationMode = " + compilation + ",\n    iterations = 10,\n    setupBlock = {\n      pressHome()\n      startActivityAndWait()\n      device.wait(Until.hasObject(By.res(TargetPackage, \"feed\")), 5_000)\n    }\n  ) {\n    device.findObject(By.res(TargetPackage, \"feed\")).fling(Direction.DOWN)\n    device.waitForIdle()\n  }\n}";
+  }
+
+  function pvEffectsLifecycle(pg, v, stage) {
+    const mode = v.effectMode || "LaunchedEffect";
+    stage.classList.add("effect-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "effect-shell");
+    shell.appendChild(h("div", "effect-top", "<b>" + esc(mode) + "</b><span>" + (v.constantEffectKey === "true" ? "constant key" : "input key") + "</span>"));
+    const flow = h("div", "effect-flow");
+    [
+      ["compose", "commit"],
+      ["key", v.constantEffectKey === "true" ? "Unit" : "input"],
+      ["work", mode],
+      ["end", mode === "DisposableEffect" ? (v.cleanupEffect === "true" ? "dispose" : "leak risk") : "cancel"],
+    ].forEach(function (item, idx) {
+      const cell = h("div", "effect-cell" + (idx === 2 ? " active" : ""));
+      cell.appendChild(h("span", null, esc(item[0])));
+      cell.appendChild(h("b", null, esc(item[1])));
+      flow.appendChild(cell);
+    });
+    shell.appendChild(flow);
+    const body = h("div", "effect-body");
+    const track = h("div", "effect-track");
+    const restartWidth = v.constantEffectKey === "true" ? "28%" : "72%";
+    track.appendChild(h("i"));
+    track.querySelector("i").style.width = restartWidth;
+    body.appendChild(track);
+    const note = mode === "SnapshotFlow"
+      ? (v.distinctFlow === "true" ? "Flow operators gate analytics" : "raw scroll emissions")
+      : mode === "ProduceState"
+        ? "external source becomes State"
+        : mode === "EventScope"
+          ? "user event launches coroutine"
+          : mode === "DerivedStateOf"
+            ? "threshold avoids recomposition"
+            : mode === "SideEffect"
+              ? "publish after commit"
+              : mode === "DisposableEffect"
+                ? "register + cleanup"
+                : "coroutine tied to keys";
+    body.appendChild(h("div", "effect-note", esc(note)));
+    shell.appendChild(body);
+    const chips = h("div", "effect-chips");
+    [
+      v.wrapLatestCallback === "true" ? "latest callback" : "captured callback",
+      v.cleanupEffect === "true" ? "cleanup" : "no cleanup",
+      v.distinctFlow === "true" ? "distinct flow" : "raw values",
+      mode === "DerivedStateOf" ? "threshold" : "side effect",
+    ].forEach(function (label) { chips.appendChild(h("span", null, esc(label))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genEffectsLifecycle(pg, v) {
+    const mode = v.effectMode || "LaunchedEffect";
+    const key = v.constantEffectKey === "true" ? "Unit" : "articleId";
+    const latest = v.wrapLatestCallback !== "false";
+    if (mode === "EventScope") {
+      return "import androidx.compose.material3.Button\nimport androidx.compose.material3.SnackbarHost\nimport androidx.compose.material3.SnackbarHostState\nimport androidx.compose.material3.SnackbarResult\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.rememberCoroutineScope\nimport kotlinx.coroutines.launch\n\n@Composable\nfun DeleteAction(onUndo: () -> Unit) {\n  val snackbarHostState = remember { SnackbarHostState() }\n  val scope = rememberCoroutineScope()\n\n  SnackbarHost(snackbarHostState)\n  Button(onClick = {\n    scope.launch {\n      val result = snackbarHostState.showSnackbar(\"Message deleted\", \"Undo\")\n      if (result == SnackbarResult.ActionPerformed) onUndo()\n    }\n  }) {\n    Text(\"Delete\")\n  }\n}";
+    }
+    if (mode === "DisposableEffect") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.DisposableEffect\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.rememberUpdatedState\nimport androidx.lifecycle.Lifecycle\nimport androidx.lifecycle.LifecycleEventObserver\nimport androidx.lifecycle.LifecycleOwner\n\n@Composable\nfun LifecycleAnalytics(\n  lifecycleOwner: LifecycleOwner,\n  onStart: () -> Unit,\n  onStop: () -> Unit\n) {\n  val latestOnStart by rememberUpdatedState(onStart)\n  val latestOnStop by rememberUpdatedState(onStop)\n\n  DisposableEffect(lifecycleOwner) {\n    val observer = LifecycleEventObserver { _, event ->\n      if (event == Lifecycle.Event.ON_START) latestOnStart()\n      if (event == Lifecycle.Event.ON_STOP) latestOnStop()\n    }\n    lifecycleOwner.lifecycle.addObserver(observer)\n\n    onDispose {\n      " + (v.cleanupEffect !== "false" ? "lifecycleOwner.lifecycle.removeObserver(observer)" : "// BUG: observer was not removed") + "\n    }\n  }\n}";
+    }
+    if (mode === "ProduceState") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.State\nimport androidx.compose.runtime.produceState\n\nsealed interface ArticleLoadResult {\n  data object Loading : ArticleLoadResult\n  data class Success(val article: Article) : ArticleLoadResult\n  data class Error(val throwable: Throwable) : ArticleLoadResult\n}\n\n@Composable\nfun rememberArticleResult(\n  articleId: String,\n  repository: ArticleRepository\n): State<ArticleLoadResult> {\n  return produceState<ArticleLoadResult>(\n    initialValue = ArticleLoadResult.Loading,\n    articleId,\n    repository\n  ) {\n    value = try {\n      ArticleLoadResult.Success(repository.loadArticle(articleId))\n    } catch (t: Throwable) {\n      ArticleLoadResult.Error(t)\n    }\n  }\n}";
+    }
+    if (mode === "SnapshotFlow") {
+      return "import androidx.compose.foundation.lazy.LazyListState\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.LaunchedEffect\nimport androidx.compose.runtime.snapshotFlow\nimport kotlinx.coroutines.flow.distinctUntilChanged\nimport kotlinx.coroutines.flow.filter\nimport kotlinx.coroutines.flow.map\n\n@Composable\nfun ReportScrollPastFirstItem(\n  listState: LazyListState,\n  analytics: Analytics\n) {\n  LaunchedEffect(listState) {\n    snapshotFlow { listState.firstVisibleItemIndex }\n      .map { index -> index > 0 }" + (v.distinctFlow !== "false" ? "\n      .distinctUntilChanged()" : "") + "\n      .filter { it }\n      .collect { analytics.scrolledPastFirstItem() }\n  }\n}";
+    }
+    if (mode === "DerivedStateOf") {
+      return "import androidx.compose.animation.AnimatedVisibility\nimport androidx.compose.foundation.lazy.rememberLazyListState\nimport androidx.compose.material3.FloatingActionButton\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.derivedStateOf\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.remember\n\n@Composable\nfun ScrollToTopAffordance() {\n  val listState = rememberLazyListState()\n  val showButton by remember {\n    derivedStateOf { listState.firstVisibleItemIndex > 0 }\n  }\n\n  FeedList(listState)\n  AnimatedVisibility(showButton) {\n    FloatingActionButton(onClick = { /* scroll */ }) { Text(\"Top\") }\n  }\n}";
+    }
+    if (mode === "SideEffect") {
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.SideEffect\nimport androidx.compose.runtime.remember\n\n@Composable\nfun rememberScreenAnalytics(user: User): Analytics {\n  val analytics = remember { Analytics() }\n\n  SideEffect {\n    analytics.setUserProperty(\"userType\", user.type)\n  }\n\n  return analytics\n}";
+    }
+    return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.LaunchedEffect\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.rememberUpdatedState\n\n@Composable\nfun ArticleEffect(\n  articleId: String,\n  onTimeout: () -> Unit\n) {\n  " + (latest ? "val latestOnTimeout by rememberUpdatedState(onTimeout)\n\n  " : "") + "LaunchedEffect(" + key + ") {\n    analytics.logScreen(\"article\", articleId)\n    repository.refreshArticle(articleId)\n    delay(30_000)\n    " + (latest ? "latestOnTimeout()" : "onTimeout() // may be stale if callback changes without restart") + "\n  }\n}";
   }
 
   function pvNesting(pg, v, stage) {
@@ -1995,6 +2902,732 @@
     return home + "\n" + detail + "\n\n@Composable\nfun ProductNavigation() {\n  " + stack + scenePrep + "\n  NavDisplay(\n    backStack = backStack,\n    onBack = { backStack.removeLastOrNull() }," + decoratorBlock + sceneBlock + "\n    entryProvider = entryProvider {\n      " + homeEntry + " {\n        ProductListRoute(\n          onOpenProduct = { id -> backStack.add(Product(id)) }\n        )\n      }\n\n      " + productEntry + " { key ->\n        ProductDetailRoute(\n          id = key.id,\n          onBack = { backStack.removeLastOrNull() }\n        )\n      }\n    }\n  )\n}";
   }
 
+  function pvPredictiveBack(pg, v, stage) {
+    const mode = v.predictiveBackMode || "SystemBack";
+    const rootBad = v.rootBackIntercept === "true";
+    const shared = mode === "SharedElementNav3";
+    const manual = mode === "ManualProgress";
+    const material = mode === "MaterialSurface";
+    stage.classList.add("pb-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "pb-shell" + (rootBad ? " warn" : ""));
+    shell.appendChild(h("div", "pb-top", "<b>" + esc(mode) + "</b><span>" + (rootBad ? "root intercept" : "supported back path") + "</span>"));
+    const phones = h("div", "pb-phones");
+    const from = h("div", "pb-phone from");
+    from.appendChild(h("div", "pb-bar", "<i></i><b>Detail</b>"));
+    from.appendChild(h("div", "pb-hero" + (shared ? " shared" : ""), shared ? "shared image" : "current screen"));
+    from.appendChild(h("div", "pb-lines", "<span></span><span></span><span></span>"));
+    const to = h("div", "pb-phone to");
+    to.appendChild(h("div", "pb-bar", "<i></i><b>" + (material ? "Drawer" : "List") + "</b>"));
+    to.appendChild(h("div", "pb-list", "<span></span><span></span><span></span>"));
+    if (manual || material) to.appendChild(h("div", "pb-progress", "<b></b><span>BackEventCompat progress</span>"));
+    phones.appendChild(from);
+    phones.appendChild(h("div", "pb-gesture", "back"));
+    phones.appendChild(to);
+    shell.appendChild(phones);
+    const flow = h("div", "pb-flow");
+    [
+      ["system", rootBad ? "intercepted" : "preview"],
+      ["owner", mode === "NavHost" ? "NavHost" : shared ? "NavDisplay" : material ? "Material state" : manual ? "custom surface" : "Activity"],
+      ["motion", shared ? (v.sharedBoundsContainer === "true" ? "sharedBounds" : "sharedElement") : mode === "NavHost" ? (v.popTransitions === "true" ? "pop transitions" : "default crossfade") : manual ? "progress flow" : material ? "component animation" : "system animation"],
+      ["finish", rootBad ? "no preview" : "destination visible"],
+    ].forEach(function (item, idx) {
+      const cell = h("div", "pb-cell" + (idx === 0 && rootBad ? " warn" : "") + (idx === 3 && !rootBad ? " active" : ""));
+      cell.appendChild(h("span", null, esc(item[0])));
+      cell.appendChild(h("b", null, esc(item[1])));
+      flow.appendChild(cell);
+    });
+    shell.appendChild(flow);
+    const chips = h("div", "pb-chips");
+    [
+      v.popTransitions === "true" ? "popEnter/popExit" : "default pop",
+      v.sharedBoundsContainer === "true" ? "sharedBounds" : "sharedElement",
+      v.overlayClip === "true" ? "overlay clipped" : "overlay default",
+      v.cancelAwareBack === "true" ? "CancellationException handled" : "completion only",
+      v.materialBackState === "true" ? "state passed" : "state missing",
+    ].forEach(function (label) { chips.appendChild(h("span", null, esc(label))); });
+    shell.appendChild(chips);
+    const note = rootBad
+      ? "Root BackHandler can disable system predictive animations."
+      : shared
+        ? "SharedTransitionLayout supplies the scope; NavDisplay supplies the animated content scope."
+        : manual
+          ? "Collect gesture progress and restore state when cancellation is thrown."
+          : material
+            ? "Material surfaces animate when their state is wired through supported APIs."
+            : "Supported back APIs let Android preview the destination.";
+    shell.appendChild(h("div", "pb-note", esc(note)));
+    stage.appendChild(shell);
+  }
+
+  function genPredictiveBack(pg, v) {
+    const mode = v.predictiveBackMode || "SystemBack";
+    if (mode === "NavHost") {
+      const transitions = v.popTransitions === "true"
+        ? ",\n    popExitTransition = {\n      scaleOut(\n        targetScale = 0.92f,\n        transformOrigin = TransformOrigin(0.5f, 0.5f)\n      )\n    },\n    popEnterTransition = { EnterTransition.None }"
+        : "";
+      return "import androidx.compose.animation.EnterTransition\nimport androidx.compose.animation.scaleOut\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.graphics.TransformOrigin\nimport androidx.navigation.compose.NavHost\nimport androidx.navigation.compose.composable\nimport androidx.navigation.compose.rememberNavController\n\n@Composable\nfun AppNavHost() {\n  val navController = rememberNavController()\n\n  NavHost(\n    navController = navController,\n    startDestination = HomeRoute" + transitions + "\n  ) {\n    composable<HomeRoute> {\n      HomeRoute(onOpen = { id -> navController.navigate(DetailRoute(id)) })\n    }\n    composable<DetailRoute> {\n      DetailRoute(onBack = { navController.popBackStack() })\n    }\n  }\n}\n\n// Navigation Compose 2.8+ participates in predictive back; pop transitions tune back motion.";
+    }
+    if (mode === "SharedElementNav3") {
+      const modifier = v.sharedBoundsContainer === "true"
+        ? ".sharedBounds(\n          sharedContentState = rememberSharedContentState(key = \"snack-card-$id\"),\n          animatedVisibilityScope = animatedVisibilityScope,\n          resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds()\n        )" + (v.overlayClip === "true" ? "\n        .clip(RoundedCornerShape(24.dp))" : "")
+        : ".sharedElement(\n          sharedContentState = rememberSharedContentState(key = \"snack-image-$id\"),\n          animatedVisibilityScope = animatedVisibilityScope\n        )" + (v.overlayClip === "true" ? "\n        .clip(RoundedCornerShape(24.dp))" : "");
+      return "import androidx.compose.animation.AnimatedVisibilityScope\nimport androidx.compose.animation.ExperimentalSharedTransitionApi\nimport androidx.compose.animation.SharedTransitionLayout\nimport androidx.compose.animation.SharedTransitionScope\nimport androidx.compose.animation.rememberSharedContentState\nimport androidx.compose.animation.sharedBounds\nimport androidx.compose.animation.sharedElement\nimport androidx.compose.foundation.shape.RoundedCornerShape\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.clip\nimport androidx.compose.ui.unit.dp\nimport androidx.navigation3.runtime.rememberNavBackStack\nimport androidx.navigation3.ui.LocalNavAnimatedContentScope\nimport androidx.navigation3.ui.NavDisplay\nimport androidx.navigation3.ui.entry\nimport androidx.navigation3.ui.entryProvider\nimport coil.compose.AsyncImage\n\n@OptIn(ExperimentalSharedTransitionApi::class)\n@Composable\nfun SnackNavigation() {\n  SharedTransitionLayout {\n    val backStack = rememberNavBackStack(HomeRoute)\n\n    NavDisplay(\n      backStack = backStack,\n      onBack = { backStack.removeLastOrNull() },\n      entryProvider = entryProvider {\n        entry<HomeRoute> {\n          SnackGrid(\n            sharedTransitionScope = this@SharedTransitionLayout,\n            animatedVisibilityScope = LocalNavAnimatedContentScope.current,\n            onOpenSnack = { id -> backStack.add(SnackDetailRoute(id)) }\n          )\n        }\n        entry<SnackDetailRoute> { route ->\n          SnackDetail(\n            id = route.id,\n            sharedTransitionScope = this@SharedTransitionLayout,\n            animatedVisibilityScope = LocalNavAnimatedContentScope.current,\n            onBack = { backStack.removeLastOrNull() }\n          )\n        }\n      }\n    )\n  }\n}\n\n@OptIn(ExperimentalSharedTransitionApi::class)\n@Composable\nfun SnackHero(\n  id: String,\n  sharedTransitionScope: SharedTransitionScope,\n  animatedVisibilityScope: AnimatedVisibilityScope\n) = with(sharedTransitionScope) {\n  AsyncImage(\n    model = id,\n    contentDescription = null,\n    modifier = Modifier\n      " + modifier + "\n  )\n}";
+    }
+    if (mode === "ManualProgress") {
+      const catchBlock = v.cancelAwareBack === "true"
+        ? "  } catch (e: CancellationException) {\n    scale = 1f\n    throw e\n  }"
+        : "  }";
+      const cancellationImport = v.cancelAwareBack === "true" ? "\nimport kotlinx.coroutines.CancellationException" : "";
+      return "import androidx.activity.BackEventCompat\nimport androidx.activity.compose.PredictiveBackHandler\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableFloatStateOf\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.setValue\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.graphics.graphicsLayer" + cancellationImport + "\nimport kotlinx.coroutines.flow.Flow\n\n@Composable\nfun BackProgressCard(\n  enabled: Boolean,\n  onBackComplete: () -> Unit\n) {\n  var scale by remember { mutableFloatStateOf(1f) }\n\n  PredictiveBackHandler(enabled) { progress: Flow<BackEventCompat> ->\n    try {\n      progress.collect { event ->\n        scale = 1f - (0.08f * event.progress)\n      }\n      onBackComplete()\n" + catchBlock + "\n  }\n\n  DetailCard(modifier = Modifier.graphicsLayer {\n    scaleX = scale\n    scaleY = scale\n  })\n}";
+    }
+    if (mode === "MaterialSurface") {
+      return "import androidx.compose.material3.DrawerValue\nimport androidx.compose.material3.ModalDrawerSheet\nimport androidx.compose.material3.ModalNavigationDrawer\nimport androidx.compose.material3.rememberDrawerState\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.rememberCoroutineScope\nimport kotlinx.coroutines.launch\n\n@Composable\nfun PredictiveDrawerShell(content: @Composable () -> Unit) {\n  val drawerState = rememberDrawerState(DrawerValue.Closed)\n  val scope = rememberCoroutineScope()\n\n  ModalNavigationDrawer(\n    drawerState = drawerState,\n    drawerContent = {\n      ModalDrawerSheet(" + (v.materialBackState === "true" ? "\n        drawerState = drawerState" : "") + "\n      ) {\n        DrawerContent(onClose = { scope.launch { drawerState.close() } })\n      }\n    },\n    content = content\n  )\n}\n\n// Material SearchBar, ModalBottomSheet, and drawers support predictive back when their state is wired.";
+    }
+    if (v.rootBackIntercept === "true") {
+      return "import androidx.activity.compose.BackHandler\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun RootShell() {\n  // BUG: root-level interception can block Android's back-to-home preview.\n  BackHandler(enabled = true) {\n    exitProcess(0)\n  }\n\n  AppNavHost()\n}";
+    }
+    return "import androidx.compose.runtime.Composable\n\n@Composable\nfun RootShell() {\n  // Let the Activity, Navigation Compose, and Material surfaces receive back.\n  // Android 15+ shows default predictive back system animations automatically\n  // when the app uses supported back APIs instead of intercepting root back.\n  AppNavHost()\n}";
+  }
+
+  function pvAdvancedInput(pg, v, stage) {
+    const mode = v.richInputMode || "DragSource";
+    const lower = mode.toLowerCase();
+    stage.classList.add("ainput-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "ainput-shell ainput-" + lower);
+    const topLabel = {
+      DragSource: v.globalDrag === "true" ? "global ClipData" : "local drag",
+      DropTarget: v.externalDropPermission === "true" ? "permission gated" : "local only",
+      Clipboard: v.sensitiveClipboard === "true" ? "sensitive flag" : "plain text",
+      RichContent: v.richContentReceiver === "true" ? "contentReceiver" : "paste text only",
+      Stylus: v.stylusCancel === "true" ? "cancel aware" : "commit only",
+      DesktopInput: v.rightClickMenu === "true" ? "right-click" : "long-press",
+    }[mode] || "input";
+    shell.appendChild(h("div", "ainput-top", "<b>" + esc(mode) + "</b><span>" + esc(topLabel) + "</span>"));
+    const body = h("div", "ainput-body");
+    if (mode === "DragSource") {
+      body.appendChild(h("div", "ainput-card source", "<i>url</i><b>Article preview</b><span>dragAndDropSource</span>"));
+      body.appendChild(h("div", "ainput-arrow", "ClipData"));
+      body.appendChild(h("div", "ainput-card ghost", "<i></i><b>Drag shadow</b><span>" + (v.globalDrag === "true" ? "View.DRAG_FLAG_GLOBAL" : "same app") + "</span>"));
+    } else if (mode === "DropTarget") {
+      body.appendChild(h("div", "ainput-drop" + (v.externalDropPermission === "true" ? " active" : ""), "<b>Drop zone</b><span>dragAndDropTarget</span>"));
+      body.appendChild(h("div", "ainput-lifecycle", "<span>onStarted</span><span>onEntered</span><span>onDrop</span><span>onEnded</span>"));
+    } else if (mode === "Clipboard") {
+      body.appendChild(h("div", "ainput-clip", "<b>ClipboardManager</b><span>ClipEntry</span><em>" + (v.sensitiveClipboard === "true" ? "EXTRA_IS_SENSITIVE" : "one ClipData entry") + "</em>"));
+      body.appendChild(h("div", "ainput-field", "<span>Paste into TextFieldState.edit</span><i></i>"));
+    } else if (mode === "RichContent") {
+      body.appendChild(h("div", "ainput-rich", "<b>contentReceiver</b><span>TransferableContent</span><em>MediaType.Image</em>"));
+      body.appendChild(h("div", "ainput-media", "<i></i><i></i><i></i>"));
+    } else if (mode === "Stylus") {
+      body.appendChild(h("div", "ainput-canvas", "<svg viewBox=\"0 0 220 110\" aria-hidden=\"true\"><path d=\"M18 82 C58 18 92 118 130 54 S188 34 204 74\"/></svg><span>AXIS_PRESSURE + AXIS_TILT</span></div>"));
+      body.appendChild(h("div", "ainput-stylus-flags", "<span>ACTION_MOVE</span><span>" + (v.stylusCancel === "true" ? "ACTION_CANCEL" : "no cancel") + "</span><span>" + (v.stylusCancel === "true" ? "FLAG_CANCELED" : "commit up") + "</span>"));
+    } else {
+      body.appendChild(h("div", "ainput-desktop", "<b>PointerEventType</b><span>" + (v.hoverFeedback === "true" ? "hoverable feedback" : "no hover cue") + "</span><em>" + (v.rightClickMenu === "true" ? "context click opens menu" : "touch long-press only") + "</em>"));
+      body.appendChild(h("div", "ainput-menu", "<span>Open</span><span>Rename</span><span>Archive</span>"));
+    }
+    shell.appendChild(body);
+    const chips = h("div", "ainput-chips");
+    [
+      v.globalDrag === "true" ? "global drag" : "local drag",
+      v.rememberDropTarget === "true" ? "remembered target" : "inline target",
+      v.externalDropPermission === "true" ? "drop permission" : "no permission",
+      v.sensitiveClipboard === "true" ? "sensitive clip" : "plain clip",
+      v.stylusCancel === "true" ? "cancel aware" : "commit only",
+      v.hoverFeedback === "true" ? "hover feedback" : "touch only",
+    ].forEach(function (label) { chips.appendChild(h("span", null, esc(label))); });
+    shell.appendChild(chips);
+    const note = {
+      DragSource: "Drag sources package payloads as ClipData; use global flags only when dragging outside the app is intended.",
+      DropTarget: "Drop targets should filter MIME types, remember callback objects, and request platform permissions for external payloads.",
+      Clipboard: "Clipboard has one current ClipEntry. Mark copied passwords, tokens, and secrets as sensitive.",
+      RichContent: "Rich content flows through contentReceiver so pasted or IME-inserted images can be consumed intentionally.",
+      Stylus: "Stylus apps need MotionEvent axes and must undo or discard canceled strokes.",
+      DesktopInput: "Large-screen users expect hover polish, right-click context actions, and drag/drop between app windows.",
+    }[mode];
+    shell.appendChild(h("div", "ainput-note", esc(note)));
+    stage.appendChild(shell);
+  }
+
+  function genAdvancedInput(pg, v) {
+    const mode = v.richInputMode || "DragSource";
+    if (mode === "DragSource") {
+      const flag = v.globalDrag === "true" ? ",\n      flags = View.DRAG_FLAG_GLOBAL" : "";
+      const importFlag = v.globalDrag === "true" ? "\nimport android.view.View" : "";
+      return "import android.content.ClipData" + importFlag + "\nimport androidx.compose.foundation.draganddrop.dragAndDropSource\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.material3.ListItem\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draganddrop.DragAndDropTransferData\nimport androidx.compose.ui.unit.dp\n\n@Composable\nfun ArticleDragSource(\n  article: ArticleUi,\n  modifier: Modifier = Modifier\n) {\n  ListItem(\n    headlineContent = { Text(article.title) },\n    supportingContent = { Text(article.url) },\n    modifier = modifier\n      .dragAndDropSource {\n        DragAndDropTransferData(\n          clipData = ClipData.newPlainText(\"article-url\", article.url)" + flag + "\n        )\n      }\n      .padding(8.dp)\n  )\n}\n\n// Global drag lets another app or window receive the ClipData; keep local drags local.";
+    }
+    if (mode === "DropTarget") {
+      const targetStart = v.rememberDropTarget !== "false"
+        ? "  val target = remember {\n    object : DragAndDropTarget {"
+        : "  // BUG: do not allocate a new target object on every recomposition.\n  val target = object : DragAndDropTarget {";
+      const targetEnd = v.rememberDropTarget !== "false" ? "\n    }\n  }" : "\n  }";
+      const permissionStart = v.externalDropPermission === "true"
+        ? "      val permission = activity.requestDragAndDropPermissions(\n        event.toAndroidDragEvent()\n      )\n      return try {\n        onDropped(readPlainText(event))\n        true\n      } finally {\n        permission?.release()\n      }"
+        : "      onDropped(readPlainText(event))\n      return true";
+      return "import android.app.Activity\nimport android.content.ClipDescription\nimport androidx.compose.foundation.draganddrop.dragAndDropTarget\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.fillMaxSize\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.remember\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draganddrop.DragAndDropEvent\nimport androidx.compose.ui.draganddrop.DragAndDropTarget\nimport androidx.compose.ui.draganddrop.mimeTypes\nimport androidx.compose.ui.draganddrop.toAndroidDragEvent\n\n@Composable\nfun ArticleDropTarget(\n  activity: Activity,\n  onDropped: (String) -> Unit,\n  modifier: Modifier = Modifier\n) {\n" + targetStart + "\n      override fun onDrop(event: DragAndDropEvent): Boolean {\n" + permissionStart + "\n      }\n    " + targetEnd + "\n\n  Box(\n    modifier\n      .fillMaxSize()\n      .dragAndDropTarget(\n        shouldStartDragAndDrop = { event ->\n          event.mimeTypes().contains(ClipDescription.MIMETYPE_TEXT_PLAIN)\n        },\n        target = target\n      )\n  ) {\n    Text(\"Drop an article URL\")\n  }\n}";
+    }
+    if (mode === "Clipboard") {
+      const sensitiveBlock = v.sensitiveClipboard === "true"
+        ? "\n    clip.description.extras = PersistableBundle().apply {\n      putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)\n    }"
+        : "";
+      const imports = v.sensitiveClipboard === "true" ? "\nimport android.content.ClipDescription\nimport android.os.PersistableBundle" : "";
+      return "import android.content.ClipData" + imports + "\nimport androidx.compose.foundation.text.input.TextFieldState\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.platform.ClipEntry\nimport androidx.compose.ui.platform.LocalClipboard\nimport androidx.compose.ui.platform.LocalClipboardManager\nimport androidx.compose.ui.text.AnnotatedString\n\n@Composable\nfun ClipboardActions(\n  displayName: String,\n  secret: String,\n  fieldState: TextFieldState\n) {\n  val legacyClipboard = LocalClipboardManager.current\n  val clipboard = LocalClipboard.current\n\n  Button(onClick = {\n    legacyClipboard.setText(AnnotatedString(displayName))\n\n    val clip = ClipData.newPlainText(\"account-secret\", secret)" + sensitiveBlock + "\n    clipboard.setClip(ClipEntry(clip))\n\n    clipboard.getClipEntry()?.clipData?.getItemAt(0)?.text?.let { pasted ->\n      fieldState.edit { append(pasted) }\n    }\n  }) {\n    Text(\"Copy account details\")\n  }\n}\n\n// Android 13+ shows system clipboard feedback, so avoid duplicating toasts.";
+    }
+    if (mode === "RichContent") {
+      const receiver = v.richContentReceiver !== "false"
+        ? "\n  val receiver = remember {\n    ReceiveContentListener { transferableContent: TransferableContent ->\n      if (transferableContent.hasMediaType(MediaType.Image)) {\n        onImagesDropped(transferableContent)\n        null\n      } else {\n        transferableContent\n      }\n    }\n  }"
+        : "";
+      const modifier = v.richContentReceiver !== "false"
+        ? "\n      .contentReceiver(receiver)"
+        : "";
+      return "import androidx.compose.foundation.content.MediaType\nimport androidx.compose.foundation.content.ReceiveContentListener\nimport androidx.compose.foundation.content.TransferableContent\nimport androidx.compose.foundation.content.contentReceiver\nimport androidx.compose.foundation.content.hasMediaType\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.text.input.TextFieldState\nimport androidx.compose.material3.OutlinedTextField\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.remember\nimport androidx.compose.ui.Modifier\n\n@Composable\nfun RichMessageField(\n  state: TextFieldState,\n  onImagesDropped: (TransferableContent) -> Unit,\n  modifier: Modifier = Modifier\n) {" + receiver + "\n\n  Column(modifier) {\n    OutlinedTextField(\n      state = state,\n      label = { Text(\"Message\") },\n      modifier = Modifier" + modifier + "\n    )\n    Text(\"Accepts typed text, pasted images, dragged content, and IME media.\")\n  }\n}";
+    }
+    if (mode === "Stylus") {
+      const cancelBlock = v.stylusCancel === "true"
+        ? "\n      MotionEvent.ACTION_CANCEL -> {\n        strokeStore.cancel(pointerId)\n        true\n      }\n      MotionEvent.ACTION_UP -> {\n        if ((event.flags and MotionEvent.FLAG_CANCELED) != 0) {\n          strokeStore.cancel(pointerId)\n        } else {\n          strokeStore.commit(pointerId)\n        }\n        true\n      }"
+        : "\n      MotionEvent.ACTION_UP -> {\n        strokeStore.commit(pointerId)\n        true\n      }";
+      return "import android.view.MotionEvent\nimport androidx.compose.foundation.Canvas\nimport androidx.compose.foundation.layout.fillMaxSize\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.input.pointer.pointerInteropFilter\n\n@Composable\nfun StylusInkCanvas(\n  strokeStore: StrokeStore,\n  modifier: Modifier = Modifier\n) {\n  Canvas(\n    modifier\n      .fillMaxSize()\n      .pointerInteropFilter { event: MotionEvent ->\n        val pointerId = event.getPointerId(event.actionIndex)\n        val toolType = event.getToolType(event.actionIndex)\n        if (toolType != MotionEvent.TOOL_TYPE_STYLUS &&\n          toolType != MotionEvent.TOOL_TYPE_ERASER\n        ) {\n          return@pointerInteropFilter false\n        }\n\n        when (event.actionMasked) {\n          MotionEvent.ACTION_DOWN,\n          MotionEvent.ACTION_MOVE -> {\n            strokeStore.update(\n              pointerId = pointerId,\n              x = event.getAxisValue(MotionEvent.AXIS_X),\n              y = event.getAxisValue(MotionEvent.AXIS_Y),\n              pressure = event.getAxisValue(MotionEvent.AXIS_PRESSURE),\n              tilt = event.getAxisValue(MotionEvent.AXIS_TILT),\n              orientation = event.getAxisValue(MotionEvent.AXIS_ORIENTATION)\n            )\n            true\n          }" + cancelBlock + "\n          else -> false\n        }\n      }\n  ) {\n    strokeStore.drawInto(this)\n  }\n}";
+    }
+    const hover = v.hoverFeedback === "true"
+      ? "\n      .hoverable(interactionSource)"
+      : "";
+    const rightClick = v.rightClickMenu === "true"
+      ? "\n      .pointerInput(Unit) {\n        awaitPointerEventScope {\n          while (true) {\n            val event = awaitPointerEvent()\n            if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {\n              onOpenContextMenu()\n            }\n          }\n        }\n      }"
+      : "";
+    return "import androidx.compose.foundation.ExperimentalFoundationApi\nimport androidx.compose.foundation.combinedClickable\nimport androidx.compose.foundation.hoverable\nimport androidx.compose.foundation.interaction.MutableInteractionSource\nimport androidx.compose.foundation.layout.Row\nimport androidx.compose.foundation.layout.fillMaxWidth\nimport androidx.compose.foundation.layout.padding\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.remember\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.input.pointer.PointerEventType\nimport androidx.compose.ui.input.pointer.isSecondaryPressed\nimport androidx.compose.ui.input.pointer.pointerInput\nimport androidx.compose.ui.unit.dp\n\n@OptIn(ExperimentalFoundationApi::class)\n@Composable\nfun DesktopReadyRow(\n  item: FileItem,\n  onOpen: () -> Unit,\n  onOpenContextMenu: () -> Unit,\n  modifier: Modifier = Modifier\n) {\n  val interactionSource = remember { MutableInteractionSource() }\n\n  Row(\n    modifier\n      .fillMaxWidth()\n      .combinedClickable(\n        interactionSource = interactionSource,\n        indication = null,\n        onClick = onOpen,\n        onLongClickLabel = \"Open context menu\",\n        onLongClick = onOpenContextMenu\n      )" + hover + rightClick + "\n      .padding(16.dp)\n  ) {\n    Text(item.name)\n  }\n}\n\n// Context menus should be reachable by touch long-press and by mouse or touchpad right-click.";
+  }
+
+  function pvActivityResults(pg, v, stage) {
+    const mode = v.activityResultMode || "GetContent";
+    const lower = mode.toLowerCase();
+    stage.classList.add("actres-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const headline = {
+      GetContent: v.unconditionalLauncher === "true" && v.launchFromEvent === "true" ? "event launch" : "registration trap",
+      PhotoPicker: v.photoPickerContract === "true" ? "privacy picker" : "broad media permission",
+      OpenDocument: v.persistUriPermission === "true" ? "persisted URI" : "session URI",
+      Permission: v.permissionRationale === "true" && v.permissionGracefulDeny === "true" ? "rationale + denial state" : "permission trap",
+      Notifications: v.notificationApiGate === "true" ? "API gated" : "ungated request",
+      AntiPattern: "review traps",
+    }[mode] || "system result";
+    const shell = h("div", "actres-shell actres-" + lower);
+    shell.appendChild(h("div", "actres-top", "<b>" + esc(mode) + "</b><span>" + esc(headline) + "</span>"));
+    const body = h("div", "actres-body");
+    if (mode === "GetContent") {
+      body.appendChild(h("section", v.unconditionalLauncher === "true" ? "good" : "warn", "<b>Register</b><span>rememberLauncherForActivityResult</span>"));
+      body.appendChild(h("section", v.launchFromEvent === "true" ? "good" : "warn", "<b>Launch</b><span>" + (v.launchFromEvent === "true" ? "Button onClick" : "composition effect") + "</span>"));
+      body.appendChild(h("section", "good", "<b>Result</b><span>Uri? as state</span>"));
+    } else if (mode === "PhotoPicker") {
+      body.appendChild(h("div", v.photoPickerContract === "true" ? "actres-picker good" : "actres-picker warn", "<i></i><b>" + (v.photoPickerContract === "true" ? "PickVisualMedia" : "READ_MEDIA_IMAGES") + "</b><span>user-selected media</span>"));
+    } else if (mode === "OpenDocument") {
+      body.appendChild(h("div", v.persistUriPermission === "true" ? "actres-document good" : "actres-document warn", "<b>OpenDocument</b><span>" + (v.persistUriPermission === "true" ? "takePersistableUriPermission" : "store Uri only") + "</span><i></i>"));
+    } else if (mode === "Permission") {
+      body.appendChild(h("div", v.permissionRationale === "true" ? "actres-permission good" : "actres-permission warn", "<b>Rationale</b><span>" + (v.permissionRationale === "true" ? "explain before prompt" : "prompt without context") + "</span>"));
+      body.appendChild(h("div", v.permissionGracefulDeny === "true" ? "actres-permission good" : "actres-permission warn", "<b>Denied</b><span>" + (v.permissionGracefulDeny === "true" ? "render fallback UI" : "crash or loop") + "</span>"));
+    } else if (mode === "Notifications") {
+      body.appendChild(h("div", v.notificationApiGate === "true" ? "actres-notify good" : "actres-notify warn", "<b>POST_NOTIFICATIONS</b><span>" + (v.notificationApiGate === "true" ? "Android 13+ only" : "all APIs") + "</span>"));
+    } else {
+      const traps = ["conditional register", "launch in effect", "manual unregister", "broad media permission"];
+      const grid = h("div", "actres-traps");
+      traps.forEach(function (trap) { grid.appendChild(h("span", null, esc(trap))); });
+      body.appendChild(grid);
+    }
+    shell.appendChild(body);
+    const chips = h("div", "actres-chips");
+    [
+      v.unconditionalLauncher === "true" ? "unconditional registration" : "conditional registration",
+      v.launchFromEvent === "true" ? "event launch" : "composition launch",
+      v.photoPickerContract === "true" ? "photo picker" : "media permission",
+      v.persistUriPermission === "true" ? "persist Uri" : "session Uri",
+      v.permissionGracefulDeny === "true" ? "denial UI" : "permission crash",
+    ].forEach(function (chip) { chips.appendChild(h("span", null, esc(chip))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genActivityResults(pg, v) {
+    const mode = v.activityResultMode || "GetContent";
+    if (mode === "GetContent") {
+      if (v.unconditionalLauncher !== "true") {
+        return "import androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun ConditionalPicker(enabled: Boolean) {\n  if (enabled) {\n    // BUG: Activity Result launchers must be registered unconditionally at a stable call site.\n    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->\n      println(uri)\n    }\n  }\n}";
+      }
+      if (v.launchFromEvent !== "true") {
+        return "import androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.LaunchedEffect\n\n@Composable\nfun AutoLaunchingPicker() {\n  val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->\n    println(uri)\n  }\n\n  // BUG: this relaunches from composition instead of a user or business event.\n  LaunchedEffect(Unit) {\n    launcher.launch(\"image/*\")\n  }\n}";
+      }
+      return "import android.net.Uri\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\n\n@Composable\nfun ImagePickerButton(\n  onImagePicked: (Uri) -> Unit,\n  modifier: Modifier = Modifier\n) {\n  val launcher = rememberLauncherForActivityResult(\n    contract = ActivityResultContracts.GetContent(),\n    onResult = { uri -> uri?.let(onImagePicked) }\n  )\n\n  Button(\n    modifier = modifier,\n    onClick = { launcher.launch(\"image/*\") }\n  ) {\n    Text(\"Choose image\")\n  }\n}\n\n// Register at composition time; launch from click, callback, or another explicit event.";
+    }
+    if (mode === "PhotoPicker") {
+      if (v.photoPickerContract !== "true") {
+        return "import android.Manifest\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun GalleryPermissionPicker() {\n  val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->\n    println(granted)\n  }\n\n  Button(onClick = { permission.launch(Manifest.permission.READ_MEDIA_IMAGES) }) {\n    Text(\"Pick photo\")\n  }\n}\n\n// BUG: for user-selected images or videos, prefer the Photo Picker instead of broad media permission.";
+      }
+      return "import android.net.Uri\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.PickVisualMediaRequest\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun AvatarPhotoPicker(onPhotoPicked: (Uri) -> Unit) {\n  val picker = rememberLauncherForActivityResult(\n    contract = ActivityResultContracts.PickVisualMedia(),\n    onResult = { uri -> uri?.let(onPhotoPicked) }\n  )\n\n  Button(\n    onClick = {\n      picker.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))\n    }\n  ) {\n    Text(\"Choose avatar\")\n  }\n}\n\n// The system Photo Picker lets users choose media without granting broad library access.";
+    }
+    if (mode === "OpenDocument") {
+      if (v.persistUriPermission !== "true") {
+        return "import android.net.Uri\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun ImportDocument(onDocumentReady: (Uri) -> Unit) {\n  val openDocument = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->\n    uri?.let(onDocumentReady)\n    // BUG: storing this Uri for later without takePersistableUriPermission can lose access.\n  }\n}";
+      }
+      return "import android.content.Intent\nimport android.net.Uri\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.platform.LocalContext\n\n@Composable\nfun ImportDocumentButton(onDocumentReady: (Uri) -> Unit) {\n  val context = LocalContext.current\n  val openDocument = rememberLauncherForActivityResult(\n    contract = ActivityResultContracts.OpenDocument(),\n    onResult = { uri ->\n      if (uri != null) {\n        context.contentResolver.takePersistableUriPermission(\n          uri,\n          Intent.FLAG_GRANT_READ_URI_PERMISSION\n        )\n        onDocumentReady(uri)\n      }\n    }\n  )\n\n  Button(onClick = { openDocument.launch(arrayOf(\"application/pdf\")) }) {\n    Text(\"Import PDF\")\n  }\n}";
+    }
+    if (mode === "Permission") {
+      if (v.permissionGracefulDeny !== "true") {
+        return "import androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun CameraPermissionTrap() {\n  val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->\n    if (!granted) error(\"Camera is required\") // BUG: denial is a normal user choice.\n  }\n}";
+      }
+      const rationale = v.permissionRationale === "true"
+        ? "\n  val shouldExplain = ActivityCompat.shouldShowRequestPermissionRationale(\n    activity,\n    Manifest.permission.CAMERA\n  )"
+        : "\n  val shouldExplain = false // BUG: no rationale path for users who need context.";
+      return "import android.Manifest\nimport android.content.pm.PackageManager\nimport androidx.activity.ComponentActivity\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\nimport androidx.compose.runtime.setValue\nimport androidx.compose.ui.platform.LocalContext\nimport androidx.core.app.ActivityCompat\nimport androidx.core.content.ContextCompat\n\n@Composable\nfun CameraPermissionButton(activity: ComponentActivity) {\n  val context = LocalContext.current\n  var denied by remember { mutableStateOf(false) }\n" + rationale + "\n  val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->\n    denied = !granted\n  }\n\n  val hasCamera = ContextCompat.checkSelfPermission(\n    context,\n    Manifest.permission.CAMERA\n  ) == PackageManager.PERMISSION_GRANTED\n\n  Button(onClick = {\n    if (!hasCamera) request.launch(Manifest.permission.CAMERA)\n  }) {\n    Text(if (hasCamera) \"Camera enabled\" else \"Enable camera\")\n  }\n\n  if (shouldExplain) Text(\"Camera access lets you scan receipts.\")\n  if (denied) Text(\"You can continue without scanning or enable it in Settings.\")\n}";
+    }
+    if (mode === "Notifications") {
+      if (v.notificationApiGate !== "true") {
+        return "import android.Manifest\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun UngatedNotifications() {\n  val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }\n\n  Button(onClick = { request.launch(Manifest.permission.POST_NOTIFICATIONS) }) {\n    Text(\"Enable notifications\")\n  }\n}\n\n// BUG: POST_NOTIFICATIONS exists for Android 13+, so gate the request by SDK level.";
+      }
+      return "import android.Manifest\nimport android.os.Build\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.platform.LocalContext\nimport androidx.core.app.NotificationManagerCompat\n\n@Composable\nfun NotificationOptInButton() {\n  val context = LocalContext.current\n  val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->\n    println(\"notifications granted = $granted\")\n  }\n  val enabled = NotificationManagerCompat.from(context).areNotificationsEnabled()\n\n  Button(onClick = {\n    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !enabled) {\n      request.launch(Manifest.permission.POST_NOTIFICATIONS)\n    }\n  }) {\n    Text(if (enabled) \"Notifications on\" else \"Enable notifications\")\n  }\n}";
+    }
+    return "import android.Manifest\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.LaunchedEffect\n\n@Composable\nfun ActivityResultAntiPattern(enabled: Boolean) {\n  if (enabled) {\n    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { }\n    launcher.unregister() // BUG: Compose manages this launcher.\n    LaunchedEffect(Unit) { launcher.launch(\"image/*\") } // BUG: launch from an event instead.\n  }\n\n  val mediaPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }\n  mediaPermission.launch(Manifest.permission.READ_MEDIA_IMAGES) // BUG: prefer Photo Picker for user-selected media.\n}";
+  }
+
+  function pvStateHolderArchitecture(pg, v, stage) {
+    const mode = v.stateHolderMode || "RouteBoundary";
+    const lower = mode.toLowerCase();
+    stage.classList.add("statearch-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "statearch-shell statearch-" + lower);
+    const status = {
+      RouteBoundary: v.contentStateless === "true" ? "state down" : "screen owns ViewModel",
+      HiltViewModel: v.hiltInjection === "true" && v.repositoryInjected === "true" ? "injected holder" : "manual dependency",
+      SavedState: v.savedStateHandle === "true" ? "minimal restore key" : "saved blob",
+      Factory: v.creationExtrasFactory === "true" ? "CreationExtras" : "remembered ViewModel",
+      LifecycleCollect: v.lifecycleCollection === "true" ? "lifecycle-aware Flow" : "manual collection",
+      AntiPattern: "review traps",
+    }[mode] || "state holder";
+    shell.appendChild(h("div", "statearch-top", "<b>" + esc(mode) + "</b><span>" + esc(status) + "</span>"));
+    const body = h("div", "statearch-body");
+    if (mode === "AntiPattern") {
+      const traps = ["hiltViewModel in leaf", "Repository() in UI", "collectAsState", "SavedState blob"];
+      const grid = h("div", "statearch-traps");
+      traps.forEach(function (trap) { grid.appendChild(h("span", null, esc(trap))); });
+      body.appendChild(grid);
+    } else {
+      const lanes = [
+        ["route", mode === "HiltViewModel" ? "Destination" : "Route", mode === "LifecycleCollect" ? (v.lifecycleCollection === "true" ? "collectAsStateWithLifecycle" : "repeatOnLifecycle") : (v.contentStateless === "true" ? "state + events" : "passes ViewModel")],
+        ["holder", mode === "Factory" ? "Factory" : mode === "SavedState" ? "SavedStateHandle" : (v.hiltInjection === "true" ? "@HiltViewModel" : "ViewModel"), mode === "Factory" ? (v.creationExtrasFactory === "true" ? "CreationExtras" : "remember") : mode === "SavedState" ? (v.savedStateHandle === "true" ? "query key" : "whole state") : (v.whileSubscribedFlow === "true" ? "stateIn WhileSubscribed" : "raw Flow")],
+        ["data", "Data layer", v.repositoryInjected === "true" ? "injected repository" : "constructed in UI"],
+      ];
+      const flow = h("div", "statearch-flow");
+      lanes.forEach(function (lane, idx) {
+        const good = (idx === 0 && (v.contentStateless === "true" || mode !== "RouteBoundary")) ||
+          (idx === 1 && (v.savedStateHandle === "true" || mode !== "SavedState") && (v.creationExtrasFactory === "true" || mode !== "Factory")) ||
+          (idx === 2 && v.repositoryInjected === "true");
+        flow.appendChild(h("section", good ? "good" : "warn", "<i>" + esc(lane[0]) + "</i><b>" + esc(lane[1]) + "</b><span>" + esc(lane[2]) + "</span>"));
+      });
+      body.appendChild(flow);
+    }
+    shell.appendChild(body);
+    const chips = h("div", "statearch-chips");
+    [
+      v.lifecycleCollection === "true" ? "lifecycle collect" : "manual collect",
+      v.hiltInjection === "true" ? "Hilt factory" : "manual factory",
+      v.savedStateHandle === "true" ? "minimal saved key" : "saved blob",
+      v.whileSubscribedFlow === "true" ? "WhileSubscribed" : "eager upstream",
+      v.contentStateless === "true" ? "stateless content" : "ViewModel child",
+    ].forEach(function (chip) { chips.appendChild(h("span", null, esc(chip))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genStateHolderArchitecture(pg, v) {
+    const mode = v.stateHolderMode || "RouteBoundary";
+    if (mode === "RouteBoundary") {
+      if (v.contentStateless !== "true") {
+        return "import androidx.compose.runtime.Composable\nimport androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel\n\n@Composable\nfun SearchScreen(\n  viewModel: SearchViewModel = hiltViewModel()\n) {\n  // BUG: reusable screen content now owns a screen-scoped dependency.\n  SearchResults(\n    query = viewModel.query,\n    onQueryChange = viewModel::onQueryChange\n  )\n}\n\n// Prefer SearchRoute owning the ViewModel and SearchScreen receiving state + events.";
+      }
+      const collector = v.lifecycleCollection === "true" ? "collectAsStateWithLifecycle" : "collectAsState";
+      const importCollector = v.lifecycleCollection === "true" ? "androidx.lifecycle.compose.collectAsStateWithLifecycle" : "androidx.compose.runtime.collectAsState";
+      const vmProvider = v.hiltInjection === "true" ? "hiltViewModel()" : "viewModel()";
+      const vmImport = v.hiltInjection === "true" ? "androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel" : "androidx.lifecycle.viewmodel.compose.viewModel";
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport " + importCollector + "\nimport " + vmImport + "\n\n@Composable\nfun SearchRoute(\n  viewModel: SearchViewModel = " + vmProvider + ",\n  onResultClick: (String) -> Unit\n) {\n  val uiState by viewModel.uiState." + collector + "()\n\n  SearchScreen(\n    uiState = uiState,\n    onQueryChange = viewModel::onQueryChange,\n    onResultClick = onResultClick\n  )\n}\n\n@Composable\nfun SearchScreen(\n  uiState: SearchUiState,\n  onQueryChange: (String) -> Unit,\n  onResultClick: (String) -> Unit\n) {\n  SearchContent(\n    query = uiState.query,\n    results = uiState.results,\n    onQueryChange = onQueryChange,\n    onResultClick = onResultClick\n  )\n}";
+    }
+    if (mode === "HiltViewModel") {
+      if (v.hiltInjection !== "true" || v.repositoryInjected !== "true") {
+        return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.remember\n\n@Composable\nfun SearchRoute() {\n  // BUG: UI constructs app dependencies and a state holder manually.\n  val repository = remember { SearchRepository(Retrofit.Builder().build()) }\n  val viewModel = remember { SearchViewModel(repository) }\n\n  SearchScreen(viewModel = viewModel)\n}";
+      }
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel\nimport androidx.lifecycle.SavedStateHandle\nimport androidx.lifecycle.ViewModel\nimport androidx.lifecycle.compose.collectAsStateWithLifecycle\nimport dagger.hilt.android.lifecycle.HiltViewModel\nimport javax.inject.Inject\n\n@HiltViewModel\nclass SearchViewModel @Inject constructor(\n  savedStateHandle: SavedStateHandle,\n  private val repository: SearchRepository\n) : ViewModel() {\n  val uiState = repository.searchResults(\n    query = savedStateHandle.getStateFlow(\"query\", \"\")\n  )\n\n  fun onQueryChange(query: String) {\n    savedStateHandle[\"query\"] = query\n  }\n}\n\n@Composable\nfun SearchRoute(viewModel: SearchViewModel = hiltViewModel()) {\n  val uiState by viewModel.uiState.collectAsStateWithLifecycle()\n  SearchScreen(uiState = uiState, onQueryChange = viewModel::onQueryChange)\n}";
+    }
+    if (mode === "SavedState") {
+      if (v.savedStateHandle !== "true") {
+        return "import androidx.lifecycle.SavedStateHandle\nimport androidx.lifecycle.ViewModel\n\nclass SearchViewModel(\n  private val savedStateHandle: SavedStateHandle\n) : ViewModel() {\n  fun cacheWholeScreen(uiState: SearchUiState) {\n    // BUG: saved state is not a database or screen cache.\n    savedStateHandle[\"results\"] = uiState.results\n    savedStateHandle[\"profile\"] = uiState.selectedProfile\n  }\n}";
+      }
+      const sharing = v.whileSubscribedFlow === "true" ? "SharingStarted.WhileSubscribed(5_000)" : "SharingStarted.Eagerly // usually wastes work for UI state";
+      return "import androidx.lifecycle.SavedStateHandle\nimport androidx.lifecycle.ViewModel\nimport androidx.lifecycle.viewModelScope\nimport kotlinx.coroutines.flow.SharingStarted\nimport kotlinx.coroutines.flow.flatMapLatest\nimport kotlinx.coroutines.flow.map\nimport kotlinx.coroutines.flow.stateIn\n\nclass SearchViewModel(\n  private val savedStateHandle: SavedStateHandle,\n  private val repository: SearchRepository\n) : ViewModel() {\n  private val query = savedStateHandle.getStateFlow(\"query\", \"\")\n\n  val uiState = query\n    .flatMapLatest { q -> repository.search(q) }\n    .map { results -> SearchUiState(query = query.value, results = results) }\n    .stateIn(\n      scope = viewModelScope,\n      started = " + sharing + ",\n      initialValue = SearchUiState()\n    )\n\n  fun onQueryChange(value: String) {\n    savedStateHandle[\"query\"] = value\n  }\n}\n\n// Save minimal keys. Rebuild loaded data from repository after recreation.";
+    }
+    if (mode === "Factory") {
+      if (v.creationExtrasFactory !== "true") {
+        return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.remember\n\n@Composable\nfun ReportRoute(repository: ReportRepository) {\n  // BUG: remember is not a ViewModelStore and will not handle owners or saved state.\n  val viewModel = remember { ReportViewModel(repository) }\n  ReportScreen(viewModel)\n}";
+      }
+      return "import android.app.Application\nimport androidx.lifecycle.SavedStateHandle\nimport androidx.lifecycle.ViewModel\nimport androidx.lifecycle.ViewModelProvider\nimport androidx.lifecycle.viewmodel.CreationExtras\nimport androidx.lifecycle.viewmodel.MutableCreationExtras\nimport androidx.lifecycle.viewmodel.createSavedStateHandle\nimport androidx.lifecycle.viewmodel.initializer\nimport androidx.lifecycle.viewmodel.viewModelFactory\nimport androidx.lifecycle.viewmodel.compose.viewModel\n\nclass ReportViewModel(\n  private val repository: ReportRepository,\n  private val savedStateHandle: SavedStateHandle\n) : ViewModel() {\n  val reportId: String = savedStateHandle[\"reportId\"] ?: error(\"Missing reportId\")\n\n  companion object {\n    val Factory: ViewModelProvider.Factory = viewModelFactory {\n      initializer {\n        val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application\n        ReportViewModel(\n          repository = app.container.reportRepository,\n          savedStateHandle = createSavedStateHandle()\n        )\n      }\n    }\n  }\n}\n\n@Composable\nfun ReportRoute(reportId: String) {\n  val extras = MutableCreationExtras().apply {\n    set(ViewModelProvider.NewInstanceFactory.VIEW_MODEL_KEY, \"report-$reportId\")\n  }\n  val viewModel: ReportViewModel = viewModel(factory = ReportViewModel.Factory, extras = extras)\n  ReportScreen(viewModel)\n}";
+    }
+    if (mode === "LifecycleCollect") {
+      if (v.lifecycleCollection !== "true") {
+        return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.LaunchedEffect\nimport androidx.lifecycle.repeatOnLifecycle\n\n@Composable\nfun SearchRoute(viewModel: SearchViewModel) {\n  var state by remember { mutableStateOf(SearchUiState()) }\n\n  // BUG: do not hand-roll lifecycle collection for UI state in Compose.\n  LaunchedEffect(viewModel) {\n    lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {\n      viewModel.uiState.collect { state = it }\n    }\n  }\n\n  SearchScreen(state)\n}";
+      }
+      return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.lifecycle.compose.collectAsStateWithLifecycle\n\n@Composable\nfun SearchRoute(viewModel: SearchViewModel) {\n  val uiState by viewModel.uiState.collectAsStateWithLifecycle()\n\n  SearchScreen(\n    uiState = uiState,\n    onQueryChange = viewModel::onQueryChange\n  )\n}\n\n// collectAsStateWithLifecycle pauses Flow collection while the UI is stopped.";
+    }
+    return "import androidx.compose.runtime.Composable\nimport androidx.compose.runtime.CompositionLocalProvider\nimport androidx.compose.runtime.compositionLocalOf\nimport androidx.compose.runtime.collectAsState\nimport androidx.compose.runtime.remember\nimport androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel\n\nval LocalSearchRepository = compositionLocalOf<SearchRepository> {\n  error(\"No repository\")\n}\n\n@Composable\nfun SearchCard() {\n  val repository = LocalSearchRepository.current\n  val viewModel: SearchViewModel = hiltViewModel() // BUG: leaf content owns screen scope.\n  val state by viewModel.uiState.collectAsState() // BUG: Android UI should use lifecycle collection.\n\n  SearchResultList(state.results)\n}\n\n@Composable\nfun SearchRoute() {\n  val repository = remember { SearchRepository() } // BUG: construct dependencies outside UI.\n  CompositionLocalProvider(LocalSearchRepository provides repository) {\n    SearchCard()\n  }\n}";
+  }
+
+  function pvSemanticsContract(pg, v, stage) {
+    const mode = v.semanticsContract || "MergedRow";
+    const progress = Math.max(0, Math.min(100, Math.round(num(v.progressValue, 65))));
+    stage.classList.add("sem-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "sem-shell");
+    shell.appendChild(h("div", "sem-top", "<b>" + esc(mode) + "</b><span>" + (v.accessibilityChecks === "true" ? "checks on" : "inspect tree") + "</span>"));
+    const body = h("div", "sem-body sem-" + mode.toLowerCase());
+    if (mode === "CustomActions") {
+      body.appendChild(h("div", "sem-row merged", "<i>AR</i><b>Article row</b><span>Swipe actions moved into accessibility menu</span>"));
+      const actions = h("div", "sem-actions");
+      ["Open", "Bookmark", "Dismiss"].forEach(function (label) { actions.appendChild(h("span", null, esc(label))); });
+      body.appendChild(actions);
+    } else if (mode === "LiveRegion") {
+      body.appendChild(h("div", "sem-pane", "<b>Filters updated</b><span>" + (v.liveRegion === "true" ? "liveRegion = Polite" : "status text only") + "</span>"));
+      body.appendChild(h("div", "sem-sheet", "<b>Sort options</b><span>" + (v.traversalGroup === "true" ? "paneTitle announced" : "new pane needs title") + "</span>"));
+    } else if (mode === "TraversalGroup") {
+      const grid = h("div", "sem-grid");
+      [["1", "Account"], ["2", "Security"], ["3", "Billing"], ["4", "Team"]].forEach(function (item) {
+        grid.appendChild(h("span", null, "<b>" + item[0] + "</b>" + esc(item[1])));
+      });
+      body.appendChild(grid);
+      body.appendChild(h("div", "sem-note", v.traversalGroup === "true" ? "isTraversalGroup + traversalIndex" : "default bounds order"));
+    } else if (mode === "ErrorProgress") {
+      body.appendChild(h("label", "sem-field", "<span>Email</span><b>Fields cannot be empty</b>"));
+      const bar = h("div", "sem-progress");
+      bar.appendChild(h("i"));
+      bar.querySelector("i").style.width = progress + "%";
+      body.appendChild(bar);
+      body.appendChild(h("div", "sem-note", "progressBarRangeInfo: " + progress + "%"));
+    } else {
+      body.appendChild(h("div", "sem-row" + (v.mergeSemantics === "true" ? " merged" : ""), "<i>AL</i><b>Ada Lovelace</b><span>Online · 4 unread</span><em>Open profile</em>"));
+      body.appendChild(h("div", "sem-note", v.clearSemantics === "true" ? "clearAndSetSemantics replaces children" : v.mergeSemantics === "true" ? "mergeDescendants exposes one row" : "children remain separate stops"));
+    }
+    const chips = h("div", "sem-chips");
+    [
+      v.mergeSemantics === "true" ? "merge" : "separate",
+      v.clearSemantics === "true" ? "clear + replace" : "preserve children",
+      v.customA11yActions === "true" ? "custom actions" : "primary action",
+      v.liveRegion === "true" ? "live region" : "quiet update",
+    ].forEach(function (label) { chips.appendChild(h("span", null, esc(label))); });
+    body.appendChild(chips);
+    shell.appendChild(body);
+    stage.appendChild(shell);
+  }
+
+  function genSemanticsContract(pg, v) {
+    const mode = v.semanticsContract || "MergedRow";
+    const progress = (Math.max(0, Math.min(100, Math.round(num(v.progressValue, 65)))) / 100).toFixed(2).replace(/0+$/, "").replace(/\.$/, "") + "f";
+    if (mode === "CustomActions") {
+      return "@Composable\nfun ArticleRowWithActions(\n  article: ArticleUi,\n  onOpen: () -> Unit,\n  onBookmark: () -> Unit,\n  onDismiss: () -> Unit,\n  modifier: Modifier = Modifier\n) {\n  Row(\n    modifier = modifier\n      .fillMaxWidth()\n      .clickable(onClickLabel = \"Open article\", onClick = onOpen)\n      .semantics {\n        customActions = listOf(\n          CustomAccessibilityAction(label = \"Bookmark\") {\n            onBookmark(); true\n          },\n          CustomAccessibilityAction(label = \"Dismiss\") {\n            onDismiss(); true\n          }\n        )\n      }\n      .padding(16.dp),\n    verticalAlignment = Alignment.CenterVertically\n  ) {\n    Text(article.title, Modifier.weight(1f))\n    Icon(Icons.Default.MoreVert, contentDescription = null)\n  }\n}";
+    }
+    if (mode === "LiveRegion") {
+      return "@Composable\nfun FilterResultsAnnouncement(\n  resultCount: Int,\n  showSheet: Boolean,\n  modifier: Modifier = Modifier\n) {\n  Column(modifier) {\n    Text(\n      text = \"$resultCount results\",\n      modifier = Modifier.semantics {\n        liveRegion = LiveRegionMode.Polite\n      }\n    )\n\n    if (showSheet) {\n      ModalBottomSheet(\n        onDismissRequest = { /* update owner state */ },\n        modifier = Modifier.semantics {\n          paneTitle = \"Filter options\"\n        }\n      ) {\n        Text(\"Sort and filter\")\n      }\n    }\n  }\n}";
+    }
+    if (mode === "TraversalGroup") {
+      return "@Composable\nfun DashboardTraversal(modifier: Modifier = Modifier) {\n  Row(\n    modifier = modifier\n      .fillMaxWidth()\n      .semantics { isTraversalGroup = true },\n    horizontalArrangement = Arrangement.spacedBy(12.dp)\n  ) {\n    SummaryCard(\n      title = \"Account\",\n      modifier = Modifier.semantics { traversalIndex = 0f }\n    )\n    SummaryCard(\n      title = \"Security\",\n      modifier = Modifier.semantics { traversalIndex = 1f }\n    )\n    SummaryCard(\n      title = \"Billing\",\n      modifier = Modifier.semantics { traversalIndex = 2f }\n    )\n  }\n}";
+    }
+    if (mode === "ErrorProgress") {
+      return "@Composable\nfun UploadField(\n  progress: Float = " + progress + ",\n  hasError: Boolean,\n  modifier: Modifier = Modifier\n) {\n  Column(modifier) {\n    OutlinedTextField(\n      value = \"\",\n      onValueChange = { },\n      label = { Text(\"Email\") },\n      isError = hasError,\n      modifier = Modifier.semantics {\n        if (hasError) error(\"Please add both email and password\")\n      }\n    )\n\n    LinearProgressIndicator(\n      progress = { progress },\n      modifier = Modifier\n        .fillMaxWidth()\n        .semantics {\n          progressBarRangeInfo = ProgressBarRangeInfo(\n            current = progress,\n            range = 0f..1f,\n            steps = 0\n          )\n        }\n    )\n  }\n}";
+    }
+    const merge = v.mergeSemantics !== "false" ? "\n      .semantics(mergeDescendants = true) { }" : "";
+    const clear = v.clearSemantics === "true"
+      ? "\n      .clearAndSetSemantics {\n        role = Role.Button\n        contentDescription = \"Open Ada Lovelace profile, online, 4 unread messages\"\n        onClick(label = \"Open profile\") { onOpen(); true }\n      }"
+      : "";
+    return "@Composable\nfun ProfileSummaryRow(\n  onOpen: () -> Unit,\n  modifier: Modifier = Modifier\n) {\n  Row(\n    modifier = modifier\n      .fillMaxWidth()\n      .clickable(onClickLabel = \"Open profile\", onClick = onOpen)" + merge + clear + "\n      .padding(16.dp),\n    verticalAlignment = Alignment.CenterVertically\n  ) {\n    Icon(Icons.Default.AccountCircle, contentDescription = null)\n    Column(Modifier.weight(1f).padding(start = 12.dp)) {\n      Text(\"Ada Lovelace\")\n      Text(\"Online, 4 unread messages\")\n    }\n    Icon(Icons.Default.ChevronRight, contentDescription = null)\n  }\n}";
+  }
+
+  function pvAdvancedAnimation(pg, v, stage) {
+    const mode = v.advancedMotionMode || "SingleValue";
+    stage.classList.add("motion2-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "motion2-shell motion2-" + mode.toLowerCase());
+    const topLabel = {
+      SingleValue: v.springSpec === "true" ? "spring spec" : "tween spec",
+      Transition: "coordinated state",
+      AnimatedContent: v.contentTargetParam === "true" ? "target keyed" : "stale state",
+      Visibility: v.visibilityTransitionOwned === "true" ? "owned exit" : "detached exit",
+      AnimatableGesture: v.gestureSnapStop === "true" ? "snap + stop" : "animate only",
+      TestClock: v.testClockControl === "true" ? "mainClock" : "sleep timing",
+    }[mode] || "motion";
+    shell.appendChild(h("div", "motion2-top", "<b>" + esc(mode) + "</b><span>" + esc(topLabel) + "</span>"));
+    const body = h("div", "motion2-body");
+    if (mode === "SingleValue") {
+      const card = h("div", "motion2-card one");
+      card.appendChild(h("b", null, "animate*AsState"));
+      card.appendChild(h("span", null, v.springSpec === "true" ? "continuous interruption" : "fixed duration"));
+      const meter = h("div", "motion2-meter");
+      meter.appendChild(h("i"));
+      card.appendChild(meter);
+      body.appendChild(card);
+    } else if (mode === "Transition") {
+      const flow = h("div", "motion2-flow");
+      [["state", "Collapsed"], ["Transition", "target"], ["color", "animateColor"], ["size", "animateDp"]].forEach(function (item, idx) {
+        const cell = h("div", "motion2-cell" + (idx === 1 ? " active" : ""));
+        cell.appendChild(h("span", null, esc(item[0])));
+        cell.appendChild(h("b", null, esc(item[1])));
+        flow.appendChild(cell);
+      });
+      body.appendChild(flow);
+    } else if (mode === "AnimatedContent") {
+      body.appendChild(h("div", "motion2-swap " + (v.contentTargetParam === "true" ? "good" : "warn"), "<b>" + (v.contentTargetParam === "true" ? "targetCount" : "outer count") + "</b><span>AnimatedContent key</span>"));
+      body.appendChild(h("div", "motion2-transform", "<span>slide</span><span>fade</span><span>SizeTransform</span>"));
+    } else if (mode === "Visibility") {
+      body.appendChild(h("div", "motion2-visibility " + (v.visibilityTransitionOwned === "true" ? "good" : "warn"), "<b>AnimatedVisibility</b><span>" + (v.visibilityTransitionOwned === "true" ? "transition.animateColor waits" : "animate*AsState may be removed early") + "</span>"));
+      body.appendChild(h("div", "motion2-exit", "<i></i><i></i><i></i>"));
+    } else if (mode === "AnimatableGesture") {
+      body.appendChild(h("div", "motion2-gesture", "<b>Animatable</b><span>" + (v.gestureSnapStop === "true" ? "stop -> snapTo -> animateTo" : "target animation only") + "</span><em></em>"));
+      body.appendChild(h("div", "motion2-path", "<span></span><span></span><span></span>"));
+    } else {
+      body.appendChild(h("div", "motion2-test", "<b>ComposeTestRule</b><span>" + (v.testClockControl === "true" ? "autoAdvance = false" : "Thread.sleep timing") + "</span>"));
+      body.appendChild(h("div", "motion2-clock", "<span>0ms</span><i></i><span>250ms</span>"));
+    }
+    shell.appendChild(body);
+    const chips = h("div", "motion2-chips");
+    [
+      v.springSpec === "true" ? "spring" : "tween",
+      v.contentTargetParam === "true" ? "target lambda" : "outer state",
+      v.visibilityTransitionOwned === "true" ? "transition-owned" : "detached exit",
+      v.gestureSnapStop === "true" ? "snap/stop" : "animate only",
+      v.animationLabels === "true" ? "labels" : "anonymous",
+      v.testClockControl === "true" ? "mainClock" : "sleep",
+    ].forEach(function (label) { chips.appendChild(h("span", null, esc(label))); });
+    shell.appendChild(chips);
+    const note = {
+      SingleValue: "Use single-value helpers when one property follows one target state.",
+      Transition: "Use updateTransition when several values must share the same state machine.",
+      AnimatedContent: "Always render the lambda target value so AnimatedContent can key outgoing and incoming content.",
+      Visibility: "Put custom exit values on AnimatedVisibilityScope.transition so removal waits for them.",
+      AnimatableGesture: "Animatable is coroutine-owned; stop or snap during direct input and animate release deliberately.",
+      TestClock: "Animation tests should control ComposeTestRule.mainClock instead of sleeping.",
+    }[mode];
+    shell.appendChild(h("div", "motion2-note", esc(note)));
+    stage.appendChild(shell);
+  }
+
+  function genAdvancedAnimation(pg, v) {
+    const mode = v.advancedMotionMode || "SingleValue";
+    const label = v.animationLabels !== "false";
+    const labelArg = function (name) { return label ? ',\n    label = "' + name + '"' : ""; };
+    if (mode === "SingleValue") {
+      const spec = v.springSpec === "true"
+        ? "spring(\n      dampingRatio = Spring.DampingRatioNoBouncy,\n      stiffness = Spring.StiffnessMediumLow\n    )"
+        : "tween(durationMillis = 240, easing = FastOutSlowInEasing)";
+      return "import androidx.compose.animation.core.FastOutSlowInEasing\nimport androidx.compose.animation.core.Spring\nimport androidx.compose.animation.core.animateDpAsState\nimport androidx.compose.animation.core.animateFloatAsState\nimport androidx.compose.animation.core.spring\nimport androidx.compose.animation.core.tween\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.alpha\nimport androidx.compose.ui.unit.dp\n\n@Composable\nfun FavoritePulse(\n  selected: Boolean,\n  modifier: Modifier = Modifier\n) {\n  val size by animateDpAsState(\n    targetValue = if (selected) 64.dp else 48.dp,\n    animationSpec = " + spec + labelArg("favorite size") + "\n  )\n  val alpha by animateFloatAsState(\n    targetValue = if (selected) 1f else 0.72f,\n    animationSpec = " + spec + labelArg("favorite alpha") + "\n  )\n\n  Box(modifier.size(size).alpha(alpha))\n}\n\n// Prefer spring when interrupted targets should preserve velocity continuity.";
+    }
+    if (mode === "Transition") {
+      return "import androidx.compose.animation.animateColor\nimport androidx.compose.animation.core.Spring\nimport androidx.compose.animation.core.animateDp\nimport androidx.compose.animation.core.spring\nimport androidx.compose.animation.core.updateTransition\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.graphics.Color\nimport androidx.compose.ui.unit.dp\n\nenum class CardMotionState { Collapsed, Expanded }\n\n@Composable\nfun CoordinatedCardMotion(\n  state: CardMotionState,\n  modifier: Modifier = Modifier\n) {\n  val transition = updateTransition(state" + (label ? ', label = "card motion"' : "") + ")\n  val container by transition.animateColor(" + (label ? 'label = "container color", ' : "") + "transitionSpec = {\n    spring(stiffness = Spring.StiffnessMediumLow)\n  }) { target ->\n    if (target == CardMotionState.Expanded) Color(0xFFCCFBF1) else Color(0xFFE2E8F0)\n  }\n  val size by transition.animateDp(" + (label ? 'label = "card size", ' : "") + "transitionSpec = {\n    spring(stiffness = Spring.StiffnessLow)\n  }) { target ->\n    if (target == CardMotionState.Expanded) 180.dp else 96.dp\n  }\n\n  MotionCard(container = container, modifier = modifier.size(size))\n}\n\n// Transition.currentState == Transition.targetState is the signal that all child animations reached the target.";
+    }
+    if (mode === "AnimatedContent") {
+      if (v.contentTargetParam === "true") {
+        return "import androidx.compose.animation.AnimatedContent\nimport androidx.compose.animation.SizeTransform\nimport androidx.compose.animation.core.tween\nimport androidx.compose.animation.fadeIn\nimport androidx.compose.animation.fadeOut\nimport androidx.compose.animation.slideInVertically\nimport androidx.compose.animation.slideOutVertically\nimport androidx.compose.animation.togetherWith\nimport androidx.compose.animation.using\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun CountBadge(count: Int) {\n  AnimatedContent(\n    targetState = count,\n    transitionSpec = {\n      if (targetState > initialState) {\n        slideInVertically { it } + fadeIn() togetherWith\n          slideOutVertically { -it } + fadeOut()\n      } else {\n        slideInVertically { -it } + fadeIn() togetherWith\n          slideOutVertically { it } + fadeOut()\n      }.using(SizeTransform(clip = false))\n    }" + (label ? ',\n    label = "count badge"' : "") + "\n  ) { targetCount ->\n    Text(\"$targetCount\")\n  }\n}\n\n// Use the lambda parameter. AnimatedContent keys incoming and outgoing content from this target value.";
+      }
+      return "import androidx.compose.animation.AnimatedContent\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun CountBadge(count: Int) {\n  AnimatedContent(targetState = count) {\n    // BUG: this reads the outer state instead of the AnimatedContent target value.\n    Text(\"$count\")\n  }\n}";
+    }
+    if (mode === "Visibility") {
+      if (v.visibilityTransitionOwned === "true") {
+        return "import androidx.compose.animation.AnimatedVisibility\nimport androidx.compose.animation.EnterExitState\nimport androidx.compose.animation.animateColor\nimport androidx.compose.animation.fadeIn\nimport androidx.compose.animation.fadeOut\nimport androidx.compose.foundation.background\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.graphics.Color\nimport androidx.compose.ui.unit.dp\n\n@Composable\nfun DismissibleStatus(visible: Boolean) {\n  AnimatedVisibility(\n    visible = visible,\n    enter = fadeIn(),\n    exit = fadeOut()" + (label ? ',\n    label = "status visibility"' : "") + "\n  ) {\n    val background by transition.animateColor(" + (label ? 'label = "status background"' : "") + ") { state ->\n      if (state == EnterExitState.Visible) Color(0xFF0F766E) else Color(0xFFCBD5E1)\n    }\n\n    Box(Modifier.size(96.dp).background(background))\n  }\n}\n\n// AnimatedVisibility waits for animations added to its Transition before removing content.";
+      }
+      return "import androidx.compose.animation.AnimatedVisibility\nimport androidx.compose.animation.fadeOut\nimport androidx.compose.animation.core.animateFloatAsState\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.alpha\n\n@Composable\nfun DismissibleStatus(visible: Boolean) {\n  AnimatedVisibility(visible = visible, exit = fadeOut()) {\n    val customExitAlpha by animateFloatAsState(\n      targetValue = if (visible) 1f else 0f\n    )\n    // BUG: AnimatedVisibility cannot wait for this independent animation.\n    Box(Modifier.alpha(customExitAlpha))\n  }\n}";
+    }
+    if (mode === "AnimatableGesture") {
+      if (v.gestureSnapStop === "true") {
+        return "import androidx.compose.animation.core.Animatable\nimport androidx.compose.animation.core.Spring\nimport androidx.compose.animation.core.spring\nimport androidx.compose.foundation.gestures.detectDragGestures\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.offset\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.remember\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.input.pointer.pointerInput\nimport androidx.compose.ui.unit.IntOffset\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.launch\nimport kotlin.math.roundToInt\n\n@Composable\nfun DraggableChip(modifier: Modifier = Modifier) {\n  val x = remember { Animatable(0f) }\n\n  Box(\n    modifier\n      .offset { IntOffset(x.value.roundToInt(), 0) }\n      .pointerInput(Unit) {\n        coroutineScope {\n          detectDragGestures(\n            onDragStart = { launch { x.stop() } },\n            onDrag = { change, dragAmount ->\n              change.consume()\n              launch { x.snapTo(x.value + dragAmount.x) }\n            },\n            onDragEnd = {\n              launch {\n                x.animateTo(\n                  targetValue = 0f,\n                  animationSpec = spring(stiffness = Spring.StiffnessLow)\n                )\n              }\n            }\n          )\n        }\n      }\n  ) { ChipContent() }\n}\n\n// Animatable is coroutine-controlled; direct input usually stops current jobs and snaps to the pointer.";
+      }
+      return "import androidx.compose.animation.core.Animatable\nimport androidx.compose.foundation.gestures.detectDragGestures\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.remember\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.input.pointer.pointerInput\n\n@Composable\nfun DraggableChip(modifier: Modifier = Modifier) {\n  val x = remember { Animatable(0f) }\n\n  ChipContent(\n    modifier.pointerInput(Unit) {\n      detectDragGestures { _, dragAmount ->\n        // BUG: no stop/snap path for direct manipulation; every drag starts another target animation.\n        x.animateTo(x.value + dragAmount.x)\n      }\n    }\n  )\n}";
+    }
+    if (v.testClockControl === "true") {
+      return "import androidx.compose.animation.core.animateColorAsState\nimport androidx.compose.animation.core.tween\nimport androidx.compose.foundation.background\nimport androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.graphics.Color\nimport androidx.compose.ui.unit.dp\nimport androidx.compose.ui.test.captureToImage\nimport androidx.compose.ui.test.junit4.createComposeRule\nimport org.junit.Rule\nimport org.junit.Test\n\n@get:Rule\nval rule = createComposeRule()\n\n@Test\nfun colorAnimation_canBeAssertedMidFlight() {\n  rule.mainClock.autoAdvance = false\n  var enabled by mutableStateOf(false)\n\n  rule.setContent {\n    val color by animateColorAsState(\n      targetValue = if (enabled) Color.Red else Color.Green,\n      animationSpec = tween(durationMillis = 250)" + (label ? ',\n      label = "box color"' : "") + "\n    )\n    Box(Modifier.size(64.dp).background(color))\n  }\n\n  enabled = true\n  rule.mainClock.advanceTimeBy(50L)\n  rule.onRoot().captureToImage()\n}\n\n// advanceTimeBy rounds to frame boundaries; assert behavior or golden images deliberately.";
+    }
+    return "import androidx.compose.animation.core.animateColorAsState\nimport androidx.compose.animation.core.tween\nimport androidx.compose.ui.test.junit4.createComposeRule\nimport org.junit.Rule\nimport org.junit.Test\n\n@get:Rule\nval rule = createComposeRule()\n\n@Test\nfun colorAnimation_isEventuallyRed() {\n  rule.setContent { AnimatedColorBox() }\n\n  // BUG: sleeping is not deterministic and can make animation tests flaky.\n  Thread.sleep(250)\n\n  rule.onRoot().captureToImage()\n}";
+  }
+
+  function pvAdvancedText(pg, v, stage) {
+    const mode = v.advancedTextMode || "AnnotatedString";
+    stage.classList.add("advtext-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "advtext-shell advtext-" + mode.toLowerCase());
+    const label = {
+      AnnotatedString: "spans + paragraph",
+      Links: v.linkAnnotation === "true" ? "LinkAnnotation" : "whole text click",
+      Selection: v.selectionContainer === "true" ? "copyable text" : "static text",
+      Paragraph: v.paragraphLineBreaks === "true" ? "line breaks + hyphens" : "default wrapping",
+      CanvasMeasure: v.cacheTextMeasure === "true" ? "cached measurement" : "remeasure on draw",
+      FontsEmoji: v.fontFallbacks === "true" && v.emojiCompat === "true" ? "fallback + emoji" : "fragile font stack",
+    }[mode] || mode;
+    shell.appendChild(h("div", "advtext-top", "<b>" + esc(mode) + "</b><span>" + esc(label) + "</span>"));
+    const body = h("div", "advtext-body");
+    if (mode === "AnnotatedString") {
+      body.appendChild(h("div", "advtext-rich", '<p><strong>Compose</strong> text can mix <em>span</em>, paragraph, and annotation ranges inside one Text node.</p><small>AnnotatedString + SpanStyle + ParagraphStyle</small>'));
+    } else if (mode === "Links") {
+      body.appendChild(h("div", "advtext-link " + (v.linkAnnotation === "true" ? "good" : "warn"), "<b>Read the Android text docs</b><span>" + (v.linkAnnotation === "true" ? "only this phrase is a link" : "entire sentence is clickable") + "</span>"));
+    } else if (mode === "Selection") {
+      body.appendChild(h("div", "advtext-select " + (v.selectionContainer === "true" ? "good" : "warn"), "<b>Confirmation code 493812</b><span>" + (v.selectionContainer === "true" ? "SelectionContainer, except buttons" : "cannot copy critical text") + "</span>"));
+    } else if (mode === "Paragraph") {
+      body.appendChild(h("div", "advtext-para " + (v.paragraphLineBreaks === "true" ? "good" : "warn"), "<b>Readable paragraph</b><p>Long copy needs line breaking, hyphenation, and line-height rules that survive narrow cards and large font scales.</p></div>"));
+    } else if (mode === "CanvasMeasure") {
+      body.appendChild(h("div", "advtext-canvas " + (v.cacheTextMeasure === "true" ? "good" : "warn"), "<i></i><b>Score 98</b><span>" + (v.cacheTextMeasure === "true" ? "drawWithCache stores measure" : "remeasures every draw") + "</span>"));
+    } else {
+      body.appendChild(h("div", "advtext-fonts " + (v.fontFallbacks === "true" && v.emojiCompat === "true" ? "good" : "warn"), "<b>Brand Sans</b><span>Fallback Latin, CJK, symbols, emoji support</span><em>font fallback chain</em>"));
+    }
+    shell.appendChild(body);
+    const chips = h("div", "advtext-chips");
+    [
+      "AnnotatedString",
+      v.linkAnnotation === "true" ? "LinkAnnotation" : "clickable Text",
+      v.selectionContainer === "true" ? "SelectionContainer" : "no selection",
+      v.paragraphLineBreaks === "true" ? "LineBreak/Hyphens" : "default wrap",
+      v.cacheTextMeasure === "true" ? "drawWithCache" : "per-frame measure",
+      v.fontFallbacks === "true" ? "font fallback" : "single font",
+      v.emojiCompat === "true" ? "emoji tested" : "emoji stripped",
+    ].forEach(function (chip) { chips.appendChild(h("span", null, esc(chip))); });
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genAdvancedText(pg, v) {
+    const mode = v.advancedTextMode || "AnnotatedString";
+    if (mode === "AnnotatedString") {
+      return "import androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.graphics.Color\nimport androidx.compose.ui.text.SpanStyle\nimport androidx.compose.ui.text.ParagraphStyle\nimport androidx.compose.ui.text.buildAnnotatedString\nimport androidx.compose.ui.text.font.FontWeight\nimport androidx.compose.ui.text.style.TextAlign\nimport androidx.compose.ui.text.withStyle\n\n@Composable\nfun RichAnnouncement() {\n  Text(\n    text = buildAnnotatedString {\n      withStyle(ParagraphStyle(textAlign = TextAlign.Start)) {\n        append(\"Compose text can \")\n        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(\"emphasize\") }\n        append(\", \")\n        withStyle(SpanStyle(color = Color(0xFF0F766E))) { append(\"color\") }\n        append(\", and structure copy in one Text node.\")\n      }\n    },\n    style = MaterialTheme.typography.bodyLarge\n  )\n}\n\n// Use AnnotatedString when one sentence needs inline styles, annotations, or paragraph ranges.";
+    }
+    if (mode === "Links") {
+      if (v.linkAnnotation === "true") {
+        return "import androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.graphics.Color\nimport androidx.compose.ui.platform.LocalUriHandler\nimport androidx.compose.ui.text.SpanStyle\nimport androidx.compose.ui.text.buildAnnotatedString\nimport androidx.compose.ui.text.LinkAnnotation\nimport androidx.compose.ui.text.TextLinkStyles\nimport androidx.compose.ui.text.style.TextDecoration\nimport androidx.compose.ui.text.withLink\n\n@Composable\nfun HelpText() {\n  val uriHandler = LocalUriHandler.current\n\n  Text(\n    text = buildAnnotatedString {\n      append(\"Read the \")\n      withLink(\n        LinkAnnotation.Url(\n          url = \"https://developer.android.com/develop/ui/compose/text\",\n          styles = TextLinkStyles(\n            style = SpanStyle(\n              color = MaterialTheme.colorScheme.primary,\n              textDecoration = TextDecoration.Underline\n            )\n          ),\n          linkInteractionListener = { uriHandler.openUri(it.url) }\n        )\n      ) {\n        append(\"Compose text guide\")\n      }\n      append(\" before shipping rich copy.\")\n    }\n  )\n}";
+      }
+      return "import androidx.compose.foundation.clickable\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\n\n@Composable\nfun HelpText(onOpenDocs: () -> Unit) {\n  Text(\n    text = \"Read the Compose text guide before shipping rich copy.\",\n    modifier = Modifier.clickable { onOpenDocs() }\n  )\n  // BUG: the whole sentence is clickable even though only one phrase is a link.\n  // Prefer AnnotatedString with LinkAnnotation and TextLinkStyles for partial links.\n}";
+    }
+    if (mode === "Selection") {
+      if (v.selectionContainer === "true") {
+        return "import androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.text.selection.DisableSelection\nimport androidx.compose.foundation.text.selection.SelectionContainer\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun ConfirmationDetails(onDone: () -> Unit) {\n  SelectionContainer {\n    Column {\n      Text(\"Confirmation code: 493812\")\n      Text(\"Support can ask for this exact code.\")\n      DisableSelection {\n        Button(onClick = onDone) { Text(\"Done\") }\n      }\n    }\n  }\n}\n\n// Wrap copyable text in SelectionContainer and opt controls out with DisableSelection.";
+      }
+      return "import androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun ConfirmationDetails() {\n  Text(\"Confirmation code: 493812\")\n  Text(\"Support can ask for this exact code.\")\n  // BUG: critical text is not selectable or copyable.\n  // Wrap copyable areas in SelectionContainer when users need exact text.\n}";
+    }
+    if (mode === "Paragraph") {
+      if (v.paragraphLineBreaks === "true") {
+        return "import androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.text.ParagraphStyle\nimport androidx.compose.ui.text.PlatformTextStyle\nimport androidx.compose.ui.text.TextStyle\nimport androidx.compose.ui.text.style.Hyphens\nimport androidx.compose.ui.text.style.LineBreak\nimport androidx.compose.ui.text.style.LineHeightStyle\nimport androidx.compose.ui.text.buildAnnotatedString\nimport androidx.compose.ui.text.withStyle\nimport androidx.compose.ui.unit.sp\n\n@Composable\nfun ArticleParagraph(copy: String) {\n  Text(\n    text = buildAnnotatedString {\n      withStyle(\n        ParagraphStyle(\n          lineBreak = LineBreak.Paragraph,\n          hyphens = Hyphens.Auto,\n          lineHeight = 24.sp,\n          lineHeightStyle = LineHeightStyle(\n            alignment = LineHeightStyle.Alignment.Proportional,\n            trim = LineHeightStyle.Trim.None\n          )\n        )\n      ) {\n        append(copy)\n      }\n    },\n    style = MaterialTheme.typography.bodyLarge\n  )\n}";
+      }
+      return "import androidx.compose.foundation.layout.width\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.text.TextStyle\nimport androidx.compose.ui.unit.dp\nimport androidx.compose.ui.unit.sp\n\n@Composable\nfun NarrowParagraph(copy: String) {\n  Text(\n    text = copy,\n    style = TextStyle(lineHeight = 18.sp),\n    modifier = Modifier.width(180.dp)\n  )\n  // BUG: narrow multi-line body copy keeps default LineBreak and Hyphens behavior.\n  // Configure LineBreak.Paragraph and Hyphens.Auto for important paragraphs.\n}";
+    }
+    if (mode === "CanvasMeasure") {
+      if (v.cacheTextMeasure === "true") {
+        return "import androidx.compose.foundation.Canvas\nimport androidx.compose.foundation.layout.size\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.drawWithCache\nimport androidx.compose.ui.geometry.CornerRadius\nimport androidx.compose.ui.geometry.Offset\nimport androidx.compose.ui.graphics.Color\nimport androidx.compose.ui.text.AnnotatedString\nimport androidx.compose.ui.text.TextStyle\nimport androidx.compose.ui.text.drawText\nimport androidx.compose.ui.text.rememberTextMeasurer\nimport androidx.compose.ui.text.style.TextOverflow\nimport androidx.compose.ui.unit.Constraints\nimport androidx.compose.ui.unit.dp\nimport androidx.compose.ui.unit.sp\n\n@Composable\nfun ScoreBadge(score: Int, modifier: Modifier = Modifier) {\n  val textMeasurer = rememberTextMeasurer()\n\n  Canvas(\n    modifier.size(width = 160.dp, height = 72.dp).drawWithCache {\n      val measuredText = textMeasurer.measure(\n        text = AnnotatedString(\"Score $score\"),\n        style = TextStyle(fontSize = 18.sp, color = Color.White),\n        overflow = TextOverflow.Ellipsis,\n        maxLines = 1,\n        constraints = Constraints(maxWidth = size.width.toInt() - 24)\n      )\n\n      onDrawBehind {\n        drawRoundRect(Color(0xFF0F766E), cornerRadius = CornerRadius(18f, 18f))\n        drawText(measuredText, topLeft = Offset(12f, 22f))\n      }\n    }\n  ) { }\n}\n\n// Text measurement can be expensive. Cache it with drawWithCache when size and inputs are stable.";
+      }
+      return "import androidx.compose.foundation.Canvas\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.text.AnnotatedString\nimport androidx.compose.ui.text.TextStyle\nimport androidx.compose.ui.text.drawText\nimport androidx.compose.ui.text.rememberTextMeasurer\nimport androidx.compose.ui.unit.sp\n\n@Composable\nfun ScoreBadge(score: Int, modifier: Modifier = Modifier) {\n  val textMeasurer = rememberTextMeasurer()\n\n  Canvas(modifier) {\n    val measured = textMeasurer.measure(\n      text = AnnotatedString(\"Score $score\"),\n      style = TextStyle(fontSize = 18.sp)\n    )\n    drawText(measured)\n  }\n  // BUG: this measures text during every draw pass; use drawWithCache.\n}";
+    }
+    if (v.fontFallbacks === "true" && v.emojiCompat === "true") {
+      return "import android.os.Build\nimport androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.platform.LocalContext\nimport androidx.compose.ui.text.font.FontFamily\nimport androidx.compose.ui.text.font.FontVariation\nimport androidx.compose.ui.text.googlefonts.Font\nimport androidx.compose.ui.text.googlefonts.GoogleFont\nimport androidx.compose.ui.text.googlefonts.isAvailableOnDevice\n\nprivate val provider = GoogleFont.Provider(\n  providerAuthority = \"com.google.android.gms.fonts\",\n  providerPackage = \"com.google.android.gms\",\n  certificates = R.array.com_google_android_gms_fonts_certs\n)\nprivate val inter = GoogleFont(\"Inter\")\nprivate val brandFont = FontFamily(\n  Font(googleFont = inter, fontProvider = provider),\n  androidx.compose.ui.text.font.Font(R.font.noto_sans_fallback)\n)\n\n@Composable\nfun BrandText(userName: String) {\n  val context = LocalContext.current\n  val style = MaterialTheme.typography.bodyLarge.copy(fontFamily = brandFont)\n  Text(\n    text = \"Welcome $userName. Modern emoji should remain visible on legacy devices.\",\n    style = if (provider.isAvailableOnDevice(context) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\n      style.copy(fontVariationSettings = FontVariation.Settings(FontVariation.weight(550)))\n    } else {\n      style\n    }\n  )\n}\n\n// Use downloadable fonts with certificates, fallback fonts, provider checks, guarded variable fonts, and emoji regression tests.";
+    }
+    return "import androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.text.font.Font\nimport androidx.compose.ui.text.font.FontFamily\n\nprivate val brandFont = FontFamily(Font(R.font.brand_regular))\n\n@Composable\nfun BrandText(userName: String) {\n  val cleaned = userName.filter { it.code < 128 }\n  Text(\"Welcome $cleaned\", fontFamily = brandFont)\n  // BUG: one local font has no fallback, provider check, variable-font guard, or emoji plan.\n  // Do not strip modern emoji; test emoji rendering on older API levels.\n}";
+  }
+
+  function pvAdaptiveCanonical(pg, v, stage) {
+    const mode = v.adaptiveCanonicalMode || "NavigationSuite";
+    stage.classList.add("adapt2-stage");
+    stage.style.display = "grid";
+    stage.style.placeItems = "center";
+    stage.style.padding = "16px";
+    const shell = h("div", "adapt2-shell adapt2-" + mode.toLowerCase());
+    const label = {
+      NavigationSuite: v.navSuiteScaffold === "true" ? "suite owns nav" : "manual nav switch",
+      ListDetail: v.paneParcelableKey === "true" ? "saveable panes" : "unsaveable key",
+      SupportingPane: v.supportingPaneNavigator === "true" ? "navigator panes" : "boolean pane",
+      Feed: v.avoidStretching === "true" ? "constrained feed" : "stretched content",
+      AntiPattern: "review traps",
+      TestMatrix: v.adaptivePreviewMatrix === "true" ? "preview matrix" : "single preview",
+    }[mode] || mode;
+    shell.appendChild(h("div", "adapt2-top", "<b>" + esc(mode) + "</b><span>" + esc(label) + "</span>"));
+    const body = h("div", "adapt2-body");
+    if (mode === "NavigationSuite") {
+      const layout = h("div", "adapt2-nav " + (v.navSuiteScaffold === "true" ? "good" : "warn"));
+      layout.appendChild(h("div", "adapt2-rail", "<i></i><i></i><i></i>"));
+      layout.appendChild(h("div", "adapt2-screen", "<b>Home</b><span>" + (v.saveableDestination === "true" ? "rememberSaveable destination" : "volatile selected state") + "</span>"));
+      layout.appendChild(h("div", "adapt2-bar", "<i></i><i></i><i></i>"));
+      body.appendChild(layout);
+    } else if (mode === "ListDetail") {
+      body.appendChild(h("div", "adapt2-panes listdetail " + (v.paneParcelableKey === "true" ? "good" : "warn"), "<section><b>List</b><span>messages</span></section><section><b>Detail</b><span>" + (v.paneParcelableKey === "true" ? "Parcelable key" : "plain object key") + "</span></section><section><b>Extra</b><span>context</span></section>"));
+    } else if (mode === "SupportingPane") {
+      body.appendChild(h("div", "adapt2-panes supporting " + (v.supportingPaneNavigator === "true" ? "good" : "warn"), "<section><b>Main</b><span>editor</span></section><section><b>Supporting</b><span>" + (v.supportingPaneNavigator === "true" ? "navigator + AnimatedPane" : "boolean + Row") + "</span></section>"));
+    } else if (mode === "Feed") {
+      body.appendChild(h("div", "adapt2-feed " + (v.avoidStretching === "true" ? "good" : "warn"), "<article><b>Story</b><span>widthIn</span></article><article><b>Story</b><span>grid cell</span></article><article><b>Story</b><span>" + (v.avoidStretching === "true" ? "readable line" : "fillMaxWidth text") + "</span></article>"));
+    } else if (mode === "AntiPattern") {
+      const traps = ["Display metrics", "screenOrientation", "maxAspectRatio", "leaf window query"];
+      const grid = h("div", "adapt2-traps");
+      traps.forEach(function (trap) { grid.appendChild(h("span", null, esc(trap))); });
+      body.appendChild(grid);
+    } else {
+      body.appendChild(h("div", "adapt2-matrix " + (v.adaptivePreviewMatrix === "true" ? "good" : "warn"), "<span>compact</span><span>medium</span><span>expanded</span><span>font scale</span><span>dark</span><span>posture</span>"));
+    }
+    const chips = h("div", "adapt2-chips");
+    [
+      v.navSuiteScaffold === "true" ? "NavigationSuiteScaffold" : "manual switch",
+      v.paneParcelableKey === "true" ? "saveable pane key" : "unsaveable pane",
+      v.supportingPaneNavigator === "true" ? "ThreePane navigator" : "local boolean",
+      v.avoidStretching === "true" ? "no stretching" : "stretched expanded",
+      v.adaptivePreviewMatrix === "true" ? "preview matrix" : "single preview",
+    ].forEach(function (chip) { chips.appendChild(h("span", null, esc(chip))); });
+    shell.appendChild(body);
+    shell.appendChild(chips);
+    stage.appendChild(shell);
+  }
+
+  function genAdaptiveCanonical(pg, v) {
+    const mode = v.adaptiveCanonicalMode || "NavigationSuite";
+    if (mode === "NavigationSuite") {
+      if (v.navSuiteScaffold !== "true") {
+        return "import androidx.compose.material3.NavigationBar\nimport androidx.compose.material3.NavigationRail\nimport androidx.compose.material3.adaptive.currentWindowAdaptiveInfo\nimport androidx.compose.runtime.Composable\nimport androidx.window.core.layout.WindowSizeClass\n\n@Composable\nfun ManualAdaptiveNav(selected: Destination) {\n  val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass\n\n  // BUG: this duplicates NavigationSuiteScaffold behavior and grows hard to keep consistent.\n  if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)) {\n    NavigationRail { Destinations.forEach { NavRailItem(it, selected) } }\n  } else {\n    NavigationBar { Destinations.forEach { NavBarItem(it, selected) } }\n  }\n}";
+      }
+      const destinationState = v.saveableDestination === "true"
+        ? "var currentDestination by rememberSaveable { mutableStateOf(AppDestination.Home) }"
+        : "var currentDestination by remember { mutableStateOf(AppDestination.Home) } // BUG: selection is lost on recreation";
+      return "import androidx.compose.material3.Icon\nimport androidx.compose.material3.Text\nimport androidx.compose.material3.adaptive.currentWindowAdaptiveInfo\nimport androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold\nimport androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults\nimport androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.getValue\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.saveable.rememberSaveable\nimport androidx.compose.runtime.setValue\nimport androidx.window.core.layout.WindowSizeClass\n\nenum class AppDestination { Home, Search, Saved }\n\n@Composable\nfun AdaptiveDestinationShell() {\n  " + destinationState + "\n  val adaptiveInfo = currentWindowAdaptiveInfo()\n  val layoutType = with(adaptiveInfo) {\n    if (windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) {\n      NavigationSuiteType.NavigationDrawer\n    } else {\n      NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(adaptiveInfo)\n    }\n  }\n\n  NavigationSuiteScaffold(\n    layoutType = layoutType,\n    navigationSuiteItems = {\n      AppDestination.entries.forEach { destination ->\n        item(\n          selected = destination == currentDestination,\n          onClick = { currentDestination = destination },\n          icon = { Icon(iconFor(destination), contentDescription = destination.name) },\n          label = { Text(destination.name) }\n        )\n      }\n    }\n  ) {\n    DestinationContent(currentDestination)\n  }\n}\n\n// NavigationSuiteScaffold owns the bar/rail/drawer presentation while the app owns selected destination state.";
+    }
+    if (mode === "ListDetail") {
+      const key = v.paneParcelableKey === "true"
+        ? "@Parcelize\ndata class MessageKey(val id: String) : Parcelable"
+        : "data class MessageKey(val id: String) // BUG: pane destination key is not Parcelable or saveable";
+      return "import android.os.Parcelable\nimport androidx.compose.material3.adaptive.layout.AnimatedPane\nimport androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole\nimport androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold\nimport androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.rememberCoroutineScope\nimport kotlinx.coroutines.launch\nimport kotlinx.parcelize.Parcelize\n\n" + key + "\n\n@Composable\nfun MessagesListDetail(messages: List<MessageSummary>) {\n  val navigator = rememberListDetailPaneScaffoldNavigator<MessageKey>()\n  val scope = rememberCoroutineScope()\n\n  NavigableListDetailPaneScaffold(\n    navigator = navigator,\n    listPane = {\n      AnimatedPane {\n        MessageList(\n          messages = messages,\n          selectedId = navigator.currentDestination?.contentKey?.id,\n          onOpen = { message ->\n            scope.launch {\n              navigator.navigateTo(\n                pane = ListDetailPaneScaffoldRole.Detail,\n                contentKey = MessageKey(message.id)\n              )\n            }\n          }\n        )\n      }\n    },\n    detailPane = {\n      AnimatedPane { MessageDetail(navigator.currentDestination?.contentKey?.id) }\n    }\n  )\n}";
+    }
+    if (mode === "SupportingPane") {
+      if (v.supportingPaneNavigator !== "true") {
+        return "import androidx.compose.foundation.layout.Row\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.mutableStateOf\nimport androidx.compose.runtime.remember\n\n@Composable\nfun EditorWithManualTools(document: DocumentUi) {\n  val showTools = remember { mutableStateOf(false) }\n\n  // BUG: a local Boolean and Row do not adapt between one-pane and multi-pane navigation.\n  Row {\n    DocumentEditor(document)\n    if (showTools.value) ToolPalette(document.id)\n  }\n}";
+      }
+      return "import androidx.compose.material3.adaptive.layout.AnimatedPane\nimport androidx.compose.material3.adaptive.layout.PaneAdaptedValue\nimport androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldRole\nimport androidx.compose.material3.adaptive.navigation.BackNavigationBehavior\nimport androidx.compose.material3.adaptive.navigation.NavigableSupportingPaneScaffold\nimport androidx.compose.material3.adaptive.navigation.rememberSupportingPaneScaffoldNavigator\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.rememberCoroutineScope\nimport kotlinx.coroutines.launch\n\n@Composable\nfun EditorWithSupportingPane(document: DocumentUi) {\n  val navigator = rememberSupportingPaneScaffoldNavigator()\n  val scope = rememberCoroutineScope()\n\n  NavigableSupportingPaneScaffold(\n    navigator = navigator,\n    mainPane = {\n      AnimatedPane {\n        DocumentEditor(\n          document = document,\n          showToolsButton = navigator.scaffoldValue[SupportingPaneScaffoldRole.Supporting] == PaneAdaptedValue.Hidden,\n          onShowTools = { scope.launch { navigator.navigateTo(SupportingPaneScaffoldRole.Supporting) } }\n        )\n      }\n    },\n    supportingPane = {\n      AnimatedPane {\n        ToolPalette(\n          documentId = document.id,\n          onClose = {\n            scope.launch { navigator.navigateBack(BackNavigationBehavior.PopUntilScaffoldValueChange) }\n          }\n        )\n      }\n    }\n  )\n}\n\n// Supporting pane content is related to the main pane; the navigator adapts visibility and back behavior.";
+    }
+    if (mode === "Feed") {
+      if (v.avoidStretching !== "true") {
+        return "import androidx.compose.foundation.layout.Column\nimport androidx.compose.foundation.layout.fillMaxWidth\nimport androidx.compose.material3.Button\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\n\n@Composable\nfun ExpandedFeedAntiPattern(stories: List<Story>) {\n  Column(Modifier.fillMaxWidth()) {\n    stories.forEach { story ->\n      // BUG: expanded windows should not just stretch phone-width content.\n      Text(story.title, Modifier.fillMaxWidth())\n      Button(modifier = Modifier.fillMaxWidth(), onClick = { }) { Text(\"Open\") }\n    }\n  }\n}";
+      }
+      return "import androidx.compose.foundation.layout.BoxWithConstraints\nimport androidx.compose.foundation.layout.widthIn\nimport androidx.compose.foundation.lazy.grid.GridCells\nimport androidx.compose.foundation.lazy.grid.LazyVerticalGrid\nimport androidx.compose.foundation.lazy.grid.items\nimport androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.unit.dp\n\n@Composable\nfun AdaptiveFeed(stories: List<Story>, modifier: Modifier = Modifier) {\n  BoxWithConstraints(modifier) {\n    val columns = when {\n      maxWidth >= 1200.dp -> 3\n      maxWidth >= 720.dp -> 2\n      else -> 1\n    }\n\n    LazyVerticalGrid(columns = GridCells.Fixed(columns)) {\n      items(stories, key = { it.id }) { story ->\n        StoryCard(\n          story = story,\n          modifier = Modifier.widthIn(max = 560.dp)\n        )\n      }\n    }\n  }\n}\n\n// Use the space a component actually receives; keep line lengths and buttons readable on expanded windows.";
+    }
+    if (mode === "AntiPattern") {
+      return "import android.view.WindowManager\nimport androidx.compose.material3.adaptive.currentWindowAdaptiveInfo\nimport androidx.compose.runtime.Composable\n\n// BUG: manifest restrictions fight adaptive windows.\n// <activity android:screenOrientation=\"portrait\" android:resizeableActivity=\"false\" android:maxAspectRatio=\"1.8\" />\n\nfun readScreenWidth(windowManager: WindowManager): Int {\n  val metrics = android.util.DisplayMetrics()\n  @Suppress(\"DEPRECATION\")\n  windowManager.defaultDisplay.getRealMetrics(metrics)\n  return metrics.widthPixels\n}\n\n@Composable\nfun ProductCard(product: ProductUi) {\n  // BUG: leaf cards should not query global window info; pass configuration or use actual constraints.\n  val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass\n  ProductCardBody(product, wide = windowSizeClass.isWidthAtLeastBreakpoint(840))\n}";
+    }
+    if (v.adaptivePreviewMatrix === "true") {
+      return "import androidx.compose.ui.tooling.preview.Preview\nimport androidx.compose.ui.tooling.preview.PreviewFontScales\nimport androidx.compose.ui.tooling.preview.PreviewScreenSizes\n\n@PreviewScreenSizes\n@PreviewFontScales\n@Preview(name = \"Dark\", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)\n@Composable\nfun AdaptiveDestinationShellPreview() {\n  AppTheme {\n    AdaptiveDestinationShell()\n  }\n}\n\n// Pair previews with runtime resize, fold posture, keyboard, mouse, and large-font checks.";
+    }
+    return "import androidx.compose.ui.tooling.preview.Preview\n\n@Preview\n@Composable\nfun PhoneOnlyPreview() {\n  // BUG: one happy-path phone preview misses compact/medium/expanded and font-scale behavior.\n  AdaptiveDestinationShell()\n}";
+  }
+
   function pvProfileRow(pg, v, stage) {
     stage.style.display = "flex"; stage.style.padding = "16px";
     stage.style.alignItems = v.verticalAlignment === "Top" ? "flex-start" : v.verticalAlignment === "Bottom" ? "flex-end" : "center";
@@ -2018,8 +3651,8 @@
     return s + "}";
   }
 
-  const COMPONENT_PV = { Button: pvButton, Card: pvCard, Controls: pvControls, TextField: pvTextField, ConstraintLayout: pvConstraintLayout, VisibilityTracking: pvVisibilityTracking, PerformanceMeasurement: pvPerformanceMeasurement, Nesting: pvNesting, Scaffold: pvScaffold, LazyCollections: pvLazyCollections, ImageResource: pvImageResource, SelectionInput: pvSelectionInput, StatusContent: pvStatusContent, TransientSurface: pvTransientSurface, NavigationSurface: pvNavigationSurface, Interop: pvInterop, Nav3: pvNav3, ProfileRow: pvProfileRow };
-  const COMPONENT_GEN = { Button: genButton, Card: genCard, Controls: genControls, TextField: genTextField, ConstraintLayout: genConstraintLayout, VisibilityTracking: genVisibilityTracking, PerformanceMeasurement: genPerformanceMeasurement, Nesting: genNesting, Scaffold: genScaffold, LazyCollections: genLazyCollections, ImageResource: genImageResource, SelectionInput: genSelectionInput, StatusContent: genStatusContent, TransientSurface: genTransientSurface, NavigationSurface: genNavigationSurface, Interop: genInterop, Nav3: genNav3, ProfileRow: genProfileRow };
+  const COMPONENT_PV = { Button: pvButton, Card: pvCard, Controls: pvControls, TextField: pvTextField, ConstraintLayout: pvConstraintLayout, AdvancedLayoutAdaptation: pvAdvancedLayoutAdaptation, CompositionIdentity: pvCompositionIdentity, CompositionLocal: pvCompositionLocal, SnapshotState: pvSnapshotState, StateHolderArchitecture: pvStateHolderArchitecture, PredictiveBack: pvPredictiveBack, AdvancedInput: pvAdvancedInput, ActivityResults: pvActivityResults, AdvancedAnimation: pvAdvancedAnimation, AdaptiveCanonical: pvAdaptiveCanonical, AdvancedText: pvAdvancedText, CustomModifier: pvCustomModifier, VisibilityTracking: pvVisibilityTracking, StabilityLab: pvStabilityLab, PerformanceMeasurement: pvPerformanceMeasurement, EffectsLifecycle: pvEffectsLifecycle, SemanticsContract: pvSemanticsContract, Nesting: pvNesting, Scaffold: pvScaffold, LazyCollections: pvLazyCollections, ImageResource: pvImageResource, SelectionInput: pvSelectionInput, StatusContent: pvStatusContent, TransientSurface: pvTransientSurface, NavigationSurface: pvNavigationSurface, Interop: pvInterop, Nav3: pvNav3, ProfileRow: pvProfileRow };
+  const COMPONENT_GEN = { Button: genButton, Card: genCard, Controls: genControls, TextField: genTextField, ConstraintLayout: genConstraintLayout, AdvancedLayoutAdaptation: genAdvancedLayoutAdaptation, CompositionIdentity: genCompositionIdentity, CompositionLocal: genCompositionLocal, SnapshotState: genSnapshotState, StateHolderArchitecture: genStateHolderArchitecture, PredictiveBack: genPredictiveBack, AdvancedInput: genAdvancedInput, ActivityResults: genActivityResults, AdvancedAnimation: genAdvancedAnimation, AdaptiveCanonical: genAdaptiveCanonical, AdvancedText: genAdvancedText, CustomModifier: genCustomModifier, VisibilityTracking: genVisibilityTracking, StabilityLab: genStabilityLab, PerformanceMeasurement: genPerformanceMeasurement, EffectsLifecycle: genEffectsLifecycle, SemanticsContract: genSemanticsContract, Nesting: genNesting, Scaffold: genScaffold, LazyCollections: genLazyCollections, ImageResource: genImageResource, SelectionInput: genSelectionInput, StatusContent: genStatusContent, TransientSurface: genTransientSurface, NavigationSurface: genNavigationSurface, Interop: genInterop, Nav3: genNav3, ProfileRow: genProfileRow };
 
   // ======================= PLAYGROUND UI =======================
   function buildControl(pg, c, v, onChange) {
@@ -2877,7 +4510,7 @@
         id: "navState",
         title: "Navigation state app",
         summary: "A Compose-first app where navigation is explicit state, saved with serializable keys, and rendered by NavDisplay.",
-        route: ["navigation3-state", "navigation-compose", "state-saving", "state-hoisting-udf", "adaptive-layouts", "animation-motion", "compose-ui-testing"],
+        route: ["navigation3-state", "navigation-compose", "state-saving", "state-hoisting-udf", "adaptive-layouts", "adaptive-canonical-navigation", "animation-motion", "compose-ui-testing"],
         steps: [
           "Choose whether this feature stays on Navigation Compose or moves to Navigation 3's owned back-stack model.",
           "Model destinations as small serializable NavKey objects or classes before wiring UI events.",
@@ -2892,7 +4525,7 @@
         id: "screen",
         title: "Scaffolded app screen",
         summary: "Top bars, bottom bars, FABs, inner padding, system bars, and screen-level state.",
-        route: ["scaffold", "navigation-surfaces", "edge-to-edge-insets", "theming-design-system", "state-hoisting-udf", "navigation-compose", "navigation3-state", "adaptive-layouts", "padding", "state-saving", "effects-lifecycle", "previews-tooling"],
+        route: ["scaffold", "navigation-surfaces", "edge-to-edge-insets", "theming-design-system", "state-hoisting-udf", "navigation-compose", "navigation3-state", "adaptive-layouts", "adaptive-canonical-navigation", "padding", "state-saving", "effects-lifecycle", "previews-tooling"],
         steps: [
           "Start with Scaffold slots and apply innerPadding to the real content container.",
           "Enable edge-to-edge, decide which Material components handle insets, and consume custom insets exactly once.",
@@ -2910,10 +4543,10 @@
         id: "navShell",
         title: "Navigation shell",
         summary: "Top app bars, bottom navigation, rails, drawers, tabs, selected state, and adaptive destination switching.",
-        route: ["navigation-surfaces", "scaffold", "navigation-compose", "navigation3-state", "adaptive-layouts", "state-saving", "edge-to-edge-insets", "accessibility-testing", "compose-ui-testing"],
+        route: ["navigation-surfaces", "scaffold", "navigation-compose", "navigation3-state", "adaptive-layouts", "adaptive-canonical-navigation", "state-saving", "edge-to-edge-insets", "accessibility-testing", "compose-ui-testing"],
         steps: [
           "Separate app structure from destination content: top-level destinations live at the shell, while each screen stays previewable.",
-          "Use NavigationBar for compact windows with three to five top-level destinations and NavigationRail or a permanent/standard drawer when width grows.",
+          "Use NavigationSuiteScaffold for top-level destinations so bar, rail, and drawer presentations adapt from window size and posture.",
           "Use a top app bar for screen title, up/menu navigation, and high-value actions; wire navigationIcon to a real back, drawer, or root action.",
           "Use tabs only for peer content inside one destination, not as a replacement for the app-wide top-level nav model.",
           "Keep selected destination/tab state in one saveable owner and derive selected booleans for every item.",
@@ -2956,13 +4589,14 @@
         id: "interactive",
         title: "Interactive surface",
         summary: "Clickable, pressable, draggable, transformable, or custom pointer-driven UI.",
-        route: ["modifiers", "buttons", "controls", "pointer-input-gestures", "focus-keyboard-input", "accessibility-testing", "compose-ui-testing", "state-saving"],
+        route: ["modifiers", "buttons", "controls", "pointer-input-gestures", "advanced-input-rich-content", "focus-keyboard-input", "accessibility-testing", "compose-ui-testing", "state-saving"],
         steps: [
           "Start from a Material component or high-level gesture modifier that already supplies semantics and indication.",
           "Hoist gesture-driven state such as pressed, selected, dragged offset, zoom, or expanded state.",
           "Use pointerInput only for a custom gesture the high-level APIs do not express.",
           "Separate top-level gesture detectors into separate pointerInput modifiers when more than one detector must run.",
           "Consume pointer changes deliberately so parent and sibling handlers do not fight.",
+          "Add drag/drop, clipboard, rich content, stylus, hover, and right-click support when the surface appears in multi-window, ChromeOS, tablet, or desktop-class workflows.",
           "Verify keyboard, D-pad, Tab traversal, shortcut handling, and visible focus states before touch-only polish.",
           "Test touch, keyboard, mouse or stylus hover where relevant, accessibility activation, and interrupted gestures.",
         ],
@@ -2983,11 +4617,14 @@
         id: "motion",
         title: "Animated state transition",
         summary: "Visibility, content swaps, size changes, and state-driven motion that remains readable.",
-        route: ["animation-motion", "effects-lifecycle", "stability-performance", "accessibility-testing", "compose-ui-testing"],
+        route: ["animation-motion", "advanced-animation-motion", "effects-lifecycle", "stability-performance", "accessibility-testing", "compose-ui-testing"],
         steps: [
           "Choose the smallest animation API that matches the state change.",
+          "Use updateTransition for coordinated values and AnimatedContent for keyed content swaps.",
+          "Use Animatable from coroutine/event paths when gestures, interruption, or fling-like release owns the value.",
           "Keep animation targets derived from state instead of manually mutating frames.",
           "Avoid restarting work from the composable body; use effect APIs for lifecycle-bound jobs.",
+          "Add labels so Animation Preview can inspect timelines and values.",
           "Check reduced-motion expectations, interrupted states, testable semantics, and deterministic mainClock assertions.",
         ],
       },
@@ -2995,14 +4632,16 @@
     const addOns = [
       { id: "save", label: "Survives process death", route: ["state-saving"], step: "Define the smallest restorable state and keep non-Bundle data out of saved instance state." },
       { id: "stateOwner", label: "Screen state holder", route: ["state-hoisting-udf", "state-saving", "effects-lifecycle"], step: "Keep ViewModel or plain state holder ownership at the route boundary, expose immutable UI state, and pass callbacks into reusable content." },
+      { id: "identity", label: "Stateful dynamic content", route: ["composition-identity-retention", "lazy-lists", "state-saving"], step: "Give repeated, moved, tabbed, or temporarily removed content a stable logical identity with key, lazy item keys, SaveableStateHolder, movableContentOf, or retain as appropriate." },
       { id: "effects", label: "Collects effects or callbacks", route: ["effects-lifecycle"], step: "Pick the effect API by lifecycle: launch, remember latest value, produce state, or clean up a listener." },
       { id: "nav", label: "Navigates between screens", route: ["navigation-compose", "effects-lifecycle"], step: "Define typed destinations, keep NavController at the route layer, and pass navigation events down as lambdas." },
-      { id: "nav3", label: "Navigation 3", route: ["navigation3-state", "state-saving", "adaptive-layouts"], step: "Own navigation as state with serializable NavKey values, an entryProvider, NavDisplay, onBack handling, and decorators or scene metadata only where needed." },
-      { id: "adaptive", label: "Adapts to large screens", route: ["adaptive-layouts", "navigation-compose", "navigation3-state"], step: "Use currentWindowAdaptiveInfo, window size classes, pane scaffolds, or Navigation 3 scenes instead of fixed phone-only breakpoints." },
-      { id: "edge", label: "Edge-to-edge", route: ["edge-to-edge-insets", "scaffold", "adaptive-layouts"], step: "Call enableEdgeToEdge, set adjustResize for IME insets, choose Scaffold or WindowInsets handling per edge, and test system bars, cutouts, caption bars, and keyboard animation." },
+      { id: "nav3", label: "Navigation 3", route: ["navigation3-state", "state-saving", "adaptive-layouts", "adaptive-canonical-navigation"], step: "Own navigation as state with serializable NavKey values, an entryProvider, NavDisplay, onBack handling, and decorators or scene metadata only where needed." },
+      { id: "adaptive", label: "Adapts to large screens", route: ["adaptive-layouts", "adaptive-canonical-navigation", "advanced-layout-adaptation", "navigation-compose", "navigation3-state"], step: "Use currentWindowAdaptiveInfo, NavigationSuiteScaffold, canonical pane scaffolds, Navigation 3 scenes, or component-local constraints instead of fixed phone-only breakpoints." },
+      { id: "edge", label: "Edge-to-edge", route: ["edge-to-edge-insets", "scaffold", "adaptive-layouts", "adaptive-canonical-navigation"], step: "Call enableEdgeToEdge, set adjustResize for IME insets, choose Scaffold or WindowInsets handling per edge, and test system bars, cutouts, caption bars, and keyboard animation." },
       { id: "gestures", label: "Custom gesture behavior", route: ["pointer-input-gestures", "accessibility-testing"], step: "Prefer high-level gesture modifiers; if pointerInput is required, add explicit semantics, key it correctly, and consume events intentionally." },
+      { id: "richInput", label: "Rich input paths", route: ["advanced-input-rich-content", "pointer-input-gestures", "focus-keyboard-input"], step: "Support drag/drop, clipboard, rich paste, stylus cancellation, hover, and right-click through the platform APIs that match each payload and device." },
       { id: "keyboard", label: "Keyboard/D-pad", route: ["focus-keyboard-input", "accessibility-testing"], step: "Define Tab, arrow, and D-pad traversal, visible focus cues, IME actions, and discoverable shortcuts before adding raw key handlers." },
-      { id: "customLayout", label: "Custom measurement", route: ["custom-layouts", "sizing", "alignment"], step: "Use `Layout` or `Modifier.layout` only for a unique measure/place contract; measure each child once and expose intrinsics or alignment lines when parents need them." },
+      { id: "customLayout", label: "Custom measurement", route: ["custom-layouts", "advanced-layout-adaptation", "sizing", "alignment"], step: "Use `Layout` or `Modifier.layout` only for a unique measure/place contract; measure each child once and expose intrinsics or alignment lines when parents need them." },
       { id: "constraints", label: "Sibling constraints", route: ["constraint-layout", "custom-layouts", "row", "column", "box"], step: "Use ConstraintLayout only when sibling-relative constraints, guidelines, barriers, chains, or swappable ConstraintSets are clearer than Row/Column/Box composition." },
       { id: "visibility", label: "Viewport visibility", route: ["visibility-tracking", "lazy-lists", "effects-lifecycle", "stability-performance"], step: "Use onVisibilityChanged for thresholded visibility events, onLayoutRectChanged for throttled geometry, and stable item identity for once-only impressions." },
       { id: "graphics", label: "Custom drawing", route: ["drawing-graphics", "background-shape", "stability-performance"], step: "Use drawBehind, drawWithContent, drawWithCache, Canvas, Brush, or graphicsLayer based on draw order, caching needs, and whether transforms should affect only drawing." },
@@ -3010,11 +4649,11 @@
       { id: "searchFilter", label: "Search/filter UI", route: ["selection-inputs", "textfields", "focus-keyboard-input"], step: "Use SearchBar, chips, segmented buttons, or date/time pickers by task shape; hoist query, selected filters, expanded state, and confirm/dismiss events." },
       { id: "statusContent", label: "Loading/list content", route: ["status-content", "lazy-lists", "accessibility-testing"], step: "Use progress indicators, PullToRefreshBox, ListItem rows, dividers, or carousels by content state; keep refresh/loading state controlled and item identity stable." },
       { id: "transient", label: "Temporary surfaces", route: ["transient-surfaces", "effects-lifecycle", "accessibility-testing"], step: "Choose Badge, Tooltip, Menu, Snackbar, BottomSheet, or Dialog by urgency and anchoring; keep visibility state hoisted and dismiss surfaces from every completion path." },
-      { id: "navSurfaces", label: "Navigation surfaces", route: ["navigation-surfaces", "scaffold", "adaptive-layouts"], step: "Choose TopAppBar, NavigationBar, NavigationRail, Drawer, or TabRow by hierarchy and window size; keep selection state in one shell owner." },
+      { id: "navSurfaces", label: "Navigation surfaces", route: ["navigation-surfaces", "scaffold", "adaptive-layouts", "adaptive-canonical-navigation"], step: "Choose NavigationSuiteScaffold for app-level destinations, TopAppBar for title/up/actions, and tabs only for peers inside one destination; keep selection state in one shell owner." },
       { id: "theme", label: "Brand theme", route: ["theming-design-system", "accessibility-testing"], step: "Define semantic color, typography, shape, and product tokens at the theme root; use CompositionLocal only for broadly consumed tree-scoped values." },
       { id: "list", label: "Large list or paging", route: ["lazy-lists", "visibility-tracking", "stability-performance"], step: "Use lazy containers, stable item keys, visibility-aware analytics, and measured performance fixes instead of eager composition." },
       { id: "interop", label: "View interop", route: ["interop-migration", "state-hoisting-udf", "compose-ui-testing"], step: "Choose ComposeView, AndroidView, AndroidFragment, or AbstractComposeView intentionally, then test lifecycle disposal, state ownership, reset behavior, and nested scroll at the boundary." },
-      { id: "motion", label: "Motion required", route: ["animation-motion"], step: "Select animate*AsState, AnimatedVisibility, AnimatedContent, or updateTransition based on the change shape." },
+      { id: "motion", label: "Motion required", route: ["animation-motion", "advanced-animation-motion"], step: "Select animate*AsState, AnimatedVisibility, AnimatedContent, updateTransition, or Animatable based on state shape, interruption needs, and testability." },
       { id: "a11y", label: "Accessibility critical", route: ["accessibility-testing"], step: "Add labels, roles, state descriptions, touch target checks, and semantic UI tests before polish." },
       { id: "tests", label: "UI tests required", route: ["compose-ui-testing", "accessibility-testing"], step: "Define the semantic contract first, then write ComposeTestRule tests that find nodes, perform actions, assert behavior, and avoid sleeps." },
       { id: "previews", label: "Preview matrix", route: ["previews-tooling", "theming-design-system", "adaptive-layouts"], step: "Create themed @Preview and multipreview coverage for representative sample states, device sizes, font scales, and light/dark or dynamic color modes." },
@@ -3201,6 +4840,92 @@
         detect: function (code) { return /@Composable\s+(?:private\s+)?fun\s+(?![A-Za-z_][\w]*Route\b)[A-Za-z_][\w]*\s*\([^)]*\b[A-Za-z_][\w]*\s*:\s*[A-Za-z_][\w]*ViewModel\b/.test(code) ? "Found a composable parameter typed as a ViewModel outside an obvious route boundary." : ""; },
       },
       {
+        id: "viewmodel-lookup-route-boundary",
+        severity: "Architecture",
+        section: "viewmodel-lifecycle-di",
+        title: "Keep ViewModel lookup at route boundaries.",
+        why: "Calling `viewModel()` or `hiltViewModel()` from reusable content couples plain UI to a screen owner, DI graph, navigation destination, and Android lifecycle.",
+        fix: "Call the lookup helper in a route, destination, graph, or entry composable, then pass UI state and events to reusable content.",
+        detect: function (code) {
+          const badNames = [];
+          code.replace(/@Composable\s+(?:private\s+)?fun\s+([A-Za-z_][\w]*)\s*\([^)]*\)\s*\{([\s\S]*?)(?=\n@Composable|\n(?:private\s+)?fun\s+[A-Za-z_]|\nclass\s+|\nobject\s+|$)/g, function (_, name, body) {
+            const routeLike = /(Route|Destination|NavHost|Graph|Entry)$/.test(name);
+            const contentLike = /(Screen|Content|Card|Row|Item|List|Dialog|Sheet|Field)$/.test(name);
+            if (!routeLike && contentLike && /\b(hiltViewModel|viewModel)\s*(?:<[^>]+>)?\s*\(/.test(body)) badNames.push(name);
+          });
+          return badNames.length ? "Found ViewModel lookup inside reusable UI: " + badNames.slice(0, 4).join(", ") + "." : "";
+        },
+      },
+      {
+        id: "viewmodel-stateflow-statein",
+        severity: "State",
+        section: "viewmodel-lifecycle-di",
+        title: "Expose ViewModel UI streams as StateFlow with stateIn.",
+        why: "A screen UI state stream should have a stable initial value, a single sharing policy, and predictable behavior across collectors.",
+        fix: "Convert cold or combined ViewModel flows with `stateIn(viewModelScope, SharingStarted.WhileSubscribed(...), initialValue)`.",
+        detect: function (code) {
+          const hasViewModelUiFlow = /class\s+\w+ViewModel[\s\S]{0,1800}val\s+uiState\s*[:=][\s\S]{0,1000}(combine\s*\(|map\s*\{|flatMapLatest\s*\{|repository\.)/.test(code);
+          return hasViewModelUiFlow && !/stateIn\s*\(/.test(code)
+            ? "Found ViewModel `uiState` flow without `stateIn(...)`."
+            : "";
+        },
+      },
+      {
+        id: "sharing-started-while-subscribed",
+        severity: "Performance",
+        section: "viewmodel-lifecycle-di",
+        title: "Use WhileSubscribed for UI StateFlow pipelines.",
+        why: "UI state pipelines often do expensive upstream work; `WhileSubscribed` keeps that work active while the UI observes it and can delay stopping briefly across rotations.",
+        fix: "Use `SharingStarted.WhileSubscribed(...)` as the `stateIn` sharing policy for UI-facing ViewModel StateFlow pipelines.",
+        detect: function (code) {
+          return /stateIn\s*\(/.test(code) && !/SharingStarted\.WhileSubscribed\s*\(/.test(code)
+            ? "Found `stateIn(...)` without `SharingStarted.WhileSubscribed(...)`."
+            : "";
+        },
+      },
+      {
+        id: "savedstatehandle-small-keys",
+        severity: "State",
+        section: "viewmodel-lifecycle-di",
+        title: "Save only minimal keys in SavedStateHandle.",
+        why: "SavedStateHandle is backed by saved instance state. Large loaded data, lists, bitmaps, responses, and full screen state should be rebuilt from repositories.",
+        fix: "Save a query, selected id, page key, or small filter enum, then reload larger data from the data layer.",
+        detect: function (code) {
+          return /\bsavedStateHandle\s*(?:\[\s*["'](?:results?|items?|list|bitmap|response|profile|uiState|screenState|state)["']\s*\]\s*=|\.set\s*\(\s*["'](?:results?|items?|list|bitmap|response|profile|uiState|screenState|state)["'])/.test(code)
+            ? "Found loaded screen data being written to `SavedStateHandle`."
+            : "";
+        },
+      },
+      {
+        id: "manual-viewmodel-construction",
+        severity: "Architecture",
+        section: "viewmodel-lifecycle-di",
+        title: "Do not construct ViewModels with remember.",
+        why: "`remember { MyViewModel(...) }` bypasses ViewModelStoreOwner scoping, saved state, factories, dependency injection, and lifecycle retention.",
+        fix: "Use `viewModel()`, `hiltViewModel()`, or `viewModel(factory = ..., extras = ...)` from a route or destination boundary.",
+        detect: function (code) {
+          return /remember\s*\{[\s\S]{0,160}\w+ViewModel\s*\(/.test(code)
+            ? "Found ViewModel construction inside `remember { ... }`."
+            : "";
+        },
+      },
+      {
+        id: "repository-construction-in-composable",
+        severity: "Architecture",
+        section: "viewmodel-lifecycle-di",
+        title: "Do not construct data-layer dependencies in composables.",
+        why: "Repositories, Retrofit services, Room databases, and DataStore instances have app-level lifetimes and test seams that should not be hidden in UI code.",
+        fix: "Inject data dependencies into a ViewModel or provide them from an app-level owner, then pass plain UI state to composables.",
+        detect: function (code) {
+          const blocks = code.split(/(?=@Composable\b)/).filter(function (part) { return /^@Composable\b/.test(part); });
+          const badBlock = blocks.some(function (part) {
+            const body = part.slice(0, 1200);
+            return /\b\w+Repository\s*\(/.test(body) || /\bRetrofit\.Builder\s*\(/.test(body) || /\bRoom\.databaseBuilder\s*\(/.test(body) || /\bDataStoreFactory\.create\s*\(/.test(body);
+          });
+          return badBlock ? "Found data-layer dependency construction in a composable." : "";
+        },
+      },
+      {
         id: "saveable-state",
         severity: "State",
         section: "state-saving",
@@ -3208,6 +4933,50 @@
         why: "Text fields, selected tabs, and small filters are frustrating when they disappear after activity recreation.",
         fix: "Use `rememberSaveable` for small Bundle-compatible UI element state; keep business state in a ViewModel.",
         detect: function (code) { return /remember\s*\{\s*mutableStateOf/.test(code) && !/rememberSaveable/.test(code) ? "Found `remember { mutableStateOf(...) }` with no `rememberSaveable`." : ""; },
+      },
+      {
+        id: "snapshot-plain-mutable-collection",
+        severity: "State",
+        section: "snapshot-state-runtime",
+        title: "Do not hide mutable collections inside MutableState.",
+        why: "Compose observes assignments to MutableState.value, not arbitrary in-place mutations inside a plain MutableList, MutableSet, or MutableMap.",
+        fix: "Use `mutableStateListOf`/`mutableStateMapOf`, or assign a new immutable collection value whenever content changes.",
+        detect: function (code) {
+          return /mutableStateOf\s*\(\s*mutable(List|Set|Map)Of\s*\(/.test(code) || /\.value\.(add|remove|clear|put)\s*\(/.test(code) && /mutableStateOf\s*\(/.test(code)
+            ? "Found `mutableStateOf` wrapping or mutating a plain mutable collection."
+            : "";
+        },
+      },
+      {
+        id: "snapshot-state-not-remembered",
+        severity: "State",
+        section: "snapshot-state-runtime",
+        title: "Remember local MutableState objects.",
+        why: "A MutableState created directly in the composable body is recreated on every recomposition, so it cannot reliably preserve UI state.",
+        fix: "Wrap local state with `remember { mutableStateOf(...) }` or `rememberSaveable { mutableStateOf(...) }`.",
+        detect: function (code) {
+          const sections = code.split(/(?=@Composable\b)/).filter(function (part) { return /^@Composable\b/.test(part); });
+          const hasLocalState = sections.some(function (part) {
+            const body = part.slice(0, 900).replace(/remember(?:Saveable)?\s*\{[\s\S]{0,180}mutableStateOf\s*\([^}]*\}/g, "");
+            return /(?:val|var)\s+\w+(?:\s*:\s*MutableState<[^>]+>)?\s*=\s*mutableStateOf\s*\(/.test(body) || /\bby\s+mutableStateOf\s*\(/.test(body);
+          });
+          return hasLocalState
+            ? "Found `mutableStateOf` in composable code without `remember` or `rememberSaveable`."
+            : "";
+        },
+      },
+      {
+        id: "state-holder-mutable-state-leak",
+        severity: "Architecture",
+        section: "snapshot-state-runtime",
+        title: "Keep MutableState private inside state holders.",
+        why: "Exposing MutableState lets callers mutate state without going through the holder's intent methods, weakening the single source of truth.",
+        fix: "Expose plain read-only values and public intent methods; keep `mutableStateOf` fields private.",
+        detect: function (code) {
+          return /(class|object)\s+\w+[\s\S]{0,700}(val|var)\s+\w+\s*:\s*MutableState<|MutableState<[^>]+>\s*=\s*mutableStateOf/.test(code) && !/private\s+(val|var)\s+\w+\s*:\s*MutableState</.test(code)
+            ? "Found a state holder exposing `MutableState` directly."
+            : "";
+        },
       },
       {
         id: "lazy-list",
@@ -3238,6 +5007,142 @@
           const lazy = /Lazy(Column|Row|VerticalGrid|HorizontalGrid|VerticalStaggeredGrid|HorizontalStaggeredGrid)/.test(code);
           const mixed = /items\s*\([\s\S]{0,700}(when\s*\(|is\s+[A-Z][A-Za-z0-9_]+|Header|Footer|AdCard|Placeholder)/.test(code);
           return lazy && mixed && !/contentType\s*=|itemContentType\s*\{/.test(code) ? "Found a heterogeneous lazy layout without an obvious `contentType` hint." : "";
+        },
+      },
+      {
+        id: "identity-stateful-loop-needs-key",
+        severity: "State",
+        section: "composition-identity-retention",
+        title: "Key stateful repeated content by logical identity.",
+        why: "Repeated calls from the same call site use execution order unless you add `key`, so remembered state and effects can move to the wrong item after insert, remove, or reorder.",
+        fix: "Wrap stateful repeated content in `key(item.id) { ... }`, or use lazy `items(..., key = { it.id })` for lazy containers.",
+        detect: function (code) {
+          const statefulLoop = /(?:forEach(?:Indexed)?\s*\{|for\s*\([^)]*\)\s*\{)[\s\S]{0,1000}\bremember(?:Saveable)?\s*\{/.test(code);
+          return statefulLoop && !/\bkey\s*\(/.test(code) && !/\bitems\s*\([\s\S]{0,500}key\s*=/.test(code)
+            ? "Found repeated content with local remembered state but no explicit key."
+            : "";
+        },
+      },
+      {
+        id: "identity-unstable-key",
+        severity: "State",
+        section: "composition-identity-retention",
+        title: "Do not use positional, random, or changing values as Compose keys.",
+        why: "A key must identify the logical item. Index, random UUID, time, or mutable hash values make state restoration and effect continuity unreliable.",
+        fix: "Use a stable unique id from the model, or a compound key such as `parent.id to child.id` when uniqueness depends on two identities.",
+        detect: function (code) {
+          return /(key\s*\(\s*(?:index|i)\b|key\s*=\s*\{\s*(?:index|i|_,\s*index)\b|UUID\.randomUUID\s*\(|Random\.\w+\s*\(|System\.currentTimeMillis\s*\(|\.hashCode\s*\(\s*\)\s*\})/.test(code)
+            ? "Found an index, random, time, or hash-derived Compose key."
+            : "";
+        },
+      },
+      {
+        id: "identity-movable-content-remembered",
+        severity: "Runtime",
+        section: "composition-identity-retention",
+        title: "Remember movableContentOf instances.",
+        why: "The movable content object carries the identity of the movable subtree; recreating it during recomposition defeats state preservation.",
+        fix: "Create movable content with `val content = remember { movableContentOf { ... } }` and invoke that remembered value from each placement.",
+        detect: function (code) {
+          return /\bmovableContentOf(?:<[^>]+>)?\s*\{/.test(code) && !/remember\s*\{[\s\S]{0,180}\bmovableContentOf/.test(code)
+            ? "Found `movableContentOf` without an enclosing `remember { ... }`."
+            : "";
+        },
+      },
+      {
+        id: "identity-saveable-state-holder",
+        severity: "State",
+        section: "composition-identity-retention",
+        title: "Use SaveableStateHolder for dynamic tabs, pages, or custom back stacks.",
+        why: "rememberSaveable only saves while its owner participates in the saveable registry; temporarily removed tab/page/destination content needs a holder keyed by logical content id.",
+        fix: "Create `rememberSaveableStateHolder()` and wrap switched content in `holder.SaveableStateProvider(tab.id) { ... }`.",
+        detect: function (code) {
+          const dynamicSwitch = /(selected(Tab|Page|Screen|Destination)|current(Tab|Page|Screen|Destination)|when\s*\(\s*\w+(Tab|Page|Screen|Destination)|HorizontalPager|Crossfade|AnimatedContent)/.test(code);
+          return dynamicSwitch && /rememberSaveable\s*\{/.test(code) && !/(rememberSaveableStateHolder|SaveableStateProvider)/.test(code)
+            ? "Found dynamic switched content using `rememberSaveable` without `SaveableStateHolder`."
+            : "";
+        },
+      },
+      {
+        id: "identity-retain-android-owner",
+        severity: "Lifecycle",
+        section: "composition-identity-retention",
+        title: "Do not retain Android owners or short-lived platform objects.",
+        why: "Retained values can outlive the current Activity, View, Fragment, Context, or Lifecycle instance and leak them across configuration changes.",
+        fix: "Retain only composition-scoped objects you would also be willing to keep in a ViewModel; use application context when a retained object needs context.",
+        detect: function (code) {
+          return /\bretain\s*\{[\s\S]{0,400}\b(Activity|Fragment|View|Lifecycle|LocalContext\.current|context as|requireContext\s*\(|requireActivity\s*\()/.test(code)
+            ? "Found `retain` capturing an Android owner or short-lived platform object."
+            : "";
+        },
+      },
+      {
+        id: "stability-mutable-model",
+        severity: "Performance",
+        section: "stability-performance",
+        title: "Do not pass ordinary mutable UI models.",
+        why: "Compose cannot observe normal `var` properties or mutable collections inside parameter objects, so stability inference and UI freshness both suffer.",
+        fix: "Expose immutable UI models, create new values for changes, or use Compose state inside a type that truly owns mutation.",
+        detect: function (code) {
+          const mutableModel = /(data\s+class|class)\s+\w+[\s\S]{0,500}\b(var\s+\w+|Mutable(List|Set|Map)<)/.test(code);
+          const composableUsesModel = /@Composable[\s\S]{0,500}\b[A-Za-z_]\w*\s*:\s*[A-Z][A-Za-z0-9_]*\b/.test(code);
+          return mutableModel && composableUsesModel ? "Found a UI model with `var` or mutable collections passed near composable code." : "";
+        },
+      },
+      {
+        id: "stability-standard-collections",
+        severity: "Performance",
+        section: "stability-performance",
+        title: "Check standard collection stability evidence.",
+        why: "The Compose compiler treats `List`, `Set`, and `Map` interfaces as unstable because the underlying implementation may be mutable.",
+        fix: "Use Kotlinx immutable collections, wrap external models in stable UI models, or rely on strong skipping only after measurement shows the tradeoff is acceptable.",
+        detect: function (code) {
+          return /@Composable[\s\S]{0,500}\b(List|Set|Map)<[A-Za-z0-9_<>,\s?]+>/.test(code) && !/(ImmutableList|ImmutableSet|ImmutableMap|PersistentList|PersistentSet|PersistentMap|persistentListOf|persistentSetOf|persistentMapOf)/.test(code)
+            ? "Found a composable parameter using standard `List`, `Set`, or `Map` without immutable collection evidence."
+            : "";
+        },
+      },
+      {
+        id: "stability-annotation-contract",
+        severity: "Correctness",
+        section: "stability-performance",
+        title: "Stability annotations are contracts.",
+        why: "`@Stable` and `@Immutable` override compiler inference. A false promise can make Compose skip when the UI should update.",
+        fix: "Remove the annotation, make every property immutable, or route mutation through Compose-observable state before promising stability.",
+        detect: function (code) {
+          const annotated = /@(Stable|Immutable)\s+(?:data\s+)?class\s+\w+[\s\S]{0,600}/.test(code);
+          const unsafe = /@(Stable|Immutable)\s+(?:data\s+)?class\s+\w+[\s\S]{0,600}\b(var\s+\w+|Mutable(List|Set|Map)<)/.test(code);
+          return annotated && unsafe && !/mutableStateOf|SnapshotState(List|Map)|State<|by\s+mutable/.test(code)
+            ? "Found `@Stable` or `@Immutable` on a type with ordinary mutable state."
+            : "";
+        },
+      },
+      {
+        id: "stability-strong-skipping-disabled",
+        severity: "Performance",
+        section: "stability-performance",
+        title: "Do not disable strong skipping casually.",
+        why: "Strong skipping is the current default in Kotlin 2.0.20+ and lets restartable composables with unstable parameters still be skipped by identity.",
+        fix: "Leave strong skipping enabled unless a measured correctness or performance issue requires a documented opt-out.",
+        detect: function (code) {
+          return /enableStrongSkippingMode\s*=\s*false/.test(code)
+            ? "Found `enableStrongSkippingMode = false` without an obvious documented reason."
+            : "";
+        },
+      },
+      {
+        id: "phase-high-frequency-composition-read",
+        severity: "Performance",
+        section: "stability-performance",
+        title: "Move high-frequency visual reads to the latest phase.",
+        why: "A state read in composition can recompose UI that only needed layout or drawing work.",
+        fix: "Use lambda layout modifiers or draw modifiers such as `drawBehind`/`drawWithContent` when the changing value only affects layout or pixels.",
+        detect: function (code) {
+          const highFrequency = /(firstVisibleItemScrollOffset|scrollState\.value|listState\.firstVisibleItemIndex|animate\w*AsState|Animatable)/.test(code);
+          const visualInComposition = /\.(background|alpha|graphicsLayer|offset|padding)\s*\([^)]*(scroll|offset|fraction|alpha|animated|value)/.test(code);
+          return highFrequency && visualInComposition && !/(drawBehind|drawWithContent|Modifier\.offset\s*\{|graphicsLayer\s*\{)/.test(code)
+            ? "Found high-frequency visual state read through eager modifier parameters."
+            : "";
         },
       },
       {
@@ -3345,6 +5250,86 @@
         },
       },
       {
+        id: "activity-result-unconditional-registration",
+        severity: "System UI",
+        section: "activity-results-permissions",
+        title: "Register Activity Result launchers unconditionally.",
+        why: "Activity Result launchers must be registered in the same order at a stable composable call site so Compose can keep the callback and launcher lifecycle correct.",
+        fix: "Move `rememberLauncherForActivityResult` out of conditionals, loops, and branches; gate `launch(...)` or the visible button instead.",
+        detect: function (code) {
+          return /(if|when|forEach|for\s*\()\s*[\s\S]{0,260}rememberLauncherForActivityResult\s*\(/.test(code) ? "Found Activity Result launcher registration inside a conditional or loop." : "";
+        },
+      },
+      {
+        id: "activity-result-launch-event",
+        severity: "Side effect",
+        section: "activity-results-permissions",
+        title: "Launch Activity Result flows from events, not composition.",
+        why: "Launching a system UI flow from LaunchedEffect, SideEffect, or DisposableEffect can relaunch unexpectedly after recomposition, restoration, or navigation.",
+        fix: "Call `launcher.launch(...)` from a click, explicit user event, or a ViewModel-driven one-shot event handled by the UI.",
+        detect: function (code) {
+          return /(LaunchedEffect|SideEffect|DisposableEffect)\s*\([\s\S]{0,400}\w+\.launch\s*\(/.test(code) ? "Found Activity Result launch from a composition effect." : "";
+        },
+      },
+      {
+        id: "activity-result-managed-unregister",
+        severity: "Lifecycle",
+        section: "activity-results-permissions",
+        title: "Do not unregister managed Activity Result launchers.",
+        why: "`rememberLauncherForActivityResult` returns a managed launcher; manual unregistering can break the composable call site's lifecycle.",
+        fix: "Remove calls to `unregister()` on managed launchers and let Compose dispose the launcher with the composition.",
+        detect: function (code) {
+          return /rememberLauncherForActivityResult\s*\(/.test(code) && /\.unregister\s*\(/.test(code) ? "Found manual `unregister()` on a managed Activity Result launcher." : "";
+        },
+      },
+      {
+        id: "photo-picker-over-media-permission",
+        severity: "Privacy",
+        section: "activity-results-permissions",
+        title: "Use Photo Picker for user-selected media.",
+        why: "The system Photo Picker lets users select photos and videos without giving the app broad media library access.",
+        fix: "Use `ActivityResultContracts.PickVisualMedia` and `PickVisualMediaRequest` for user-selected images or videos.",
+        detect: function (code) {
+          const asksBroadMedia = /(READ_MEDIA_IMAGES|READ_MEDIA_VIDEO|READ_EXTERNAL_STORAGE)/.test(code);
+          return asksBroadMedia && /(photo|image|video|gallery|media)/i.test(code) && !/(PickVisualMedia|PhotoPicker)/.test(code) ? "Found broad media permission request for a user-selected media flow." : "";
+        },
+      },
+      {
+        id: "open-document-persist-uri",
+        severity: "Data",
+        section: "activity-results-permissions",
+        title: "Persist OpenDocument URI access when storing it.",
+        why: "A Uri returned by OpenDocument is not enough for durable access after process death or reboot unless the app persists the granted URI permission.",
+        fix: "Call `contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)` before saving the Uri for later.",
+        detect: function (code) {
+          const storesDocument = /(store|save|database|rememberSaveable|later|onDocumentReady|saveForLater)/i.test(code);
+          return /ActivityResultContracts\.OpenDocument|OpenDocument\s*\(/.test(code) && storesDocument && !/takePersistableUriPermission\s*\(/.test(code) ? "Found OpenDocument result stored for later without persistable URI permission." : "";
+        },
+      },
+      {
+        id: "permission-rationale-denial-state",
+        severity: "UX",
+        section: "activity-results-permissions",
+        title: "Runtime permission UI needs rationale and denial states.",
+        why: "Permission denial is a normal path. Users need context before a request and a usable UI after denial.",
+        fix: "Check current grant state, show rationale when appropriate, request with `RequestPermission`, and render a denied/fallback state.",
+        detect: function (code) {
+          const requestsPermission = /(RequestPermission|RequestMultiplePermissions|ActivityResultContracts\.RequestPermission)/.test(code);
+          return requestsPermission && !/(shouldShowRequestPermissionRationale|rationale|denied|PERMISSION_GRANTED|ContextCompat\.checkSelfPermission)/i.test(code) ? "Found runtime permission request with no obvious rationale, grant check, or denial UI." : "";
+        },
+      },
+      {
+        id: "notification-permission-sdk-gate",
+        severity: "Compatibility",
+        section: "activity-results-permissions",
+        title: "Gate notification permission by Android 13+.",
+        why: "`POST_NOTIFICATIONS` is a runtime permission on Android 13 and higher; older versions need notification-enabled checks, not the same permission request path.",
+        fix: "Wrap `Manifest.permission.POST_NOTIFICATIONS` requests with `Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU` and handle existing notification settings.",
+        detect: function (code) {
+          return /POST_NOTIFICATIONS/.test(code) && !/(Build\.VERSION\.SDK_INT|VERSION_CODES\.TIRAMISU|TIRAMISU)/.test(code) ? "Found POST_NOTIFICATIONS request without an Android 13+ SDK gate." : "";
+        },
+      },
+      {
         id: "navigation-strings",
         severity: "App structure",
         section: "navigation-compose",
@@ -3385,6 +5370,56 @@
         detect: function (code) { return /NavDisplay\s*\(|entryProvider\s*\{/.test(code) && /(rememberNavController|NavHost\s*\(|NavController|navController\.navigate)/.test(code) ? "Found Navigation 3 APIs mixed with Navigation 2 controller or NavHost APIs." : ""; },
       },
       {
+        id: "predictive-back-root-intercept",
+        severity: "System UI",
+        section: "predictive-back-shared-transitions",
+        title: "Do not intercept root back when the system can own it.",
+        why: "Root-level interception can prevent Android's predictive back-to-home and cross-activity previews from running.",
+        fix: "Remove root `BackHandler` interception unless there is real in-app state to consume; let Navigation, Activity, or Material surfaces handle supported back paths.",
+        detect: function (code) {
+          const rootScope = /(class\s+\w+Activity|setContent\s*\{|RootShell|AppShell|MainActivity)/.test(code);
+          const intercepts = /BackHandler\s*\(\s*(?:enabled\s*=\s*)?true[\s\S]{0,220}(finish\s*\(|moveTaskToBack\s*\(|exitProcess\s*\(|System\.exit)/.test(code);
+          return rootScope && intercepts ? "Found root-level BackHandler that exits or finishes the app directly." : "";
+        },
+      },
+      {
+        id: "navhost-custom-motion-needs-pop-transitions",
+        severity: "Motion",
+        section: "predictive-back-shared-transitions",
+        title: "Custom NavHost motion needs explicit pop transitions.",
+        why: "Back gestures pop the stack. If forward transitions are customized but pop transitions are omitted, predictive back can feel unrelated to the forward motion.",
+        fix: "Add `popEnterTransition` and `popExitTransition` alongside `enterTransition` and `exitTransition`, or intentionally use the default Navigation Compose back animation.",
+        detect: function (code) {
+          const customNavHost = /NavHost\s*\([\s\S]{0,900}(enterTransition|exitTransition)\s*=/.test(code);
+          return customNavHost && !/(popEnterTransition|popExitTransition)\s*=/.test(code) ? "Found custom NavHost enter/exit transitions without matching pop transitions." : "";
+        },
+      },
+      {
+        id: "shared-transition-scope-missing",
+        severity: "Motion",
+        section: "predictive-back-shared-transitions",
+        title: "Shared element modifiers need shared and animated visibility scopes.",
+        why: "`sharedElement` and `sharedBounds` only work when both matching elements are inside a `SharedTransitionScope` and receive the transition's animated visibility scope.",
+        fix: "Wrap the owner in `SharedTransitionLayout`, pass `SharedTransitionScope`, pass `AnimatedVisibilityScope` or `LocalNavAnimatedContentScope.current`, and use stable shared content keys.",
+        detect: function (code) {
+          const usesShared = /\.(sharedElement|sharedBounds)\s*\(/.test(code);
+          const hasSharedScope = /(SharedTransitionLayout|SharedTransitionScope|sharedTransitionScope)/.test(code);
+          const hasAnimatedScope = /(AnimatedVisibilityScope|LocalNavAnimatedContentScope|animatedVisibilityScope)/.test(code);
+          return usesShared && (!hasSharedScope || !hasAnimatedScope) ? "Found shared element/bounds modifiers without both shared-transition and animated-visibility scope wiring." : "";
+        },
+      },
+      {
+        id: "predictive-back-progress-cancellation",
+        severity: "Runtime",
+        section: "predictive-back-shared-transitions",
+        title: "Manual PredictiveBackHandler code must restore on cancellation.",
+        why: "Predictive back progress is a Flow that can be cancelled when the gesture is aborted; custom UI state should be restored and the cancellation rethrown.",
+        fix: "Wrap progress collection in `try/catch (e: CancellationException)`, restore visual state in the catch block, and rethrow.",
+        detect: function (code) {
+          return /PredictiveBackHandler\s*\(/.test(code) && !/CancellationException/.test(code) ? "Found manual `PredictiveBackHandler` progress handling without cancellation recovery." : "";
+        },
+      },
+      {
         id: "adaptive-window",
         severity: "Adaptive",
         section: "adaptive-layouts",
@@ -3394,6 +5429,99 @@
         detect: function (code) { return /(LocalConfiguration\.current\.screenWidthDp|resources\.displayMetrics|DisplayMetrics)/.test(code) && !/currentWindowAdaptiveInfo\s*\(/.test(code) ? "Found screen/display-size logic without `currentWindowAdaptiveInfo()`." : ""; },
       },
       {
+        id: "adaptive-navigation-suite",
+        severity: "Adaptive",
+        section: "adaptive-canonical-navigation",
+        title: "Use NavigationSuiteScaffold for top-level adaptive navigation.",
+        why: "NavigationSuiteScaffold centralizes bar, rail, and drawer presentation from adaptive info instead of duplicating breakpoints across app shells.",
+        fix: "Move top-level destinations into `NavigationSuiteScaffold.navigationSuiteItems`, keep selected destination saveable, and override `layoutType` only for a product-specific rule.",
+        detect: function (code) {
+          const manualSwitch = /(NavigationBar|NavigationRail|ModalNavigationDrawer|PermanentNavigationDrawer)[\s\S]{0,900}(NavigationBar|NavigationRail|ModalNavigationDrawer|PermanentNavigationDrawer)/.test(code);
+          return manualSwitch && /(WindowSizeClass|currentWindowAdaptiveInfo|screenWidthDp)/.test(code) && !/NavigationSuiteScaffold/.test(code)
+            ? "Found manual adaptive switching between navigation surfaces without `NavigationSuiteScaffold`."
+            : "";
+        },
+      },
+      {
+        id: "adaptive-pane-key-saveable",
+        severity: "State",
+        section: "adaptive-canonical-navigation",
+        title: "Pane destination keys must be saveable.",
+        why: "Material 3 adaptive pane navigators preserve selected pane content across configuration changes when the content key can be saved.",
+        fix: "Use a small `Parcelable` or otherwise saveable key with `rememberListDetailPaneScaffoldNavigator` or the supporting-pane navigator.",
+        detect: function (code) {
+          const paneNav = /(NavigableListDetailPaneScaffold|rememberListDetailPaneScaffoldNavigator|NavigableSupportingPaneScaffold|rememberSupportingPaneScaffoldNavigator)/.test(code);
+          return paneNav && !/(@Parcelize|Parcelable|Serializable)/.test(code) ? "Found adaptive pane navigation without an obviously saveable pane key." : "";
+        },
+      },
+      {
+        id: "adaptive-supporting-pane-manual",
+        severity: "Adaptive",
+        section: "adaptive-canonical-navigation",
+        title: "Use supporting-pane navigators instead of local Boolean panes.",
+        why: "A local Boolean and Row cannot reproduce one-pane versus multi-pane visibility, default pane animation, or predictive back behavior.",
+        fix: "Use `NavigableSupportingPaneScaffold` or `SupportingPaneScaffold` with `rememberSupportingPaneScaffoldNavigator`, `AnimatedPane`, and back behavior.",
+        detect: function (code) {
+          const manualTools = /Row\s*\{[\s\S]{0,700}if\s*\([^)]*(showTools|showPane|showSupporting|expanded)[^)]*\)[\s\S]{0,400}(Tool|Supporting|Details|Comments|Pane)/.test(code);
+          return manualTools && !/(SupportingPaneScaffold|NavigableSupportingPaneScaffold|rememberSupportingPaneScaffoldNavigator)/.test(code)
+            ? "Found manually toggled supporting pane content without an adaptive supporting-pane scaffold."
+            : "";
+        },
+      },
+      {
+        id: "adaptive-deprecated-display-metrics",
+        severity: "Compatibility",
+        section: "adaptive-canonical-navigation",
+        title: "Do not use deprecated Display metrics for adaptive sizing.",
+        why: "Deprecated Display APIs can measure the physical screen or omit system decor instead of reporting the app window.",
+        fix: "Use `currentWindowAdaptiveInfo` in Compose or WindowManager current window metrics outside Compose.",
+        detect: function (code) {
+          return /(defaultDisplay|getRealMetrics|getMetrics|getRealSize|getSize\s*\(|resources\.displayMetrics|DisplayMetrics)/.test(code)
+            ? "Found deprecated or physical display metrics used for layout sizing."
+            : "";
+        },
+      },
+      {
+        id: "adaptive-orientation-aspect-lock",
+        severity: "Compatibility",
+        section: "adaptive-canonical-navigation",
+        title: "Do not lock orientation, resizability, or aspect ratio for adaptive apps.",
+        why: "Large screens, foldables, split screen, and desktop windows require apps to handle resizing rather than forcing a phone-only envelope.",
+        fix: "Remove `screenOrientation`, `resizeableActivity=\"false\"`, `minAspectRatio`, and `maxAspectRatio`; make layouts adapt to the app window.",
+        detect: function (code) {
+          return /(android:screenOrientation\s*=|android:resizeableActivity\s*=\s*["']false["']|android:(?:min|max)AspectRatio\s*=)/.test(code)
+            ? "Found manifest configuration that restricts orientation, resizability, or aspect ratio."
+            : "";
+        },
+      },
+      {
+        id: "adaptive-stretched-expanded-content",
+        severity: "Layout",
+        section: "adaptive-canonical-navigation",
+        title: "Do not stretch phone content across expanded windows.",
+        why: "Large windows should add panes, columns, or readable constraints instead of stretching single-column text and buttons.",
+        fix: "Use canonical pane scaffolds, adaptive grids, `widthIn`, or component-local constraints to keep line lengths and actions readable.",
+        detect: function (code) {
+          const adaptiveContext = /(WindowSizeClass|currentWindowAdaptiveInfo|WIDTH_DP_EXPANDED|expanded|Expanded)/.test(code);
+          const stretched = /(Text|Button|Column|LazyColumn)\s*\([\s\S]{0,220}Modifier\.fillMaxWidth\s*\(\s*\)/.test(code);
+          const hasConstraint = /(widthIn|heightIn|LazyVerticalGrid|GridCells|BoxWithConstraints)/.test(code);
+          return adaptiveContext && stretched && !hasConstraint ? "Found expanded-window code that appears to stretch single-column content with `fillMaxWidth()`." : "";
+        },
+      },
+      {
+        id: "adaptive-leaf-window-query",
+        severity: "Architecture",
+        section: "adaptive-canonical-navigation",
+        title: "Keep global window queries out of reusable leaf components.",
+        why: "Leaf cards and rows may be placed inside panes, rails, sheets, or grids where available space differs from the app window.",
+        fix: "Query adaptive info at the app or content level, pass derived configuration down, or use the component's actual constraints with `BoxWithConstraints` or custom layout.",
+        detect: function (code) {
+          return /@Composable\s+fun\s+\w*(?:Card|Row|Item|Chip|Cell)\s*\([^)]*\)\s*\{[\s\S]{0,700}currentWindowAdaptiveInfo\s*\(/.test(code)
+            ? "Found a reusable leaf composable querying global adaptive window info."
+            : "";
+        },
+      },
+      {
         id: "modifier-order",
         severity: "Layout",
         section: "modifier-order",
@@ -3401,6 +5529,58 @@
         why: "Modifier order changes measurement, drawing, hit targets, clipping, and semantics.",
         fix: "Check whether `background`, `clip`, `padding`, `clickable`, and size modifiers are in the intended order.",
         detect: function (code) { return /\.padding\s*\([^)]*\)\s*\.\s*(background|clickable|clip)\s*\(/.test(code) ? "Found `padding()` before drawing or interaction modifiers." : ""; },
+      },
+      {
+        id: "custom-modifier-chain",
+        severity: "API design",
+        section: "custom-modifiers",
+        title: "Custom modifier factories must preserve the incoming chain.",
+        why: "A `Modifier` extension that returns a fresh `Modifier` drops everything the caller placed before it.",
+        fix: "Return `this then Element(...)`, `this.then(...)`, or call existing factories on `this` instead of starting from `Modifier`.",
+        detect: function (code) {
+          return /fun\s+Modifier\.\w+\s*\([^)]*\)\s*(?::\s*Modifier\s*)?=\s*Modifier\./.test(code)
+            ? "Found a `Modifier` extension factory that starts from `Modifier.` instead of `this`."
+            : "";
+        },
+      },
+      {
+        id: "custom-modifier-composed",
+        severity: "Performance",
+        section: "custom-modifiers",
+        title: "Avoid composed for new custom modifier behavior.",
+        why: "`composed {}` is no longer recommended for new custom modifiers; `Modifier.Node` is the lower-level API designed for better performance.",
+        fix: "Use chained existing modifiers, a composable modifier factory for high-level Compose APIs, or `Modifier.Node` for reusable custom behavior.",
+        detect: function (code) { return /\bcomposed\s*\{|\.\s*composed\s*\(/.test(code) ? "Found `composed` in custom modifier code." : ""; },
+      },
+      {
+        id: "modifier-node-element-equality",
+        severity: "Performance",
+        section: "custom-modifiers",
+        title: "ModifierNodeElement needs stable equality.",
+        why: "Compose uses element equality to decide whether an existing node can be updated and reused. Instance equality can cause unnecessary updates or stale behavior.",
+        fix: "Prefer a `data class` or `data object` element, or implement `equals` and `hashCode` manually.",
+        detect: function (code) {
+          const hasElement = /ModifierNodeElement\s*</.test(code);
+          const hasStableEquality = /(data\s+(?:class|object)\s+\w+[\s\S]{0,160}ModifierNodeElement|override\s+fun\s+equals\s*\(|override\s+fun\s+hashCode\s*\()/.test(code);
+          return hasElement && !hasStableEquality ? "Found `ModifierNodeElement` without data-class/data-object or explicit equality." : "";
+        },
+      },
+      {
+        id: "modifier-node-update",
+        severity: "Runtime",
+        section: "custom-modifiers",
+        title: "Update existing Modifier.Node instances instead of recreating behavior.",
+        why: "Node reuse is the performance point of `Modifier.Node`; update should mutate the existing node's fields to match new parameters.",
+        fix: "Implement `override fun update(node: YourNode) { node.property = property }` for every parameter that affects behavior.",
+        detect: function (code) {
+          const hasNodeElement = /ModifierNodeElement\s*</.test(code);
+          if (!hasNodeElement) return "";
+          if (!/override\s+fun\s+update\s*\(\s*node\s*:/.test(code)) return "Found `ModifierNodeElement` without an `update(node)` implementation.";
+          const updateBlock = (code.match(/override\s+fun\s+update\s*\(\s*node\s*:[\s\S]{0,500}?\}/) || [""])[0];
+          return !/node\.\w+\s*=/.test(updateBlock) && !/invalidate(?:Draw|Measurement|Semantics)?\s*\(/.test(updateBlock)
+            ? "Found `update(node)` without obvious node field updates or invalidation."
+            : "";
+        },
       },
       {
         id: "theme-hardcoded-visuals",
@@ -3413,12 +5593,55 @@
       },
       {
         id: "compositionlocal-screen-state",
-        severity: "Theming",
-        section: "theming-design-system",
+        severity: "Architecture",
+        section: "compositionlocal-scope",
         title: "Reserve CompositionLocal for tree-scoped context.",
         why: "`CompositionLocal` is appropriate for theme tokens and broad local context, not for hiding screen state, repositories, navigation, or ViewModels.",
         fix: "Pass ordinary state and dependencies explicitly, or keep them at the route/state-holder boundary; keep CompositionLocal for design-system and ambient context values.",
-        detect: function (code) { return /(compositionLocalOf|staticCompositionLocalOf)\s*\{[\s\S]{0,300}(ViewModel|Repository|NavController|MutableState|StateFlow|Flow)/.test(code) ? "Found a CompositionLocal default that looks like screen state or a dependency." : ""; },
+        detect: function (code) {
+          const badGeneric = /(compositionLocalOf|staticCompositionLocalOf)\s*<[^>]*(ViewModel|Repository|NavController|MutableState|StateFlow|Flow)[^>]*>\s*\{/.test(code);
+          const badDefault = /(compositionLocalOf|staticCompositionLocalOf)\s*\{[\s\S]{0,300}(ViewModel|Repository|NavController|MutableState|StateFlow|Flow)/.test(code);
+          return badGeneric || badDefault ? "Found a CompositionLocal default that looks like screen state or a dependency." : "";
+        },
+      },
+      {
+        id: "compositionlocal-hidden-dependency",
+        severity: "Architecture",
+        section: "compositionlocal-scope",
+        title: "Do not hide screen dependencies behind Local* globals.",
+        why: "Implicit dependencies make reusable composables harder to reason about, preview, and test.",
+        fix: "Keep ViewModel, repository, and navigation ownership at the route boundary; pass only the state and event callbacks the child needs.",
+        detect: function (code) {
+          return /Local[A-Za-z0-9_]*(ViewModel|Repository|NavController)\b/.test(code) || /CompositionLocalProvider\s*\([\s\S]{0,250}provides\s+[A-Za-z_][\w]*(ViewModel|Repository|NavController)\b/.test(code)
+            ? "Found a Local* dependency for ViewModel, repository, or navigation."
+            : "";
+        },
+      },
+      {
+        id: "compositionlocal-ui-state",
+        severity: "State",
+        section: "compositionlocal-scope",
+        title: "Keep screen UI state explicit instead of ambient.",
+        why: "UI state should have one visible owner so state flows down and events flow up.",
+        fix: "Pass `uiState` and event lambdas as parameters; reserve CompositionLocal for broad tree-scoped context.",
+        detect: function (code) {
+          return /Local[A-Za-z0-9_]*(UiState|ScreenState|MutableState|StateFlow|Flow)\b/.test(code) || /CompositionLocalProvider\s*\([\s\S]{0,250}provides\s+[A-Za-z_][\w]*(UiState|ScreenState|State|Flow)\b/.test(code)
+            ? "Found screen state or observable state routed through a CompositionLocal."
+            : "";
+        },
+      },
+      {
+        id: "compositionlocal-required-default",
+        severity: "Previewability",
+        section: "compositionlocal-scope",
+        title: "Give CompositionLocal a safe default when possible.",
+        why: "Required locals make tests and previews fail unless every caller remembers the provider.",
+        fix: "Provide a reasonable default for tree-scoped values, or keep a required local so high in the app shell that missing it is difficult.",
+        detect: function (code) {
+          return /(compositionLocalOf|staticCompositionLocalOf)\s*<[^>]+>\s*\{\s*(?:error|throw)\s*\(/.test(code)
+            ? "Found a CompositionLocal default that throws."
+            : "";
+        },
       },
       {
         id: "draw-content-missing",
@@ -3463,6 +5686,58 @@
           });
           const repeated = Object.keys(counts).filter(function (name) { return counts[name] > 1; });
           return repeated.length ? "Measured more than once: " + repeated.slice(0, 3).join(", ") : "";
+        },
+      },
+      {
+        id: "component-local-constraints",
+        severity: "Architecture",
+        section: "advanced-layout-adaptation",
+        title: "Use component-local constraints for reusable layout decisions.",
+        why: "A leaf component can be placed inside a pane, sheet, grid cell, or split window whose available width differs from the global app window.",
+        fix: "Read global adaptive info at the route or shell, pass a simple mode down, or use `BoxWithConstraints`/custom layout for the component's actual constraints.",
+        detect: function (code) {
+          const reusable = /@Composable\s+fun\s+\w*(?:Card|Row|Item|Cell|Chip|Tile|Header|Content|Panel)\s*\([^)]*\)\s*\{[\s\S]{0,900}(currentWindowAdaptiveInfo|LocalConfiguration\.current|screenWidthDp|displayMetrics)/.test(code);
+          return reusable ? "Found a reusable component making a global window/display-size decision." : "";
+        },
+      },
+      {
+        id: "boxwithconstraints-meaningful-breakpoints",
+        severity: "Layout",
+        section: "advanced-layout-adaptation",
+        title: "Use meaningful bounded breakpoints in BoxWithConstraints.",
+        why: "A BoxWithConstraints branch should describe a real local layout threshold and handle bounded versus unbounded constraints deliberately.",
+        fix: "Use named compact/medium/expanded thresholds such as `maxWidth >= 480.dp`; avoid always-true checks like `maxWidth > 0.dp`.",
+        detect: function (code) {
+          const hasBox = /\bBoxWithConstraints\s*(?:\(|\{)/.test(code);
+          return hasBox && /(maxWidth\s*>\s*0\.dp|maxHeight\s*>\s*0\.dp|if\s*\(\s*maxWidth\s*[<>]=?\s*\d+\.dp\s*\)\s*\w+\s*else\s*\w+)/.test(code) && !/(when\s*\{|>=\s*(360|400|480|600|720|840|1200)\.dp)/.test(code)
+            ? "Found BoxWithConstraints branching without clear named or bounded breakpoints."
+            : "";
+        },
+      },
+      {
+        id: "lazy-item-subcompose-overhead",
+        severity: "Performance",
+        section: "advanced-layout-adaptation",
+        title: "Avoid unnecessary subcomposition in every lazy item.",
+        why: "BoxWithConstraints, SubcomposeLayout, and nested lazy containers can split composition work per item and hurt scroll performance when the item does not truly need measured-dependent composition.",
+        fix: "Move the constraint decision to the parent, pass a layout mode into items, or use Row/Column/Flow/custom Layout inside the item unless profiling proves subcomposition is needed.",
+        detect: function (code) {
+          const lazyBlock = /(LazyColumn|LazyRow|LazyVerticalGrid|LazyHorizontalGrid|LazyVerticalStaggeredGrid|LazyHorizontalStaggeredGrid)\s*(?:\([^)]*\))?\s*\{[\s\S]{0,2200}\bitems?\s*\([^)]*\)\s*\{[\s\S]{0,1400}\b(BoxWithConstraints|SubcomposeLayout|LazyRow)\s*(?:\(|\{)/m.test(code);
+          return lazyBlock ? "Found per-item subcomposition inside a lazy container." : "";
+        },
+      },
+      {
+        id: "lookahead-approach-completion",
+        severity: "Motion",
+        section: "advanced-layout-adaptation",
+        title: "Custom lookahead approach nodes need completion signals.",
+        why: "ApproachLayoutModifierNode relies on measurement and placement progress signals to know whether to keep approaching or snap to the lookahead result.",
+        fix: "Implement both `isMeasurementApproachInProgress` and `isPlacementApproachInProgress`, or use higher-level lookahead APIs such as `Modifier.animateBounds` when they fit.",
+        detect: function (code) {
+          const hasNode = /\bApproachLayoutModifierNode\b/.test(code);
+          return hasNode && (!/isMeasurementApproachInProgress\s*\(/.test(code) || !/isPlacementApproachInProgress\s*\(/.test(code))
+            ? "Found ApproachLayoutModifierNode without both approach progress functions."
+            : "";
         },
       },
       {
@@ -3631,6 +5906,58 @@
         why: "Navigation, toasts, snackbars, and logging can repeat unpredictably when composition restarts.",
         fix: "Move one-shot work behind events or the appropriate effect API.",
         detect: function (code) { return /(Toast\.makeText|showSnackbar\s*\(|navController\.navigate\s*\()/.test(code) && !/(LaunchedEffect|rememberCoroutineScope)/.test(code) ? "Found one-shot work without an obvious effect or event scope." : ""; },
+      },
+      {
+        id: "disposable-empty-on-dispose",
+        severity: "Runtime",
+        section: "effects-lifecycle",
+        title: "DisposableEffect cleanup must do real cleanup.",
+        why: "An empty `onDispose` usually means the effect has the wrong lifecycle API or leaks registered work.",
+        fix: "Remove the registered observer/listener/subscription in `onDispose`, or switch to another effect API if there is no cleanup.",
+        detect: function (code) { return /DisposableEffect\s*\([^)]*\)\s*\{[\s\S]{0,900}onDispose\s*\{\s*(?:\/\/[^\n]*)?\s*\}/.test(code) ? "Found `DisposableEffect` with an empty `onDispose` block." : ""; },
+      },
+      {
+        id: "snapshotflow-effect-scope",
+        severity: "Runtime",
+        section: "effects-lifecycle",
+        title: "Collect snapshotFlow from an effect.",
+        why: "`snapshotFlow` is a cold Flow and should be collected from a coroutine whose lifecycle is explicit.",
+        fix: "Collect `snapshotFlow { ... }` inside `LaunchedEffect(keys)` and use Flow operators to gate emissions.",
+        detect: function (code) {
+          const hits = [];
+          code.replace(/snapshotFlow\s*\{/g, function (_, offset) {
+            const prefix = code.slice(Math.max(0, offset - 180), offset);
+            if (!/LaunchedEffect\s*\([^)]*\)\s*\{[\s\S]{0,180}$/.test(prefix)) hits.push(offset);
+          });
+          return hits.length ? "Found `snapshotFlow` without a nearby enclosing `LaunchedEffect` collector." : "";
+        },
+      },
+      {
+        id: "produce-state-keys",
+        severity: "Runtime",
+        section: "effects-lifecycle",
+        title: "Key produceState to the external source identity.",
+        why: "`produceState` restarts from its keys; missing keys can keep a producer loading stale data.",
+        fix: "Pass inputs such as id, url, repository, or subscription owner after `initialValue`.",
+        detect: function (code) {
+          return /produceState\s*<[^>]+>\s*\(\s*initialValue\s*=\s*[^,\n)]+\s*\)\s*\{/.test(code) || /produceState\s*\(\s*initialValue\s*=\s*[^,\n)]+\s*\)\s*\{/.test(code)
+            ? "Found `produceState` with only an initial value and no restart keys."
+            : "";
+        },
+      },
+      {
+        id: "derivedstate-cheap-expression",
+        severity: "Performance",
+        section: "effects-lifecycle",
+        title: "Do not wrap cheap always-changing values in derivedStateOf.",
+        why: "`derivedStateOf` is useful when inputs change more often than the derived result; otherwise it adds overhead.",
+        fix: "Use a plain expression for cheap values like string concatenation or direct arithmetic that changes with every input.",
+        detect: function (code) {
+          const block = (code.match(/derivedStateOf\s*\{[\s\S]{0,220}?\}/) || [""])[0];
+          return block && /(\$[A-Za-z_][\w]*|\+\s*[A-Za-z_][\w]*|[A-Za-z_][\w]*\s*\+\s*[A-Za-z_][\w]*)/.test(block) && !/(>|<|>=|<=|==|!=|distinct|firstVisibleItem|offset|scroll)/.test(block)
+            ? "Found `derivedStateOf` around a cheap expression that likely changes as often as its inputs."
+            : "";
+        },
       },
       {
         id: "image-a11y",
@@ -3928,6 +6255,74 @@
         detect: function (code) { return /\.clickable\s*(?:\(|\{)/.test(code) && !/(semantics\s*\{|role\s*=|stateDescription|contentDescription)/.test(code) ? "Found clickable UI with no obvious semantic label, role, or state." : ""; },
       },
       {
+        id: "a11y-empty-label",
+        severity: "Accessibility",
+        section: "advanced-semantics",
+        title: "Do not expose empty accessibility labels.",
+        why: "An empty contentDescription or custom action label creates a focusable target with no useful announcement.",
+        fix: "Use a meaningful localized label, or use `contentDescription = null` only for decorative images and icons.",
+        detect: function (code) {
+          return /(contentDescription\s*=\s*["']\s*["']|label\s*=\s*["']\s*["'])/.test(code)
+            ? "Found an empty accessibility label."
+            : "";
+        },
+      },
+      {
+        id: "semantics-clear-replacement",
+        severity: "Accessibility",
+        section: "advanced-semantics",
+        title: "clearAndSetSemantics must replace the full contract.",
+        why: "`clearAndSetSemantics` removes descendant meaning. On interactive UI, that is safe only when the replacement supplies label, role/state, and action.",
+        fix: "Inside `clearAndSetSemantics`, provide contentDescription or text, role/stateDescription as needed, and onClick/custom actions for interactive behavior.",
+        detect: function (code) {
+          const hasClear = /clearAndSetSemantics\s*\{[\s\S]{0,500}?\}/.test(code);
+          if (!hasClear) return "";
+          const block = (code.match(/clearAndSetSemantics\s*\{[\s\S]{0,500}?\}/) || [""])[0];
+          const hasLabel = /(contentDescription\s*=|text\s*=|stateDescription\s*=)/.test(block);
+          const hasAction = /(onClick\s*\(|customActions\s*=|role\s*=)/.test(block);
+          return (!hasLabel || !hasAction) ? "Found `clearAndSetSemantics` without an obvious replacement label and action/role." : "";
+        },
+      },
+      {
+        id: "semantics-custom-action-labels",
+        severity: "Accessibility",
+        section: "advanced-semantics",
+        title: "Custom accessibility actions need labels and handled results.",
+        why: "Assistive technologies present customActions by label, and the action lambda should return true only after handling the request.",
+        fix: "Use `CustomAccessibilityAction(label = \"...\") { doAction(); true }` for every action.",
+        detect: function (code) {
+          if (!/customActions\s*=|CustomAccessibilityAction\s*\(/.test(code)) return "";
+          const missingLabel = /CustomAccessibilityAction\s*\(\s*(?:action\s*=|\{)/.test(code) || /CustomAccessibilityAction\s*\([^)]*label\s*=\s*["']\s*["']/.test(code);
+          const missingTrue = /CustomAccessibilityAction\s*\([\s\S]{0,300}\}\s*\)/.test(code) && !/CustomAccessibilityAction\s*\([\s\S]{0,300}\btrue\b[\s\S]{0,80}\)/.test(code);
+          if (missingLabel && missingTrue) return "Found custom accessibility actions without useful labels and handled `true` results.";
+          if (missingLabel) return "Found a custom accessibility action without a useful label.";
+          if (missingTrue) return "Found a custom accessibility action without an obvious handled `true` result.";
+          return "";
+        },
+      },
+      {
+        id: "semantics-live-region-assertive",
+        severity: "Accessibility",
+        section: "advanced-semantics",
+        title: "Use assertive live regions sparingly.",
+        why: "Assertive live regions interrupt current speech. Most status updates should be polite or user-triggered announcements.",
+        fix: "Prefer `LiveRegionMode.Polite` for non-urgent updates, and reserve `Assertive` for critical time-sensitive alerts.",
+        detect: function (code) { return /liveRegion\s*=\s*LiveRegionMode\.Assertive/.test(code) ? "Found `LiveRegionMode.Assertive`." : ""; },
+      },
+      {
+        id: "semantics-traversal-group",
+        severity: "Accessibility",
+        section: "advanced-semantics",
+        title: "Traversal indexes need a traversal group.",
+        why: "`traversalIndex` only makes sense when TalkBack can sort within a deliberate traversal boundary.",
+        fix: "Set `isTraversalGroup = true` on the parent group, then set `traversalIndex` on the focusable children that need custom ordering.",
+        detect: function (code) {
+          return /traversalIndex\s*=/.test(code) && !/isTraversalGroup\s*=\s*true/.test(code)
+            ? "Found `traversalIndex` without `isTraversalGroup = true`."
+            : "";
+        },
+      },
+      {
         id: "raw-pointer-semantics",
         severity: "Input",
         section: "pointer-input-gestures",
@@ -3944,6 +6339,72 @@
         why: "Top-level detector functions such as `detectTapGestures` suspend while waiting for their gesture; code after the first detector may never run.",
         fix: "Use separate `.pointerInput(...) { ... }` modifiers for independent detectors, or write one coordinated `awaitEachGesture` loop.",
         detect: function (code) { return /\.pointerInput\s*\([^)]*\)\s*\{[\s\S]{0,700}detectTapGestures[\s\S]{0,700}detect(Drag|Transform|HorizontalDrag|VerticalDrag)Gestures/.test(code) ? "Found multiple top-level gesture detectors inside one `pointerInput` block." : ""; },
+      },
+      {
+        id: "drag-drop-target-not-remembered",
+        severity: "Input",
+        section: "advanced-input-rich-content",
+        title: "Remember DragAndDropTarget callback objects.",
+        why: "A drag target callback object carries drag lifecycle state; allocating it inline during recomposition can restart behavior and make accepted drops inconsistent.",
+        fix: "Create the `DragAndDropTarget` inside `remember { object : DragAndDropTarget { ... } }`, then pass the remembered instance to `dragAndDropTarget`.",
+        detect: function (code) {
+          const usesTarget = /dragAndDropTarget\s*\(/.test(code) || /DragAndDropTarget/.test(code);
+          const inlineObject = /target\s*=\s*object\s*:\s*DragAndDropTarget/.test(code) || /val\s+\w+\s*=\s*object\s*:\s*DragAndDropTarget/.test(code);
+          const remembered = /remember\s*\{[\s\S]{0,350}object\s*:\s*DragAndDropTarget/.test(code);
+          return usesTarget && inlineObject && !remembered ? "Found a `DragAndDropTarget` object that is not obviously remembered." : "";
+        },
+      },
+      {
+        id: "external-drag-permission",
+        severity: "Input",
+        section: "advanced-input-rich-content",
+        title: "Request permissions before reading external drag payloads.",
+        why: "Drops from other apps or windows can carry URIs that require temporary platform permission before the target reads them.",
+        fix: "When accepting external drops, call `requestDragAndDropPermissions(event.toAndroidDragEvent())`, process the ClipData, then release the permission.",
+        detect: function (code) {
+          const target = /dragAndDropTarget\s*\(|DragAndDropTarget/.test(code);
+          const externalSignal = /(toAndroidDragEvent|ClipData\.newUri|content:\/\/|DRAG_FLAG_GLOBAL|MIMETYPE_(?:TEXT|IMAGE|VIDEO|AUDIO)|uri\b|Uri\b)/.test(code);
+          return target && externalSignal && !/requestDragAndDropPermissions\s*\(/.test(code) ? "Found drag/drop code that appears to handle external payloads without `requestDragAndDropPermissions`." : "";
+        },
+      },
+      {
+        id: "clipboard-sensitive-flag",
+        severity: "Privacy",
+        section: "advanced-input-rich-content",
+        title: "Mark copied secrets as sensitive clipboard content.",
+        why: "Passwords, tokens, and credentials should not be exposed in clipboard previews or unnecessary system surfaces.",
+        fix: "Set `ClipDescription.EXTRA_IS_SENSITIVE` on the clip description when copying secrets, tokens, passwords, or credentials.",
+        detect: function (code) {
+          const copies = /(setClip\s*\(|setText\s*\(|ClipData\.newPlainText\s*\()/.test(code);
+          const sensitive = /(password|secret|token|credential|apiKey|privateKey|authorization)/i.test(code);
+          return copies && sensitive && !/EXTRA_IS_SENSITIVE/.test(code) ? "Found clipboard copy of likely sensitive content without `ClipDescription.EXTRA_IS_SENSITIVE`." : "";
+        },
+      },
+      {
+        id: "stylus-cancel-handling",
+        severity: "Input",
+        section: "advanced-input-rich-content",
+        title: "Stylus MotionEvent code must handle cancellation.",
+        why: "Palm rejection and interrupted strokes can produce ACTION_CANCEL or FLAG_CANCELED; committing those strokes leaves unwanted ink behind.",
+        fix: "Handle `MotionEvent.ACTION_CANCEL` and check `MotionEvent.FLAG_CANCELED` on up events so canceled strokes are discarded or undone.",
+        detect: function (code) {
+          const stylus = /(pointerInteropFilter|MotionEvent|TOOL_TYPE_STYLUS|AXIS_PRESSURE|AXIS_TILT|AXIS_ORIENTATION|AXIS_DISTANCE)/.test(code);
+          const axes = /(AXIS_PRESSURE|AXIS_TILT|AXIS_ORIENTATION|AXIS_DISTANCE)/.test(code);
+          return stylus && axes && !/(ACTION_CANCEL|FLAG_CANCELED)/.test(code) ? "Found stylus MotionEvent axis handling without cancellation handling." : "";
+        },
+      },
+      {
+        id: "desktop-context-menu-right-click",
+        severity: "Input",
+        section: "advanced-input-rich-content",
+        title: "Context menus need a mouse or touchpad path.",
+        why: "Large-screen, ChromeOS, and desktop-window users expect context actions to work with right-click, not only touch long-press.",
+        fix: "Pair long-press context menus with `PointerEventType` secondary-button handling or a platform context-click listener, and add hover feedback when appropriate.",
+        detect: function (code) {
+          const contextMenu = /(onLongClickLabel|onLongClick|context menu|ContextMenu|showMenu|openMenu)/i.test(code);
+          const rightClick = /(isSecondaryPressed|PointerEventType\.Press|setOnContextClickListener|onContextClick|right-click|secondary button)/i.test(code);
+          return contextMenu && !rightClick ? "Found context-menu behavior with no obvious right-click or secondary-button path." : "";
+        },
       },
       {
         id: "key-handler-focusable",
@@ -3995,6 +6456,83 @@
         detect: function (code) { return /(onRoot\s*\(\)\.onChildren|onChildren\s*\(\)\.on.*(?:At|First|Last)|assertLeftPositionInRoot|assertTopPositionInRoot|assertWidthIsEqualTo|assertHeightIsEqualTo)/.test(code) && /(createComposeRule|ComposeTestRule|onNode|composeTestRule)/.test(code) ? "Found a Compose test that appears to assert child position, index, or size rather than behavior." : ""; },
       },
       {
+        id: "animated-content-target-param",
+        severity: "Motion",
+        section: "advanced-animation-motion",
+        title: "AnimatedContent must render its target-state parameter.",
+        why: "AnimatedContent keys outgoing and incoming content from the lambda target value. Reading the outer state can make content identity and direction logic wrong during transitions.",
+        fix: "Name the lambda parameter, such as `{ targetCount -> ... }`, and render that target value inside the content block.",
+        detect: function (code) {
+          const animated = /AnimatedContent\s*\([\s\S]{0,500}targetState\s*=/.test(code);
+          if (!animated) return "";
+          const open = code.match(/AnimatedContent\s*\([\s\S]{0,500}\)\s*\{([\s\S]{0,180})/);
+          return open && !/->/.test(open[1]) ? "Found `AnimatedContent` content without an explicit target-state lambda parameter." : "";
+        },
+      },
+      {
+        id: "animate-content-size-order",
+        severity: "Motion",
+        section: "advanced-animation-motion",
+        title: "Place animateContentSize before size-changing modifiers.",
+        why: "`animateContentSize` reports animated size changes to layout only when it wraps the size modifiers whose changes it should animate.",
+        fix: "Move `.animateContentSize()` before `.size`, `.height`, `.width`, `.requiredSize`, or `.defaultMinSize` in the modifier chain.",
+        detect: function (code) {
+          return /\.(?:size|height|width|requiredSize|requiredHeight|requiredWidth|defaultMinSize)\s*\([^)]*\)[\s\S]{0,220}\.animateContentSize\s*\(/.test(code)
+            ? "Found a size modifier before `animateContentSize()` in the same chain."
+            : "";
+        },
+      },
+      {
+        id: "animated-visibility-detached-exit",
+        severity: "Motion",
+        section: "advanced-animation-motion",
+        title: "Attach custom exit work to AnimatedVisibility's Transition.",
+        why: "AnimatedVisibility waits for animations on its own Transition before removing content. Independent animate*AsState exit work can be cut off when the content leaves.",
+        fix: "Use `AnimatedVisibilityScope.transition.animate*` for custom enter/exit values that must complete before removal.",
+        detect: function (code) {
+          const block = /AnimatedVisibility\s*\([\s\S]{0,900}\{[\s\S]{0,900}animate\w*AsState/.test(code);
+          return block && !/transition\.animate/.test(code) ? "Found `animate*AsState` inside `AnimatedVisibility` without using `transition.animate*`." : "";
+        },
+      },
+      {
+        id: "animation-labels",
+        severity: "Tooling",
+        section: "advanced-animation-motion",
+        title: "Label animations for Animation Preview and traces.",
+        why: "Anonymous animations are harder to inspect in Android Studio Animation Preview when multiple values or transitions run together.",
+        fix: "Pass meaningful `label = ...` values to animate*AsState, updateTransition, AnimatedContent, AnimatedVisibility, and rememberInfiniteTransition.",
+        detect: function (code) {
+          const usesInspectable = /(animate\w+AsState\s*\(|updateTransition\s*\(|AnimatedContent\s*\(|AnimatedVisibility\s*\(|rememberInfiniteTransition\s*\()/.test(code);
+          return usesInspectable && !/label\s*=/.test(code) ? "Found inspectable animation APIs without labels." : "";
+        },
+      },
+      {
+        id: "animatable-needs-coroutine-owner",
+        severity: "Runtime",
+        section: "advanced-animation-motion",
+        title: "Animatable jobs need an event or effect coroutine owner.",
+        why: "Animatable APIs are suspending and interruption-aware. Starting them from composition or without a clear coroutine owner can restart work or fail to compile.",
+        fix: "Call `animateTo`, `animateDecay`, `snapTo`, or `stop` from `LaunchedEffect`, `pointerInput`, `rememberCoroutineScope().launch`, or another explicit event coroutine.",
+        detect: function (code) {
+          const usesAnimatable = /Animatable\s*\(/.test(code) && /\.(?:animateTo|animateDecay|snapTo|stop)\s*\(/.test(code);
+          const owner = /(LaunchedEffect|pointerInput|rememberCoroutineScope|launch\s*\{|coroutineScope\s*\{|produceState)/.test(code);
+          return usesAnimatable && !owner ? "Found `Animatable` suspending calls without an obvious coroutine owner." : "";
+        },
+      },
+      {
+        id: "animation-test-main-clock",
+        severity: "Testing",
+        section: "advanced-animation-motion",
+        title: "Control Compose animation time in tests.",
+        why: "ComposeTestRule exposes mainClock so animation tests can advance virtual time deterministically and inspect intermediate frames.",
+        fix: "Set `mainClock.autoAdvance = false` for frame-level checks, trigger the state change, then use `advanceTimeBy` or `advanceTimeByFrame` before asserting.",
+        detect: function (code) {
+          const test = /(createComposeRule|ComposeTestRule|@Test|onNode|onRoot)/.test(code);
+          const animation = /(animate\w+AsState|AnimatedContent|AnimatedVisibility|updateTransition|Animatable|rememberInfiniteTransition)/.test(code);
+          return test && animation && !/mainClock/.test(code) ? "Found a Compose animation test without explicit `mainClock` control." : "";
+        },
+      },
+      {
         id: "preview-viewmodel-route",
         severity: "Tooling",
         section: "previews-tooling",
@@ -4011,6 +6549,105 @@
         why: "Un-themed previews can hide broken typography, color roles, shapes, dynamic color behavior, and dark-theme contrast until much later.",
         fix: "Wrap preview content in `AppTheme`, `MaterialTheme`, or the product theme used by production content.",
         detect: function (code) { return /@Preview/.test(code) && !/(AppTheme|MaterialTheme|BrandTheme|DesignSystemTheme)\s*\{/.test(code) ? "Found @Preview usage without an obvious theme wrapper." : ""; },
+      },
+      {
+        id: "annotated-string-inline-styles",
+        severity: "Text",
+        section: "advanced-text-typography",
+        title: "Use AnnotatedString for inline text styling.",
+        why: "Splitting one sentence across several Text nodes breaks selection, wrapping, accessibility reading order, and link/span ownership.",
+        fix: "Build one `AnnotatedString` with `SpanStyle` and `ParagraphStyle`, then render it in one `Text`.",
+        detect: function (code) {
+          const splitSentence = /Row\s*\{[\s\S]{0,700}Text\s*\([^)]*(?:color\s*=|fontWeight\s*=|fontStyle\s*=|textDecoration\s*=|style\s*=)[\s\S]{0,350}Text\s*\(/.test(code);
+          return splitSentence && !/(buildAnnotatedString|SpanStyle|ParagraphStyle)/.test(code)
+            ? "Found a Row that appears to split one styled sentence across multiple Text composables."
+            : "";
+        },
+      },
+      {
+        id: "link-annotation-partial-links",
+        severity: "Text",
+        section: "advanced-text-typography",
+        title: "Use LinkAnnotation for partial text links.",
+        why: "Making a whole Text clickable for one inline link gives users the wrong hit target and loses link-specific styling and interaction semantics.",
+        fix: "Use `buildAnnotatedString` with `withLink(LinkAnnotation.Url(..., styles = TextLinkStyles(...)))` for clickable text ranges.",
+        detect: function (code) {
+          const clickableText = /Text\s*\([\s\S]{0,450}(?:Modifier\.)?clickable\s*(?:\(|\{)/.test(code) || /ClickableText\s*\(/.test(code);
+          const linkish = /(https?:\/\/|uriHandler|openUri|docs?|terms|privacy|link)/i.test(code);
+          return clickableText && linkish && !/(LinkAnnotation|withLink|TextLinkStyles)/.test(code)
+            ? "Found clickable text that looks like a link without `LinkAnnotation`."
+            : "";
+        },
+      },
+      {
+        id: "selection-container-copyable-text",
+        severity: "Text",
+        section: "advanced-text-typography",
+        title: "Wrap copyable text in SelectionContainer.",
+        why: "Confirmation codes, legal copy, error details, and support identifiers often need exact user selection and copy behavior.",
+        fix: "Wrap the copyable text region in `SelectionContainer`; use `DisableSelection` around controls inside that region.",
+        detect: function (code) {
+          const copyable = /Text\s*\([\s\S]{0,220}(copy|select|confirmation|code|token|receipt|legal|terms|error id|support id)/i.test(code);
+          return copyable && !/SelectionContainer\s*\{/.test(code)
+            ? "Found text that appears copyable by task, but no `SelectionContainer`."
+            : "";
+        },
+      },
+      {
+        id: "paragraph-linebreak-hyphens",
+        severity: "Text",
+        section: "advanced-text-typography",
+        title: "Configure line breaks and hyphenation for important paragraphs.",
+        why: "Narrow cards, translated strings, and large font scales can produce poor paragraph wrapping without explicit line-break and hyphenation strategy.",
+        fix: "Use `ParagraphStyle` or `TextStyle` with `lineBreak = LineBreak.Paragraph` and `hyphens = Hyphens.Auto` for body copy that must read well.",
+        detect: function (code) {
+          const paragraph = /Text\s*\([\s\S]{0,600}(longParagraph|paragraph|body copy|lineHeight\s*=|TextStyle\s*\(|Modifier\.width\s*\()/i.test(code);
+          return paragraph && !/(LineBreak|Hyphens)/.test(code)
+            ? "Found paragraph-like text without explicit `LineBreak` or `Hyphens` behavior."
+            : "";
+        },
+      },
+      {
+        id: "text-measure-cache",
+        severity: "Performance",
+        section: "advanced-text-typography",
+        title: "Cache manual text measurement in draw code.",
+        why: "Measuring text during every Canvas or draw pass can add avoidable per-frame work and jank.",
+        fix: "Create a `TextMeasurer` with `rememberTextMeasurer`, measure inside `drawWithCache`, then call `drawText` from the cached draw block.",
+        detect: function (code) {
+          const drawing = /(Canvas\s*\(|drawBehind\s*\{|drawWithContent\s*\{)/.test(code);
+          return drawing && /textMeasurer\.measure\s*\(/.test(code) && !/drawWithCache\s*\{/.test(code)
+            ? "Found `textMeasurer.measure(...)` in draw code without `drawWithCache`."
+            : "";
+        },
+      },
+      {
+        id: "font-fallback-chain",
+        severity: "Text",
+        section: "advanced-text-typography",
+        title: "Ship fonts with fallback and provider checks.",
+        why: "A single brand font can miss scripts, symbols, weights, provider availability, or downloadable-font certificates and leave users with broken typography.",
+        fix: "Define a `FontFamily` with local fallbacks, verify downloadable provider availability with `isAvailableOnDevice`, and guard variable-font axes by API level.",
+        detect: function (code) {
+          const fontStack = /(GoogleFont|FontFamily\s*\(|fontProvider|R\.font)/.test(code);
+          const fallback = /(isAvailableOnDevice|fallback|noto|emoji|FontVariation|Build\.VERSION|certificates|R\.array|androidx\.compose\.ui\.text\.font\.Font\s*\()/i.test(code);
+          return fontStack && !fallback
+            ? "Found custom font usage without an obvious fallback, provider availability check, certificate, or variable-font guard."
+            : "";
+        },
+      },
+      {
+        id: "emoji-legacy-device-test",
+        severity: "Text",
+        section: "advanced-text-typography",
+        title: "Do not strip modern emoji or symbols.",
+        why: "Filtering text down to ASCII breaks names, languages, symbols, and emoji; Compose text should preserve content and be tested on legacy devices where fallback matters.",
+        fix: "Keep user text intact, rely on Compose and platform emoji support, and add regression coverage for recent emoji on API 30 or lower.",
+        detect: function (code) {
+          return /(filter\s*\{\s*it\.code\s*<\s*128|replace\s*\(\s*Regex\s*\(\s*["']\[\^\\p\{ASCII\}\]|strip emoji|remove emoji|ASCII-only)/i.test(code)
+            ? "Found code that appears to strip non-ASCII text or emoji."
+            : "";
+        },
       },
       {
         id: "textfield-contract",
@@ -4870,7 +7507,22 @@
       s.key_points.forEach(function (p) { ul.appendChild(h("li", null, esc(p))); }); kp.appendChild(ul); sec.appendChild(kp);
     }
     if (s.playground) sec.appendChild(buildPlayground(s.playground));
-    if (s.gotchas_html) sec.appendChild(h("div", "gotchas", "<h4>⚠️ Common mistakes</h4>" + s.gotchas_html));
+    if (s.gotchas_html) {
+      const gbox = h("div", "gotchas", "<h4>⚠️ Common mistakes</h4>" + s.gotchas_html);
+      if (s.gotchas_code) {
+        const gc = h("div", "gotchas-code");
+        const gch = h("div", "canon-head");
+        gch.appendChild(h("div", "pg-label", esc(s.gotchas_code.caption || "See it in code")));
+        const gcopy = h("button", "mini-copy", "Copy example");
+        gcopy.type = "button";
+        gcopy.addEventListener("click", function () { copyText(s.gotchas_code.code, gcopy, "Copy example"); });
+        gch.appendChild(gcopy);
+        gc.appendChild(gch);
+        const gpre = h("pre"); gpre.innerHTML = kt(s.gotchas_code.code); gc.appendChild(gpre);
+        gbox.appendChild(gc);
+      }
+      sec.appendChild(gbox);
+    }
     sec.appendChild(buildDrills(s));
     const refs = buildRefs(s);
     if (refs) sec.appendChild(refs);
@@ -4902,7 +7554,7 @@
         { label: "Summary", weight: 6, text: s.summary },
         { label: "Key points", weight: 5, text: (s.key_points || []).join(" ") },
         { label: "Explanation", weight: 4, text: stripHtml(s.explanation_html) },
-        { label: "Common mistakes", weight: 5, text: stripHtml(s.gotchas_html) },
+        { label: "Common mistakes", weight: 5, text: stripHtml(s.gotchas_html) + " " + ((s.gotchas_code && (s.gotchas_code.caption + " " + s.gotchas_code.code)) || "") },
         { label: "Canonical code", weight: 4, text: s.canonical_code || "" },
         { label: "Official source", weight: 3, text: refs.map(function (r) { return r.title + " " + r.url; }).join(" ") },
       ].filter(function (part) { return part.text && part.text.trim(); });

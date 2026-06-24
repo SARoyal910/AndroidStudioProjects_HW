@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 7 — Match Mania: A Memory-Match Grid Game (Compose)</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84;        /* Android green */
+    --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:0 22px 80px;}
+
+  /* Header */
+  header.hero{
+    background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:34px;
+    border-bottom:4px solid var(--accent);
+  }
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px;
+    color:var(--accent); font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:64ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:10px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:16px; margin:24px 0 6px;}
+  h3 code{font-size:.95em;}
+
+  p{margin:12px 0;}
+  ul,ol{margin:10px 0 10px; padding-left:22px;}
+  li{margin:6px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.92em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:16px 18px; border-radius:10px;
+    overflow:auto; font-size:13.5px; line-height:1.55; margin:14px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre .c{color:#7d8aa0;}          /* comment */
+  pre .k{color:#c792ea;}          /* keyword */
+  pre .s{color:#a5e8a0;}          /* string  */
+  pre .f{color:#82aaff;}          /* fn/type */
+
+  /* Where-to-work tag on each task */
+  .where{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.04em;
+    text-transform:uppercase; padding:2px 8px; border-radius:999px; margin-left:8px; vertical-align:middle;}
+  .where.pg{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}     /* playground */
+  .where.as{background:#fff3e6; color:#b4530a; border:1px solid #fde2c0;}     /* Android Studio */
+  .where.both{background:#eafaf1; color:var(--accent-deep); border:1px solid #c5ebd3;}
+
+  /* Project / problem blocks */
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 6px; margin:16px 0;
+     box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .q > .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
+  .q .qid{font-weight:800; color:var(--ink);}
+  .deliver{margin:10px 0 4px; font-size:14px; color:var(--accent-deep); font-weight:700;}
+  .deliver span{color:var(--muted); font-weight:500;}
+
+  /* Project facts strip at the top of each project card */
+  .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin:8px 0 14px;}
+  .facts div{background:var(--pill); border:1px solid var(--line); border-radius:8px; padding:8px 11px;
+    font-size:12.5px;}
+  .facts div b{display:block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+    color:#9aa8b8; margin-bottom:2px;}
+  .facts code{background:#f1f7f3; color:var(--accent-deep); font-weight:600; font-size:11.5px;}
+
+  /* Per-step block inside a part */
+  .todo{border:1px solid var(--line); border-radius:10px; padding:12px 14px 4px; margin:14px 0; background:#fff;}
+  .todo .th{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .todo .tn{flex:none; width:auto; min-width:30px; height:24px; padding:0 9px; border-radius:999px;
+    background:var(--accent); color:#063; font-weight:800; display:inline-grid; place-items:center; font-size:12px;}
+  .todo .ttl{font-weight:800; font-size:15px;}
+  .todo .builds{font-size:11.5px; font-weight:700; letter-spacing:.03em; color:#2454c9;
+    background:#eef4ff; border:1px solid #d3e0ff; border-radius:999px; padding:2px 9px;}
+  .todo .file{font-size:11.5px; font-weight:700; letter-spacing:.02em; color:#7c4a12;
+    background:#fff3e6; border:1px solid #fde2c0; border-radius:999px; padding:2px 9px;}
+  .todo p{margin:8px 0;}
+  .hint{font-size:13.5px; color:#7c4a12; background:var(--warn-soft); border:1px solid #fde2c0;
+    border-radius:8px; padding:8px 11px; margin:8px 0;}
+  .hint b{color:#7c4a12;}
+  .hint code{background:#fff3e6; color:#b4530a;}
+
+  .callout{border-radius:10px; padding:13px 16px; margin:16px 0; font-size:15px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.tip{background:#ecfdf3; border:1px solid #c5ebd3;}
+  .callout.warn{background:var(--warn-soft); border:1px solid #fde2c0; color:#7c4a12;}
+  .callout b{color:inherit;}
+
+  .progression{display:grid; grid-template-columns:1fr; gap:10px; margin:18px 0;}
+  .step{display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid var(--line);
+    border-radius:10px; padding:12px 14px;}
+  .step .n{flex:none; width:26px; height:26px; border-radius:50%; background:var(--accent);
+    color:#063; font-weight:800; display:grid; place-items:center; font-size:13px;}
+  .step h4{margin:0 0 2px; font-size:15px;}
+  .step p{margin:0; color:var(--muted); font-size:14px;}
+  .step code{font-size:.85em;}
+
+  /* Action / spec table */
+  table.map{width:100%; border-collapse:collapse; font-size:14.5px; margin:14px 0;}
+  table.map th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.map td{padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.map td b{color:var(--accent-deep);}
+  table.map code{font-size:.86em;}
+
+  /* "Done when" checklist */
+  ul.check{list-style:none; padding-left:0; margin:8px 0;}
+  ul.check li{position:relative; padding-left:26px; margin:5px 0; font-size:14.5px;}
+  ul.check li::before{content:"☐"; position:absolute; left:0; top:0; color:var(--accent-deep);
+    font-weight:800; font-size:15px;}
+
+  /* Reference grid */
+  .refgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; margin:16px 0;}
+  .refcard{border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:#fff;}
+  .refcard h4{margin:0 0 6px; font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:#9aa8b8;}
+  .refcard code{display:inline-block; margin:2px 4px 2px 0; font-size:11.5px; color:var(--accent-deep);
+    background:#f1f7f3; font-weight:600;}
+
+  table.grade{width:100%; border-collapse:collapse; font-size:14.5px; margin-top:8px;}
+  table.grade th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.grade td{padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.grade code{font-size:.86em;}
+
+  footer{margin-top:46px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:13.5px;}
+
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.step,.callout,.refcard,.todo{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Compose · State · Unit tests</p>
+    <h1>Homework 7 — Match Mania: A Memory-Match Grid Game</h1>
+    <p class="sub">Build a complete single-screen Android game in Jetpack Compose: a <b>memory / pairs-matching</b>
+       grid. You'll design a clean three-layer app — <b>pure game rules</b>, a <b>Compose UI</b> that draws them,
+       and <b>unit tests</b> that prove the rules are correct — and implement four actions: start a new game, reset
+       the board, flip a tile, and detect a win. A <b>runnable starter project is provided</b> — it already
+       compiles and launches; you fill in the numbered TODOs to bring the game to life.</p>
+    <div class="meta">
+      <span><b>Project:</b> MatchMania</span>
+      <span><b>Runnable starter</b> · 3 Kotlin files · individual work</span>
+      <span><b>Tools:</b> Android Studio + emulator/device</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="../projects.html">▶ Projects, Explained</a>
+      <a href="./hw6.html">← Homework 6</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ CONTEXT ============ -->
+  <section>
+    <p>Every game you build with Compose has the same skeleton: some <b>state</b> (what the board looks like right
+       now), a <b>pure rules layer</b> that decides how that state changes, a <b>UI</b> that draws the state and
+       forwards taps, and <b>tests</b> that prove the rules are right. In this assignment you'll build all four for
+       a memory game — and because the rules live apart from the UI, you can test them on a plain JVM in
+       milliseconds, then drop them into a thin Compose screen.</p>
+
+    <div class="callout proj"><b>The game.</b> A grid of face-down tiles. Each symbol (emoji, flag, fruit — your
+      choice of theme) is hidden on <b>exactly two</b> tiles. Tap a tile to flip it face-up; flip a second; if the
+      two faces <b>match</b>, they lock as a found pair; if they don't, you see them, then they flip back. Find
+      <b>all the pairs</b> to win. (This is the classic "Concentration" / memory card game.)</div>
+
+    <h3>What you're building</h3>
+    <p>Your app must support these <b>four actions</b> — three buttons plus the tile tap:</p>
+    <table class="map">
+      <thead><tr><th style="width:34%">Action</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><b>New Game</b></td><td>shuffle a fresh board of pairs — all tiles face-down</td></tr>
+        <tr><td><b>Reset</b></td><td>flip every tile back face-down (same layout, fresh start)</td></tr>
+        <tr><td><b>Flip a tile</b> (tap)</td><td>reveal the tapped tile; a second tile resolves the pair (match or miss)</td></tr>
+        <tr><td><b>Check / win</b></td><td>detect when every pair is matched; report how many pairs remain</td></tr>
+      </tbody>
+    </table>
+    <p>…across <b>three files</b> you'll create:</p>
+    <table class="map">
+      <tbody>
+        <tr><td style="width:34%"><code>MatchLogic.kt</code></td><td>the <b>pure</b> game rules (no Android imports) — model + generate + flip + reset + win check</td></tr>
+        <tr><td><code>MainActivity.kt</code></td><td>the <b>Compose UI</b> — grid, tiles, buttons, stats, win banner</td></tr>
+        <tr><td><code>MatchLogicTest.kt</code></td><td>your <b>JUnit tests</b> for the rules</td></tr>
+      </tbody>
+    </table>
+
+    <div class="progression">
+      <div class="step"><div class="n">1</div><div>
+        <h4>A board of pairs (pure logic + tests)</h4>
+        <p>A 4×4 grid = 16 tiles = <b>8 symbols, each appearing twice</b>, shuffled. The rules — build a board,
+           flip a tile, resolve a pair, detect a win — live in <code>MatchLogic.kt</code> with <em>no</em> Android
+           imports, so JUnit can test them in milliseconds.</p>
+      </div></div>
+      <div class="step"><div class="n">2</div><div>
+        <h4>A screen that draws it (Compose)</h4>
+        <p>A <code>Scaffold</code> + top bar, a stats line (pairs found, moves), a <code>LazyVerticalGrid</code> of
+           tappable tiles that look different when face-down / face-up / matched, and the action buttons.</p>
+      </div></div>
+      <div class="step"><div class="n">3</div><div>
+        <h4>It plays correctly and announces the win</h4>
+        <p>Flipping follows the rules exactly, mismatches clear, found pairs lock, and when the last pair is found
+           a <b>"You win!"</b> banner appears. New Game and Reset both work.</p>
+      </div></div>
+    </div>
+
+    <h3>The exact rules your game must follow</h3>
+    <p class="lead" style="margin-bottom:6px;">These are the spec — your logic and tests must match them precisely.</p>
+    <ol>
+      <li>The board is <b>16 tiles</b> in a <b>4×4</b> grid. There are <b>8 distinct symbols</b>; each appears on
+          <b>exactly two</b> tiles; the 16 tiles are shuffled into random positions.</li>
+      <li>Every tile is in one of three states: <b>FaceDown</b>, <b>FaceUp</b>, or <b>Matched</b>. A new board has
+          all 16 tiles FaceDown.</li>
+      <li><b>Tapping</b> a tile resolves as follows, based on how many tiles are currently face-up (not counting
+          matched ones):
+        <ul>
+          <li><b>0 face-up:</b> the tapped FaceDown tile flips to FaceUp.</li>
+          <li><b>1 face-up:</b> the tapped FaceDown tile flips to FaceUp, making two. <b>Immediately compare</b> them:
+            if the two faces are equal → set <b>both to Matched</b>; if not → leave both FaceUp so the player sees the miss.</li>
+          <li><b>2 face-up and they did NOT match:</b> the next tap first <b>flips those two back to FaceDown</b>
+            and reveals nothing else (that tap just clears the miss). The following tap starts a fresh pair.</li>
+        </ul>
+      </li>
+      <li>Tapping a <b>Matched</b> tile, or the <b>same</b> tile that is already FaceUp, does <b>nothing</b>.</li>
+      <li><b>Win</b> = all 16 tiles are Matched.</li>
+      <li>Track a <b>moves</b> counter: increment it by one each time a second tile is revealed (i.e., once per
+          pair attempt, match or miss).</li>
+    </ol>
+    <div class="callout tip"><b>Why "clear on the next tap" instead of a timer?</b> It keeps the rules
+      <em>pure and synchronous</em>: every action is "old board in → new board out," with no coroutines or delays to
+      design tests around. (Want the polished auto-flip-after-a-moment behavior? That's the optional stretch goal in
+      Part&nbsp;E, using <code>LaunchedEffect</code> + <code>delay</code>.)</div>
+
+    <h3>How to work this assignment</h3>
+    <div class="progression">
+      <div class="step"><div class="n">1</div><div>
+        <h4>Sketch the data first</h4>
+        <p>Before writing any UI, decide your types on paper: a tile has a <em>face</em> and a <em>state</em>; the
+           board is a list of tiles. Then walk through rule 3 by hand for a few taps so the three branches of the
+           flip logic are clear in your head.</p>
+      </div></div>
+      <div class="step"><div class="n">2</div><div>
+        <h4>Build logic → tests → UI, in that order</h4>
+        <p>Do Part B (logic) and Part D (tests) <em>together</em> — write a function, write its test, see green —
+           before you touch the UI. A correct, tested rules layer makes the Compose part almost mechanical.</p>
+      </div></div>
+      <div class="step"><div class="n">3</div><div>
+        <h4>Run on the emulator early and often</h4>
+        <p>Get a board drawing as soon as possible, then wire one button at a time. The emulator (and the
+           <code>@Preview</code>) is the source of truth for the UI.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ============ PART A — OPEN THE STARTER ============ -->
+  <h2><span class="part">Part A.</span> Open the starter project <span class="where as">Android Studio</span></h2>
+  <p class="lead">A runnable starter is provided — open it, run it, then fill in the TODOs.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Open <code>MatchMania</code> and run it once</span></div>
+    <div class="facts">
+      <div><b>Project folder</b> <code>MatchMania</code></div>
+      <div><b>Package</b> <code>com.example.matchmania</code></div>
+      <div><b>Theme wrapper</b> <code>MatchManiaTheme</code></div>
+      <div><b>Compose BOM</b> <code>2026.02.01</code></div>
+      <div><b>Min SDK</b> <code>24+</code></div>
+      <div><b>Language</b> <code>Kotlin</code></div>
+    </div>
+    <p>In Android Studio: <code>File ▸ Open…</code> and select the <code>MatchMania</code> <em>folder itself</em>
+       (in your <code>AndroidStudioProjects</code> folder). Let Gradle sync, then press <b>Run ▶</b>. <b>It already compiles and
+       launches</b> — you'll see the top bar, a "Pairs / Moves" line, a big <em>"TODO (C2): build the board"</em>
+       placeholder, and the three buttons. The placeholders are the visible markers where your work goes. You edit
+       <b>three files</b>:</p>
+    <ul>
+      <li><code>MatchLogic.kt</code> — the pure game rules. <b>Provided:</b> the constants + the data model
+          (<code>TileState</code>/<code>Tile</code>/<code>Board</code> and its helpers). <b>Your TODOs:</b> B2
+          <code>newBoard</code>, B3 <code>flip</code>, B4 <code>reset</code> (each ships as a safe stub).</li>
+      <li><code>MainActivity.kt</code> — the Compose UI. <b>Provided:</b> the Activity, Scaffold + top bar, hoisted
+          state, stats line, and the buttons' wiring. <b>Your TODOs:</b> C2 the real tile grid (replace
+          <code>BoardPlaceholder</code>) and C3 the win banner.</li>
+      <li><code>MatchLogicTest.kt</code> — JUnit tests. <b>Provided:</b> two passing example tests + your TODO list.
+          <b>Your job:</b> write the remaining tests (Part D).</li>
+    </ul>
+    <div class="callout tip"><b>Make it your own:</b> the starter ships an animal theme in <code>DEFAULT_SYMBOLS</code>.
+      Swap it for a theme you choose (fruit, flags, planets…) — just keep at least <code>PAIR_COUNT</code> (8)
+      distinct symbols.</div>
+    <div class="hint"><b>Heads-up on icons:</b> use <b>emoji in a <code>Text</code></b> for any glyph (the starter
+      already does, e.g. 🔀 on New Game), <b>not</b> <code>Icons.Filled.*</code>. The <code>material-icons</code>
+      artifact isn't reliably available in this course's setup, and an emoji keeps the build green.</div>
+    <div class="deliver">Deliver: <span>the starter runs on your emulator before you change anything.</span></div>
+  </div>
+
+  <!-- ============ PART B — THE GAME LOGIC ============ -->
+  <h2><span class="part">Part B.</span> The game logic — <code>MatchLogic.kt</code> <span class="where as">Android Studio</span></h2>
+  <p class="lead">Pure Kotlin, <b>no Android / no Compose imports</b> — that's what lets Part D test it instantly.
+     The constants and the data model (<code>TileState</code>, <code>Tile</code>, and <code>Board</code> with its
+     <code>faceUpIndices()</code> / <code>isSolved()</code> / <code>pairsFound()</code> helpers) are <b>provided</b> in
+     the starter — read them. Your job is the three stubbed functions below. Each must be <b>pure</b>: take a board,
+     return a <em>new</em> board, never mutate in place. Implement one, test it (Part D), then move to the next.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Implement <code>newBoard</code> (B2), <code>Board.flip</code> (B3), and <code>Board.reset</code> (B4)</span></div>
+
+    <!-- B2 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">B2</span>
+        <span class="ttl">Build a fresh, shuffled board — <code>newBoard(symbols, random)</code></span>
+        <span class="file">MatchLogic.kt</span>
+      </div>
+      <p>Return a brand-new board that satisfies the spec: the first <code>PAIR_COUNT</code> symbols, each appearing
+         <b>exactly twice</b>, <b>shuffled</b> into the 16 positions, every tile <b>FaceDown</b>, and <code>moves</code>
+         at 0. The function already takes a <code>Random</code> (defaulting to the system RNG) — use it for the shuffle.</p>
+      <p style="color:var(--muted)"><b>Think about:</b> how do you turn 8 symbols into 16 shuffled tiles? And why does
+         accepting the <code>Random</code> as an argument — rather than calling it inside — make this function testable?</p>
+    </div>
+
+    <!-- B3 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">B3</span>
+        <span class="ttl">Flip a tile — <code>Board.flip(index)</code> (the heart of the game)</span>
+        <span class="file">MatchLogic.kt</span>
+      </div>
+      <p>Apply the tap rules (see <b>"The exact rules your game must follow"</b>, rule 3) and return a new board. The
+         outcome depends on how many tiles are currently face-up — that's what <code>faceUpIndices()</code> is for.</p>
+      <p style="color:var(--muted)"><b>Think about:</b> what are the distinct situations a tap can land in, and what
+         does each one produce? How do you change only the one or two tiles involved while leaving every other tile —
+         and the original board object — untouched? Exactly when does <code>moves</code> go up, and which taps must do
+         nothing at all?</p>
+    </div>
+
+    <!-- B4 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">B4</span>
+        <span class="ttl">Reset the board — <code>Board.reset()</code></span>
+        <span class="file">MatchLogic.kt</span>
+      </div>
+      <p>Return a board with the <b>same faces in the same positions</b>, but every tile <b>FaceDown</b> and
+         <code>moves</code> back to 0. (Reset = same layout, cleared; New Game = a fresh shuffle — they're different
+         actions.)</p>
+    </div>
+  </div>
+
+  <!-- ============ PART C — THE UI ============ -->
+  <h2><span class="part">Part C.</span> The Compose UI — <code>MainActivity.kt</code> <span class="where as">Android Studio</span></h2>
+  <p class="lead">The starter already wires the screen frame: the Activity, the <code>Scaffold</code> + top bar, the
+     hoisted <code>board</code> state, the stats line, and the three buttons (New Game / Reset / Check). <b>Your work
+     is the board itself (C2) and the win banner (C3).</b> Keep the shape in mind: state flows down into the UI, and a
+     tap flows up to become a <em>new</em> board you store back in state.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Build the board (C2) and the win banner (C3)</span></div>
+
+    <!-- C2 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">C2</span>
+        <span class="ttl">The board grid</span>
+        <span class="file">MainActivity.kt</span>
+      </div>
+      <p>Replace the <code>BoardPlaceholder</code> with the real board: the 16 tiles laid out as a <b>4-column grid of
+         square cells</b>. Each cell must (1) be <b>tappable</b> and drive the game — a tap on tile <i>i</i> produces a
+         new board — and (2) <b>look clearly different in each state</b>: hidden while FaceDown, showing its symbol
+         while FaceUp, and visibly "done" once Matched.</p>
+      <p style="color:var(--muted)"><b>Think about:</b> which Compose container lays items out in a fixed number of
+         columns? How do you keep each cell square? How does a cell get <em>both</em> the tile and its index, so a tap
+         knows which one it is? And where must the new board be stored for the screen to redraw?</p>
+    </div>
+
+    <!-- C3 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">C3</span>
+        <span class="ttl">Win banner</span>
+        <span class="file">MainActivity.kt</span>
+      </div>
+      <p>When the board is solved, show a clear, celebratory message that includes the move count
+         (e.g. "🎉 You win in N moves!"). The stats line (pairs found / moves) is already on screen; you add the
+         banner.</p>
+      <p style="color:var(--muted)"><b>Think about:</b> how do you derive "did the player win?" — is it new state you
+         have to track, or does it fall straight out of the board you already hold?</p>
+    </div>
+
+    <p class="deliver" style="margin-top:14px;">Done when…</p>
+    <ul class="check">
+      <li>a fresh 4×4 board of face-down tiles appears on launch;</li>
+      <li>tapping reveals a tile; a matching second tile locks the pair; a mismatch shows both, then clears on the next tap;</li>
+      <li>the pairs/moves counter updates and a win banner appears when every pair is found;</li>
+      <li><b>New Game</b> reshuffles and <b>Reset</b> returns the same layout to all-face-down;</li>
+      <li>the app builds and runs, with no leftover template/placeholder text on screen.</li>
+    </ul>
+  </div>
+
+  <!-- ============ PART D — TESTS ============ -->
+  <h2><span class="part">Part D.</span> Unit tests — <code>MatchLogicTest.kt</code> <span class="where as">Android Studio</span></h2>
+  <p class="lead">Prove the rules in <code>MatchLogic.kt</code> are correct on the plain JVM — no emulator. The
+     starter gives you two example tests and a checklist; <b>write the rest yourself</b> (at least eight tests total).</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Verify each behavior (JUnit 4)</span></div>
+    <p>Your tests must cover, at minimum:</p>
+    <ul>
+      <li><b>Generation</b> — a fresh board has 16 tiles, exactly <code>PAIR_COUNT</code> distinct faces with each used <b>twice</b>, all FaceDown, <code>moves == 0</code>, and is not solved.</li>
+      <li><b>Determinism</b> — the same seed produces the same board (so the rest of your tests are repeatable).</li>
+      <li><b>Flip · reveal</b> — tapping a face-down tile on an empty board reveals exactly that tile.</li>
+      <li><b>Flip · match</b> — revealing a tile and then its twin locks both as <code>Matched</code> and counts one move.</li>
+      <li><b>Flip · mismatch</b> — revealing two different tiles leaves both FaceUp (one move); the next tap clears them back to FaceDown <em>without</em> adding a move.</li>
+      <li><b>Immutability</b> — <code>flip()</code> returns a new board and does <b>not</b> change the board it was called on.</li>
+      <li><b>Win &amp; reset</b> — matching every pair makes the board solved; <code>reset()</code> returns all tiles to FaceDown with <code>moves == 0</code> and the same faces in the same order.</li>
+    </ul>
+    <p style="color:var(--muted)"><b>You'll need to work out:</b> how to seed the RNG for a repeatable board, and how
+       to find a tile's <em>twin</em> (the other tile sharing its face) so you can force a guaranteed match.</p>
+    <div class="callout tip"><b>Run them:</b> right-click <code>MatchLogicTest.kt ▸ Run</code>, or
+      <code>./gradlew testDebugUnitTest</code>. All tests must pass.</div>
+    <div class="deliver">Deliver: <span>a green test run (JUnit panel screenshot or the
+      <code>BUILD SUCCESSFUL</code> terminal output).</span></div>
+  </div>
+
+  <!-- ============ PART E — STRETCH ============ -->
+  <h2><span class="part">Part E.</span> Stretch goals <span class="where both">optional</span></h2>
+  <p class="lead">Worth bonus credit. Each builds on a real Compose concept beyond the required app — attempt them
+     only after the core game is solid and tested.</p>
+  <div class="q">
+    <div class="todo">
+      <div class="th"><span class="tn">E1</span><span class="ttl">Auto-flip mismatches after a beat</span><span class="builds">LaunchedEffect + delay</span></div>
+      <p>Instead of "clears on next tap," make a mismatched pair flip back down on its own after ~800ms. Use
+         <code>LaunchedEffect(board)</code> + <code>kotlinx.coroutines.delay(800)</code> when
+         <code>board.faceUpIndices().size == 2</code> and they don't match. Keep the synchronous rule available so
+         your existing tests still pass — gate the auto-flip in the UI only.</p>
+    </div>
+    <div class="todo">
+      <div class="th"><span class="tn">E2</span><span class="ttl">Choose a difficulty</span><span class="builds">state + grid sizing</span></div>
+      <p>Add buttons for 4×4 / 4×5 / 6×6 (keep an even tile count so pairs work out). Drive
+         <code>GridCells.Fixed(columns)</code> and the symbol count from state.</p>
+    </div>
+    <div class="todo">
+      <div class="th"><span class="tn">E3</span><span class="ttl">Accessibility</span><span class="builds">semantics / stateDescription</span></div>
+      <p>Tiles convey state by color alone, which a screen reader can't perceive. Add
+         <code>Modifier.semantics { stateDescription = … }</code> so it announces "face down / showing 🐶 / matched."</p>
+    </div>
+    <div class="todo">
+      <div class="th"><span class="tn">E4</span><span class="ttl">Flip animation</span><span class="builds">animateColorAsState / AnimatedContent</span></div>
+      <p>Animate the reveal — a color cross-fade with <code>animateColorAsState</code>, or swap the face/back with
+         <code>AnimatedContent</code>.</p>
+    </div>
+  </div>
+
+  <!-- ============ REFERENCE ============ -->
+  <h2>Quick reference</h2>
+  <p class="lead">The APIs this assignment leans on. They're standard Kotlin / Compose — your course notes and the
+     Android docs cover each one.</p>
+
+  <div class="refgrid">
+    <div class="refcard">
+      <h4>Kotlin model</h4>
+      <code>data class</code><code>enum class</code><code>copy()</code><code>require()</code><code>const val</code>
+    </div>
+    <div class="refcard">
+      <h4>Collections</h4>
+      <code>shuffled(random)</code><code>take(n)</code><code>map</code><code>mapIndexed</code><code>filter</code><code>indices</code>
+    </div>
+    <div class="refcard">
+      <h4>Randomness (testable)</h4>
+      <code>kotlin.random.Random</code><code>Random.Default</code><code>Random(seed)</code>
+    </div>
+    <div class="refcard">
+      <h4>State in Compose</h4>
+      <code>remember</code><code>mutableStateOf</code><code>by</code><code>getValue</code><code>setValue</code>
+    </div>
+    <div class="refcard">
+      <h4>Grid &amp; layout</h4>
+      <code>LazyVerticalGrid</code><code>GridCells.Fixed</code><code>itemsIndexed</code><code>aspectRatio(1f)</code><code>Arrangement.spacedBy</code><code>weight(1f)</code>
+    </div>
+    <div class="refcard">
+      <h4>Material 3</h4>
+      <code>Scaffold</code><code>TopAppBar</code><code>Card(onClick=)</code><code>Button</code><code>OutlinedButton</code><code>Text</code>
+    </div>
+    <div class="refcard">
+      <h4>Drawing</h4>
+      <code>Modifier.clip</code><code>background</code><code>RoundedCornerShape</code><code>padding</code><code>fillMaxWidth</code>
+    </div>
+    <div class="refcard">
+      <h4>JUnit 4</h4>
+      <code>@Test</code><code>assertEquals</code><code>assertTrue</code><code>assertFalse</code>
+    </div>
+  </div>
+
+  <!-- ============ OVERVIEW ============ -->
+  <h2>Overview &amp; checklist</h2>
+  <table class="grade">
+    <thead><tr><th>Part</th><th>File</th><th>What you deliver</th></tr></thead>
+    <tbody>
+      <tr><td><b>A · Project</b></td><td>—</td><td>Open &amp; run the provided <code>MatchMania</code> starter</td></tr>
+      <tr><td><b>B · Logic</b></td><td><code>MatchLogic.kt</code></td><td>B2 <code>newBoard</code> · B3 <code>flip</code> · B4 <code>reset</code> (model + helpers provided)</td></tr>
+      <tr><td><b>C · UI</b></td><td><code>MainActivity.kt</code></td><td>C2 the tile grid · C3 the win banner (screen frame, buttons &amp; stats provided)</td></tr>
+      <tr><td><b>D · Tests</b></td><td><code>MatchLogicTest.kt</code></td><td>≥ 8 passing JUnit tests covering generation, flip, match, mismatch-clear, win, reset</td></tr>
+      <tr><td><b>E · Stretch</b></td><td>optional</td><td>auto-flip · difficulty · accessibility · animation (bonus)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn" style="margin-top:18px;">
+    <b>What to submit.</b> Push your finished <code>MatchMania</code> project to a <b>GitHub repository</b> and
+    submit the repo link. It should build and run, and the unit tests should pass.
+  </div>
+
+  <div class="callout tip" style="margin-top:14px;">
+    <b>You're done when</b> Match Mania launches to a shuffled board, plays by the rules exactly (reveal → match or
+    miss → clear), counts pairs and moves, declares a win, reshuffles on New Game and clears on Reset — and your
+    <code>MatchLogicTest.kt</code> is all green.
+  </div>
+
+  <footer>
+    Homework 7 · Compose + state + pure-logic + unit tests · runnable starter, no solution —
+    project <code>MatchMania</code>. See also <a href="./hw6.html">Homework 6</a> and
+    <a href="../projects.html">Projects, Explained</a>. The emulator and a green test run are the source of truth.
+  </footer>
+
+</div>
+</body>
+</html>

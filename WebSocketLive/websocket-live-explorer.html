@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSocket Live — Interactive Explainer</title>
+<meta name="description" content="An interactive explainer for the WebSocket Live Android app: run a live simulator that opens a full-duplex socket, streams connection events, folds them into UI state with a pure reducer, and echoes the messages you send; compare WebSocket with HTTP, explore the Real/Fake offline switch, the architecture and source, and a quiz.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+/* ============ interactive explorer additions ============ */
+:root {
+  --ui: #2d64c8; --vm: #6d58b8; --repo: #0a8f9a; --room: #b56c00; --flow: #1b8a5a;
+}
+[data-theme="dark"] {
+  --ui: #6f9bff; --vm: #a78bfa; --repo: #38c7d4; --room: #e0a44a; --flow: #54c98a;
+}
+
+/* segmented controls / buttons */
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+.btn {
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  border-radius: 9px; min-height: 38px; padding: 0 14px; font-weight: 750; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; transition: background .15s, transform .05s;
+}
+.btn:hover { background: var(--surface-alt); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--muted); min-height: 36px; padding: 0 13px; font-weight: 750; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--blue); color: #fff; }
+.hint { color: var(--muted); font-size: 0.84rem; }
+
+/* simulator layout */
+.sim { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 16px; margin: 14px 0; }
+.sim-low { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; margin-top: 14px; }
+@media (max-width: 900px) { .sim, .sim-low { grid-template-columns: 1fr; } }
+
+/* fake device */
+.device {
+  border: 1px solid var(--line); border-radius: 18px; background: var(--surface);
+  box-shadow: 0 6px 26px rgba(0,0,0,0.08); overflow: hidden; min-width: 0;
+}
+.device-bar { height: 30px; background: var(--surface-strong); display: flex; align-items: center; justify-content: center; gap: 6px; border-bottom: 1px solid var(--line); }
+.device-bar .dot3 { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.device-body { padding: 14px; }
+.device-title { font-weight: 850; font-size: 1.02rem; }
+.device-sub { color: var(--muted); font-size: 0.82rem; margin-bottom: 10px; }
+.field { border: 1.5px solid var(--line-strong); border-radius: 9px; padding: 9px 11px; display: flex; align-items: center; }
+.field input { border: 0; outline: 0; background: transparent; color: var(--ink); width: 100%; font-size: 0.95rem; }
+.field.focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.items { margin-top: 12px; display: grid; gap: 6px; min-height: 40px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); animation: pop .35s ease; }
+.item-row.flash { animation: flashrow 1s ease; }
+@keyframes pop { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@keyframes flashrow { 0% { background: var(--flow); } 100% { background: var(--bg); } }
+.id-badge { font-family: var(--mono); font-size: 0.78rem; font-weight: 800; background: var(--violet-soft); color: var(--violet); border-radius: 6px; padding: 2px 7px; }
+.item-row .lbl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.x-btn { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 7px; min-height: 28px; padding: 0 9px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+.x-btn:hover { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.empty-note { color: var(--muted); font-size: 0.86rem; padding: 6px 2px; }
+
+/* pipeline */
+.pipe { display: grid; gap: 0; }
+.pl {
+  border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px;
+  padding: 10px 13px; background: var(--surface); transition: opacity .25s, box-shadow .25s, transform .25s, background .25s;
+  opacity: 0.5;
+}
+.band:nth-child(odd) .pl { background: var(--bg); }
+.pl.ui { border-left-color: var(--ui); }
+.pl.vm { border-left-color: var(--vm); }
+.pl.repo { border-left-color: var(--repo); }
+.pl.room { border-left-color: var(--room); }
+.pl.disk { border-left-color: var(--flow); }
+.pl.done { opacity: 0.82; }
+.pl.active { opacity: 1; transform: translateX(5px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.pl.ui.active { box-shadow: 0 0 0 2px var(--ui), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.vm.active { box-shadow: 0 0 0 2px var(--vm), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.repo.active { box-shadow: 0 0 0 2px var(--repo), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.room.active { box-shadow: 0 0 0 2px var(--room), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.disk.active { box-shadow: 0 0 0 2px var(--flow), 0 4px 16px rgba(0,0,0,0.12); }
+.pl-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pl-name { font-weight: 850; font-size: 0.94rem; display: flex; align-items: center; gap: 8px; }
+.pl-tag { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+.pl-sub { color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+.pl-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.carry { font-family: var(--mono); font-size: 0.74rem; font-weight: 800; border-radius: 6px; padding: 2px 8px; opacity: 0; transition: opacity .2s; white-space: nowrap; }
+.pl.active .carry { opacity: 1; }
+.pl.ui .carry { background: var(--blue-soft); color: var(--ui); }
+.pl.vm .carry { background: var(--violet-soft); color: var(--vm); }
+.pl.repo .carry { background: var(--teal-soft); color: var(--repo); }
+.pl.room .carry { background: var(--amber-soft); color: var(--room); }
+.pl.disk .carry { background: var(--green-soft); color: var(--flow); }
+.pl-arrow { display: grid; place-items: center; height: 18px; color: var(--line-strong); font-size: 0.95rem; transition: color .25s; }
+.pl-arrow.lit { color: var(--ui); }
+.pl-return { display: grid; place-items: center; min-height: 30px; color: var(--flow); font-weight: 800; font-size: 0.82rem; border: 1px dashed rgba(27,138,90,0.5); border-radius: 9px; margin-top: 6px; opacity: 0.45; transition: opacity .25s; }
+.pl-return.lit { opacity: 1; background: var(--green-soft); }
+
+/* journey log (live) */
+.jl { display: grid; gap: 8px; min-height: 60px; }
+.jl-row { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; animation: pop .3s ease; }
+.jl-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 0.8rem; }
+.jl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.jl-chip { font-size: 0.68rem; font-weight: 800; border-radius: 6px; padding: 1px 8px; }
+.jl-time { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.jl-msg { font-size: 0.86rem; margin-top: 2px; }
+.jl-empty { color: var(--muted); font-size: 0.86rem; }
+
+/* sqlite table */
+.dbcard .code-file { color: var(--muted); }
+.db-meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin-bottom: 8px; }
+table.db { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.82rem; }
+table.db th, table.db td { border: 1px solid var(--line); padding: 6px 9px; text-align: left; }
+table.db th { background: var(--surface-alt); color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+table.db tr.flash td { animation: flashrow 1s ease; }
+table.db .nodata td { text-align: center; color: var(--muted); font-family: var(--sans); }
+
+/* clickable architecture */
+.arch-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 12px 0; }
+@media (max-width: 760px) { .arch-grid { grid-template-columns: 1fr 1fr; } }
+.arch-chip { text-align: left; border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px; padding: 11px 13px; background: var(--surface); cursor: pointer; transition: transform .1s, box-shadow .15s; }
+.band:nth-child(odd) .arch-chip { background: var(--bg); }
+.arch-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.arch-chip.sel { box-shadow: 0 0 0 2px var(--blue); }
+.arch-chip.ui { border-left-color: var(--ui); }
+.arch-chip.vm { border-left-color: var(--vm); }
+.arch-chip.repo { border-left-color: var(--repo); }
+.arch-chip.room { border-left-color: var(--room); }
+.arch-chip.disk { border-left-color: var(--flow); }
+.arch-chip.log { border-left-color: var(--muted); }
+.arch-chip .ac-name { font-weight: 850; font-size: 0.92rem; }
+.arch-chip .ac-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+.arch-detail { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 14px 16px; margin-top: 6px; }
+.band:nth-child(odd) .arch-detail { background: var(--bg); }
+
+/* tabs (code explorer) */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.tab { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 8px 8px 0 0; min-height: 34px; padding: 0 12px; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.tab.on { background: var(--code-bg); color: #fff; border-color: var(--code-bg); }
+.tabpane { display: none; }
+.tabpane.on { display: block; }
+.concepts { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 0; }
+
+/* lifecycle */
+.life-row { display: flex; flex-wrap: wrap; gap: 9px; margin: 12px 0; }
+.life-stage { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); margin: 12px 0; }
+.band:nth-child(odd) .life-stage { background: var(--bg); }
+.life-chip { width: 86px; height: 86px; border-radius: 14px; display: grid; place-items: center; font-size: 2.2rem; border: 2px solid var(--line); background: var(--surface-alt); transition: all .3s; }
+.life-chip.present { border-color: var(--flow); background: var(--green-soft); }
+.life-chip.gone { border-color: var(--red); background: var(--red-soft); }
+.life-state { font-weight: 850; }
+.life-state.present { color: var(--flow); }
+.life-state.gone { color: var(--red); }
+.life-why { color: var(--muted); font-size: 0.9rem; margin-top: 3px; }
+
+/* glossary accordion */
+.acc { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin: 10px 0; background: var(--surface); }
+.band:nth-child(odd) .acc { background: var(--bg); }
+.acc-item + .acc-item { border-top: 1px solid var(--line); }
+.acc-q { width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: 12px 14px; font-weight: 750; color: var(--ink); display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: 0.95rem; }
+.acc-q:hover { background: var(--surface-alt); }
+.acc-q .plus { color: var(--muted); font-weight: 800; transition: transform .2s; }
+.acc-item.open .acc-q .plus { transform: rotate(45deg); }
+.acc-a { display: none; padding: 0 14px 13px; color: var(--muted); font-size: 0.92rem; }
+.acc-item.open .acc-a { display: block; }
+.acc-a code { color: var(--ink); }
+
+/* quiz */
+.quiz { display: grid; gap: 14px; margin: 12px 0; }
+.q { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+.band:nth-child(odd) .q { background: var(--bg); }
+.q-prompt { font-weight: 800; margin-bottom: 10px; }
+.q-opts { display: grid; gap: 8px; }
+.opt { text-align: left; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 9px; padding: 10px 12px; cursor: pointer; font-weight: 600; transition: background .12s; }
+.opt:hover { background: var(--surface-alt); }
+.opt.correct { border-color: var(--flow); background: var(--green-soft); }
+.opt.wrong { border-color: var(--red); background: var(--red-soft); }
+.opt:disabled { cursor: default; }
+.q-exp { margin-top: 10px; font-size: 0.9rem; color: var(--muted); display: none; border-left: 3px solid var(--blue); padding-left: 10px; }
+.q.answered .q-exp { display: block; }
+.quiz-score { font-weight: 850; font-size: 1.05rem; }
+
+.tiny { font-size: 0.78rem; color: var(--muted); }
+.kbd { font-family: var(--mono); background: var(--surface-alt); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 0.82em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">WS</div>
+      <div>
+        <div class="brand-title">WebSocket Live</div>
+        <div class="brand-subtitle">Interactive explainer</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">Explore</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>What is this?</span></a>
+      <a class="nav-link" href="#simulator"><span class="nav-num">2</span><span>Live socket simulator</span></a>
+      <a class="nav-link" href="#reducer"><span class="nav-num">3</span><span>Events → reducer</span></a>
+      <a class="nav-link" href="#architecture"><span class="nav-num">4</span><span>Architecture</span></a>
+      <a class="nav-link" href="#code"><span class="nav-num">5</span><span>Code explorer</span></a>
+      <div class="nav-title">Key ideas</div>
+      <a class="nav-link" href="#httpvsws"><span class="nav-num">6</span><span>WebSocket vs HTTP</span></a>
+      <a class="nav-link" href="#realfake"><span class="nav-num">7</span><span>Real vs Fake switch</span></a>
+      <a class="nav-link" href="#glossary"><span class="nav-num">8</span><span>Glossary</span></a>
+      <a class="nav-link" href="#quiz"><span class="nav-num">9</span><span>Check yourself</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      The step-by-step code page:
+      <a href="how-a-message-arrives.html">How a message arrives →</a>
+      <a href="../NetworkParsing/network-parsing-explorer.html">Network Parsing explainer →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">WS</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · What is this?</option>
+        <option value="#simulator">2 · Live socket simulator</option>
+        <option value="#reducer">3 · Events → reducer</option>
+        <option value="#architecture">4 · Architecture</option>
+        <option value="#code">5 · Code explorer</option>
+        <option value="#httpvsws">6 · WebSocket vs HTTP</option>
+        <option value="#realfake">7 · Real vs Fake switch</option>
+        <option value="#glossary">8 · Glossary</option>
+        <option value="#quiz">9 · Check yourself</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Interactive explainer</p>
+        <h1>WebSocket Live, hands-on</h1>
+        <p class="lead">
+          <strong>WebSocket Live</strong> teaches a <em>second network protocol</em>: a full-duplex <code>wss://</code>
+          connection that stays open so either side can push messages at any time — the contrast to HTTP's one-shot
+          request/response. This page lets you <strong>drive a live socket</strong> in your browser: connect, send text,
+          watch the echo come back, see each connection event fold into UI state through a <strong>pure reducer</strong>,
+          and compare the protocol with HTTP.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">OkHttp WebSocket</span>
+          <span class="tag blue">Flow&lt;ConnectionEvent&gt;</span>
+          <span class="tag violet">pure reducer</span>
+          <span class="tag amber">StateFlow + Compose</span>
+          <span class="tag teal">runnable + this explainer</span>
+        </div>
+        <div class="grid3">
+          <div class="card"><div class="card-head"><span class="card-title">▶ Run it</span></div><div class="card-body"><p class="dense">The <a href="#simulator">socket simulator</a> opens a connection, streams events, and echoes what you send — just like the real app.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧭 Explore it</span></div><div class="card-body"><p class="dense">Fold events with the <a href="#reducer">pure reducer</a>, click the <a href="#architecture">architecture</a>, and browse the <a href="#code">source</a>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧠 Get it</span></div><div class="card-body"><p class="dense">Compare <a href="#httpvsws">WebSocket vs HTTP</a>, see the <a href="#realfake">Real/Fake switch</a>, then <a href="#quiz">check yourself</a>.</p></div></div>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">One sentence to hold onto</span>
+          A socket is a <strong>stream of events over time</strong>. Callbacks become a <code>Flow&lt;ConnectionEvent&gt;</code>,
+          a <strong>pure reducer</strong> folds each event into one immutable <code>LiveUiState</code>, and the screen
+          renders that state — so the whole state machine is testable with no coroutines.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. SIMULATOR ============ -->
+    <section class="band anchor" id="simulator">
+      <div class="band-inner">
+        <p class="eyebrow">The main event</p>
+        <h2>Live socket simulator</h2>
+        <p class="dense">
+          Press <strong>Connect</strong>, then type and <strong>Send</strong>. The device on the left is the app's screen
+          (status chip + transcript + input); the panel on the right is the raw <strong>event stream</strong> the
+          connection reports. Your sent line appears immediately (optimistic), and the echo arrives as a separate
+          <code>MessageReceived</code> event — exactly like the real echo server.
+        </p>
+
+        <div class="controls">
+          <span class="hint">Connection:</span>
+          <span class="seg" id="wsModeSeg">
+            <button data-mode="fake" class="on" type="button">Fake (offline)</button>
+            <button data-mode="real" type="button">Real (wss://)</button>
+          </span>
+          <button class="btn primary" id="wsConnect" type="button">Connect</button>
+          <button class="btn" id="wsPush" type="button" disabled>📡 Server push</button>
+          <button class="btn danger" id="wsFail" type="button" disabled>Simulate failure</button>
+          <button class="btn" id="wsClose" type="button" disabled>Close</button>
+        </div>
+
+        <div class="sim">
+          <!-- device -->
+          <div class="device">
+            <div class="device-bar"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></div>
+            <div class="device-body">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div class="device-title">WebSocket Live</div>
+                <span class="tag" id="wsStatus">Disconnected</span>
+              </div>
+              <div class="device-sub" id="wsEndpoint">wss://echo.websocket.events</div>
+              <div class="jl" id="wsTranscript" style="min-height:150px; margin:10px 0;"><div class="jl-empty">Connect to start the transcript.</div></div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <div class="field" style="flex:1;"><input id="wsInput" type="text" placeholder="Message" value="hello" autocomplete="off" /></div>
+                <button class="btn primary" id="wsSend" type="button" disabled>Send</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- event stream -->
+          <div class="card">
+            <div class="card-head"><span class="card-title">events(): Flow&lt;ConnectionEvent&gt;</span><button class="x-btn" id="wsClear" type="button">Clear</button></div>
+            <div class="card-body"><div class="jl" id="wsEvents"><div class="jl-empty">Each socket event appears here as it happens.</div></div></div>
+          </div>
+        </div>
+        <p class="tiny">Every action funnels a <code>ConnectionEvent</code> into the stream; the ViewModel's collector folds each one into the <code>LiveUiState</code> the device shows. <strong>Fake</strong> mode scripts the same events offline; <strong>Real</strong> mode is what an open <code>wss://</code> socket would report.</p>
+      </div>
+    </section>
+
+    <!-- ============ 3. REDUCER ============ -->
+    <section class="band anchor" id="reducer">
+      <div class="band-inner">
+        <p class="eyebrow">The key idea · a pure state machine</p>
+        <h2>Events → reducer → state</h2>
+        <p class="dense">
+          The heart of the app is one pure function: <code>reduceLiveState(state, event)</code> returns the next immutable
+          <code>LiveUiState</code>. Click events below and watch the state fold — no coroutines, no socket, just the
+          reducer. This is exactly what makes the state machine unit-testable.
+        </p>
+        <div id="evBoard"></div>
+      </div>
+    </section>
+
+    <!-- ============ 4. ARCHITECTURE ============ -->
+    <section class="band anchor" id="architecture">
+      <div class="band-inner">
+        <p class="eyebrow">The pieces</p>
+        <h2>Architecture — click a layer</h2>
+        <p class="dense">Four small files. Tap any one to see its job, the file it lives in, and what to look at.</p>
+        <div class="arch-grid" id="archGrid">
+          <button class="arch-chip ui sel" data-layer="ui" type="button"><div class="ac-name">① UI · screen</div><div class="ac-file">MainActivity.kt</div></button>
+          <button class="arch-chip vm" data-layer="vm" type="button"><div class="ac-name">② ViewModel + reducer</div><div class="ac-file">LiveViewModel.kt</div></button>
+          <button class="arch-chip repo" data-layer="conn" type="button"><div class="ac-name">③ Connection</div><div class="ac-file">WebSocketClient.kt</div></button>
+          <button class="arch-chip room" data-layer="model" type="button"><div class="ac-name">④ Events &amp; models</div><div class="ac-file">ConnectionEvent.kt</div></button>
+        </div>
+        <div class="arch-detail" id="archDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ 5. CODE ============ -->
+    <section class="band anchor" id="code">
+      <div class="band-inner">
+        <p class="eyebrow">The source</p>
+        <h2>Code explorer</h2>
+        <p class="dense">Every file, lightly trimmed for focus. For the full, commented code open <a href="how-a-message-arrives.html">the step-by-step page</a> or the files themselves.</p>
+        <div class="tabs" id="codeTabs">
+          <button class="tab on" data-tab="t-event" type="button">ConnectionEvent.kt</button>
+          <button class="tab" data-tab="t-conn" type="button">WebSocketClient.kt</button>
+          <button class="tab" data-tab="t-vm" type="button">LiveViewModel.kt</button>
+          <button class="tab" data-tab="t-main" type="button">MainActivity.kt</button>
+        </div>
+
+        <div class="tabpane on" data-pane="t-event">
+          <div class="code-panel"><div class="code-head"><span class="code-file">ConnectionEvent.kt — wire events + UI models</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">sealed interface ConnectionEvent {
+    data object Connecting : ConnectionEvent
+    data object Open : ConnectionEvent
+    data class MessageReceived(val text: String) : ConnectionEvent
+    data class Closed(val reason: String) : ConnectionEvent
+    data class Failure(val error: String) : ConnectionEvent
+}
+
+enum class ConnectionStatus { Disconnected, Connecting, Connected, Failed }
+data class ChatMessage(val text: String, val fromMe: Boolean)</pre></div>
+          <div class="tag-row"><span class="tag green">sealed events</span><span class="tag">ConnectionStatus</span><span class="tag">ChatMessage</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-conn">
+          <div class="code-panel"><div class="code-head"><span class="code-file">WebSocketClient.kt — LiveConnection + Real (OkHttp) + Fake + switch</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface LiveConnection {
+    fun events(): Flow&lt;ConnectionEvent&gt;
+    fun connect(); fun send(text: String); fun close()
+}
+
+class RealWebSocketClient(
+    private val url: String = "wss://echo.websocket.events",
+    private val httpClient: OkHttpClient = OkHttpClient(),     // injectable for testing
+) : LiveConnection {
+    private var webSocket: WebSocket? = null
+    private val events = MutableSharedFlow&lt;ConnectionEvent&gt;(extraBufferCapacity = 64)
+    override fun events() = events.asSharedFlow()
+
+    override fun connect() {
+        events.tryEmit(ConnectionEvent.Connecting)
+        webSocket = httpClient.newWebSocket(Request.Builder().url(url).build(),
+            object : WebSocketListener() {
+                override fun onOpen(webSocket: WebSocket, r: Response) { events.tryEmit(ConnectionEvent.Open) }
+                override fun onMessage(webSocket: WebSocket, text: String) { events.tryEmit(ConnectionEvent.MessageReceived(text)) }
+                override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                    webSocket.close(1000, null)
+                    events.tryEmit(ConnectionEvent.Closed(reason.ifBlank { "closed" }))
+                }
+                override fun onFailure(webSocket: WebSocket, t: Throwable, r: Response?) { events.tryEmit(ConnectionEvent.Failure(t.message ?: "failed")) }
+            })
+    }
+    override fun send(text: String) { webSocket?.send(text) }
+    override fun close() { webSocket?.close(1000, "client closed"); webSocket = null }
+}
+
+fun provideLiveConnection(useFake: Boolean = true): LiveConnection =
+    if (useFake) FakeWebSocketClient() else RealWebSocketClient()</pre></div>
+          <div class="tag-row"><span class="tag teal">LiveConnection</span><span class="tag">WebSocketListener</span><span class="tag">tryEmit</span><span class="tag">the switch</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-vm">
+          <div class="code-panel"><div class="code-head"><span class="code-file">LiveViewModel.kt — state + pure reducer + collector</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">data class LiveUiState(
+    val status: ConnectionStatus = ConnectionStatus.Disconnected,
+    val messages: List&lt;ChatMessage&gt; = emptyList(),
+)
+
+fun reduceLiveState(state: LiveUiState, event: ConnectionEvent): LiveUiState = when (event) {
+    is ConnectionEvent.Connecting      -&gt; state.copy(status = ConnectionStatus.Connecting)
+    is ConnectionEvent.Open            -&gt; state.copy(status = ConnectionStatus.Connected)
+    is ConnectionEvent.MessageReceived -&gt; state.copy(messages = state.messages + ChatMessage(event.text, fromMe = false))
+    is ConnectionEvent.Closed          -&gt; state.copy(status = ConnectionStatus.Disconnected)
+    is ConnectionEvent.Failure         -&gt; state.copy(status = ConnectionStatus.Failed)
+}
+
+class LiveViewModel(private val connection: LiveConnection = FakeWebSocketClient()) : ViewModel() {
+    private val _uiState = MutableStateFlow(LiveUiState())
+    val uiState: StateFlow&lt;LiveUiState&gt; = _uiState.asStateFlow()
+    init { viewModelScope.launch { connection.events().collect { e -&gt; _uiState.update { reduceLiveState(it, e) } } } }
+    fun connect() = connection.connect()
+    fun send(text: String) {
+        if (text.isBlank()) return
+        connection.send(text)
+        _uiState.update { it.copy(messages = it.messages + ChatMessage(text, fromMe = true)) }   // optimistic
+    }
+}</pre></div>
+          <div class="tag-row"><span class="tag violet">pure reducer</span><span class="tag">collect events()</span><span class="tag">optimistic send</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-main">
+          <div class="code-panel"><div class="code-head"><span class="code-file">MainActivity.kt — open once, render the stream</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Composable
+fun LiveScreen(modifier: Modifier = Modifier, viewModel: LiveViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { viewModel.connect() }          // open the socket exactly once
+    var input by remember { mutableStateOf("") }
+    LiveContent(uiState, input, onInputChange = { input = it },
+        onSend = { viewModel.send(input); input = "" }, modifier)
+}
+
+// LiveContent: a status chip, a LazyColumn transcript (weight(1f)), and an input row.
+// MessageRow shows fromMe lines right-aligned ("you: …") and server lines left ("server: …").</pre></div>
+          <div class="tag-row"><span class="tag blue">LaunchedEffect(Unit)</span><span class="tag">collectAsStateWithLifecycle</span><span class="tag">stateless content</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. HTTP vs WS ============ -->
+    <section class="band anchor" id="httpvsws">
+      <div class="band-inner">
+        <p class="eyebrow">Key idea · why a socket</p>
+        <h2>WebSocket vs HTTP</h2>
+        <p class="dense">
+          HTTP is one request → one response: to get three answers you open three round-trips. A WebSocket opens
+          <em>once</em> and then carries any number of frames either way. Press the button and watch the difference.
+        </p>
+        <div class="controls">
+          <button class="btn primary" id="hwSend" type="button">Send 3 messages</button>
+          <button class="btn ghost" id="hwReset" type="button">Reset</button>
+        </div>
+        <div class="sim-low">
+          <div class="card">
+            <div class="card-head"><span class="card-title">HTTP (request/response)</span></div>
+            <div class="card-body"><div class="jl" id="hwHttp"><div class="jl-empty">Each message = a new connection + handshake.</div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">WebSocket (one open connection)</span></div>
+            <div class="card-body"><div class="jl" id="hwWs"><div class="jl-empty">One handshake, then frames flow both ways.</div></div></div>
+          </div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>&nbsp;</th><th>HTTP (Network Parsing)</th><th>WebSocket (this app)</th></tr></thead>
+          <tbody>
+            <tr><td>Shape</td><td>One request → one response</td><td>One open connection, many frames over time</td></tr>
+            <tr><td>Who can speak</td><td>Client asks; server answers</td><td>Either side pushes at any time (full-duplex)</td></tr>
+            <tr><td>Modelled as</td><td>A single <code>suspend</code> call returning data</td><td>A <code>Flow&lt;ConnectionEvent&gt;</code> stream</td></tr>
+            <tr><td>UI state</td><td><code>Loading / Success / Error</code></td><td>A status chip + a growing transcript</td></tr>
+            <tr><td>Good for</td><td>Fetching/CRUD on demand</td><td>Live chat, tickers, presence, notifications</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 7. REAL/FAKE ============ -->
+    <section class="band anchor" id="realfake">
+      <div class="band-inner">
+        <p class="eyebrow">Key idea · one-line offline switch</p>
+        <h2>Real vs Fake — the same interface, two implementations</h2>
+        <p class="dense">
+          Both implement <code>LiveConnection</code>, so the ViewModel can't tell them apart.
+          <code>provideLiveConnection(useFake = …)</code> is the intended single switch. (As wired, the
+          <code>LiveViewModel</code> constructor defaults straight to <code>FakeWebSocketClient()</code> — that's what makes
+          the app and its unit tests run with no network.) Flip the switch:
+        </p>
+        <div class="controls">
+          <span class="seg" id="rfSeg">
+            <button data-rf="fake" class="on" type="button">useFake = true</button>
+            <button data-rf="real" type="button">useFake = false</button>
+          </span>
+        </div>
+        <div class="arch-detail" id="rfDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ 8. GLOSSARY ============ -->
+    <section class="band anchor" id="glossary">
+      <div class="band-inner">
+        <p class="eyebrow">Plain-language terms</p>
+        <h2>Glossary — tap to expand</h2>
+        <div class="acc" id="acc"></div>
+      </div>
+    </section>
+
+    <!-- ============ 9. QUIZ ============ -->
+    <section class="band anchor" id="quiz">
+      <div class="band-inner">
+        <p class="eyebrow">Check yourself</p>
+        <h2>Did it click?</h2>
+        <p class="dense">Five questions. Pick an answer to see if it’s right and why. <span class="quiz-score" id="quizScore">0 / 5</span></p>
+        <div class="quiz" id="quiz"></div>
+        <p class="foot">WebSocket Live · one open connection, a stream of events · part of the AndroidStudioProjects teaching set. See also <a href="how-a-message-arrives.html">the step-by-step code page</a>.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+<script>
+/* ============ WebSocket Live — interactive explorer logic ============ */
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  // event metadata (colors for the stream chips)
+  var EV = {
+    Connecting:      { color: "var(--room)", soft: "var(--amber-soft)" },
+    Open:            { color: "var(--flow)", soft: "var(--green-soft)" },
+    MessageReceived: { color: "var(--ui)",   soft: "var(--blue-soft)" },
+    Closed:          { color: "var(--muted)", soft: "var(--surface-alt)" },
+    Failure:         { color: "var(--red)",  soft: "var(--red-soft)" },
+  };
+
+  // the PURE reducer, mirrored from reduceLiveState in LiveViewModel.kt
+  function reduce(state, ev) {
+    switch (ev.type) {
+      case "Connecting":      return { status: "Connecting", messages: state.messages };
+      case "Open":            return { status: "Connected", messages: state.messages };
+      case "MessageReceived": return { status: state.status, messages: state.messages.concat([{ text: ev.text, fromMe: false }]) };
+      case "Closed":          return { status: "Disconnected", messages: state.messages };
+      case "Failure":         return { status: "Failed", messages: state.messages };
+      default:                return state;
+    }
+  }
+
+  function statusClass(s) {
+    return "tag " + (s === "Connected" ? "green" : s === "Connecting" ? "amber" : s === "Failed" ? "red" : "");
+  }
+
+  // ======================= LIVE SOCKET SIMULATOR =======================
+  var sim = { mode: "fake", state: { status: "Disconnected", messages: [] }, events: [], connected: false };
+
+  function simRenderStatus() {
+    var chip = $("#wsStatus"); chip.textContent = sim.state.status; chip.className = statusClass(sim.state.status);
+  }
+  function simRenderTranscript() {
+    var el = $("#wsTranscript"); el.innerHTML = "";
+    if (!sim.state.messages.length) { el.innerHTML = '<div class="jl-empty">Connect to start the transcript.</div>'; return; }
+    sim.state.messages.forEach(function (m) {
+      var row = document.createElement("div");
+      row.style.textAlign = m.fromMe ? "right" : "left";
+      row.style.padding = "3px 0";
+      var span = document.createElement("span");
+      span.textContent = (m.fromMe ? "you: " : "server: ") + m.text;
+      span.style.color = m.fromMe ? "var(--blue)" : "var(--ink)";
+      span.style.fontSize = "0.9rem";
+      row.appendChild(span); el.appendChild(row);
+    });
+    el.scrollTop = el.scrollHeight;
+  }
+  function simRenderEvents() {
+    var el = $("#wsEvents"); el.innerHTML = "";
+    if (!sim.events.length) { el.innerHTML = '<div class="jl-empty">Each socket event appears here as it happens.</div>'; return; }
+    sim.events.slice(-20).forEach(function (e, idx) {
+      var meta = EV[e.type] || EV.Closed;
+      var row = document.createElement("div"); row.className = "jl-row";
+      var num = document.createElement("div"); num.className = "jl-num"; num.textContent = idx + 1; num.style.background = meta.color;
+      var body = document.createElement("div");
+      var head = document.createElement("div"); head.className = "jl-head";
+      var chip = document.createElement("span"); chip.className = "jl-chip"; chip.textContent = e.type; chip.style.color = meta.color; chip.style.background = meta.soft;
+      head.appendChild(chip);
+      var msg = document.createElement("div"); msg.className = "jl-msg"; msg.textContent = e.text != null ? '"' + e.text + '"' : "(no payload)";
+      body.appendChild(head); body.appendChild(msg); row.appendChild(num); row.appendChild(body); el.appendChild(row);
+    });
+  }
+  function simButtons() {
+    $("#wsConnect").disabled = sim.connected;
+    $("#wsSend").disabled = !sim.connected;
+    $("#wsPush").disabled = !sim.connected;
+    $("#wsFail").disabled = !sim.connected;
+    $("#wsClose").disabled = !sim.connected;
+  }
+  // emit one ConnectionEvent: log it + fold it into state (the ViewModel's collector)
+  function emit(ev) {
+    sim.events.push(ev);
+    sim.state = reduce(sim.state, ev);
+    simRenderStatus(); simRenderTranscript(); simRenderEvents();
+  }
+  function simConnect() {
+    if (sim.connected) return;
+    sim.connected = true; simButtons();
+    emit({ type: "Connecting" });
+    emit({ type: "Open" });
+    emit({ type: "MessageReceived", text: sim.mode === "fake"
+      ? "Connected to the OFFLINE fake echo server."
+      : "echo.websocket.events: connected" });
+  }
+  function simSend() {
+    if (!sim.connected) return;
+    var text = $("#wsInput").value.trim();
+    if (!text) { var f = $("#wsInput").closest(".field"); f.classList.add("focus"); setTimeout(function () { f.classList.remove("focus"); }, 600); return; }
+    $("#wsInput").value = "";
+    // optimistic: append our own line immediately (the ViewModel's send() does this)
+    sim.state = { status: sim.state.status, messages: sim.state.messages.concat([{ text: text, fromMe: true }]) };
+    simRenderTranscript();
+    // the echo arrives a moment later as a separate MessageReceived event
+    setTimeout(function () { if (sim.connected) emit({ type: "MessageReceived", text: text }); }, 420);
+  }
+  $("#wsConnect").addEventListener("click", simConnect);
+  $("#wsSend").addEventListener("click", simSend);
+  $("#wsInput").addEventListener("keydown", function (e) { if (e.key === "Enter" && !$("#wsSend").disabled) simSend(); });
+  $("#wsPush").addEventListener("click", function () { if (sim.connected) emit({ type: "MessageReceived", text: "📡 server pushed an unsolicited update" }); });
+  $("#wsFail").addEventListener("click", function () { if (sim.connected) { emit({ type: "Failure", error: "connection lost" }); sim.connected = false; simButtons(); } });
+  $("#wsClose").addEventListener("click", function () { if (sim.connected) { emit({ type: "Closed", reason: "client closed" }); sim.connected = false; simButtons(); } });
+  $("#wsClear").addEventListener("click", function () { sim.events = []; simRenderEvents(); });
+  $$("#wsModeSeg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (sim.connected) return;
+      $$("#wsModeSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on");
+      sim.mode = b.dataset.mode;
+      $("#wsEndpoint").textContent = sim.mode === "fake" ? "offline fake echo server" : "wss://echo.websocket.events";
+    });
+  });
+  simButtons(); simRenderStatus(); simRenderTranscript(); simRenderEvents();
+
+  // ======================= EVENTS → REDUCER DEMO =======================
+  var evState = { status: "Disconnected", messages: [] };
+  var EVENT_BTNS = [
+    { label: "Connecting", ev: { type: "Connecting" } },
+    { label: "Open", ev: { type: "Open" } },
+    { label: 'MessageReceived("hi")', ev: { type: "MessageReceived", text: "hi" } },
+    { label: "Failure", ev: { type: "Failure", error: "boom" } },
+    { label: "Closed", ev: { type: "Closed", reason: "bye" } },
+  ];
+  function renderEvBoard() {
+    var board = $("#evBoard"); if (!board) return;
+    board.innerHTML = "";
+    var controls = document.createElement("div"); controls.className = "controls";
+    var hint = document.createElement("span"); hint.className = "hint"; hint.textContent = "Apply an event:"; controls.appendChild(hint);
+    EVENT_BTNS.forEach(function (b) {
+      var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = b.label;
+      btn.addEventListener("click", function () { evState = reduce(evState, b.ev); paintEv(b); });
+      controls.appendChild(btn);
+    });
+    var reset = document.createElement("button"); reset.className = "btn ghost"; reset.type = "button"; reset.textContent = "↺ Reset";
+    reset.addEventListener("click", function () { evState = { status: "Disconnected", messages: [] }; paintEv(null); });
+    controls.appendChild(reset);
+    board.appendChild(controls);
+
+    var panel = document.createElement("div"); panel.className = "sim-low";
+    panel.innerHTML =
+      '<div class="card"><div class="card-head"><span class="card-title">The reduce call</span></div><div class="card-body"><div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">reduceLiveState(state, event)</span></div><pre id="evCall" style="white-space:pre-wrap;">Click an event above.</pre></div></div></div>' +
+      '<div class="card"><div class="card-head"><span class="card-title">Resulting LiveUiState</span></div><div class="card-body"><div style="margin-bottom:8px;">status: <span class="tag" id="evStatus">Disconnected</span></div><div class="jl" id="evMsgs"><div class="jl-empty">No messages yet.</div></div></div></div>';
+    board.appendChild(panel);
+    paintEv(null);
+  }
+  function paintEv(b) {
+    var call = $("#evCall");
+    if (call) call.textContent = b
+      ? "reduceLiveState(state, ConnectionEvent." + b.label + ")\n  → status = " + evState.status + ", messages = " + evState.messages.length
+      : "Click an event above.";
+    var chip = $("#evStatus"); if (chip) { chip.textContent = evState.status; chip.className = statusClass(evState.status); }
+    var msgs = $("#evMsgs"); if (msgs) {
+      msgs.innerHTML = "";
+      if (!evState.messages.length) { msgs.innerHTML = '<div class="jl-empty">No messages yet.</div>'; }
+      else evState.messages.forEach(function (m) {
+        var row = document.createElement("div"); row.style.padding = "3px 0"; row.style.fontSize = "0.9rem";
+        row.textContent = (m.fromMe ? "you: " : "server: ") + m.text; msgs.appendChild(row);
+      });
+    }
+  }
+  renderEvBoard();
+
+  // ======================= ARCHITECTURE =======================
+  var ARCH = {
+    ui:    { name: "① UI — the screen", file: "MainActivity.kt", tab: "t-main",
+      what: "LiveScreen (stateful) observes the StateFlow, owns the input text, and opens the socket exactly once with LaunchedEffect(Unit). LiveContent (stateless) draws the status chip, the transcript, and the input row — so previews drive it with hand-made state.",
+      points: ["LaunchedEffect(Unit) { connect() } — open once", "collectAsStateWithLifecycle() observes LiveUiState", "MessageRow: fromMe right-aligned, server left"] },
+    vm:    { name: "② ViewModel + the pure reducer", file: "LiveViewModel.kt", tab: "t-vm",
+      what: "Collects the connection's events() Flow for its whole lifetime and folds each event into the state with the pure reduceLiveState(). send() optimistically appends your line; the echo arrives later as a MessageReceived.",
+      points: ["reduceLiveState(state, event) — pure, unit-testable", "init { collect events() → _uiState.update { reduce } }", "send(): connection.send + optimistic append"] },
+    conn:  { name: "③ The connection — Real/Fake", file: "WebSocketClient.kt", tab: "t-conn",
+      what: "A LiveConnection interface with a Real impl (OkHttp WebSocket + WebSocketListener, callbacks funnelled into a MutableSharedFlow via tryEmit) and a Fake impl that scripts the same events offline. provideLiveConnection(useFake = …) is the switch.",
+      points: ["events(): Flow<ConnectionEvent> + connect/send/close", "Real: OkHttp newWebSocket + listener callbacks", "tryEmit on a SharedFlow never blocks the OkHttp thread"] },
+    model: { name: "④ Events & UI models", file: "ConnectionEvent.kt", tab: "t-event",
+      what: "The sealed ConnectionEvent (Connecting, Open, MessageReceived, Closed, Failure) models the closed set of things a socket can report — so the reducer's when is exhaustive. ConnectionStatus is the coarse chip; ChatMessage is one transcript line.",
+      points: ["sealed ConnectionEvent — exhaustive when", "ConnectionStatus enum for the header chip", "ChatMessage(text, fromMe) for the transcript"] },
+  };
+  function renderArch(layer) {
+    var a = ARCH[layer]; var d = $("#archDetail");
+    d.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = a.name; h.style.marginTop = "0";
+    var f = document.createElement("div"); f.className = "pl-file"; f.style.marginBottom = "8px"; f.textContent = a.file;
+    var p = document.createElement("p"); p.className = "dense"; p.textContent = a.what;
+    var ul = document.createElement("ul"); ul.className = "kicker-list";
+    a.points.forEach(function (pt) { var li = document.createElement("li"); li.textContent = pt; ul.appendChild(li); });
+    var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "Open " + a.file + " in the code explorer ▸";
+    btn.addEventListener("click", function () { openCodeTab(a.tab); var c = $("#code"); if (c) c.scrollIntoView({ behavior: "smooth" }); });
+    d.appendChild(h); d.appendChild(f); d.appendChild(p); d.appendChild(ul); d.appendChild(btn);
+  }
+  $$(".arch-chip").forEach(function (chip) {
+    chip.addEventListener("click", function () { $$(".arch-chip").forEach(function (x) { x.classList.remove("sel"); }); chip.classList.add("sel"); renderArch(chip.dataset.layer); });
+  });
+  renderArch("ui");
+
+  // ======================= CODE TABS =======================
+  function openCodeTab(tabId) {
+    $$(".tab").forEach(function (x) { x.classList.toggle("on", x.dataset.tab === tabId); });
+    $$(".tabpane").forEach(function (x) { x.classList.toggle("on", x.dataset.pane === tabId); });
+  }
+  $$(".tab").forEach(function (t) { t.addEventListener("click", function () { openCodeTab(t.dataset.tab); }); });
+
+  // ======================= HTTP vs WS =======================
+  var hw = { httpConns: 0, wsOpen: false, wsFrames: 0 };
+  function hwRow(text, color, soft) {
+    var row = document.createElement("div"); row.className = "jl-row";
+    var num = document.createElement("div"); num.className = "jl-num"; num.textContent = "•"; num.style.background = color;
+    var body = document.createElement("div"); var msg = document.createElement("div"); msg.className = "jl-msg"; msg.textContent = text;
+    body.appendChild(msg); row.appendChild(num); row.appendChild(body); return row;
+  }
+  function hwRender() {
+    var http = $("#hwHttp"); http.innerHTML = "";
+    if (!hw.httpConns) http.innerHTML = '<div class="jl-empty">Each message = a new connection + handshake.</div>';
+    else {
+      for (var i = 1; i <= hw.httpConns; i++) http.appendChild(hwRow("connection #" + i + ": TCP+TLS handshake → request → response → close", "var(--room)", "var(--amber-soft)"));
+      http.appendChild(hwRow("total: " + hw.httpConns + " connections, " + hw.httpConns + " handshakes", "var(--red)", "var(--red-soft)"));
+    }
+    var ws = $("#hwWs"); ws.innerHTML = "";
+    if (!hw.wsOpen) ws.innerHTML = '<div class="jl-empty">One handshake, then frames flow both ways.</div>';
+    else {
+      ws.appendChild(hwRow("1 handshake (opened once)", "var(--flow)", "var(--green-soft)"));
+      for (var j = 1; j <= hw.wsFrames; j++) ws.appendChild(hwRow("frame #" + j + ": → send / ← echo (no new handshake)", "var(--ui)", "var(--blue-soft)"));
+      ws.appendChild(hwRow("total: 1 connection, " + hw.wsFrames + " frames", "var(--flow)", "var(--green-soft)"));
+    }
+  }
+  $("#hwSend").addEventListener("click", function () {
+    hw.httpConns += 3;                 // HTTP: 3 messages = 3 fresh connections
+    hw.wsOpen = true; hw.wsFrames += 3; // WS: reuse the one open connection, add 3 frames
+    hwRender();
+  });
+  $("#hwReset").addEventListener("click", function () { hw = { httpConns: 0, wsOpen: false, wsFrames: 0 }; hwRender(); });
+  hwRender();
+
+  // ======================= REAL vs FAKE =======================
+  var RF = {
+    fake: { name: "FakeWebSocketClient — offline (the default)", path: "provideLiveConnection(useFake = true)",
+      what: "Scripts a Connecting → Open (plus a greeting) and echoes back whatever you send, exactly like the real echo server — but with NO network. This lets the app run offline and the unit tests assert behaviour deterministically.",
+      points: ["Works in airplane mode and in unit tests", "connect() emits Connecting/Open/greeting", "send() echoes the text straight back"] },
+    real: { name: "RealWebSocketClient — live wss://", path: "provideLiveConnection(useFake = false)",
+      what: "Opens a real WebSocket with OkHttp to wss://echo.websocket.events and forwards every WebSocketListener callback (onOpen/onMessage/onClosing/onFailure) into the events Flow via tryEmit. Requires INTERNET + a live connection.",
+      points: ["OkHttp newWebSocket + WebSocketListener", "callbacks → events.tryEmit(ConnectionEvent.…)", "close(1000, …) — the protocol's normal-closure code"] },
+  };
+  function renderRf(which) {
+    $$("#rfSeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.rf === which); });
+    var r = RF[which]; var d = $("#rfDetail");
+    d.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = r.name; h.style.marginTop = "0";
+    var f = document.createElement("div"); f.className = "pl-file"; f.style.marginBottom = "8px"; f.textContent = r.path;
+    var p = document.createElement("p"); p.className = "dense"; p.textContent = r.what;
+    var ul = document.createElement("ul"); ul.className = "kicker-list";
+    r.points.forEach(function (pt) { var li = document.createElement("li"); li.textContent = pt; ul.appendChild(li); });
+    d.appendChild(h); d.appendChild(f); d.appendChild(p); d.appendChild(ul);
+  }
+  $$("#rfSeg button").forEach(function (b) { b.addEventListener("click", function () { renderRf(b.dataset.rf); }); });
+  renderRf("fake");
+
+  // ======================= GLOSSARY =======================
+  var TERMS = [
+    ["WebSocket", "A protocol that upgrades a single HTTP connection into a persistent, full-duplex channel: once open, either side can send frames at any time."],
+    ["full-duplex", "Both directions at once. Unlike HTTP request/response, the server can push to the client without being asked — ideal for chat, tickers, and presence."],
+    ["ws:// / wss://", "The WebSocket URL schemes. ws:// is plaintext; wss:// is TLS-encrypted (this app uses wss://echo.websocket.events)."],
+    ["OkHttp WebSocket", "OkHttp's WebSocket client. httpClient.newWebSocket(request, listener) starts the handshake; the socket handle's send()/close() drive it."],
+    ["WebSocketListener", "The callback object OkHttp invokes on the socket's lifecycle: onOpen, onMessage, onClosing, onFailure. The app turns each into a ConnectionEvent."],
+    ["ConnectionEvent", "A sealed type modelling the closed set of things a socket reports: Connecting, Open, MessageReceived, Closed, Failure. Sealed → the reducer's when is exhaustive."],
+    ["Flow", "An asynchronous stream of values. The connection exposes events(): Flow<ConnectionEvent>, which the ViewModel collects."],
+    ["MutableSharedFlow", "A hot stream the socket callbacks push events into. With extraBufferCapacity, events can be emitted without a buffered consumer."],
+    ["tryEmit", "A non-suspending emit. OkHttp's callbacks run on its own thread, which must never block — tryEmit pushes the event without suspending."],
+    ["reduceLiveState (pure reducer)", "fun reduceLiveState(state, event): LiveUiState — folds one event into the next immutable state. No coroutines, no side effects, so it's trivially unit-testable."],
+    ["LiveUiState", "One immutable snapshot the UI renders: a ConnectionStatus plus the transcript (a List<ChatMessage>)."],
+    ["StateFlow", "A hot Flow that always holds a current value. The ViewModel publishes uiState: StateFlow<LiveUiState> for the screen to observe."],
+    ["optimistic UI", "send() appends your outgoing line immediately (fromMe = true) so the UI feels instant; the server's echo arrives later as a separate MessageReceived (fromMe = false)."],
+    ["LaunchedEffect(Unit)", "A Compose side effect that runs once when the screen enters composition. Here it calls viewModel.connect() exactly once, not on every recomposition."],
+    ["collectAsStateWithLifecycle()", "Subscribes a composable to a StateFlow, wraps the value in Compose State, recomposes on change, and pauses while off-screen."],
+    ["Real / Fake switch", "provideLiveConnection(useFake = …) returns the offline fake (default) or the live OkHttp socket — a one-line toggle for offline runs and tests."],
+    ["echo server", "A server that returns whatever you send it. wss://echo.websocket.events is public and key-free; the fake mimics it offline."],
+    ["NORMAL_CLOSURE (1000)", "The WebSocket protocol's status code for a clean, normal close. close() sends it when the client disconnects."],
+  ];
+  (function () {
+    var acc = $("#acc");
+    TERMS.forEach(function (t) {
+      var item = document.createElement("div"); item.className = "acc-item";
+      var q = document.createElement("button"); q.className = "acc-q"; q.type = "button";
+      var term = document.createElement("span"); term.innerHTML = "<code>" + t[0].replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
+      var plus = document.createElement("span"); plus.className = "plus"; plus.textContent = "+";
+      q.appendChild(term); q.appendChild(plus);
+      var a = document.createElement("div"); a.className = "acc-a"; a.textContent = t[1];
+      q.addEventListener("click", function () { item.classList.toggle("open"); });
+      item.appendChild(q); item.appendChild(a); acc.appendChild(item);
+    });
+  })();
+
+  // ======================= QUIZ =======================
+  var QUIZ = [
+    { q: "What's the core difference between a WebSocket and an HTTP request?",
+      opts: ["WebSockets are faster to type", "HTTP is one request → one response; a WebSocket keeps one connection open so either side can push at any time", "WebSockets don't need the internet", "HTTP can't send JSON"],
+      correct: 1,
+      exp: "A socket is full-duplex and long-lived. The app models it as a stream of events over time, not a single call — which is why it uses a Flow<ConnectionEvent>." },
+    { q: "How do OkHttp's socket callbacks reach the ViewModel?",
+      opts: ["The ViewModel polls the socket", "Each callback (onOpen/onMessage/…) does events.tryEmit(ConnectionEvent.…) into a MutableSharedFlow the ViewModel collects", "Through a database", "Via LiveData only"],
+      correct: 1,
+      exp: "WebSocketListener callbacks are funnelled into a MutableSharedFlow with tryEmit (non-suspending, so the OkHttp thread never blocks); events() exposes it as a Flow." },
+    { q: "Why is reduceLiveState a top-level pure function?",
+      opts: ["To run faster", "So the whole state machine is unit-testable with no coroutines — given a state and an event it returns the next state", "Because Compose requires it", "To avoid using a ViewModel"],
+      correct: 1,
+      exp: "Pulling the fold out as a pure (state, event) → state function means tests assert behaviour with plain calls like reduceLiveState(LiveUiState(), Open).status == Connected — no dispatcher, no socket." },
+    { q: "You type a message and tap Send. Why does your line appear before the echo?",
+      opts: ["The echo is dropped", "send() optimistically appends your line (fromMe = true) immediately; the server's echo returns later as a separate MessageReceived (fromMe = false)", "The reducer runs twice", "The UI guesses the reply"],
+      correct: 1,
+      exp: "Optimistic UI: the outgoing line is appended right away so the UI feels instant, while the echoed reply flows back asynchronously through the same event stream." },
+    { q: "Why can the app run and unit-test with no network?",
+      opts: ["It records real traffic", "provideLiveConnection(useFake = true) returns FakeWebSocketClient, which scripts connect + echoes sends offline", "It disables the socket", "Tests are skipped"],
+      correct: 1,
+      exp: "The default is the offline fake. It emits Connecting/Open/greeting on connect() and echoes whatever you send — so the UI and tests behave just like the live server, with no internet." },
+  ];
+  (function () {
+    var wrap = $("#quiz"); var answered = {}; var score = 0;
+    QUIZ.forEach(function (item, qi) {
+      var card = document.createElement("div"); card.className = "q";
+      var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
+      var opts = document.createElement("div"); opts.className = "q-opts";
+      item.opts.forEach(function (text, oi) {
+        var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
+        b.addEventListener("click", function () {
+          if (answered[qi]) return;
+          answered[qi] = true;
+          var buttons = $$(".opt", opts);
+          buttons.forEach(function (x, xi) { x.disabled = true; if (xi === item.correct) x.classList.add("correct"); });
+          if (oi !== item.correct) b.classList.add("wrong");
+          else score++;
+          card.classList.add("answered");
+          $("#quizScore").textContent = score + " / " + QUIZ.length;
+        });
+        opts.appendChild(b);
+      });
+      var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
+      card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
+    });
+  })();
+})();
+</script>
+</body>
+</html>

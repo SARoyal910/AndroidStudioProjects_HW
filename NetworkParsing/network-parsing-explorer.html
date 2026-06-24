@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Parsing — Interactive Explainer</title>
+<meta name="description" content="An interactive explainer for the Network Parsing Android app: run a live fetch simulator that walks a request through the ViewModel, Repository, Retrofit, and the network, then parses JSON into notes and renders Loading / Success / Error; explore DTO-to-domain mapping, the Real/Fake offline switch, the architecture and source, and a quiz.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+/* ============ interactive explorer additions ============ */
+:root {
+  --ui: #2d64c8; --vm: #6d58b8; --repo: #0a8f9a; --room: #b56c00; --flow: #1b8a5a;
+}
+[data-theme="dark"] {
+  --ui: #6f9bff; --vm: #a78bfa; --repo: #38c7d4; --room: #e0a44a; --flow: #54c98a;
+}
+
+/* segmented controls / buttons */
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+.btn {
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  border-radius: 9px; min-height: 38px; padding: 0 14px; font-weight: 750; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; transition: background .15s, transform .05s;
+}
+.btn:hover { background: var(--surface-alt); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--muted); min-height: 36px; padding: 0 13px; font-weight: 750; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--blue); color: #fff; }
+.hint { color: var(--muted); font-size: 0.84rem; }
+
+/* simulator layout */
+.sim { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 16px; margin: 14px 0; }
+.sim-low { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; margin-top: 14px; }
+@media (max-width: 900px) { .sim, .sim-low { grid-template-columns: 1fr; } }
+
+/* fake device */
+.device {
+  border: 1px solid var(--line); border-radius: 18px; background: var(--surface);
+  box-shadow: 0 6px 26px rgba(0,0,0,0.08); overflow: hidden; min-width: 0;
+}
+.device-bar { height: 30px; background: var(--surface-strong); display: flex; align-items: center; justify-content: center; gap: 6px; border-bottom: 1px solid var(--line); }
+.device-bar .dot3 { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.device-body { padding: 14px; }
+.device-title { font-weight: 850; font-size: 1.02rem; }
+.device-sub { color: var(--muted); font-size: 0.82rem; margin-bottom: 10px; }
+.field { border: 1.5px solid var(--line-strong); border-radius: 9px; padding: 9px 11px; display: flex; align-items: center; }
+.field input { border: 0; outline: 0; background: transparent; color: var(--ink); width: 100%; font-size: 0.95rem; }
+.field.focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.items { margin-top: 12px; display: grid; gap: 6px; min-height: 40px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); animation: pop .35s ease; }
+.item-row.flash { animation: flashrow 1s ease; }
+@keyframes pop { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@keyframes flashrow { 0% { background: var(--flow); } 100% { background: var(--bg); } }
+.id-badge { font-family: var(--mono); font-size: 0.78rem; font-weight: 800; background: var(--violet-soft); color: var(--violet); border-radius: 6px; padding: 2px 7px; }
+.item-row .lbl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.x-btn { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 7px; min-height: 28px; padding: 0 9px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+.x-btn:hover { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.empty-note { color: var(--muted); font-size: 0.86rem; padding: 6px 2px; }
+
+/* pipeline */
+.pipe { display: grid; gap: 0; }
+.pl {
+  border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px;
+  padding: 10px 13px; background: var(--surface); transition: opacity .25s, box-shadow .25s, transform .25s, background .25s;
+  opacity: 0.5;
+}
+.band:nth-child(odd) .pl { background: var(--bg); }
+.pl.ui { border-left-color: var(--ui); }
+.pl.vm { border-left-color: var(--vm); }
+.pl.repo { border-left-color: var(--repo); }
+.pl.room { border-left-color: var(--room); }
+.pl.disk { border-left-color: var(--flow); }
+.pl.done { opacity: 0.82; }
+.pl.active { opacity: 1; transform: translateX(5px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.pl.ui.active { box-shadow: 0 0 0 2px var(--ui), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.vm.active { box-shadow: 0 0 0 2px var(--vm), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.repo.active { box-shadow: 0 0 0 2px var(--repo), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.room.active { box-shadow: 0 0 0 2px var(--room), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.disk.active { box-shadow: 0 0 0 2px var(--flow), 0 4px 16px rgba(0,0,0,0.12); }
+.pl-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pl-name { font-weight: 850; font-size: 0.94rem; display: flex; align-items: center; gap: 8px; }
+.pl-tag { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+.pl-sub { color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+.pl-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.carry { font-family: var(--mono); font-size: 0.74rem; font-weight: 800; border-radius: 6px; padding: 2px 8px; opacity: 0; transition: opacity .2s; white-space: nowrap; }
+.pl.active .carry { opacity: 1; }
+.pl.ui .carry { background: var(--blue-soft); color: var(--ui); }
+.pl.vm .carry { background: var(--violet-soft); color: var(--vm); }
+.pl.repo .carry { background: var(--teal-soft); color: var(--repo); }
+.pl.room .carry { background: var(--amber-soft); color: var(--room); }
+.pl.disk .carry { background: var(--green-soft); color: var(--flow); }
+.pl-arrow { display: grid; place-items: center; height: 18px; color: var(--line-strong); font-size: 0.95rem; transition: color .25s; }
+.pl-arrow.lit { color: var(--ui); }
+.pl-return { display: grid; place-items: center; min-height: 30px; color: var(--flow); font-weight: 800; font-size: 0.82rem; border: 1px dashed rgba(27,138,90,0.5); border-radius: 9px; margin-top: 6px; opacity: 0.45; transition: opacity .25s; }
+.pl-return.lit { opacity: 1; background: var(--green-soft); }
+
+/* journey log (live) */
+.jl { display: grid; gap: 8px; min-height: 60px; }
+.jl-row { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; animation: pop .3s ease; }
+.jl-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 0.8rem; }
+.jl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.jl-chip { font-size: 0.68rem; font-weight: 800; border-radius: 6px; padding: 1px 8px; }
+.jl-time { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.jl-msg { font-size: 0.86rem; margin-top: 2px; }
+.jl-empty { color: var(--muted); font-size: 0.86rem; }
+
+/* sqlite table */
+.dbcard .code-file { color: var(--muted); }
+.db-meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin-bottom: 8px; }
+table.db { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.82rem; }
+table.db th, table.db td { border: 1px solid var(--line); padding: 6px 9px; text-align: left; }
+table.db th { background: var(--surface-alt); color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+table.db tr.flash td { animation: flashrow 1s ease; }
+table.db .nodata td { text-align: center; color: var(--muted); font-family: var(--sans); }
+
+/* clickable architecture */
+.arch-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 12px 0; }
+@media (max-width: 760px) { .arch-grid { grid-template-columns: 1fr 1fr; } }
+.arch-chip { text-align: left; border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px; padding: 11px 13px; background: var(--surface); cursor: pointer; transition: transform .1s, box-shadow .15s; }
+.band:nth-child(odd) .arch-chip { background: var(--bg); }
+.arch-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.arch-chip.sel { box-shadow: 0 0 0 2px var(--blue); }
+.arch-chip.ui { border-left-color: var(--ui); }
+.arch-chip.vm { border-left-color: var(--vm); }
+.arch-chip.repo { border-left-color: var(--repo); }
+.arch-chip.room { border-left-color: var(--room); }
+.arch-chip.disk { border-left-color: var(--flow); }
+.arch-chip.log { border-left-color: var(--muted); }
+.arch-chip .ac-name { font-weight: 850; font-size: 0.92rem; }
+.arch-chip .ac-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+.arch-detail { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 14px 16px; margin-top: 6px; }
+.band:nth-child(odd) .arch-detail { background: var(--bg); }
+
+/* tabs (code explorer) */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.tab { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 8px 8px 0 0; min-height: 34px; padding: 0 12px; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.tab.on { background: var(--code-bg); color: #fff; border-color: var(--code-bg); }
+.tabpane { display: none; }
+.tabpane.on { display: block; }
+.concepts { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 0; }
+
+/* lifecycle */
+.life-row { display: flex; flex-wrap: wrap; gap: 9px; margin: 12px 0; }
+.life-stage { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); margin: 12px 0; }
+.band:nth-child(odd) .life-stage { background: var(--bg); }
+.life-chip { width: 86px; height: 86px; border-radius: 14px; display: grid; place-items: center; font-size: 2.2rem; border: 2px solid var(--line); background: var(--surface-alt); transition: all .3s; }
+.life-chip.present { border-color: var(--flow); background: var(--green-soft); }
+.life-chip.gone { border-color: var(--red); background: var(--red-soft); }
+.life-state { font-weight: 850; }
+.life-state.present { color: var(--flow); }
+.life-state.gone { color: var(--red); }
+.life-why { color: var(--muted); font-size: 0.9rem; margin-top: 3px; }
+
+/* glossary accordion */
+.acc { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin: 10px 0; background: var(--surface); }
+.band:nth-child(odd) .acc { background: var(--bg); }
+.acc-item + .acc-item { border-top: 1px solid var(--line); }
+.acc-q { width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: 12px 14px; font-weight: 750; color: var(--ink); display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: 0.95rem; }
+.acc-q:hover { background: var(--surface-alt); }
+.acc-q .plus { color: var(--muted); font-weight: 800; transition: transform .2s; }
+.acc-item.open .acc-q .plus { transform: rotate(45deg); }
+.acc-a { display: none; padding: 0 14px 13px; color: var(--muted); font-size: 0.92rem; }
+.acc-item.open .acc-a { display: block; }
+.acc-a code { color: var(--ink); }
+
+/* quiz */
+.quiz { display: grid; gap: 14px; margin: 12px 0; }
+.q { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+.band:nth-child(odd) .q { background: var(--bg); }
+.q-prompt { font-weight: 800; margin-bottom: 10px; }
+.q-opts { display: grid; gap: 8px; }
+.opt { text-align: left; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 9px; padding: 10px 12px; cursor: pointer; font-weight: 600; transition: background .12s; }
+.opt:hover { background: var(--surface-alt); }
+.opt.correct { border-color: var(--flow); background: var(--green-soft); }
+.opt.wrong { border-color: var(--red); background: var(--red-soft); }
+.opt:disabled { cursor: default; }
+.q-exp { margin-top: 10px; font-size: 0.9rem; color: var(--muted); display: none; border-left: 3px solid var(--blue); padding-left: 10px; }
+.q.answered .q-exp { display: block; }
+.quiz-score { font-weight: 850; font-size: 1.05rem; }
+
+.tiny { font-size: 0.78rem; color: var(--muted); }
+.kbd { font-family: var(--mono); background: var(--surface-alt); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 0.82em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">NP</div>
+      <div>
+        <div class="brand-title">Network Parsing</div>
+        <div class="brand-subtitle">Interactive explainer</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">Explore</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>What is this?</span></a>
+      <a class="nav-link" href="#simulator"><span class="nav-num">2</span><span>Live fetch simulator</span></a>
+      <a class="nav-link" href="#states"><span class="nav-num">3</span><span>The three UI states</span></a>
+      <a class="nav-link" href="#architecture"><span class="nav-num">4</span><span>Architecture</span></a>
+      <a class="nav-link" href="#code"><span class="nav-num">5</span><span>Code explorer</span></a>
+      <div class="nav-title">Key ideas</div>
+      <a class="nav-link" href="#dto"><span class="nav-num">6</span><span>DTO → domain mapping</span></a>
+      <a class="nav-link" href="#realfake"><span class="nav-num">7</span><span>Real vs Fake switch</span></a>
+      <a class="nav-link" href="#glossary"><span class="nav-num">8</span><span>Glossary</span></a>
+      <a class="nav-link" href="#quiz"><span class="nav-num">9</span><span>Check yourself</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      The step-by-step code page:
+      <a href="how-a-note-is-fetched.html">How a note is fetched →</a>
+      <a href="../WebSocketLive/websocket-live-explorer.html">WebSocket Live explainer →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">NP</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · What is this?</option>
+        <option value="#simulator">2 · Live fetch simulator</option>
+        <option value="#states">3 · The three UI states</option>
+        <option value="#architecture">4 · Architecture</option>
+        <option value="#code">5 · Code explorer</option>
+        <option value="#dto">6 · DTO → domain mapping</option>
+        <option value="#realfake">7 · Real vs Fake switch</option>
+        <option value="#glossary">8 · Glossary</option>
+        <option value="#quiz">9 · Check yourself</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Interactive explainer</p>
+        <h1>Network Parsing, hands-on</h1>
+        <p class="lead">
+          <strong>Network Parsing</strong> is a small Android app with one job: make it obvious <em>how an app talks to a
+          network, parses the JSON, and shows the result safely</em>. It fetches notes with <strong>Retrofit</strong> +
+          <strong>kotlinx.serialization</strong> and renders explicit <strong>Loading / Success / Error</strong> states.
+          This page lets you <strong>run that fetch yourself</strong> — choose the outcome, watch the request travel the
+          layers and come back as a UI state — then explore the DTO→domain mapping, the offline switch, the architecture,
+          and the source.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">Retrofit</span>
+          <span class="tag blue">kotlinx.serialization</span>
+          <span class="tag violet">ViewModel + StateFlow</span>
+          <span class="tag amber">Loading / Success / Error</span>
+          <span class="tag teal">runnable + this explainer</span>
+        </div>
+        <div class="grid3">
+          <div class="card"><div class="card-head"><span class="card-title">▶ Run it</span></div><div class="card-body"><p class="dense">The <a href="#simulator">fetch simulator</a> walks a request through the ViewModel, Repository, Retrofit, and the network — and renders the resulting state.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧭 Explore it</span></div><div class="card-body"><p class="dense">Preview the <a href="#states">three UI states</a>, click the <a href="#architecture">architecture</a>, and browse the <a href="#code">source</a>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧠 Get it</span></div><div class="card-body"><p class="dense">See <a href="#dto">DTO→domain mapping</a> and the <a href="#realfake">Real/Fake switch</a>, then <a href="#quiz">check yourself</a>.</p></div></div>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">One sentence to hold onto</span>
+          The screen is a <strong>pure function of one sealed state</strong>. A single <code>try/catch</code> turns any
+          failure into an <code>Error</code> state — never a crash — and a reactive <code>StateFlow</code> redraws the UI
+          for you.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. SIMULATOR ============ -->
+    <section class="band anchor" id="simulator">
+      <div class="band-inner">
+        <p class="eyebrow">The main event</p>
+        <h2>Live fetch simulator — watch a request travel</h2>
+        <p class="dense">
+          Pick a <strong>repository</strong> (offline Fake or live Real) and an <strong>outcome</strong>, then press
+          <strong>Load notes</strong>. The same pipeline the app runs lights up one layer at a time, the
+          <strong>Journey log</strong> records each leg, the <strong>response panel</strong> shows what came back, and the
+          device renders the matching <code>Loading → Success/Error</code> state.
+        </p>
+
+        <div class="controls">
+          <span class="hint">Repository:</span>
+          <span class="seg" id="modeSeg">
+            <button data-mode="fake" class="on" type="button">Fake (offline)</button>
+            <button data-mode="real" type="button">Real (network)</button>
+          </span>
+          <span class="hint">Outcome:</span>
+          <span class="seg" id="outcomeSeg">
+            <button data-out="success" class="on" type="button">Success</button>
+            <button data-out="offline" type="button">Offline error</button>
+            <button data-out="badjson" type="button">Bad JSON</button>
+          </span>
+          <span class="hint">Speed:</span>
+          <span class="seg" id="spdSeg">
+            <button data-ms="900" type="button">Slow</button>
+            <button data-ms="520" class="on" type="button">Normal</button>
+            <button data-ms="240" type="button">Fast</button>
+          </span>
+        </div>
+
+        <div class="sim">
+          <!-- fake device -->
+          <div class="device">
+            <div class="device-bar"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></div>
+            <div class="device-body">
+              <div class="device-title">Network Parsing · Notes</div>
+              <div class="device-sub" id="simModeNote">Offline fake — no network needed.</div>
+              <div style="margin:10px 0;">
+                <button class="btn primary" id="simLoad" type="button" style="width:100%; justify-content:center;">Load notes</button>
+              </div>
+              <div id="simScreen" style="min-height:150px;"></div>
+            </div>
+          </div>
+
+          <!-- pipeline -->
+          <div>
+            <div class="pipe" id="pipe">
+              <div class="pl ui" id="pl-ui">
+                <div class="pl-top"><span class="pl-name">① UI — the screen</span><span class="carry" id="carry-ui"></span></div>
+                <div class="pl-sub">Observes the StateFlow; the load/Retry tap calls the ViewModel.</div>
+                <div class="pl-file">MainActivity.kt · NotesScreen</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl vm" id="pl-vm">
+                <div class="pl-top"><span class="pl-name">② ViewModel — the conductor</span><span class="carry" id="carry-vm"></span></div>
+                <div class="pl-sub">Sets Loading, launches a coroutine, wraps the call in try/catch.</div>
+                <div class="pl-file">NotesViewModel.kt · loadNotes()</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl repo" id="pl-repo">
+                <div class="pl-top"><span class="pl-name">③ Repository — source of truth</span><span class="carry" id="carry-repo"></span></div>
+                <div class="pl-sub">Real (network) or Fake (offline) — chosen by one flag.</div>
+                <div class="pl-file">NoteRepository.kt</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl room" id="pl-api">
+                <div class="pl-top"><span class="pl-name">④ Retrofit — the HTTP client</span><span class="carry" id="carry-api"></span></div>
+                <div class="pl-sub">@GET("posts") → a real HTTP GET; decodes JSON with the converter.</div>
+                <div class="pl-file">NoteApi.kt</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl disk" id="pl-net">
+                <div class="pl-top"><span class="pl-name">⑤ The network — JSON API</span><span class="carry" id="carry-net"></span></div>
+                <div class="pl-sub">Returns a JSON array of posts (or fails).</div>
+                <div class="pl-file">jsonplaceholder.typicode.com/posts</div>
+              </div>
+              <div class="pl-return" id="pl-return">↑ return trip: JSON → List&lt;NoteDto&gt; → .map { toNote() } → Success/Error → recompose</div>
+            </div>
+            <p class="tiny">In <strong>Fake</strong> mode the request never leaves the device — step ⑤ parses a hardcoded JSON string instead of hitting the network. The <strong>Outcome</strong> control decides whether the trip succeeds or throws.</p>
+          </div>
+        </div>
+
+        <div class="sim-low">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Journey of the request</span></div>
+            <div class="card-body"><div class="jl" id="simJourney"><div class="jl-empty">Press <strong>Load notes</strong> to record a trip.</div></div></div>
+          </div>
+          <div class="card dbcard">
+            <div class="card-head"><span class="card-title">What came back</span></div>
+            <div class="card-body">
+              <div class="db-meta" id="simRespMeta">no response yet</div>
+              <div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file" id="simRespFile">response</span></div><pre id="simResp" style="white-space:pre-wrap;">—</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. STATES ============ -->
+    <section class="band anchor" id="states">
+      <div class="band-inner">
+        <p class="eyebrow">The key idea · one sealed type</p>
+        <h2>The three UI states</h2>
+        <p class="dense">
+          Because <code>NotesUiState</code> is a <strong>sealed interface</strong>, the screen has exactly three shapes and
+          the <code>when</code> that renders them is exhaustive. Tap each one to see what <code>NotesContent</code> draws.
+        </p>
+        <div class="controls">
+          <span class="seg" id="stateSeg">
+            <button data-state="loading" class="on" type="button">Loading</button>
+            <button data-state="success" type="button">Success</button>
+            <button data-state="error" type="button">Error</button>
+          </span>
+        </div>
+        <div class="sim-low">
+          <div class="device" style="max-width:340px;">
+            <div class="device-bar"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></div>
+            <div class="device-body">
+              <div class="device-title">Network Parsing · Notes</div>
+              <div id="stateScreen" style="min-height:170px; margin-top:8px;"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">What renders this state</span></div>
+            <div class="card-body"><div id="stateInfo"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. ARCHITECTURE ============ -->
+    <section class="band anchor" id="architecture">
+      <div class="band-inner">
+        <p class="eyebrow">The pieces</p>
+        <h2>Architecture — click a layer</h2>
+        <p class="dense">Five small files. Tap any one to see its job, the file it lives in, and what to look at. The colors match the simulator.</p>
+        <div class="arch-grid" id="archGrid">
+          <button class="arch-chip ui sel" data-layer="ui" type="button"><div class="ac-name">① UI · screen</div><div class="ac-file">MainActivity.kt</div></button>
+          <button class="arch-chip vm" data-layer="vm" type="button"><div class="ac-name">② ViewModel</div><div class="ac-file">NotesViewModel.kt</div></button>
+          <button class="arch-chip repo" data-layer="repo" type="button"><div class="ac-name">③ Repository</div><div class="ac-file">NoteRepository.kt</div></button>
+          <button class="arch-chip room" data-layer="api" type="button"><div class="ac-name">④ Retrofit API</div><div class="ac-file">NoteApi.kt</div></button>
+          <button class="arch-chip disk" data-layer="model" type="button"><div class="ac-name">⑤ DTO + domain</div><div class="ac-file">Note.kt</div></button>
+        </div>
+        <div class="arch-detail" id="archDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ 5. CODE ============ -->
+    <section class="band anchor" id="code">
+      <div class="band-inner">
+        <p class="eyebrow">The source</p>
+        <h2>Code explorer</h2>
+        <p class="dense">Every file, lightly trimmed for focus. For the full, commented code open <a href="how-a-note-is-fetched.html">the step-by-step page</a> or the files themselves.</p>
+        <div class="tabs" id="codeTabs">
+          <button class="tab on" data-tab="t-note" type="button">Note.kt</button>
+          <button class="tab" data-tab="t-api" type="button">NoteApi.kt</button>
+          <button class="tab" data-tab="t-repo" type="button">NoteRepository.kt</button>
+          <button class="tab" data-tab="t-vm" type="button">NotesViewModel.kt</button>
+          <button class="tab" data-tab="t-main" type="button">MainActivity.kt</button>
+        </div>
+
+        <div class="tabpane on" data-pane="t-note">
+          <div class="code-panel"><div class="code-head"><span class="code-file">Note.kt — DTO + domain + mapper</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Serializable                                  // makes this class JSON-decodable
+data class NoteDto(
+    val userId: Int,                           // matches JSON "userId" (parsed, then dropped)
+    val id: Int, val title: String, val body: String,
+)
+
+// PLAIN data class: no @Serializable, no JSON knowledge, and NO userId.
+data class Note(val id: Int, val title: String, val body: String)
+
+// The SINGLE place network-shape becomes app-shape.
+fun NoteDto.toNote(): Note = Note(id = id, title = title, body = body)</pre></div>
+          <div class="tag-row"><span class="tag green">@Serializable</span><span class="tag">DTO vs domain</span><span class="tag">mapper</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-api">
+          <div class="code-panel"><div class="code-head"><span class="code-file">NoteApi.kt — the Retrofit interface + assembly</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface NoteApi {
+    @GET("posts")                              // relative path -&gt; HTTP GET
+    suspend fun fetchNotes(): List&lt;NoteDto&gt;    // JSON array -&gt; List&lt;NoteDto&gt;, parsed for you
+}
+
+private val json = Json { ignoreUnknownKeys = true }   // new server fields won't break parsing
+
+fun provideNoteApi(): NoteApi =
+    Retrofit.Builder()
+        .baseUrl("https://jsonplaceholder.typicode.com/")          // MUST end in "/"
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+        .create(NoteApi::class.java)           // Retrofit generates the implementation</pre></div>
+          <div class="tag-row"><span class="tag green">@GET</span><span class="tag">suspend</span><span class="tag">ignoreUnknownKeys</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-repo">
+          <div class="code-panel"><div class="code-head"><span class="code-file">NoteRepository.kt — Real, Fake, switch</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface NoteRepository { suspend fun getNotes(): List&lt;Note&gt; }   // may THROW on failure
+
+class RealNoteRepository(private val api: NoteApi = provideNoteApi()) : NoteRepository {
+    override suspend fun getNotes() = api.fetchNotes().map { it.toNote() }   // network + parse + map
+}
+
+class FakeNoteRepository : NoteRepository {
+    private val json = Json { ignoreUnknownKeys = true }
+    override suspend fun getNotes(): List&lt;Note&gt; {
+        delay(600)                                              // imitate latency (see Loading)
+        return json.decodeFromString&lt;List&lt;NoteDto&gt;&gt;(FAKE_NOTES_JSON).map { it.toNote() }
+    }
+}
+
+// THE SWITCH — one argument toggles offline (default) vs live.
+fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
+    if (useFake) FakeNoteRepository() else RealNoteRepository()</pre></div>
+          <div class="tag-row"><span class="tag teal">interface</span><span class="tag">Real</span><span class="tag">Fake</span><span class="tag">the switch</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-vm">
+          <div class="code-panel"><div class="code-head"><span class="code-file">NotesViewModel.kt — sealed state + loadNotes()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">sealed interface NotesUiState {
+    data object Loading : NotesUiState
+    data class Success(val notes: List&lt;Note&gt;) : NotesUiState
+    data class Error(val message: String) : NotesUiState
+}
+
+class NotesViewModel(private val repository: NoteRepository = provideNoteRepository()) : ViewModel() {
+    private val _uiState = MutableStateFlow&lt;NotesUiState&gt;(NotesUiState.Loading)
+    val uiState: StateFlow&lt;NotesUiState&gt; = _uiState.asStateFlow()
+    init { loadNotes() }
+
+    fun loadNotes() {
+        viewModelScope.launch {
+            _uiState.value = NotesUiState.Loading
+            try { _uiState.value = NotesUiState.Success(repository.getNotes()) }
+            catch (e: Exception) { _uiState.value = NotesUiState.Error(e.message ?: "Something went wrong while loading notes.") }
+        }
+    }
+}</pre></div>
+          <div class="tag-row"><span class="tag violet">sealed interface</span><span class="tag">StateFlow</span><span class="tag">try/catch</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-main">
+          <div class="code-panel"><div class="code-head"><span class="code-file">MainActivity.kt — collect + exhaustive when</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Composable
+fun NotesScreen(modifier: Modifier = Modifier, viewModel: NotesViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    NotesContent(uiState, onRetry = viewModel::loadNotes, modifier)
+}
+
+@Composable
+fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifier = Modifier) {
+    when (uiState) {                                           // exhaustive: sealed type
+        is NotesUiState.Loading -&gt; LoadingState(modifier)
+        is NotesUiState.Success -&gt; NotesList(uiState.notes, modifier)
+        is NotesUiState.Error   -&gt; ErrorState(uiState.message, onRetry, modifier)
+    }
+}</pre></div>
+          <div class="tag-row"><span class="tag blue">Compose</span><span class="tag">collectAsStateWithLifecycle</span><span class="tag">stateless content</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. DTO ============ -->
+    <section class="band anchor" id="dto">
+      <div class="band-inner">
+        <p class="eyebrow">Key idea · the parsing boundary</p>
+        <h2>DTO → domain mapping</h2>
+        <p class="dense">
+          JSON arrives in the <em>network's</em> shape (<code>NoteDto</code>); the app uses its own clean shape
+          (<code>Note</code>). The mapper <code>toNote()</code> is the single boundary — it copies the fields the UI needs
+          and drops the rest. Toggle the JSON to see two robustness behaviors.
+        </p>
+        <div class="controls">
+          <span class="hint">Server JSON:</span>
+          <span class="seg" id="dtoSeg">
+            <button data-dto="normal" class="on" type="button">Normal</button>
+            <button data-dto="extra" type="button">+ extra server field</button>
+          </span>
+        </div>
+        <div class="sim-low">
+          <div class="card">
+            <div class="card-head"><span class="card-title">① JSON in (network shape)</span></div>
+            <div class="card-body"><div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">one /posts object</span></div><pre id="dtoJson" style="white-space:pre-wrap;">—</pre></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">② Note out (app shape)</span></div>
+            <div class="card-body"><div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">after dto.toNote()</span></div><pre id="dtoNote" style="white-space:pre-wrap;">—</pre></div></div>
+          </div>
+        </div>
+        <div class="callout violet" id="dtoMsg"></div>
+      </div>
+    </section>
+
+    <!-- ============ 7. REAL/FAKE ============ -->
+    <section class="band anchor" id="realfake">
+      <div class="band-inner">
+        <p class="eyebrow">Key idea · one-line offline switch</p>
+        <h2>Real vs Fake — the same interface, two implementations</h2>
+        <p class="dense">
+          Both implement <code>NoteRepository</code>, so the ViewModel can't tell them apart. <code>provideNoteRepository(useFake = …)</code>
+          picks one in a single place — which is why the app and its unit tests run with no network. Flip the switch:
+        </p>
+        <div class="controls">
+          <span class="seg" id="rfSeg">
+            <button data-rf="fake" class="on" type="button">useFake = true</button>
+            <button data-rf="real" type="button">useFake = false</button>
+          </span>
+        </div>
+        <div class="arch-detail" id="rfDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ 8. GLOSSARY ============ -->
+    <section class="band anchor" id="glossary">
+      <div class="band-inner">
+        <p class="eyebrow">Plain-language terms</p>
+        <h2>Glossary — tap to expand</h2>
+        <div class="acc" id="acc"></div>
+      </div>
+    </section>
+
+    <!-- ============ 9. QUIZ ============ -->
+    <section class="band anchor" id="quiz">
+      <div class="band-inner">
+        <p class="eyebrow">Check yourself</p>
+        <h2>Did it click?</h2>
+        <p class="dense">Five questions. Pick an answer to see if it’s right and why. <span class="quiz-score" id="quizScore">0 / 5</span></p>
+        <div class="quiz" id="quiz"></div>
+        <p class="foot">Network Parsing · one request, three states · part of the AndroidStudioProjects teaching set. See also <a href="how-a-note-is-fetched.html">the step-by-step code page</a>.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+<script>
+/* ============ Network Parsing — interactive explorer logic ============ */
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  // stage metadata shared by the simulator + journey log
+  var STAGE = {
+    UI:         { label: "UI",         color: "var(--ui)",   soft: "var(--blue-soft)" },
+    VIEWMODEL:  { label: "ViewModel",  color: "var(--vm)",   soft: "var(--violet-soft)" },
+    REPOSITORY: { label: "Repository", color: "var(--repo)", soft: "var(--teal-soft)" },
+    API:        { label: "Retrofit",   color: "var(--room)", soft: "var(--amber-soft)" },
+    NETWORK:    { label: "Network",    color: "var(--flow)", soft: "var(--green-soft)" },
+    STATE:      { label: "Success",    color: "var(--flow)", soft: "var(--green-soft)" },
+    ERROR:      { label: "Error",      color: "var(--red)",  soft: "var(--red-soft)" },
+  };
+  var ORDER = ["ui", "vm", "repo", "api", "net"];
+
+  // ---- sample data -------------------------------------------------------
+  var FAKE_NOTES = [
+    { id: 1, title: "Offline note one", body: "This note was parsed from a hardcoded JSON string, no network required." },
+    { id: 2, title: "Offline note two", body: "The FAKE repository lets the app and the unit tests run completely offline." },
+    { id: 3, title: "Offline note three", body: "Flip useFake to false in provideNoteRepository() to hit the real API instead." },
+  ];
+  var REAL_NOTES = [
+    { id: 1, title: "sunt aut facere repellat", body: "quia et suscipit suscipit recusandae…" },
+    { id: 2, title: "qui est esse", body: "est rerum tempore vitae sequi sint…" },
+  ];
+  function notesJson(notes, userIdEach) {
+    return "[\n" + notes.map(function (n, i) {
+      return '  { "userId": ' + (userIdEach[i] || 1) + ', "id": ' + n.id + ', "title": "' + n.title + '", "body": "' + n.body + '" }';
+    }).join(",\n") + "\n]";
+  }
+  var BAD_JSON = '[\n  { "userId": 1, "id": 1, "title": "sunt aut facere",\n    "body": 12345  <-- a number where a string is expected\n  } ,';
+
+  // ======================= LIVE FETCH SIMULATOR =======================
+  var sim = { mode: "fake", outcome: "success", delay: 520, queue: [], qi: 0, journey: [], running: false, timer: null };
+
+  function renderScreen(kind, payload) {
+    var el = $("#simScreen"); if (!el) return;
+    if (kind === "idle") { el.innerHTML = '<div class="empty-note">Tap <strong>Load notes</strong> to fetch.</div>'; return; }
+    if (kind === "loading") {
+      el.innerHTML = '<div style="text-align:center; padding:34px 0; color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div style="margin-top:8px;">Loading notes…</div></div>';
+      return;
+    }
+    if (kind === "success") {
+      el.innerHTML = "";
+      payload.forEach(function (n) {
+        var row = document.createElement("div"); row.className = "item-row"; row.style.display = "block";
+        var t = document.createElement("div"); t.style.fontWeight = "800"; t.textContent = n.title;
+        var b = document.createElement("div"); b.className = "tiny"; b.style.marginTop = "2px"; b.textContent = n.body;
+        row.appendChild(t); row.appendChild(b); el.appendChild(row);
+      });
+      return;
+    }
+    if (kind === "error") {
+      el.innerHTML = "";
+      var wrap = document.createElement("div"); wrap.style.textAlign = "center"; wrap.style.padding = "20px 4px";
+      var h = document.createElement("div"); h.style.fontWeight = "800"; h.textContent = "❌ Couldn't load notes";
+      var m = document.createElement("div"); m.className = "tiny"; m.style.margin = "8px 0 14px"; m.style.color = "var(--red)"; m.textContent = payload;
+      var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "Retry";
+      btn.addEventListener("click", function () { if (!sim.running) startSim(); });
+      wrap.appendChild(h); wrap.appendChild(m); wrap.appendChild(btn); el.appendChild(wrap);
+    }
+  }
+
+  function setResp(meta, file, text) {
+    $("#simRespMeta").textContent = meta;
+    $("#simRespFile").textContent = file;
+    $("#simResp").textContent = text;
+  }
+
+  function renderJourney() {
+    var el = $("#simJourney"); el.innerHTML = "";
+    if (!sim.journey.length) { el.innerHTML = '<div class="jl-empty">Press <strong>Load notes</strong> to record a trip.</div>'; return; }
+    sim.journey.forEach(function (s, idx) {
+      var meta = STAGE[s.stage];
+      var row = document.createElement("div"); row.className = "jl-row";
+      var num = document.createElement("div"); num.className = "jl-num"; num.textContent = idx + 1; num.style.background = meta.color;
+      var body = document.createElement("div");
+      var head = document.createElement("div"); head.className = "jl-head";
+      var chip = document.createElement("span"); chip.className = "jl-chip"; chip.textContent = meta.label; chip.style.color = meta.color; chip.style.background = meta.soft;
+      head.appendChild(chip);
+      var msg = document.createElement("div"); msg.className = "jl-msg"; msg.textContent = s.msg;
+      body.appendChild(head); body.appendChild(msg); row.appendChild(num); row.appendChild(body); el.appendChild(row);
+    });
+  }
+
+  function clearPipe() {
+    $$(".pl").forEach(function (p) { p.classList.remove("active", "done"); });
+    $$("[data-arrow]").forEach(function (a) { a.classList.remove("lit"); });
+    var ret = $("#pl-return"); if (ret) ret.classList.remove("lit");
+    ORDER.forEach(function (c) { var el = $("#carry-" + c); if (el) el.textContent = ""; });
+  }
+
+  function visual(idx) {
+    clearPipe();
+    var touched = {};
+    for (var k = 0; k <= idx; k++) sim.queue[k].boxes.forEach(function (b) { if (b !== "return") touched[b] = true; });
+    Object.keys(touched).forEach(function (b) { var el = $("#pl-" + b); if (el) el.classList.add("done"); });
+    var cur = sim.queue[idx];
+    cur.boxes.forEach(function (b) {
+      if (b === "return") { var r = $("#pl-return"); if (r) r.classList.add("lit"); return; }
+      var el = $("#pl-" + b); if (el) { el.classList.remove("done"); el.classList.add("active"); var c = $("#carry-" + b); if (c && cur.carry) c.textContent = cur.carry; }
+    });
+    var n = ORDER.filter(function (b) { return touched[b]; }).length;
+    $$("[data-arrow]").forEach(function (a, j) { a.classList.toggle("lit", j < n - 1); });
+  }
+
+  function advance() {
+    if (sim.qi >= sim.queue.length) { finish(); return; }
+    var step = sim.queue[sim.qi];
+    if (step.apply) step.apply();
+    sim.journey.push({ stage: step.stage, msg: step.msg });
+    renderJourney();
+    visual(sim.qi);
+    sim.qi++;
+  }
+
+  function autoRun() {
+    advance();
+    if (sim.qi < sim.queue.length) sim.timer = setTimeout(autoRun, sim.delay);
+    else finish();
+  }
+
+  function finish() { sim.running = false; if (sim.timer) { clearTimeout(sim.timer); sim.timer = null; } $("#simLoad").disabled = false; }
+
+  function startSim() {
+    if (sim.running) return;
+    sim.queue = buildSteps(sim.mode, sim.outcome); sim.qi = 0; sim.journey = []; sim.running = true;
+    renderJourney(); $("#simLoad").disabled = true;
+    setResp("request in flight…", "response", "—");
+    autoRun();
+  }
+
+  function buildSteps(mode, outcome) {
+    var fake = mode === "fake";
+    var notes = fake ? FAKE_NOTES : REAL_NOTES;
+    var steps = [
+      { stage: "UI", boxes: ["ui"], carry: "loadNotes()",
+        msg: "NotesScreen is observing the StateFlow; the load (or Retry) tap calls viewModel.loadNotes()." },
+      { stage: "VIEWMODEL", boxes: ["vm"], carry: "Loading",
+        msg: "loadNotes() set _uiState = Loading and launched a coroutine on viewModelScope, entering the try block.",
+        apply: function () { renderScreen("loading"); } },
+      { stage: "REPOSITORY", boxes: ["repo"], carry: "getNotes()",
+        msg: fake
+          ? "repository.getNotes() → FakeNoteRepository (offline). No network will be touched."
+          : "repository.getNotes() → RealNoteRepository (network). Requires INTERNET + a connection." },
+      { stage: "API", boxes: ["api"], carry: fake ? "decode" : "@GET posts",
+        msg: fake
+          ? "The fake skips Retrofit: delay(600) to imitate latency, then it will decode a hardcoded JSON string."
+          : "NoteApi.fetchNotes() → Retrofit issues HTTP GET /posts with the kotlinx.serialization converter installed." },
+    ];
+
+    if (outcome === "offline") {
+      steps.push({ stage: "NETWORK", boxes: ["net"], carry: "✕",
+        msg: fake
+          ? "(Fake mode has no network to fail — this is the failure the Real repository would throw when offline.)"
+          : "The GET failed before any response: java.net.UnknownHostException — Unable to resolve host.",
+        apply: function () { setResp("request failed", "exception", "java.net.UnknownHostException:\n  Unable to resolve host \"jsonplaceholder.typicode.com\":\n  No address associated with hostname"); } });
+      steps.push({ stage: "ERROR", boxes: ["return"],
+        msg: "The try/catch caught the exception → _uiState = Error(\"Unable to resolve host …\"). The screen shows the error + a Retry button.",
+        apply: function () { renderScreen("error", "Unable to resolve host \"jsonplaceholder.typicode.com\""); } });
+      return steps;
+    }
+
+    if (outcome === "badjson") {
+      steps.push({ stage: "NETWORK", boxes: ["net"], carry: fake ? "JSON" : "200 OK",
+        msg: fake ? "Read the hardcoded JSON — but this payload is malformed (a number where a String is expected)."
+                  : "Server responded 200 with a body — but the JSON is malformed (a number where a String is expected).",
+        apply: function () { setResp(fake ? "malformed payload" : "200 OK · malformed body", "posts (bad)", BAD_JSON); } });
+      steps.push({ stage: "ERROR", boxes: ["return"],
+        msg: "Decoding threw kotlinx.serialization's SerializationException → caught → _uiState = Error(...). No crash; the error screen shows.",
+        apply: function () { renderScreen("error", "Unexpected JSON token … (SerializationException)"); } });
+      return steps;
+    }
+
+    // success
+    steps.push({ stage: "NETWORK", boxes: ["net"], carry: fake ? "JSON" : "200 OK",
+      msg: fake ? "Read the hardcoded JSON string (no network) — a JSON array of " + notes.length + " posts."
+                : "Server responded 200 OK with a JSON array of " + notes.length + " posts.",
+      apply: function () { setResp(fake ? "parsed hardcoded JSON · " + notes.length + " posts" : "200 OK · " + notes.length + " posts", "GET /posts", notesJson(notes, fake ? [1, 1, 2] : [1, 1])); } });
+    steps.push({ stage: "STATE", boxes: ["return"],
+      msg: "JSON array → List<NoteDto> (parsed) → .map { toNote() } → _uiState = Success(" + notes.length + " notes). collectAsStateWithLifecycle recomposes the list.",
+      apply: function () { renderScreen("success", notes); } });
+    return steps;
+  }
+
+  $("#simLoad").addEventListener("click", startSim);
+  $$("#modeSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { if (sim.running) return; $$("#modeSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.mode = b.dataset.mode; $("#simModeNote").textContent = sim.mode === "fake" ? "Offline fake — no network needed." : "Live network — needs INTERNET + a connection."; });
+  });
+  $$("#outcomeSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { if (sim.running) return; $$("#outcomeSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.outcome = b.dataset.out; });
+  });
+  $$("#spdSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { $$("#spdSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.delay = parseInt(b.dataset.ms, 10); });
+  });
+  renderScreen("idle"); renderJourney();
+
+  // ======================= THREE UI STATES =======================
+  var STATES = {
+    loading: { render: function () { renderInto("#stateScreen", "loading"); },
+      info: "<strong>NotesUiState.Loading</strong> — a data object (a singleton; it carries no data). NotesContent draws a centered CircularProgressIndicator via LoadingState()." },
+    success: { render: function () { renderInto("#stateScreen", "success", FAKE_NOTES); },
+      info: "<strong>NotesUiState.Success(val notes: List&lt;Note&gt;)</strong> — carries the parsed notes. NotesContent draws them in a LazyColumn via NotesList(notes)." },
+    error:   { render: function () { renderInto("#stateScreen", "error", "No internet connection."); },
+      info: "<strong>NotesUiState.Error(val message: String)</strong> — carries a human-readable reason. NotesContent draws the message + a Retry button via ErrorState(message, onRetry)." },
+  };
+  function renderInto(sel, kind, payload) {
+    // a lightweight clone of renderScreen for the states device (no Retry wiring needed)
+    var el = $(sel); if (!el) return;
+    if (kind === "loading") { el.innerHTML = '<div style="text-align:center; padding:40px 0; color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div style="margin-top:8px;">Loading notes…</div></div>'; return; }
+    if (kind === "success") {
+      el.innerHTML = "";
+      payload.forEach(function (n) {
+        var row = document.createElement("div"); row.className = "item-row"; row.style.display = "block";
+        var t = document.createElement("div"); t.style.fontWeight = "800"; t.textContent = n.title;
+        var b = document.createElement("div"); b.className = "tiny"; b.style.marginTop = "2px"; b.textContent = n.body;
+        row.appendChild(t); row.appendChild(b); el.appendChild(row);
+      });
+      return;
+    }
+    if (kind === "error") {
+      el.innerHTML = '<div style="text-align:center; padding:26px 4px;"><div style="font-weight:800;">❌ Couldn\'t load notes</div><div class="tiny" style="margin:8px 0 14px; color:var(--red);">' + payload + '</div><button class="btn" type="button">Retry</button></div>';
+    }
+  }
+  function showState(name) {
+    $$("#stateSeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.state === name); });
+    STATES[name].render();
+    $("#stateInfo").innerHTML = STATES[name].info;
+  }
+  $$("#stateSeg button").forEach(function (b) { b.addEventListener("click", function () { showState(b.dataset.state); }); });
+  showState("loading");
+
+  // ======================= ARCHITECTURE =======================
+  var ARCH = {
+    ui:    { name: "① UI — the screen", file: "MainActivity.kt", tab: "t-main",
+      what: "NotesScreen (stateful) obtains the ViewModel and collects its StateFlow with collectAsStateWithLifecycle(); NotesContent (stateless) renders the current state with one exhaustive when. Previews drive NotesContent with hand-made states.",
+      points: ["collectAsStateWithLifecycle() observes the state", "when over the sealed NotesUiState (exhaustive)", "stateless content = previewable without a ViewModel"] },
+    vm:    { name: "② ViewModel — the conductor", file: "NotesViewModel.kt", tab: "t-vm",
+      what: "Exposes a private MutableStateFlow as a public read-only StateFlow, loads in init, and wraps the suspending call in a single try/catch that turns any failure into an Error state.",
+      points: ["_uiState (mutable) → uiState (read-only)", "loadNotes(): Loading → try Success / catch Error", "viewModelScope.launch keeps the work off the main thread"] },
+    repo:  { name: "③ Repository — source of truth", file: "NoteRepository.kt", tab: "t-repo",
+      what: "A NoteRepository interface with a Real (network) implementation and a Fake (offline) one. provideNoteRepository(useFake = …) picks one in a single place, which is what lets the app and tests run offline.",
+      points: ["interface getNotes(): List<Note> (may throw)", "Real: api.fetchNotes().map { toNote() }", "Fake: delay + decode hardcoded JSON"] },
+    api:   { name: "④ Retrofit — the HTTP client", file: "NoteApi.kt", tab: "t-api",
+      what: "Describe the endpoint as an annotated interface (@GET(\"posts\") suspend fun fetchNotes(): List<NoteDto>); Retrofit generates the HTTP code and decodes the JSON with the kotlinx.serialization converter. Json { ignoreUnknownKeys = true } keeps parsing robust.",
+      points: ["@GET(\"posts\") + suspend", "kotlinx.serialization converter factory", "ignoreUnknownKeys = true for forward-compatibility"] },
+    model: { name: "⑤ DTO + domain model", file: "Note.kt", tab: "t-note",
+      what: "NoteDto is the @Serializable network shape (its fields match the JSON keys); Note is the clean domain shape (no userId, no annotations). NoteDto.toNote() is the single mapping boundary.",
+      points: ["@Serializable NoteDto matches the JSON keys", "Note drops userId — the UI doesn't need it", "toNote() is the one testable parse→app seam"] },
+  };
+  function renderArch(layer) {
+    var a = ARCH[layer]; var d = $("#archDetail");
+    d.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = a.name; h.style.marginTop = "0";
+    var f = document.createElement("div"); f.className = "pl-file"; f.style.marginBottom = "8px"; f.textContent = a.file;
+    var p = document.createElement("p"); p.className = "dense"; p.textContent = a.what;
+    var ul = document.createElement("ul"); ul.className = "kicker-list";
+    a.points.forEach(function (pt) { var li = document.createElement("li"); li.textContent = pt; ul.appendChild(li); });
+    var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "Open " + a.file + " in the code explorer ▸";
+    btn.addEventListener("click", function () { openCodeTab(a.tab); var c = $("#code"); if (c) c.scrollIntoView({ behavior: "smooth" }); });
+    d.appendChild(h); d.appendChild(f); d.appendChild(p); d.appendChild(ul); d.appendChild(btn);
+  }
+  $$(".arch-chip").forEach(function (chip) {
+    chip.addEventListener("click", function () { $$(".arch-chip").forEach(function (x) { x.classList.remove("sel"); }); chip.classList.add("sel"); renderArch(chip.dataset.layer); });
+  });
+  renderArch("ui");
+
+  // ======================= CODE TABS =======================
+  function openCodeTab(tabId) {
+    $$(".tab").forEach(function (x) { x.classList.toggle("on", x.dataset.tab === tabId); });
+    $$(".tabpane").forEach(function (x) { x.classList.toggle("on", x.dataset.pane === tabId); });
+  }
+  $$(".tab").forEach(function (t) { t.addEventListener("click", function () { openCodeTab(t.dataset.tab); }); });
+
+  // ======================= DTO → DOMAIN DEMO =======================
+  var DTO = {
+    normal: {
+      json: '{\n  "userId": 1,\n  "id": 1,\n  "title": "sunt aut facere",\n  "body": "quia et suscipit"\n}',
+      note: 'Note(\n  id = 1,\n  title = "sunt aut facere",\n  body = "quia et suscipit"\n)',
+      msg: "<strong>userId</strong> is parsed into NoteDto, then <strong>dropped</strong> by toNote() — the domain Note never carries it. That decoupling is the whole point of two shapes.",
+    },
+    extra: {
+      json: '{\n  "userId": 1,\n  "id": 1,\n  "title": "sunt aut facere",\n  "body": "quia et suscipit",\n  "reactions": 42\n}',
+      note: 'Note(\n  id = 1,\n  title = "sunt aut facere",\n  body = "quia et suscipit"\n)',
+      msg: "The server added <code>\"reactions\": 42</code>, a field the app never modeled. Because <code>Json { ignoreUnknownKeys = true }</code>, decoding still succeeds — the unknown field is simply ignored (and userId is dropped, as always). That is the #1 real-world robustness setting.",
+    },
+  };
+  function showDto(which) {
+    $$("#dtoSeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.dto === which); });
+    $("#dtoJson").textContent = DTO[which].json;
+    $("#dtoNote").textContent = DTO[which].note;
+    $("#dtoMsg").innerHTML = '<span class="callout-label">What happened</span>' + DTO[which].msg;
+  }
+  $$("#dtoSeg button").forEach(function (b) { b.addEventListener("click", function () { showDto(b.dataset.dto); }); });
+  showDto("normal");
+
+  // ======================= REAL vs FAKE =======================
+  var RF = {
+    fake: { name: "FakeNoteRepository — offline (the default)", path: "provideNoteRepository(useFake = true)",
+      what: "Returns the same parsed notes every time, after a short delay() to imitate latency so the Loading spinner is visible. It never touches the network — but it still decodeFromString()s a hardcoded JSON payload, so it exercises the real parse step.",
+      points: ["Works in airplane mode and in unit tests (no internet)", "delay(600) so you can see Loading", "Still parses JSON — the offline tests genuinely test parsing"] },
+    real: { name: "RealNoteRepository — live network", path: "provideNoteRepository(useFake = false)",
+      what: "Calls NoteApi.fetchNotes() over HTTP and maps each NoteDto to a Note. Requires the INTERNET permission (already declared) and a live connection; on no network it throws, which the ViewModel turns into an Error state.",
+      points: ["Hits https://jsonplaceholder.typicode.com/posts", "api.fetchNotes().map { it.toNote() }", "Throws offline → caught → Error UI state"] },
+  };
+  function renderRf(which) {
+    $$("#rfSeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.rf === which); });
+    var r = RF[which]; var d = $("#rfDetail");
+    d.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = r.name; h.style.marginTop = "0";
+    var f = document.createElement("div"); f.className = "pl-file"; f.style.marginBottom = "8px"; f.textContent = r.path;
+    var p = document.createElement("p"); p.className = "dense"; p.textContent = r.what;
+    var ul = document.createElement("ul"); ul.className = "kicker-list";
+    r.points.forEach(function (pt) { var li = document.createElement("li"); li.textContent = pt; ul.appendChild(li); });
+    d.appendChild(h); d.appendChild(f); d.appendChild(p); d.appendChild(ul);
+  }
+  $$("#rfSeg button").forEach(function (b) { b.addEventListener("click", function () { renderRf(b.dataset.rf); }); });
+  renderRf("fake");
+
+  // ======================= GLOSSARY =======================
+  var TERMS = [
+    ["Retrofit", "A type-safe HTTP client: you describe endpoints as an annotated interface and Retrofit generates the calls. Here it backs NoteApi.fetchNotes()."],
+    ["kotlinx.serialization", "Kotlin's JSON (de)serialization library. The compiler plugin generates a serializer for @Serializable NoteDto; the Retrofit converter uses it to decode response bodies."],
+    ["@Serializable", "Marks NoteDto so JSON text can be decoded into it. The DTO's field names match the JSON keys exactly (userId/id/title/body)."],
+    ["DTO", "Data Transfer Object — the exact on-the-wire shape of a JSON object. It exists only to be (de)serialized. Here: NoteDto."],
+    ["domain model", "The clean shape the rest of the app uses (Note) — no serialization annotations, and it drops fields the UI doesn't need (userId)."],
+    ["toNote() mapper", "The single extension function that converts a network NoteDto into a domain Note. Centralizing it keeps parsing logic in one testable place."],
+    ["@GET", "Retrofit annotation marking a method as an HTTP GET. @GET(\"posts\") appends \"posts\" to the baseUrl."],
+    ["suspend", "Marks fetchNotes()/getNotes() as coroutine functions: Retrofit runs the network I/O off the main thread and resumes you with the result — no callbacks, no blocked threads."],
+    ["ignoreUnknownKeys", "A Json setting: if the server adds fields you didn't model, decoding keeps working instead of throwing. The #1 real-world robustness setting."],
+    ["sealed interface", "A closed set of subtypes the compiler fully knows. NotesUiState is sealed, so a when over it is exhaustive — you can't forget a state."],
+    ["NotesUiState", "The three states the screen can be in: Loading, Success(notes), Error(message). Exactly one is active at a time."],
+    ["StateFlow", "A hot Flow that always holds a current value. The ViewModel exposes uiState: StateFlow<NotesUiState> for the screen to observe."],
+    ["MutableStateFlow", "The private, writable backing flow (_uiState). Exposed read-only via asStateFlow() — the standard one-way encapsulation."],
+    ["viewModelScope", "A CoroutineScope tied to the ViewModel's lifetime. loadNotes() launches in it, so the work is cancelled if the ViewModel is cleared."],
+    ["collectAsStateWithLifecycle()", "Subscribes a composable to a StateFlow, wraps the value in Compose State, recomposes on change, and pauses while off-screen."],
+    ["try/catch (the error boundary)", "The single try/catch in loadNotes() turns ANY failure — no network, bad JSON, timeout, HTTP error — into an Error state instead of a crash."],
+    ["Repository", "The abstraction the ViewModel depends on. It hides whether notes come from the network (Real) or memory (Fake)."],
+    ["Real / Fake switch", "provideNoteRepository(useFake = …) returns the offline fake (default) or the live network impl — a one-line toggle for offline runs and tests."],
+    ["INTERNET permission", "A normal (install-time) permission declared in the manifest. No runtime request; required for the Real repository to reach the network."],
+  ];
+  (function () {
+    var acc = $("#acc");
+    TERMS.forEach(function (t) {
+      var item = document.createElement("div"); item.className = "acc-item";
+      var q = document.createElement("button"); q.className = "acc-q"; q.type = "button";
+      var term = document.createElement("span"); term.innerHTML = "<code>" + t[0].replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
+      var plus = document.createElement("span"); plus.className = "plus"; plus.textContent = "+";
+      q.appendChild(term); q.appendChild(plus);
+      var a = document.createElement("div"); a.className = "acc-a"; a.textContent = t[1];
+      q.addEventListener("click", function () { item.classList.toggle("open"); });
+      item.appendChild(q); item.appendChild(a); acc.appendChild(item);
+    });
+  })();
+
+  // ======================= QUIZ =======================
+  var QUIZ = [
+    { q: "After a successful fetch, what makes the list appear on screen?",
+      opts: ["The repository pushes rows into the UI", "The ViewModel sets _uiState = Success(notes); the StateFlow emits and collectAsStateWithLifecycle recomposes", "onCreate runs again", "Retrofit updates the UI directly"],
+      correct: 1,
+      exp: "The screen is a pure function of the StateFlow. loadNotes() publishes Success(notes); the new value flows to the screen and NotesContent's when redraws the list — no manual refresh." },
+    { q: "Why are NoteDto and Note two separate classes?",
+      opts: ["To use more memory", "So the UI/ViewModel never depend on the API's exact wire format — only NoteDto + toNote() change if the JSON changes", "Because Retrofit requires it", "To store userId twice"],
+      correct: 1,
+      exp: "NoteDto is the network shape (@Serializable, matches JSON keys); Note is the clean app shape (drops userId). toNote() is the single boundary, so API changes don't ripple into the screens." },
+    { q: "What does Json { ignoreUnknownKeys = true } do?",
+      opts: ["Speeds up parsing", "Lets decoding succeed when the server adds fields the app didn't model (they're ignored)", "Encrypts the JSON", "Removes userId"],
+      correct: 1,
+      exp: "It makes parsing forward-compatible: new server fields are ignored instead of throwing. A server merely adding fields therefore does NOT cause an Error state." },
+    { q: "A device is offline and you're in Real mode. What does the user see?",
+      opts: ["A crash", "The Loading spinner forever", "An Error state with the message and a Retry button", "An empty list"],
+      correct: 2,
+      exp: "getNotes() throws (UnknownHostException); the single try/catch in loadNotes() turns it into Error(message). NotesContent draws the message + Retry, which just calls loadNotes() again." },
+    { q: "Why can the app build, run, and unit-test with no internet?",
+      opts: ["It caches responses", "provideNoteRepository(useFake = true) returns FakeNoteRepository, which parses a hardcoded JSON string offline", "It mocks Retrofit", "Tests are skipped offline"],
+      correct: 1,
+      exp: "The default is the offline fake. It still decodeFromString()s a hardcoded payload (so parsing is genuinely tested) after a small delay — no network required." },
+  ];
+  (function () {
+    var wrap = $("#quiz"); var answered = {}; var score = 0;
+    QUIZ.forEach(function (item, qi) {
+      var card = document.createElement("div"); card.className = "q";
+      var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
+      var opts = document.createElement("div"); opts.className = "q-opts";
+      item.opts.forEach(function (text, oi) {
+        var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
+        b.addEventListener("click", function () {
+          if (answered[qi]) return;
+          answered[qi] = true;
+          var buttons = $$(".opt", opts);
+          buttons.forEach(function (x, xi) { x.disabled = true; if (xi === item.correct) x.classList.add("correct"); });
+          if (oi !== item.correct) b.classList.add("wrong");
+          else score++;
+          card.classList.add("answered");
+          $("#quizScore").textContent = score + " / " + QUIZ.length;
+        });
+        opts.appendChild(b);
+      });
+      var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
+      card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
+    });
+  })();
+})();
+</script>
+</body>
+</html>

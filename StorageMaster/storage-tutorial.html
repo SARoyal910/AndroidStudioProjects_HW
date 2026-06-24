@@ -70,6 +70,15 @@ h1,h2,h3{line-height:1.15;letter-spacing:-.02em}
 .hero p{font-size:1.14rem;color:var(--on-surface-2);max-width:64ch;margin:0 0 10px}
 .hero .meta{font-size:.92rem;color:var(--on-surface-2);margin-top:18px}
 .hero .meta b{color:var(--on-surface)}
+.quick-start{margin:0 0 24px;background:var(--surface);border:1px solid var(--outline-2);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px}
+.quick-start h2{font-size:1.05rem;margin:0 0 10px;font-weight:850}
+.quick-start p{margin:0 0 12px;color:var(--on-surface-2);font-size:.95rem}
+.quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.quick-item{border:1px solid var(--outline-2);border-radius:12px;background:var(--surface-2);padding:12px}
+.quick-item strong{display:block;font-size:.84rem;margin-bottom:4px;color:var(--on-surface)}
+.quick-item span{display:block;font-size:.82rem;color:var(--on-surface-2);line-height:1.45}
+.quick-path{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.quick-path a{font-weight:800;background:var(--primary-container);color:var(--on-primary-container);border-radius:999px;padding:5px 10px;font-size:.82rem}
 .foot{margin-top:40px;padding:22px 24px;border:1px dashed var(--outline);border-radius:var(--radius);color:var(--on-surface-2);font-size:.92rem;background:var(--surface-2)}
 .foot code{font-size:.85em}
 
@@ -379,6 +388,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   .main{padding:0 18px 100px}
   .section{padding:22px 18px}
   .codedual{grid-template-columns:1fr}
+  .quick-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -396,6 +406,21 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <p>Everything you persist on-device — key/value settings with <b>DataStore</b>, structured records with <b>Room</b>, files &amp; media under <b>scoped storage</b>, plus encryption, backup and migrations — explained in real depth and made tweakable. Insert rows and watch a reactive <code>Flow</code> re-emit, flip <code>@Entity</code> annotations and watch the <code>CREATE&nbsp;TABLE</code> change, break a migration and watch it crash.</p>
       <p class="meta"><b>21 sections</b> · written for Android devs who want to <em>understand</em> persistence, not just paste it. The playgrounds are hand-built simulations of real Android behavior; the generated Kotlin &amp; SQL are the real thing.</p>
     </header>
+    <section class="quick-start" aria-label="Storage quick start">
+      <h2>Start here if the storage choices feel tangled</h2>
+      <p>Use this page as the deep reference, not the first explanation. First answer what shape the data has, then jump into the matching section.</p>
+      <div class="quick-grid">
+        <div class="quick-item"><strong>Small private settings</strong><span>Use DataStore. Examples: dark mode, sort order, last-opened tab.</span></div>
+        <div class="quick-item"><strong>Many records to query</strong><span>Use Room. Examples: notes, tasks, messages, cached API rows.</span></div>
+        <div class="quick-item"><strong>Files or user media</strong><span>Use filesDir/cacheDir for private app files, MediaStore or SAF for user-visible files.</span></div>
+      </div>
+      <div class="quick-path">
+        <a href="#landscape">Choose an API</a>
+        <a href="#where-it-lives">What survives?</a>
+        <a href="#room-why">Room basics</a>
+        <a href="#sharedprefs-vs-datastore">DataStore basics</a>
+      </div>
+    </section>
     <div id="sections"></div>
     <footer class="foot">
       <p>A standalone, offline interactive lab. The running Android app these concepts come from is <code>RoomAndPreferences</code> in this repo — Room (via KSP) for the notes table + DataStore Preferences for settings.</p>

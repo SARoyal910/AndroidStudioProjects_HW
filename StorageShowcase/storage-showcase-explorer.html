@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storage Showcase — Interactive Explainer</title>
+<meta name="description" content="An interactive explainer for the Storage Showcase Android app: run a live simulator that saves a note through Room, watch all four stores write to five real files on disk, flip the reactive sort order, see what survives a restart, explore the architecture and source, and check yourself with a quiz.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+/* ============ interactive explorer additions ============ */
+:root {
+  --ui: #2d64c8; --vm: #6d58b8; --repo: #0a8f9a; --room: #b56c00; --flow: #1b8a5a;
+}
+[data-theme="dark"] {
+  --ui: #6f9bff; --vm: #a78bfa; --repo: #38c7d4; --room: #e0a44a; --flow: #54c98a;
+}
+
+/* segmented controls / buttons */
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+.btn {
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  border-radius: 9px; min-height: 38px; padding: 0 14px; font-weight: 750; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; transition: background .15s, transform .05s;
+}
+.btn:hover { background: var(--surface-alt); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--muted); min-height: 36px; padding: 0 13px; font-weight: 750; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--blue); color: #fff; }
+.hint { color: var(--muted); font-size: 0.84rem; }
+
+/* simulator layout */
+.sim { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 16px; margin: 14px 0; }
+.sim-low { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; margin-top: 14px; }
+@media (max-width: 900px) { .sim, .sim-low { grid-template-columns: 1fr; } }
+
+/* fake device */
+.device {
+  border: 1px solid var(--line); border-radius: 18px; background: var(--surface);
+  box-shadow: 0 6px 26px rgba(0,0,0,0.08); overflow: hidden; min-width: 0;
+}
+.device-bar { height: 30px; background: var(--surface-strong); display: flex; align-items: center; justify-content: center; gap: 6px; border-bottom: 1px solid var(--line); }
+.device-bar .dot3 { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.device-body { padding: 14px; }
+.device-title { font-weight: 850; font-size: 1.02rem; }
+.device-sub { color: var(--muted); font-size: 0.82rem; margin-bottom: 10px; }
+.field { border: 1.5px solid var(--line-strong); border-radius: 9px; padding: 9px 11px; display: flex; align-items: center; }
+.field input { border: 0; outline: 0; background: transparent; color: var(--ink); width: 100%; font-size: 0.95rem; }
+.field.focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.items { margin-top: 12px; display: grid; gap: 6px; min-height: 40px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); animation: pop .35s ease; }
+.item-row.flash { animation: flashrow 1s ease; }
+@keyframes pop { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@keyframes flashrow { 0% { background: var(--flow); } 100% { background: var(--bg); } }
+.id-badge { font-family: var(--mono); font-size: 0.78rem; font-weight: 800; background: var(--violet-soft); color: var(--violet); border-radius: 6px; padding: 2px 7px; }
+.item-row .lbl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.x-btn { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 7px; min-height: 28px; padding: 0 9px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+.x-btn:hover { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.empty-note { color: var(--muted); font-size: 0.86rem; padding: 6px 2px; }
+
+/* pipeline */
+.pipe { display: grid; gap: 0; }
+.pl {
+  border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px;
+  padding: 10px 13px; background: var(--surface); transition: opacity .25s, box-shadow .25s, transform .25s, background .25s;
+  opacity: 0.5;
+}
+.band:nth-child(odd) .pl { background: var(--bg); }
+.pl.ui { border-left-color: var(--ui); }
+.pl.vm { border-left-color: var(--vm); }
+.pl.repo { border-left-color: var(--repo); }
+.pl.room { border-left-color: var(--room); }
+.pl.disk { border-left-color: var(--flow); }
+.pl.done { opacity: 0.82; }
+.pl.active { opacity: 1; transform: translateX(5px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.pl.ui.active { box-shadow: 0 0 0 2px var(--ui), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.vm.active { box-shadow: 0 0 0 2px var(--vm), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.repo.active { box-shadow: 0 0 0 2px var(--repo), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.room.active { box-shadow: 0 0 0 2px var(--room), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.disk.active { box-shadow: 0 0 0 2px var(--flow), 0 4px 16px rgba(0,0,0,0.12); }
+.pl-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pl-name { font-weight: 850; font-size: 0.94rem; display: flex; align-items: center; gap: 8px; }
+.pl-tag { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+.pl-sub { color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+.pl-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.carry { font-family: var(--mono); font-size: 0.74rem; font-weight: 800; border-radius: 6px; padding: 2px 8px; opacity: 0; transition: opacity .2s; white-space: nowrap; }
+.pl.active .carry { opacity: 1; }
+.pl.ui .carry { background: var(--blue-soft); color: var(--ui); }
+.pl.vm .carry { background: var(--violet-soft); color: var(--vm); }
+.pl.repo .carry { background: var(--teal-soft); color: var(--repo); }
+.pl.room .carry { background: var(--amber-soft); color: var(--room); }
+.pl.disk .carry { background: var(--green-soft); color: var(--flow); }
+.pl-arrow { display: grid; place-items: center; height: 18px; color: var(--line-strong); font-size: 0.95rem; transition: color .25s; }
+.pl-arrow.lit { color: var(--ui); }
+.pl-return { display: grid; place-items: center; min-height: 30px; color: var(--flow); font-weight: 800; font-size: 0.82rem; border: 1px dashed rgba(27,138,90,0.5); border-radius: 9px; margin-top: 6px; opacity: 0.45; transition: opacity .25s; }
+.pl-return.lit { opacity: 1; background: var(--green-soft); }
+
+/* journey log (live) */
+.jl { display: grid; gap: 8px; min-height: 60px; }
+.jl-row { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; animation: pop .3s ease; }
+.jl-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 0.8rem; }
+.jl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.jl-chip { font-size: 0.68rem; font-weight: 800; border-radius: 6px; padding: 1px 8px; }
+.jl-time { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.jl-msg { font-size: 0.86rem; margin-top: 2px; }
+.jl-empty { color: var(--muted); font-size: 0.86rem; }
+
+/* sqlite table */
+.dbcard .code-file { color: var(--muted); }
+.db-meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin-bottom: 8px; }
+table.db { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.82rem; }
+table.db th, table.db td { border: 1px solid var(--line); padding: 6px 9px; text-align: left; }
+table.db th { background: var(--surface-alt); color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+table.db tr.flash td { animation: flashrow 1s ease; }
+table.db .nodata td { text-align: center; color: var(--muted); font-family: var(--sans); }
+
+/* clickable architecture */
+.arch-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 12px 0; }
+@media (max-width: 760px) { .arch-grid { grid-template-columns: 1fr 1fr; } }
+.arch-chip { text-align: left; border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px; padding: 11px 13px; background: var(--surface); cursor: pointer; transition: transform .1s, box-shadow .15s; }
+.band:nth-child(odd) .arch-chip { background: var(--bg); }
+.arch-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.arch-chip.sel { box-shadow: 0 0 0 2px var(--blue); }
+.arch-chip.ui { border-left-color: var(--ui); }
+.arch-chip.vm { border-left-color: var(--vm); }
+.arch-chip.repo { border-left-color: var(--repo); }
+.arch-chip.room { border-left-color: var(--room); }
+.arch-chip.disk { border-left-color: var(--flow); }
+.arch-chip.log { border-left-color: var(--muted); }
+.arch-chip .ac-name { font-weight: 850; font-size: 0.92rem; }
+.arch-chip .ac-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+.arch-detail { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 14px 16px; margin-top: 6px; }
+.band:nth-child(odd) .arch-detail { background: var(--bg); }
+
+/* tabs (code explorer) */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.tab { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 8px 8px 0 0; min-height: 34px; padding: 0 12px; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.tab.on { background: var(--code-bg); color: #fff; border-color: var(--code-bg); }
+.tabpane { display: none; }
+.tabpane.on { display: block; }
+.concepts { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 0; }
+
+/* lifecycle */
+.life-row { display: flex; flex-wrap: wrap; gap: 9px; margin: 12px 0; }
+.life-stage { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); margin: 12px 0; }
+.band:nth-child(odd) .life-stage { background: var(--bg); }
+.life-chip { width: 86px; height: 86px; border-radius: 14px; display: grid; place-items: center; font-size: 2.2rem; border: 2px solid var(--line); background: var(--surface-alt); transition: all .3s; }
+.life-chip.present { border-color: var(--flow); background: var(--green-soft); }
+.life-chip.gone { border-color: var(--red); background: var(--red-soft); }
+.life-state { font-weight: 850; }
+.life-state.present { color: var(--flow); }
+.life-state.gone { color: var(--red); }
+.life-why { color: var(--muted); font-size: 0.9rem; margin-top: 3px; }
+
+/* glossary accordion */
+.acc { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin: 10px 0; background: var(--surface); }
+.band:nth-child(odd) .acc { background: var(--bg); }
+.acc-item + .acc-item { border-top: 1px solid var(--line); }
+.acc-q { width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: 12px 14px; font-weight: 750; color: var(--ink); display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: 0.95rem; }
+.acc-q:hover { background: var(--surface-alt); }
+.acc-q .plus { color: var(--muted); font-weight: 800; transition: transform .2s; }
+.acc-item.open .acc-q .plus { transform: rotate(45deg); }
+.acc-a { display: none; padding: 0 14px 13px; color: var(--muted); font-size: 0.92rem; }
+.acc-item.open .acc-a { display: block; }
+.acc-a code { color: var(--ink); }
+
+/* quiz */
+.quiz { display: grid; gap: 14px; margin: 12px 0; }
+.q { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+.band:nth-child(odd) .q { background: var(--bg); }
+.q-prompt { font-weight: 800; margin-bottom: 10px; }
+.q-opts { display: grid; gap: 8px; }
+.opt { text-align: left; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 9px; padding: 10px 12px; cursor: pointer; font-weight: 600; transition: background .12s; }
+.opt:hover { background: var(--surface-alt); }
+.opt.correct { border-color: var(--flow); background: var(--green-soft); }
+.opt.wrong { border-color: var(--red); background: var(--red-soft); }
+.opt:disabled { cursor: default; }
+.q-exp { margin-top: 10px; font-size: 0.9rem; color: var(--muted); display: none; border-left: 3px solid var(--blue); padding-left: 10px; }
+.q.answered .q-exp { display: block; }
+.quiz-score { font-weight: 850; font-size: 1.05rem; }
+
+.tiny { font-size: 0.78rem; color: var(--muted); }
+.kbd { font-family: var(--mono); background: var(--surface-alt); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 0.82em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">SS</div>
+      <div>
+        <div class="brand-title">Storage Showcase</div>
+        <div class="brand-subtitle">Interactive explainer</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">Explore</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>What is this?</span></a>
+      <a class="nav-link" href="#simulator"><span class="nav-num">2</span><span>Live simulator</span></a>
+      <a class="nav-link" href="#stores"><span class="nav-num">3</span><span>Four stores, five files</span></a>
+      <a class="nav-link" href="#architecture"><span class="nav-num">4</span><span>Architecture</span></a>
+      <a class="nav-link" href="#code"><span class="nav-num">5</span><span>Code explorer</span></a>
+      <div class="nav-title">Key ideas</div>
+      <a class="nav-link" href="#reactive"><span class="nav-num">6</span><span>Reactive sort swap</span></a>
+      <a class="nav-link" href="#survives"><span class="nav-num">7</span><span>What survives</span></a>
+      <a class="nav-link" href="#glossary"><span class="nav-num">8</span><span>Glossary</span></a>
+      <a class="nav-link" href="#quiz"><span class="nav-num">9</span><span>Check yourself</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      The step-by-step code pages:
+      <a href="how-a-note-reaches-storage.html">How a note reaches storage →</a>
+      <a href="how-storageshowcase-works.html">File-by-file walkthrough →</a>
+      <a href="../STORAGE_GUIDE.md">Storage decision guide →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">SS</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · What is this?</option>
+        <option value="#simulator">2 · Live simulator</option>
+        <option value="#stores">3 · Four stores, five files</option>
+        <option value="#architecture">4 · Architecture</option>
+        <option value="#code">5 · Code explorer</option>
+        <option value="#reactive">6 · Reactive sort swap</option>
+        <option value="#survives">7 · What survives</option>
+        <option value="#glossary">8 · Glossary</option>
+        <option value="#quiz">9 · Check yourself</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Interactive explainer</p>
+        <h1>Storage Showcase, hands-on</h1>
+        <p class="lead">
+          <strong>Storage Showcase</strong> is the capstone app: <em>every common on-device storage technique</em> in one
+          place, one per tab — <strong>Room</strong>, <strong>Preferences DataStore</strong>, a <strong>typed
+          DataStore</strong>, and <strong>internal files</strong>. This page lets you <strong>run the note pipeline
+          yourself</strong>, watch all four stores write to five real files on disk, flip the reactive sort order, click
+          through the architecture and source, and check yourself with a quiz.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">Room · SQLite</span>
+          <span class="tag blue">Preferences DataStore</span>
+          <span class="tag violet">Typed DataStore</span>
+          <span class="tag amber">filesDir / cacheDir</span>
+          <span class="tag">Jetpack Compose</span>
+          <span class="tag teal">runnable + this explainer</span>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><div class="card-head"><span class="card-title">▶ Run it</span></div><div class="card-body"><p class="dense">The <a href="#simulator">Live simulator</a> reproduces the note's exact pipeline in your browser — UI → ViewModel → DAO → Room → back via a reactive <code>Flow</code>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🗂 Compare it</span></div><div class="card-body"><p class="dense">See <a href="#stores">four stores, five files</a> write to disk, then <a href="#architecture">click the architecture</a> and browse the <a href="#code">source</a>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧠 Get it</span></div><div class="card-body"><p class="dense">Watch the <a href="#reactive">reactive sort swap</a>, see what <a href="#survives">survives</a> a restart, then <a href="#quiz">check yourself</a>.</p></div></div>
+        </div>
+
+        <div class="callout good">
+          <span class="callout-label">One sentence to hold onto</span>
+          Four different stores, <strong>one pattern</strong>: you write once, and because every read side is a reactive
+          <code>Flow</code> turned into a <code>StateFlow</code>, the screen updates <em>for you</em> — no manual reload anywhere.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. SIMULATOR ============ -->
+    <section class="band anchor" id="simulator">
+      <div class="band-inner">
+        <p class="eyebrow">The main event</p>
+        <h2>Live simulator — watch one note travel</h2>
+        <p class="dense">
+          Type a title and press <strong>Add note</strong>. The same pipeline the real app runs lights up one layer at a
+          time, the <strong>Journey log</strong> records each leg, and the <strong>SQLite table</strong> gains a row with
+          the id SQLite assigned. Switch to <span class="kbd">Manual</span> mode to advance one step at a time.
+        </p>
+
+        <div class="controls">
+          <span class="hint">Mode:</span>
+          <span class="seg" id="modeSeg">
+            <button data-mode="auto" class="on" type="button">Auto-play</button>
+            <button data-mode="manual" type="button">Manual steps</button>
+          </span>
+          <span class="hint">Speed:</span>
+          <span class="seg" id="spdSeg">
+            <button data-ms="900" type="button">Slow</button>
+            <button data-ms="520" class="on" type="button">Normal</button>
+            <button data-ms="240" type="button">Fast</button>
+          </span>
+          <button class="btn" id="simNext" type="button" disabled>Next step ▸</button>
+        </div>
+
+        <div class="sim">
+          <!-- fake device -->
+          <div class="device">
+            <div class="device-bar"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></div>
+            <div class="device-body">
+              <div class="device-title">Storage Showcase · Notes</div>
+              <div class="device-sub">Add a note — it lands in storage.db.</div>
+              <div class="field" id="simField">
+                <input id="simInput" type="text" placeholder="Note title" value="Buy milk" autocomplete="off" />
+              </div>
+              <div style="margin-top:8px;">
+                <button class="btn primary" id="simSave" type="button" style="width:100%; justify-content:center;">Add note (Room INSERT)</button>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+                <strong id="simCount" style="font-size:0.92rem;">Persisted notes (0)</strong>
+                <button class="x-btn" id="simClear" type="button">Clear notes</button>
+              </div>
+              <div class="items" id="simItems"></div>
+            </div>
+          </div>
+
+          <!-- pipeline -->
+          <div>
+            <div class="pipe" id="pipe">
+              <div class="pl ui" id="pl-ui">
+                <div class="pl-top"><span class="pl-name">① UI — the Notes tab</span><span class="carry" id="carry-ui"></span></div>
+                <div class="pl-sub">The tap captures the inputs and calls the ViewModel.</div>
+                <div class="pl-file">MainActivity.kt · NotesTab</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl vm" id="pl-vm">
+                <div class="pl-top"><span class="pl-name">② ViewModel — the conductor</span><span class="carry" id="carry-vm"></span></div>
+                <div class="pl-sub">Trims the title, stamps createdAt, builds the Note, launches a coroutine.</div>
+                <div class="pl-file">StorageViewModel.kt · addNote()</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl repo" id="pl-dao">
+                <div class="pl-top"><span class="pl-name">③ DAO — the read/write surface</span><span class="carry" id="carry-dao"></span></div>
+                <div class="pl-sub">The suspend @Insert; converters turn tags→JSON, priority→TEXT.</div>
+                <div class="pl-file">NoteDao.kt · Converters.kt</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl room" id="pl-room">
+                <div class="pl-top"><span class="pl-name">④ Room — the SQLite engine</span><span class="carry" id="carry-room"></span></div>
+                <div class="pl-sub">Runs INSERT, assigns a primary key, commits the row.</div>
+                <div class="pl-file">StorageDatabase.kt</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl disk" id="pl-disk">
+                <div class="pl-top"><span class="pl-name">⑤ storage.db — bytes on disk</span><span class="carry" id="carry-disk"></span></div>
+                <div class="pl-sub">Private SQLite file. The note now survives restarts.</div>
+                <div class="pl-file">/data/data/com.example.storageshowcase/databases/storage.db</div>
+              </div>
+              <div class="pl-return" id="pl-return">↑ return trip: observeNotes() re-emits its Flow → the LazyColumn recomposes</div>
+            </div>
+            <div class="controls" style="margin-top:14px;">
+              <button class="btn" id="simRelaunch" type="button">⟳ Kill &amp; relaunch app</button>
+              <button class="btn danger" id="simUninstall" type="button">🗑 Clear app data</button>
+            </div>
+            <p class="tiny">“Kill &amp; relaunch” keeps the rows (they’re on disk) and shows the lone read step. “Clear app data” wipes <code>storage.db</code> — the true end of the journey.</p>
+          </div>
+        </div>
+
+        <div class="sim-low">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Journey of the last note</span></div>
+            <div class="card-body"><div class="jl" id="simJourney"><div class="jl-empty">Press <strong>Add note</strong> to record a trip.</div></div></div>
+          </div>
+          <div class="card dbcard">
+            <div class="card-head"><span class="card-title">SQLite · notes table</span></div>
+            <div class="card-body">
+              <div class="db-meta" id="simDbMeta">storage.db · 0 rows</div>
+              <table class="db">
+                <thead><tr><th>id</th><th>title</th><th>priority</th></tr></thead>
+                <tbody id="simTbl"><tr class="nodata"><td colspan="3">no rows yet</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. STORES ============ -->
+    <section class="band anchor" id="stores">
+      <div class="band-inner">
+        <p class="eyebrow">Breadth, not depth</p>
+        <h2>Four stores → five files on disk</h2>
+        <p class="dense">
+          Each storage mechanism writes to its <em>own</em> file under the app's private internal storage. Use the
+          controls and watch the matching file update — and notice how the API for each store is shaped differently
+          (rows, key/value, one typed object, raw bytes) even though they all land in the same private folder.
+        </p>
+        <div class="grid2" id="storeGrid">
+          <!-- Room -->
+          <div class="card">
+            <div class="card-head"><span class="card-title">🗃️ Room · structured rows</span><span class="tag green">storage.db</span></div>
+            <div class="card-body">
+              <p class="dense" style="margin-bottom:8px;">A real SQLite database of note rows.</p>
+              <div class="controls"><button class="btn primary" id="stAddNote" type="button">+ INSERT a note</button><button class="btn" id="stDelNote" type="button">− DELETE a note</button></div>
+              <div class="db-meta">📄 databases/storage.db</div>
+              <div class="db-meta" id="fileDb" style="color:var(--ink);">notes table · 0 row(s)</div>
+            </div>
+          </div>
+          <!-- Preferences DataStore -->
+          <div class="card">
+            <div class="card-head"><span class="card-title">⚙️ Preferences DataStore · settings</span><span class="tag blue">settings.preferences_pb</span></div>
+            <div class="card-body">
+              <p class="dense" style="margin-bottom:8px;">A few simple typed keys.</p>
+              <div class="controls"><button class="btn" id="stDark" type="button">Toggle dark_theme</button><button class="btn" id="stSort" type="button">Cycle sort_order</button></div>
+              <div class="db-meta">📄 files/datastore/settings.preferences_pb</div>
+              <div class="db-meta" id="filePrefs" style="color:var(--ink);">dark_theme=false · sort_order=NEWEST_FIRST</div>
+            </div>
+          </div>
+          <!-- Typed DataStore -->
+          <div class="card">
+            <div class="card-head"><span class="card-title">🧑 Typed DataStore · one object</span><span class="tag violet">user_profile.json</span></div>
+            <div class="card-body">
+              <p class="dense" style="margin-bottom:8px;">One @Serializable object as JSON.</p>
+              <div class="field" style="margin-bottom:8px;"><input id="stName" type="text" placeholder="Display name" value="Ada" autocomplete="off" /></div>
+              <div class="controls"><button class="btn primary" id="stSetName" type="button">updateData { displayName }</button></div>
+              <div class="db-meta">📄 files/datastore/user_profile.json</div>
+              <div class="db-meta" id="fileProfile" style="color:var(--ink);">{"displayName":"Guest","accentSeed":0,"notesCreated":0}</div>
+            </div>
+          </div>
+          <!-- Files -->
+          <div class="card">
+            <div class="card-head"><span class="card-title">📁 Internal files · raw bytes</span><span class="tag amber">scratch.txt · cache/</span></div>
+            <div class="card-body">
+              <p class="dense" style="margin-bottom:8px;">A persistent file + an evictable cache.</p>
+              <div class="field" style="margin-bottom:8px;"><input id="stScratch" type="text" placeholder="Scratch note" value="todo: ship it" autocomplete="off" /></div>
+              <div class="controls"><button class="btn primary" id="stSaveScratch" type="button">Save to filesDir</button><button class="btn" id="stCacheAdd" type="button">Write cache blob</button><button class="btn danger" id="stCacheClear" type="button">Clear cache</button></div>
+              <div class="db-meta">📄 files/scratch.txt · cache/</div>
+              <div class="db-meta" id="fileScratch" style="color:var(--ink);">scratch.txt: "" · cache: 0 blob(s)</div>
+            </div>
+          </div>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">One tap, two stores</span>
+          In the real app, adding a note also calls <code>profileRepo.incrementNotesCreated()</code> — so a Room insert
+          <em>and</em> a typed-DataStore write happen together. Hit <strong>+ INSERT a note</strong> above and watch both
+          <code>storage.db</code> and <code>user_profile.json</code> change.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. ARCHITECTURE ============ -->
+    <section class="band anchor" id="architecture">
+      <div class="band-inner">
+        <p class="eyebrow">The pieces</p>
+        <h2>Architecture — click a layer</h2>
+        <p class="dense">One UI, one ViewModel, and a small <code>data/</code> package with one class per store. Tap any layer to see its job, the file it lives in, and what to look at.</p>
+        <div class="arch-grid" id="archGrid">
+          <button class="arch-chip ui sel" data-layer="ui" type="button"><div class="ac-name">① UI · tabs</div><div class="ac-file">MainActivity.kt</div></button>
+          <button class="arch-chip vm" data-layer="vm" type="button"><div class="ac-name">② ViewModel</div><div class="ac-file">StorageViewModel.kt</div></button>
+          <button class="arch-chip room" data-layer="room" type="button"><div class="ac-name">③ Room</div><div class="ac-file">data/ (4 files)</div></button>
+          <button class="arch-chip repo" data-layer="prefs" type="button"><div class="ac-name">④ Preferences DataStore</div><div class="ac-file">SettingsRepository.kt</div></button>
+          <button class="arch-chip disk" data-layer="typed" type="button"><div class="ac-name">⑤ Typed DataStore</div><div class="ac-file">ProfileRepository.kt</div></button>
+          <button class="arch-chip log" data-layer="files" type="button"><div class="ac-name">⑥ Internal files</div><div class="ac-file">FileStore.kt</div></button>
+        </div>
+        <div class="arch-detail" id="archDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ 5. CODE ============ -->
+    <section class="band anchor" id="code">
+      <div class="band-inner">
+        <p class="eyebrow">The source</p>
+        <h2>Code explorer</h2>
+        <p class="dense">Every storage file, lightly trimmed for focus. For the full, verbatim code with line-by-line comments, open <a href="how-a-note-reaches-storage.html">the step-by-step page</a> or the files themselves.</p>
+        <div class="tabs" id="codeTabs">
+          <button class="tab on" data-tab="t-models" type="button">Models.kt</button>
+          <button class="tab" data-tab="t-conv" type="button">Converters.kt</button>
+          <button class="tab" data-tab="t-dao" type="button">NoteDao.kt</button>
+          <button class="tab" data-tab="t-db" type="button">StorageDatabase.kt</button>
+          <button class="tab" data-tab="t-prefs" type="button">SettingsRepository.kt</button>
+          <button class="tab" data-tab="t-profile" type="button">ProfileRepository.kt</button>
+          <button class="tab" data-tab="t-files" type="button">FileStore.kt</button>
+          <button class="tab" data-tab="t-vm" type="button">ViewModel.kt</button>
+        </div>
+
+        <div class="tabpane on" data-pane="t-models">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/Models.kt — entities + relation</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">enum class Priority { LOW, NORMAL, HIGH }
+
+@Entity(tableName = "categories", indices = [Index(value = ["name"], unique = true)])
+data class Category(@PrimaryKey(autoGenerate = true) val id: Long = 0, val name: String)
+
+@Entity(
+    tableName = "notes",
+    foreignKeys = [ForeignKey(entity = Category::class, parentColumns = ["id"],
+        childColumns = ["categoryId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("categoryId"), Index("title")],   // index the FK child column
+)
+data class Note(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String, val body: String, val done: Boolean = false,
+    val categoryId: Long,                          // FK -&gt; categories.id
+    val priority: Priority = Priority.NORMAL,      // enum -&gt; TEXT via Converters
+    val tags: List&lt;String&gt; = emptyList(),          // List -&gt; JSON TEXT via Converters
+    val createdAt: Long = 0L,
+)
+
+data class CategoryWithNotes(
+    @Embedded val category: Category,
+    @Relation(parentColumn = "id", entityColumn = "categoryId") val notes: List&lt;Note&gt;,
+)</pre></div>
+          <div class="tag-row"><span class="tag green">@Entity</span><span class="tag">@ForeignKey</span><span class="tag">@Relation</span><span class="tag">@Index</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-conv">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/Converters.kt — non-primitive columns</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class Converters {
+    @TypeConverter fun fromTags(tags: List&lt;String&gt;): String = Json.encodeToString(tags)
+    @TypeConverter fun toTags(json: String): List&lt;String&gt; =
+        if (json.isBlank()) emptyList() else Json.decodeFromString(json)
+
+    @TypeConverter fun fromPriority(p: Priority): String = p.name        // store NAME, not ordinal
+    @TypeConverter fun toPriority(value: String): Priority =
+        runCatching { Priority.valueOf(value) }.getOrDefault(Priority.NORMAL)
+}</pre></div>
+          <div class="tag-row"><span class="tag">@TypeConverter</span><span class="tag">List↔JSON</span><span class="tag">enum↔name</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-dao">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/NoteDao.kt — reactive reads + suspend writes</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Dao
+interface NoteDao {
+    @Query("SELECT * FROM notes ORDER BY id DESC")
+    fun observeNotes(): Flow&lt;List&lt;Note&gt;&gt;
+    @Query("SELECT * FROM notes ORDER BY title COLLATE NOCASE ASC")
+    fun observeNotesByTitle(): Flow&lt;List&lt;Note&gt;&gt;
+
+    @Transaction
+    @Query("SELECT * FROM categories ORDER BY name COLLATE NOCASE ASC")
+    fun observeCategoriesWithNotes(): Flow&lt;List&lt;CategoryWithNotes&gt;&gt;
+
+    @Query("SELECT COUNT(*) FROM notes") fun observeCount(): Flow&lt;Int&gt;
+
+    @Insert suspend fun insert(note: Note): Long
+    @Update suspend fun update(note: Note)
+    @Delete suspend fun delete(note: Note)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertCategory(category: Category): Long
+}</pre></div>
+          <div class="tag-row"><span class="tag green">@Dao</span><span class="tag">Flow reads</span><span class="tag">suspend writes</span><span class="tag">@Transaction</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-db">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/StorageDatabase.kt — holder, singleton, migration</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Database(entities = [Note::class, Category::class], version = 2, exportSchema = false)
+@TypeConverters(Converters::class)
+abstract class StorageDatabase : RoomDatabase() {
+    abstract fun noteDao(): NoteDao
+
+    companion object {
+        @Volatile private var INSTANCE: StorageDatabase? = null
+
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
+            }
+        }
+
+        fun getInstance(context: Context): StorageDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(context.applicationContext,
+                    StorageDatabase::class.java, "storage.db")
+                    .addMigrations(MIGRATION_1_2).build().also { INSTANCE = it }
+            }
+    }
+}</pre></div>
+          <div class="tag-row"><span class="tag green">@Database</span><span class="tag">@TypeConverters</span><span class="tag">Migration(1,2)</span><span class="tag">singleton</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-prefs">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/SettingsRepository.kt — Preferences DataStore</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">private val Context.settingsDataStore by preferencesDataStore(name = "settings")
+
+class SettingsRepository(context: Context) {
+    private val dataStore = context.applicationContext.settingsDataStore
+    private companion object {
+        val KEY_DARK_THEME = booleanPreferencesKey("dark_theme")
+        val KEY_SORT_ORDER = stringPreferencesKey("sort_order")
+    }
+    val darkTheme: Flow&lt;Boolean&gt; = dataStore.data.map { it[KEY_DARK_THEME] ?: false }
+    suspend fun setDarkTheme(enabled: Boolean) { dataStore.edit { it[KEY_DARK_THEME] = enabled } }
+    suspend fun setSortOrder(order: SortOrder) { dataStore.edit { it[KEY_SORT_ORDER] = order.name } }
+}</pre></div>
+          <div class="tag-row"><span class="tag blue">preferencesDataStore</span><span class="tag">.data Flow</span><span class="tag">edit { }</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-profile">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/ProfileRepository.kt — Typed DataStore</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@kotlinx.serialization.Serializable
+data class UserProfile(val displayName: String = "Guest", val accentSeed: Int = 0, val notesCreated: Int = 0)
+
+object UserProfileSerializer : Serializer&lt;UserProfile&gt; {
+    override val defaultValue = UserProfile()
+    override suspend fun readFrom(input: InputStream): UserProfile = /* JSON decode */ TODO()
+    override suspend fun writeTo(t: UserProfile, output: OutputStream) { /* JSON encode */ }
+}
+
+private val Context.profileDataStore by dataStore("user_profile.json", UserProfileSerializer)
+
+class ProfileRepository(context: Context) {
+    val profile: Flow&lt;UserProfile&gt; = context.applicationContext.profileDataStore.data
+    suspend fun setDisplayName(name: String) { /* updateData { it.copy(...) } */ }
+    suspend fun incrementNotesCreated() { /* updateData { it.copy(notesCreated = it.notesCreated + 1) } */ }
+}</pre></div>
+          <div class="tag-row"><span class="tag violet">@Serializable</span><span class="tag">Serializer</span><span class="tag">updateData { }</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-files">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/FileStore.kt — internal files</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class FileStore(context: Context) {
+    private val app = context.applicationContext
+    private val scratchFile: File get() = File(app.filesDir, "scratch.txt")
+
+    fun readScratch(): String = if (scratchFile.exists()) scratchFile.readText() else ""
+    fun writeScratch(text: String) { scratchFile.writeText(text) }              // filesDir: persists
+    fun writeCacheBlob(): File =
+        File.createTempFile("blob", ".tmp", app.cacheDir).apply { writeText("cacheable scratch data") }  // cacheDir: evictable
+    fun clearCache() { app.cacheDir.listFiles()?.forEach { it.delete() } }
+}</pre></div>
+          <div class="tag-row"><span class="tag amber">filesDir</span><span class="tag">cacheDir</span><span class="tag">blocking I/O → Dispatchers.IO</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-vm">
+          <div class="code-panel"><div class="code-head"><span class="code-file">StorageViewModel.kt — every store → a StateFlow</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// The persisted sort order SWAPS the Room query reactively.
+val notes: StateFlow&lt;List&lt;Note&gt;&gt; = settings.sortOrder
+    .flatMapLatest { order -&gt; when (order) {
+        SortOrder.NEWEST_FIRST -&gt; dao.observeNotes()
+        SortOrder.TITLE_ASC    -&gt; dao.observeNotesByTitle()
+    } }
+    .stateIn(viewModelScope, started, emptyList())
+
+fun addNote(title: String, /* … */) {
+    viewModelScope.launch {
+        dao.insert(Note(title = title.trim(), /* … */, createdAt = System.currentTimeMillis()))
+        profileRepo.incrementNotesCreated()      // one tap, two stores
+    }
+}
+
+fun saveScratch() = viewModelScope.launch {
+    withContext(Dispatchers.IO) { fileStore.writeScratch(_scratch.value) }   // raw I/O → IO
+}</pre></div>
+          <div class="tag-row"><span class="tag violet">flatMapLatest</span><span class="tag">stateIn</span><span class="tag">viewModelScope.launch</span><span class="tag">withContext(IO)</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. REACTIVE ============ -->
+    <section class="band anchor" id="reactive">
+      <div class="band-inner">
+        <p class="eyebrow">The key idea · reactive composition</p>
+        <h2>Reactive sort swap — <code>flatMapLatest</code></h2>
+        <p class="dense">
+          The notes list is ordered by a setting stored in <strong>Preferences DataStore</strong>. Changing the setting
+          doesn't re-query by hand — it emits a new value, and <code>flatMapLatest</code> swaps which Room <code>Flow</code>
+          feeds the list. Flip the toggle and watch the list reorder, with a trace of what fired.
+        </p>
+        <div class="controls">
+          <span class="hint">sort_order (persisted in DataStore):</span>
+          <span class="seg" id="rxSeg">
+            <button data-rx="NEWEST_FIRST" class="on" type="button">Newest first</button>
+            <button data-rx="TITLE_ASC" type="button">Title A–Z</button>
+          </span>
+        </div>
+        <div class="sim-low">
+          <div class="card">
+            <div class="card-head"><span class="card-title">The notes list (on screen)</span></div>
+            <div class="card-body"><div class="items" id="rxList"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">What fired</span></div>
+            <div class="card-body"><div class="jl" id="rxTrace"><div class="jl-empty">Flip the sort order to see the chain.</div></div></div>
+          </div>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">Why <code>flatMapLatest</code> and not a manual re-sort</span>
+          <code>flatMapLatest</code> cancels the previous inner <code>Flow</code> and switches to the new query the moment
+          the setting changes — so the list is always backed by the right SQL, and the setting itself is just another
+          reactive source. Composition, not bookkeeping.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. SURVIVES ============ -->
+    <section class="band anchor" id="survives">
+      <div class="band-inner">
+        <p class="eyebrow">The end of the journey</p>
+        <h2>What survives — across all five files</h2>
+        <p class="dense">
+          Everything lives in the app's private internal storage, so it outlives in-memory state. The one deliberate
+          exception is the cache. Run an event and watch each store's fate.
+        </p>
+        <div class="life-row" id="lifeBtns">
+          <button class="btn" data-ev="rotate" type="button">🔄 Rotate screen</button>
+          <button class="btn" data-ev="kill" type="button">✖ Kill process</button>
+          <button class="btn" data-ev="reboot" type="button">⚡ Reboot device</button>
+          <button class="btn" data-ev="clearcache" type="button">🧽 Clear cache</button>
+          <button class="btn danger" data-ev="cleardata" type="button">🧹 Clear app data</button>
+          <button class="btn danger" data-ev="uninstall" type="button">🗑 Uninstall</button>
+          <button class="btn ghost" data-ev="restore" type="button">↺ Restore</button>
+        </div>
+        <div class="grid3" id="lifeGrid" style="margin-top:8px;">
+          <div class="card"><div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:10px;"><span><strong>storage.db</strong><br><span class="tiny">Room rows</span></span><span class="dot yes" id="lifeDb">✓</span></div></div>
+          <div class="card"><div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:10px;"><span><strong>settings.preferences_pb</strong><br><span class="tiny">Preferences DataStore</span></span><span class="dot yes" id="lifePrefs">✓</span></div></div>
+          <div class="card"><div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:10px;"><span><strong>user_profile.json</strong><br><span class="tiny">Typed DataStore</span></span><span class="dot yes" id="lifeProfile">✓</span></div></div>
+          <div class="card"><div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:10px;"><span><strong>scratch.txt</strong><br><span class="tiny">filesDir</span></span><span class="dot yes" id="lifeScratch">✓</span></div></div>
+          <div class="card"><div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:10px;"><span><strong>cache/</strong><br><span class="tiny">cacheDir (evictable)</span></span><span class="dot yes" id="lifeCache">✓</span></div></div>
+        </div>
+        <p class="dense" id="lifeWhy" style="margin-top:12px;">Tap an event to see whether each store survives it.</p>
+      </div>
+    </section>
+
+    <!-- ============ 8. GLOSSARY ============ -->
+    <section class="band anchor" id="glossary">
+      <div class="band-inner">
+        <p class="eyebrow">Plain-language terms</p>
+        <h2>Glossary — tap to expand</h2>
+        <div class="acc" id="acc"></div>
+      </div>
+    </section>
+
+    <!-- ============ 9. QUIZ ============ -->
+    <section class="band anchor" id="quiz">
+      <div class="band-inner">
+        <p class="eyebrow">Check yourself</p>
+        <h2>Did it click?</h2>
+        <p class="dense">Five questions. Pick an answer to see if it’s right and why. <span class="quiz-score" id="quizScore">0 / 5</span></p>
+        <div class="quiz" id="quiz"></div>
+        <p class="foot">Storage Showcase · four stores, one app · part of the AndroidStudioProjects teaching set. See also <a href="how-a-note-reaches-storage.html">the step-by-step code page</a>.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+<script>
+/* ============ Storage Showcase — interactive explorer logic ============ */
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  // stage metadata shared by the simulator + journey log (colors match the CSS vars)
+  var STAGE = {
+    UI:        { label: "UI",            color: "var(--ui)",   soft: "var(--blue-soft)" },
+    VIEWMODEL: { label: "ViewModel",     color: "var(--vm)",   soft: "var(--violet-soft)" },
+    DAO:       { label: "DAO",           color: "var(--repo)", soft: "var(--teal-soft)" },
+    ROOM:      { label: "Room · SQLite", color: "var(--room)", soft: "var(--amber-soft)" },
+    FLOW:      { label: "Flow · UI",     color: "var(--flow)", soft: "var(--green-soft)" },
+  };
+  var ORDER = ["ui", "vm", "dao", "room", "disk"];
+
+  // ======================= LIVE SIMULATOR =======================
+  var sim = { items: [], nextId: 1, journey: [], delay: 520, mode: "auto", queue: [], qi: 0, running: false, timer: null, pending: null };
+
+  function renderItems(flash) {
+    var el = $("#simItems"); el.innerHTML = "";
+    $("#simCount").textContent = "Persisted notes (" + sim.items.length + ")";
+    if (!sim.items.length) { el.innerHTML = '<div class="empty-note">Nothing stored yet — Add a note above.</div>'; return; }
+    sim.items.forEach(function (it, idx) {
+      var row = document.createElement("div");
+      row.className = "item-row" + (flash && idx === 0 ? " flash" : "");
+      var badge = document.createElement("span"); badge.className = "id-badge"; badge.textContent = "#" + it.id;
+      var lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = it.title;
+      var x = document.createElement("button"); x.className = "x-btn"; x.type = "button"; x.textContent = "Delete";
+      x.addEventListener("click", function () { if (!sim.running) startJourney(buildDeleteSteps(it)); });
+      row.appendChild(badge); row.appendChild(lbl); row.appendChild(x); el.appendChild(row);
+    });
+  }
+
+  function renderTable() {
+    var tb = $("#simTbl"); tb.innerHTML = "";
+    $("#simDbMeta").textContent = "storage.db · " + sim.items.length + " row" + (sim.items.length === 1 ? "" : "s");
+    if (!sim.items.length) { tb.innerHTML = '<tr class="nodata"><td colspan="3">no rows yet</td></tr>'; return; }
+    sim.items.forEach(function (it, idx) {
+      var tr = document.createElement("tr"); if (idx === 0) tr.className = "flash";
+      [String(it.id), it.title, it.priority].forEach(function (v) { var td = document.createElement("td"); td.textContent = v; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+  }
+
+  function renderJourney() {
+    var el = $("#simJourney"); el.innerHTML = "";
+    if (!sim.journey.length) { el.innerHTML = '<div class="jl-empty">Press <strong>Add note</strong> to record a trip.</div>'; return; }
+    sim.journey.forEach(function (s, idx) {
+      var meta = STAGE[s.stage];
+      var row = document.createElement("div"); row.className = "jl-row";
+      var num = document.createElement("div"); num.className = "jl-num"; num.textContent = idx + 1; num.style.background = meta.color;
+      var body = document.createElement("div");
+      var head = document.createElement("div"); head.className = "jl-head";
+      var chip = document.createElement("span"); chip.className = "jl-chip"; chip.textContent = meta.label; chip.style.color = meta.color; chip.style.background = meta.soft;
+      var time = document.createElement("span"); time.className = "jl-time"; time.textContent = "+" + s.at + " ms";
+      head.appendChild(chip); head.appendChild(time);
+      var msg = document.createElement("div"); msg.className = "jl-msg"; msg.textContent = s.msg;
+      body.appendChild(head); body.appendChild(msg); row.appendChild(num); row.appendChild(body); el.appendChild(row);
+    });
+  }
+
+  function clearPipe() {
+    $$(".pl").forEach(function (p) { p.classList.remove("active", "done"); });
+    $$("[data-arrow]").forEach(function (a) { a.classList.remove("lit"); });
+    var ret = $("#pl-return"); if (ret) ret.classList.remove("lit");
+    ORDER.forEach(function (c) { var el = $("#carry-" + c); if (el) el.textContent = ""; });
+  }
+
+  function visual(idx) {
+    clearPipe();
+    var touched = {};
+    for (var k = 0; k <= idx; k++) sim.queue[k].boxes.forEach(function (b) { if (b !== "return") touched[b] = true; });
+    Object.keys(touched).forEach(function (b) { var el = $("#pl-" + b); if (el) el.classList.add("done"); });
+    var cur = sim.queue[idx];
+    cur.boxes.forEach(function (b) {
+      if (b === "return") { var r = $("#pl-return"); if (r) r.classList.add("lit"); return; }
+      var el = $("#pl-" + b); if (el) { el.classList.remove("done"); el.classList.add("active"); var c = $("#carry-" + b); if (c && cur.carry) c.textContent = cur.carry; }
+    });
+    var n = ORDER.filter(function (b) { return touched[b]; }).length;
+    $$("[data-arrow]").forEach(function (a, j) { a.classList.toggle("lit", j < n - 1); });
+  }
+
+  function advance() {
+    if (sim.qi >= sim.queue.length) { finish(); return; }
+    var step = sim.queue[sim.qi];
+    if (step.apply) step.apply();
+    sim.journey.push({ stage: step.stage, msg: step.msg, at: step.at });
+    renderJourney();
+    visual(sim.qi);
+    sim.qi++;
+    updateNextBtn();
+  }
+
+  function autoRun() {
+    advance();
+    if (sim.qi < sim.queue.length) sim.timer = setTimeout(autoRun, sim.delay);
+    else finish();
+  }
+
+  function startJourney(steps) {
+    if (sim.running) return;
+    sim.queue = steps; sim.qi = 0; sim.journey = []; sim.running = true;
+    renderJourney(); $("#simSave").disabled = true;
+    if (sim.mode === "auto") autoRun();
+    else { advance(); updateNextBtn(); }
+  }
+
+  function finish() {
+    sim.running = false; if (sim.timer) { clearTimeout(sim.timer); sim.timer = null; }
+    $("#simSave").disabled = false; updateNextBtn();
+  }
+
+  function updateNextBtn() {
+    $("#simNext").disabled = !(sim.mode === "manual" && sim.running && sim.qi < sim.queue.length);
+  }
+
+  function buildSaveSteps(title) {
+    return [
+      { stage: "UI", boxes: ["ui"], carry: '"' + title + '"', at: 0,
+        msg: 'The Add button captured "' + title + '" and called viewModel.addNote("' + title + '", …).' },
+      { stage: "VIEWMODEL", boxes: ["vm"], carry: "Note", at: 1,
+        msg: 'ViewModel trimmed the title, built Note(title="' + title + '", priority=NORMAL, createdAt=now) and launched a coroutine on viewModelScope so the write never blocks the UI thread.',
+        apply: function () { sim.pending = { id: 0, title: title, priority: "NORMAL", createdAt: Date.now() }; } },
+      { stage: "DAO", boxes: ["dao"], carry: "insert(note)", at: 2,
+        msg: 'dao.insert(note) — a suspend write Room runs on its own executor. The @TypeConverters turn tags into JSON and the priority enum into the text "NORMAL".' },
+      { stage: "ROOM", boxes: ["room", "disk"], carry: "INSERT", at: 6, msg: "",
+        apply: function () { var it = sim.pending; it.id = sim.nextId++; sim.items.unshift(it); this.msg = "Room ran INSERT INTO notes(...), SQLite assigned id #" + it.id + " and committed the row to storage.db. addNote() also bumped profile.notesCreated via the typed DataStore — one tap, two stores."; renderTable(); } },
+      { stage: "FLOW", boxes: ["return"], at: 8, msg: "",
+        apply: function () { this.msg = "observeNotes() re-ran (selected by flatMapLatest on the sort order), found " + sim.items.length + " row(s), and pushed a new List down the Flow → the LazyColumn recomposes. (No manual reload!)"; renderItems(true); } },
+    ];
+  }
+
+  function buildDeleteSteps(item) {
+    return [
+      { stage: "UI", boxes: ["ui"], carry: "delete", at: 0,
+        msg: 'Delete tapped on "' + item.title + '" → viewModelScope.launch { dao.delete(note) }.',
+        apply: function () { sim.items = sim.items.filter(function (x) { return x.id !== item.id; }); renderTable(); } },
+      { stage: "FLOW", boxes: ["return"], at: 3, msg: "",
+        apply: function () { this.msg = "Room re-ran the query, found " + sim.items.length + " row(s), and re-emitted the Flow — deletes update the screen the same reactive way."; renderItems(true); } },
+    ];
+  }
+
+  function buildClearSteps() {
+    return [
+      { stage: "UI", boxes: ["ui"], carry: "clear", at: 0,
+        msg: "Clear notes tapped → each note is deleted via dao.delete(...).",
+        apply: function () { sim.items = []; renderTable(); } },
+      { stage: "FLOW", boxes: ["return"], at: 4,
+        msg: "Room re-emitted an empty List down the Flow → the list clears on screen.",
+        apply: function () { renderItems(false); } },
+    ];
+  }
+
+  function buildRelaunchSteps() {
+    return [
+      { stage: "FLOW", boxes: ["return"], at: 1, msg: "",
+        apply: function () { this.msg = "App relaunched. On first subscription observeNotes() read " + sim.items.length + " row(s) back from storage.db — a lone Flow step, no save in sight. That is persistence."; renderItems(true); renderTable(); } },
+    ];
+  }
+
+  $("#simSave").addEventListener("click", function () {
+    var title = $("#simInput").value.trim();
+    if (!title) { var f = $("#simField"); f.classList.add("focus"); setTimeout(function () { f.classList.remove("focus"); }, 600); return; }
+    $("#simInput").value = "";
+    startJourney(buildSaveSteps(title));
+  });
+  $("#simInput").addEventListener("keydown", function (e) { if (e.key === "Enter") $("#simSave").click(); });
+  $("#simInput").addEventListener("focus", function () { $("#simField").classList.add("focus"); });
+  $("#simInput").addEventListener("blur", function () { $("#simField").classList.remove("focus"); });
+  $("#simNext").addEventListener("click", function () { if (sim.mode === "manual" && sim.running) { advance(); if (sim.qi >= sim.queue.length) finish(); } });
+  $("#simClear").addEventListener("click", function () { if (!sim.running && sim.items.length) startJourney(buildClearSteps()); });
+  $("#simRelaunch").addEventListener("click", function () { if (!sim.running) startJourney(buildRelaunchSteps()); });
+  $("#simUninstall").addEventListener("click", function () {
+    if (sim.running) return;
+    sim.items = []; sim.nextId = 1; sim.journey = []; clearPipe();
+    renderItems(false); renderTable(); renderJourney();
+  });
+  $$("#modeSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { $$("#modeSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.mode = b.dataset.mode; updateNextBtn(); });
+  });
+  $$("#spdSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { $$("#spdSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.delay = parseInt(b.dataset.ms, 10); });
+  });
+  renderItems(false); renderTable(); renderJourney();
+
+  // ======================= FOUR STORES, FIVE FILES =======================
+  var st = { notes: 0, dark: false, sort: "NEWEST_FIRST", name: "Guest", notesCreated: 0, scratch: "", cache: 0 };
+  function jsonStr(obj) { return JSON.stringify(obj); }
+  function renderStores() {
+    var db = $("#fileDb"); if (db) db.textContent = "notes table · " + st.notes + " row(s)";
+    var pf = $("#filePrefs"); if (pf) pf.textContent = "dark_theme=" + st.dark + " · sort_order=" + st.sort;
+    var pr = $("#fileProfile"); if (pr) pr.textContent = jsonStr({ displayName: st.name, accentSeed: 0, notesCreated: st.notesCreated });
+    var sc = $("#fileScratch"); if (sc) sc.textContent = 'scratch.txt: "' + st.scratch + '" · cache: ' + st.cache + " blob(s)";
+  }
+  function on(id, fn) { var el = $("#" + id); if (el) el.addEventListener("click", fn); }
+  on("stAddNote", function () { st.notes++; st.notesCreated++; renderStores(); });          // one tap, two stores
+  on("stDelNote", function () { if (st.notes > 0) st.notes--; renderStores(); });
+  on("stDark", function () { st.dark = !st.dark; renderStores(); });
+  on("stSort", function () { st.sort = st.sort === "NEWEST_FIRST" ? "TITLE_ASC" : "NEWEST_FIRST"; renderStores(); });
+  on("stSetName", function () { st.name = ($("#stName").value.trim() || "Guest"); renderStores(); });
+  on("stSaveScratch", function () { st.scratch = $("#stScratch").value; renderStores(); });
+  on("stCacheAdd", function () { st.cache++; renderStores(); });
+  on("stCacheClear", function () { st.cache = 0; renderStores(); });
+  renderStores();
+
+  // ======================= ARCHITECTURE =======================
+  var ARCH = {
+    ui:   { name: "① UI — four tabs", file: "MainActivity.kt", tab: "how-a-note-reaches-storage.html#ui",
+      what: "A single Compose screen with a bottom NavigationBar: Notes, Settings, Profile, Files — one tab per storage mechanism. Each tab reads ViewModel StateFlows with collectAsStateWithLifecycle() and shows the real on-disk file its data is saved to.",
+      points: ["NavigationBar with one item per store", "collectAsStateWithLifecycle() on every tab", "A 'Saved to · path' banner makes the file concrete"] },
+    vm:   { name: "② ViewModel — the conductor", file: "StorageViewModel.kt", tab: "t-vm",
+      what: "Turns every persistence Flow into a UI StateFlow via stateIn(...), and every user intent into a write on viewModelScope. flatMapLatest swaps the Room query when the sort setting changes; raw file I/O is wrapped in Dispatchers.IO while Room/DataStore are left alone.",
+      points: ["stateIn(...) for notes, settings, profile, files", "flatMapLatest swaps the active Room query", "addNote() writes Room AND bumps the typed profile"] },
+    room: { name: "③ Room — structured rows", file: "data/Models.kt · Converters.kt · NoteDao.kt · StorageDatabase.kt", tab: "t-models",
+      what: "The relational store: a Note entity with a foreign key to Category, a @Relation read object, @TypeConverters for the List and enum columns, reactive Flow queries, and a real Migration(1,2). Backed by storage.db.",
+      points: ["@Entity + @ForeignKey + @Index + @Relation", "@TypeConverter: List↔JSON, enum↔name", "version=2 with a shipped ALTER TABLE migration"] },
+    prefs:{ name: "④ Preferences DataStore — settings", file: "data/SettingsRepository.kt", tab: "t-prefs",
+      what: "The modern SharedPreferences replacement for a few simple settings: dark theme + notes sort order. Reads are a reactive Flow off .data; writes are a transactional suspend edit { }. Stored in settings.preferences_pb.",
+      points: ["One file-scoped DataStore instance", "darkTheme: Flow<Boolean> = data.map { ... }", "edit { } writes; enum stored by NAME"] },
+    typed:{ name: "⑤ Typed DataStore — one object", file: "data/ProfileRepository.kt", tab: "t-profile",
+      what: "When settings are really one structured object, a typed DataStore beats loose keys. A @Serializable UserProfile is stored as JSON via a custom Serializer; reads are Flow<UserProfile>, writes are updateData { }. Stored in user_profile.json.",
+      points: ["@Serializable UserProfile with real defaults", "Serializer<UserProfile> encodes/decodes JSON", "updateData { it.copy(...) } is transactional"] },
+    files:{ name: "⑥ Internal files — raw bytes", file: "data/FileStore.kt", tab: "t-files",
+      what: "For free-form blobs: a persistent scratch note in filesDir and an evictable blob in cacheDir. Unlike Room/DataStore, raw java.io calls are blocking and are NOT auto-moved off the main thread, so the ViewModel wraps them in withContext(Dispatchers.IO).",
+      points: ["filesDir: private, persistent, gone on uninstall", "cacheDir: re-creatable; the system may evict it", "Blocking I/O → withContext(Dispatchers.IO)"] },
+  };
+  function renderArch(layer) {
+    var a = ARCH[layer]; var d = $("#archDetail");
+    d.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = a.name; h.style.marginTop = "0";
+    var f = document.createElement("div"); f.className = "pl-file"; f.style.marginBottom = "8px"; f.textContent = a.file;
+    var p = document.createElement("p"); p.className = "dense"; p.textContent = a.what;
+    var ul = document.createElement("ul"); ul.className = "kicker-list";
+    a.points.forEach(function (pt) { var li = document.createElement("li"); li.textContent = pt; ul.appendChild(li); });
+    d.appendChild(h); d.appendChild(f); d.appendChild(p); d.appendChild(ul);
+    if (a.tab && a.tab.indexOf("t-") === 0) {
+      var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "Open in the code explorer ▸";
+      btn.addEventListener("click", function () { openCodeTab(a.tab); var c = $("#code"); if (c) c.scrollIntoView({ behavior: "smooth" }); });
+      d.appendChild(btn);
+    } else if (a.tab) {
+      var link = document.createElement("a"); link.className = "btn"; link.href = a.tab; link.textContent = "See it in the walkthrough ▸";
+      d.appendChild(link);
+    }
+  }
+  $$(".arch-chip").forEach(function (chip) {
+    chip.addEventListener("click", function () { $$(".arch-chip").forEach(function (x) { x.classList.remove("sel"); }); chip.classList.add("sel"); renderArch(chip.dataset.layer); });
+  });
+  renderArch("ui");
+
+  // ======================= CODE TABS =======================
+  function openCodeTab(tabId) {
+    $$(".tab").forEach(function (x) { x.classList.toggle("on", x.dataset.tab === tabId); });
+    $$(".tabpane").forEach(function (x) { x.classList.toggle("on", x.dataset.pane === tabId); });
+  }
+  $$(".tab").forEach(function (t) { t.addEventListener("click", function () { openCodeTab(t.dataset.tab); }); });
+
+  // ======================= REACTIVE SORT SWAP =======================
+  var RX_NOTES = [
+    { id: 3, title: "Buy milk" },
+    { id: 1, title: "Apples" },
+    { id: 2, title: "Zucchini" },
+  ];
+  function rxRenderList(order) {
+    var list = RX_NOTES.slice();
+    if (order === "TITLE_ASC") list.sort(function (a, b) { return a.title.toLowerCase() < b.title.toLowerCase() ? -1 : 1; });
+    else list.sort(function (a, b) { return b.id - a.id; });
+    var el = $("#rxList"); el.innerHTML = "";
+    list.forEach(function (it) {
+      var row = document.createElement("div"); row.className = "item-row";
+      var badge = document.createElement("span"); badge.className = "id-badge"; badge.textContent = "#" + it.id;
+      var lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = it.title;
+      row.appendChild(badge); row.appendChild(lbl); el.appendChild(row);
+    });
+  }
+  function rxTrace(order) {
+    var query = order === "TITLE_ASC" ? "observeNotesByTitle()" : "observeNotes()";
+    var steps = [
+      { stage: "PREFS", label: "DataStore", color: "var(--ui)", soft: "var(--blue-soft)", msg: "setSortOrder(" + order + ") → a suspend edit { } writes sort_order to settings.preferences_pb." },
+      { stage: "FLOW", label: "Flow", color: "var(--vm)", soft: "var(--violet-soft)", msg: "settings.sortOrder (a Flow) emits the new value " + order + "." },
+      { stage: "SWAP", label: "flatMapLatest", color: "var(--room)", soft: "var(--amber-soft)", msg: "flatMapLatest cancels the previous query and switches the list to " + query + "." },
+      { stage: "STATE", label: "stateIn → UI", color: "var(--flow)", soft: "var(--green-soft)", msg: "stateIn caches the new ordered List; collectAsStateWithLifecycle() recomposes the LazyColumn." },
+    ];
+    var el = $("#rxTrace"); el.innerHTML = "";
+    steps.forEach(function (s, idx) {
+      var row = document.createElement("div"); row.className = "jl-row";
+      var num = document.createElement("div"); num.className = "jl-num"; num.textContent = idx + 1; num.style.background = s.color;
+      var body = document.createElement("div");
+      var head = document.createElement("div"); head.className = "jl-head";
+      var chip = document.createElement("span"); chip.className = "jl-chip"; chip.textContent = s.label; chip.style.color = s.color; chip.style.background = s.soft;
+      head.appendChild(chip);
+      var msg = document.createElement("div"); msg.className = "jl-msg"; msg.textContent = s.msg;
+      body.appendChild(head); body.appendChild(msg); row.appendChild(num); row.appendChild(body); el.appendChild(row);
+    });
+  }
+  $$("#rxSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { $$("#rxSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); var o = b.dataset.rx; rxRenderList(o); rxTrace(o); });
+  });
+  rxRenderList("NEWEST_FIRST");
+
+  // ======================= LIFECYCLE =======================
+  // each event maps to a state per store: [db, prefs, profile, scratch, cache]
+  var LIFE = {
+    rotate:     { s: ["yes", "yes", "yes", "yes", "yes"], why: "Rotation just recreates the screen. Every store is on disk, and the ViewModel + its StateFlows survive a configuration change — nothing re-queries from scratch." },
+    kill:       { s: ["yes", "yes", "yes", "yes", "yes"], why: "All stores already committed to disk. On relaunch each Flow reads its file back on first subscription. A process kill does not clear the cache." },
+    reboot:     { s: ["yes", "yes", "yes", "yes", "maybe"], why: "Every private file persists across reboots. The cache also survives a reboot, but the system may evict it at any time under storage pressure — never rely on it." },
+    clearcache: { s: ["yes", "yes", "yes", "yes", "no"], why: "Settings → Clear cache (or low-storage eviction) deletes only cacheDir. storage.db, the two DataStore files, and scratch.txt are untouched. This is exactly why important data never goes in the cache." },
+    cleardata:  { s: ["no", "no", "no", "no", "no"], why: "Settings → Clear data wipes ALL of the app's private files: storage.db, both DataStore files, scratch.txt, and the cache. The app starts over from defaults." },
+    uninstall:  { s: ["no", "no", "no", "no", "no"], why: "Uninstalling removes the app's entire private storage. This is the true end — every store is gone." },
+    restore:    { s: ["yes", "yes", "yes", "yes", "yes"], why: "Demo reset — every store is back on disk. Try an event to see which ones survive it." },
+  };
+  var LIFE_IDS = ["lifeDb", "lifePrefs", "lifeProfile", "lifeScratch", "lifeCache"];
+  var GLYPH = { yes: "✓", maybe: "~", no: "✕" };
+  function renderLife(ev) {
+    var L = LIFE[ev];
+    LIFE_IDS.forEach(function (id, i) {
+      var el = $("#" + id); if (!el) return;
+      var state = L.s[i];
+      el.className = "dot " + state; el.textContent = GLYPH[state];
+    });
+    $("#lifeWhy").textContent = L.why;
+  }
+  $$("#lifeBtns button").forEach(function (b) { b.addEventListener("click", function () { renderLife(b.dataset.ev); }); });
+
+  // ======================= GLOSSARY =======================
+  var TERMS = [
+    ["Room", "Jetpack's SQLite layer. You annotate Kotlin classes (@Entity/@Dao/@Database); KSP generates a checked, SQLite-backed implementation. Here it stores the notes + categories tables in storage.db."],
+    ["@Entity", "A class Room turns into a SQLite table. Here: Note (with a foreign key to Category) and Category."],
+    ["@ForeignKey", "A SQLite constraint linking a child row to a parent. Note.categoryId references categories.id; onDelete = CASCADE deletes a category's notes with it."],
+    ["@Relation", "Tells Room to assemble a parent + its children (CategoryWithNotes) with a second query. DAO methods returning it use @Transaction for a consistent snapshot."],
+    ["@TypeConverter", "A pair of functions that turn a non-primitive (List<String>, Priority enum) into a storable column value and back. Registered with @TypeConverters on the @Database."],
+    ["Migration", "Code that upgrades a shipped schema. MIGRATION_1_2 adds the tags column with ALTER TABLE. Shipping it is mandatory — without a path Room crashes on launch for upgraders."],
+    ["Flow", "A cold, asynchronous stream. A Room @Query returning Flow is LIVE: Room re-runs it and emits a fresh list on every table change."],
+    ["StateFlow", "A hot Flow that always holds a current value. The ViewModel converts each persistence Flow into one with stateIn(...)."],
+    ["stateIn", "Turns a cold Flow into a hot StateFlow scoped to viewModelScope, with an initial value and a WhileSubscribed(5000) sharing policy."],
+    ["flatMapLatest", "Switches to a new inner Flow whenever the source emits, cancelling the previous one. Here it swaps the Room query when the persisted sort order changes."],
+    ["Preferences DataStore", "The modern SharedPreferences replacement: typed keys, reactive Flow reads via .data, transactional suspend edit { } writes. Stored in settings.preferences_pb."],
+    ["Typed DataStore", "Stores one schema-backed object (UserProfile) via a Serializer<T>. Type-safe, with defaults; reads are Flow<T>, writes are updateData { }. Stored in user_profile.json."],
+    ["Serializer<T>", "The bridge a typed DataStore uses to read/write your object — here encoding UserProfile to JSON with kotlinx.serialization."],
+    ["filesDir", "The app's private, persistent internal directory. Files survive restart and reboot; removed only on clear-data or uninstall."],
+    ["cacheDir", "Re-creatable scratch storage. The system may evict it under low storage and the user can clear it anytime — never store anything important here."],
+    ["Dispatchers.IO", "A coroutine dispatcher for blocking I/O. Raw java.io file calls are wrapped in withContext(Dispatchers.IO); Room and DataStore already handle their own threading."],
+    ["collectAsStateWithLifecycle()", "Subscribes a composable to a StateFlow, wraps the value in Compose State, recomposes on change, and pauses while off-screen."],
+    ["KSP", "Kotlin Symbol Processing — the build-time generator that turns Room's annotations into the concrete *_Impl classes."],
+  ];
+  (function () {
+    var acc = $("#acc");
+    TERMS.forEach(function (t) {
+      var item = document.createElement("div"); item.className = "acc-item";
+      var q = document.createElement("button"); q.className = "acc-q"; q.type = "button";
+      var term = document.createElement("span"); term.innerHTML = "<code>" + t[0].replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
+      var plus = document.createElement("span"); plus.className = "plus"; plus.textContent = "+";
+      q.appendChild(term); q.appendChild(plus);
+      var a = document.createElement("div"); a.className = "acc-a"; a.textContent = t[1];
+      q.addEventListener("click", function () { item.classList.toggle("open"); });
+      item.appendChild(q); item.appendChild(a); acc.appendChild(item);
+    });
+  })();
+
+  // ======================= QUIZ =======================
+  var QUIZ = [
+    { q: "Why does the notes list reorder the instant you change the sort setting?",
+      opts: ["MainActivity manually re-sorts the list", "The sort setting is a Flow; flatMapLatest swaps the Room query and stateIn re-emits, so Compose recomposes", "Room sorts every table automatically", "onResume runs again"],
+      correct: 1,
+      exp: "The persisted sort order is a reactive Flow. flatMapLatest switches to observeNotes() or observeNotesByTitle(), stateIn caches the new list, and collectAsStateWithLifecycle() recomposes — no manual re-sort." },
+    { q: "Adding a note writes to two stores at once. Which two?",
+      opts: ["storage.db and settings.preferences_pb", "storage.db (Room) and user_profile.json (the typed DataStore's notesCreated)", "scratch.txt and the cache", "Two SQLite tables only"],
+      correct: 1,
+      exp: "addNote() calls dao.insert(...) AND profileRepo.incrementNotesCreated(), so one tap writes a Room row and bumps a field in the typed DataStore object." },
+    { q: "Which store's file is the system free to delete at any time?",
+      opts: ["storage.db", "user_profile.json", "cacheDir blobs", "settings.preferences_pb"],
+      correct: 2,
+      exp: "cacheDir is re-creatable scratch space; the system may evict it under low storage and the user can clear it anytime. filesDir, Room, and DataStore files persist until clear-data or uninstall." },
+    { q: "Why is raw file I/O wrapped in withContext(Dispatchers.IO) but the Room and DataStore calls are not?",
+      opts: ["Files are bigger", "Room and DataStore already move their work off the main thread; raw java.io calls are plain blocking calls that don't", "It's a style choice", "Dispatchers.IO is required for SQLite"],
+      correct: 1,
+      exp: "Room runs suspend/Flow work on its own executor and DataStore does its own IO, so neither needs wrapping. Raw java.io is blocking, so FileStore calls are dispatched to Dispatchers.IO." },
+    { q: "Why does Converters store the Priority enum by name ('HIGH') instead of its ordinal (2)?",
+      opts: ["Names are shorter", "So reordering the enum later can't silently corrupt stored values", "SQLite can't store integers", "Room requires it"],
+      correct: 1,
+      exp: "If you stored the ordinal and later reordered the enum, every stored value would point at the wrong constant. Storing the name keeps values stable across enum changes; toPriority also falls back to NORMAL on unknown text." },
+  ];
+  (function () {
+    var wrap = $("#quiz"); var answered = {}; var score = 0;
+    QUIZ.forEach(function (item, qi) {
+      var card = document.createElement("div"); card.className = "q";
+      var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
+      var opts = document.createElement("div"); opts.className = "q-opts";
+      item.opts.forEach(function (text, oi) {
+        var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
+        b.addEventListener("click", function () {
+          if (answered[qi]) return;
+          answered[qi] = true;
+          var buttons = $$(".opt", opts);
+          buttons.forEach(function (x, xi) { x.disabled = true; if (xi === item.correct) x.classList.add("correct"); });
+          if (oi !== item.correct) b.classList.add("wrong");
+          else score++;
+          card.classList.add("answered");
+          $("#quizScore").textContent = score + " / " + QUIZ.length;
+        });
+        opts.appendChild(b);
+      });
+      var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
+      card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
+    });
+  })();
+})();
+</script>
+</body>
+</html>

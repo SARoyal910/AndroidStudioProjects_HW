@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How an Item Reaches Storage — Storage Journey</title>
+<meta name="description" content="A step-by-step walkthrough of the Storage Journey Android app: follow one element from the text field through the ViewModel, Repository, and Room into the SQLite file on disk, and back to the screen — each step shown as a real block of code, from build wiring to app teardown.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">SJ</div>
+      <div>
+        <div class="brand-title">Storage Journey</div>
+        <div class="brand-subtitle">How an item reaches storage</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">The idea</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>The journey</span></a>
+      <a class="nav-link" href="#layers"><span class="nav-num">2</span><span>The five layers</span></a>
+      <a class="nav-link" href="#map"><span class="nav-num">3</span><span>Project map</span></a>
+      <div class="nav-title">Initialization</div>
+      <a class="nav-link" href="#init"><span class="nav-num">4</span><span>Build wiring &amp; launch</span></a>
+      <a class="nav-link" href="#element"><span class="nav-num">5</span><span>The element</span></a>
+      <a class="nav-link" href="#component"><span class="nav-num">6</span><span>The storage component</span></a>
+      <a class="nav-link" href="#dao"><span class="nav-num">7</span><span>The door (DAO)</span></a>
+      <a class="nav-link" href="#repo"><span class="nav-num">8</span><span>The boundary</span></a>
+      <a class="nav-link" href="#viewmodel"><span class="nav-num">9</span><span>The conductor</span></a>
+      <a class="nav-link" href="#ui"><span class="nav-num">10</span><span>The screen</span></a>
+      <div class="nav-title">The round trip</div>
+      <a class="nav-link" href="#trip"><span class="nav-num">11</span><span>The full trip</span></a>
+      <a class="nav-link" href="#survives"><span class="nav-num">12</span><span>What survives (the end)</span></a>
+      <a class="nav-link" href="#run"><span class="nav-num">13</span><span>Run &amp; inspect</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      Prefer to play with it?
+      <a href="storage-journey-explorer.html">Interactive explainer →</a>
+      <a href="../STORAGE_GUIDE.md">Storage decision guide →</a>
+      <a href="../StorageShowcase/how-storageshowcase-works.html">Storage Showcase walkthrough →</a>
+      <a href="../Playground/storage-playground.html">Room Playground →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">SJ</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · The journey</option>
+        <option value="#layers">2 · The five layers</option>
+        <option value="#map">3 · Project map</option>
+        <option value="#init">4 · Build wiring &amp; launch</option>
+        <option value="#element">5 · The element</option>
+        <option value="#component">6 · The storage component</option>
+        <option value="#dao">7 · The door (DAO)</option>
+        <option value="#repo">8 · The boundary</option>
+        <option value="#viewmodel">9 · The conductor</option>
+        <option value="#ui">10 · The screen</option>
+        <option value="#trip">11 · The full trip</option>
+        <option value="#survives">12 · What survives (the end)</option>
+        <option value="#run">13 · Run &amp; inspect</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Storage, one element at a time</p>
+        <h1>How an item reaches storage</h1>
+        <p class="lead">
+          Most storage demos show you a finished app and leave you to guess how the data got onto
+          disk. <strong>Storage Journey</strong> does the opposite: it follows a <em>single element</em> —
+          one line of text you type — through every layer it passes on the way into the database, and
+          back to the screen. This page is that trip as <strong>blocks of real code</strong>, in order,
+          from the build wiring that switches storage on to the moment the app is uninstalled.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">Room · SQLite</span>
+          <span class="tag blue">Jetpack Compose</span>
+          <span class="tag violet">ViewModel + Flow</span>
+          <span class="tag">Kotlin 2.2.10</span>
+          <span class="tag">heavily commented</span>
+        </div>
+
+        <div class="callout good">
+          <span class="callout-label">The app mirrors this page</span>
+          The running app draws a <strong>Journey panel</strong>: each time you save an element it lists the
+          numbered, color-coded steps the data just took (UI → ViewModel → Repository → Room → Flow), with the
+          time since the trip began. The colors on this page match that panel, so the lesson and the app read
+          as one thing. The trace itself lives in <code>JourneyLog.kt</code>.
+        </div>
+
+        <h3>The one sentence to remember</h3>
+        <p class="dense">
+          You never update the list by hand. You <strong>write once</strong> (an insert), and because the
+          read side is a <strong>reactive <code>Flow</code></strong>, Room re-runs the query and pushes the
+          new data back to the screen for you. The whole project exists to make that single round trip
+          impossible to miss.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ 2. LAYERS ============ -->
+    <section class="band anchor" id="layers">
+      <div class="band-inner">
+        <p class="eyebrow">The shape of the trip</p>
+        <h2>The five layers an element passes through</h2>
+        <p class="dense">
+          Tapping <strong>Save to storage</strong> sends the element <em>down</em> through four layers onto
+          disk (the <strong>write path</strong>). Then a single reactive <code>Flow</code> carries the result
+          back <em>up</em> to the screen (the <strong>return trip</strong>, in green). Same colors as the
+          in-app Journey panel.
+        </p>
+        <div class="layers">
+          <div class="layer ui">
+            <div class="l-name">① UI — the screen</div>
+            <div class="l-desc">An <code>OutlinedTextField</code> + a Button. The tap captures the typed text and calls the ViewModel.</div>
+            <div class="l-files"><code>MainActivity.kt</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;onSave(label) → viewModel.addItem(label)</div>
+          <div class="layer vm">
+            <div class="l-name">② ViewModel — the conductor</div>
+            <div class="l-desc">Stamps metadata, builds the <code>StoredItem</code>, and launches a coroutine so the disk write never blocks the UI.</div>
+            <div class="l-files"><code>StorageJourneyViewModel.kt</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;repository.save(item)</div>
+          <div class="layer repo">
+            <div class="l-name">③ Repository — the storage boundary</div>
+            <div class="l-desc">The one front door to persistence. Hands the element to the DAO; the rest of the app never touches Room directly.</div>
+            <div class="l-files"><code>ItemRepository.kt</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;dao.insert(item) &nbsp;<em>(suspend)</em></div>
+          <div class="layer engine">
+            <div class="l-name">④ Room — the SQLite engine</div>
+            <div class="l-desc">Turns the <code>@Insert</code> method into a real <code>INSERT</code>, assigns a primary key, and commits the row.</div>
+            <div class="l-files"><code>ItemDao.kt</code><code>ItemDatabase.kt</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;writes the row</div>
+          <div class="layer disk">
+            <div class="l-name">⑤ journey.db — bytes on disk</div>
+            <div class="l-desc">The app's private SQLite file. The element now survives process death and restarts.</div>
+            <div class="l-files"><code>/data/data/com.example.storagejourney/databases/journey.db</code></div>
+          </div>
+          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;the return trip: Room re-emits its <code>Flow</code> → the screen recomposes</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. MAP ============ -->
+    <section class="band anchor" id="map">
+      <div class="band-inner">
+        <p class="eyebrow">Where everything lives</p>
+        <h2>Project map</h2>
+        <p class="dense">Eight small Kotlin files. The storage component is just the three <code>data/</code> files plus the repository; everything else is the UI and the narration.</p>
+        <div class="tree">
+<span class="dir">StorageJourney/</span>
+  <span class="f">build.gradle.kts</span>            <span class="note"># Room + KSP wiring (no DataStore — Room only)</span>
+  <span class="dir">src/main/java/com/example/storagejourney/</span>
+    <span class="dir">data/</span>
+      <span class="f">StoredItem.kt</span>           <span class="note"># @Entity — the element that travels into storage</span>
+      <span class="f">ItemDao.kt</span>              <span class="note"># @Dao — insert (write) + observeItems (reactive read)</span>
+      <span class="f">ItemDatabase.kt</span>         <span class="note"># @Database singleton — builds journey.db</span>
+      <span class="f">ItemRepository.kt</span>       <span class="note"># the storage component's front door; records the trip</span>
+    <span class="dir">journey/</span>
+      <span class="f">JourneyLog.kt</span>           <span class="note"># observable trace the UI renders</span>
+    <span class="f">StorageJourneyViewModel.kt</span>  <span class="note"># wires it together; addItem() IS the write path</span>
+    <span class="f">MainActivity.kt</span>             <span class="note"># the one screen: input + saved list + Journey panel</span>
+  <span class="dir">src/test/java/.../journey/</span>
+    <span class="f">JourneyLogTest.kt</span>           <span class="note"># JVM unit tests for the trace recorder</span>
+  <span class="f">how-an-item-reaches-storage.html</span>  <span class="note"># (this page)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. INIT ============ -->
+    <section class="band anchor" id="init">
+      <div class="band-inner">
+        <p class="eyebrow">Initialization · before any data moves</p>
+        <h2>Step 0 — turning storage on, and launching</h2>
+        <p class="dense">
+          Two things must be true before an element can travel anywhere: the build must wire up Room (so
+          the SQLite code is generated), and the app must start and build the database once. This is the
+          <em>initialization</em> end of the journey.
+        </p>
+
+        <h3>Build wiring: KSP generates the SQLite code</h3>
+        <p class="dense">
+          Room is annotations only; a code generator turns your <code>@Entity</code>/<code>@Dao</code>/<code>@Database</code>
+          into real SQLite classes at build time. That generator runs through <strong>KSP</strong>, so the
+          plugin and the <code>ksp(...)</code> dependency are not optional — without them the app compiles but
+          crashes at first use.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.gradle.kts</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kts">plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    // KSP (Kotlin Symbol Processing) — REQUIRED so Room's annotation processor runs during
+    // assembleDebug and GENERATES the concrete ItemDatabase_Impl / ItemDao_Impl classes.
+    alias(libs.plugins.ksp)
+}
+
+dependencies {
+    // --- THE STORAGE COMPONENT (the whole point of this project) ---
+    // Room: the SQLite-backed store our one StoredItem row travels into. This single
+    // app deliberately uses ONLY Room (no DataStore/files).
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    // The Room compiler is wired through KSP (NOT implementation). This is the line that
+    // makes KSP generate the SQLite-backed implementation of @Dao / @Database at build time.
+    ksp(libs.androidx.room.compiler)
+}</pre>
+        </div>
+        <div class="callout warn">
+          <span class="callout-label">One more required flag</span>
+          AGP 9's built-in Kotlin normally forbids adding sources via the <code>kotlin.sourceSets</code> DSL —
+          which is exactly how KSP registers its generated output. <code>gradle.properties</code> sets
+          <code>android.disallowKotlinSourceSets=false</code> so the generated Room code is allowed in.
+        </div>
+
+        <h3>Launch: build the screen, lazily build the store</h3>
+        <p class="dense">
+          When the launcher opens <code>MainActivity</code>, <code>onCreate</code> sets the Compose content and
+          asks for the ViewModel. The database itself is not built here — it is created on first use inside the
+          ViewModel (next), so startup stays cheap.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · onCreate</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)                     // always call through to the framework first
+    enableEdgeToEdge()                                     // draw under the system bars for a modern look
+    setContent {
+        // Obtain the ViewModel (constructed via its Application factory). viewModel()
+        // remembers it across recompositions and scopes it to this Activity.
+        val viewModel: StorageJourneyViewModel = viewModel(
+            factory = StorageJourneyViewModel.factory(application)
+        )
+        StorageJourneyTheme(dynamicColor = false) {
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -&gt;
+                JourneyRoute(
+                    viewModel = viewModel,
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+        }
+    }
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. ELEMENT ============ -->
+    <section class="band anchor" id="element">
+      <div class="band-inner">
+        <p class="eyebrow">Step 1 · the thing that travels</p>
+        <h2>The element — one row, described as a class</h2>
+        <p class="dense">
+          The "element" is a <code>StoredItem</code>. A Room <code>@Entity</code> is a Kotlin class that Room
+          turns into a SQLite <strong>table</strong> at compile time; each property becomes a <strong>column</strong>,
+          and each instance becomes a <strong>row</strong>. This is the payload that will travel all the way to disk.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/StoredItem.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Entity(tableName = "items")                 // &lt;-- THE concept: this class IS a table named "items"
+data class StoredItem(
+    @PrimaryKey(autoGenerate = true)         // &lt;-- unique row id; SQLite auto-increments it
+    val id: Long = 0,                        // default 0 =&gt; "let Room/SQLite pick the id on insert"
+    val label: String,                       // becomes a TEXT column "label" (the user's text)
+    val createdAt: Long,                     // becomes an INTEGER column "createdAt" (epoch millis)
+)</pre>
+        </div>
+        <ul class="kicker-list">
+          <li><strong><code>id = 0</code> + <code>autoGenerate = true</code></strong> means "SQLite, assign the next id on insert." After the row lands, the real id comes back (you will see it as <code>#7</code> in the saved list).</li>
+          <li><strong><code>label</code></strong> is the text you typed — the actual cargo of the journey.</li>
+          <li><strong><code>createdAt</code></strong> is stamped by the ViewModel, so the row carries its own "saved at" moment.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 6. COMPONENT ============ -->
+    <section class="band anchor" id="component">
+      <div class="band-inner">
+        <p class="eyebrow">Step 2 · the destination</p>
+        <h2>The storage component — the Room database</h2>
+        <p class="dense">
+          This abstract class is the single connection to the SQLite <strong>file</strong> on disk
+          (<code>journey.db</code>). It ties the entity to the DAO, and <code>Room.databaseBuilder(...)</code>
+          brings it to life. It is <code>abstract</code> because Room generates the real subclass
+          (<code>ItemDatabase_Impl</code>) at build time — that is the KSP step from before paying off.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/ItemDatabase.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Database(
+    entities = [StoredItem::class],         // &lt;-- every table in this DB; here just StoredItem
+    version = 1,                            // schema version; increment when columns change
+    exportSchema = false,
+)
+abstract class ItemDatabase : RoomDatabase() {
+
+    abstract fun itemDao(): ItemDao         // &lt;-- Room fills this in with ItemDao_Impl
+
+    companion object {
+        @Volatile private var INSTANCE: ItemDatabase? = null
+
+        // Return the shared database, building it once on first use (double-checked locking
+        // so two threads racing on startup can't each build their own database object for the same file).
+        fun getInstance(context: Context): ItemDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext,             // applicationContext =&gt; no Activity leak
+                    ItemDatabase::class.java,               // the database class to implement
+                    "journey.db",                           // the SQLite FILE name on disk
+                ).build().also { INSTANCE = it }            // cache the instance for next time
+            }
+    }
+}</pre>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Why a singleton</span>
+          Opening two databases over the same file is wasteful and can corrupt state. The
+          <code>companion object</code> caches exactly one instance for the whole process — the ViewModel just
+          asks <code>ItemDatabase.getInstance(app)</code> and always gets the same store.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. DAO ============ -->
+    <section class="band anchor" id="dao">
+      <div class="band-inner">
+        <p class="eyebrow">Step 3 · the door</p>
+        <h2>The DAO — the read/write surface</h2>
+        <p class="dense">
+          A DAO ("Data Access Object") is the set of methods that read and write the table. You describe it as
+          an <strong>interface</strong>; Room generates the implementation. Two methods matter for the journey:
+          the <strong>write</strong> (<code>insert</code>) and the <strong>reactive read</strong>
+          (<code>observeItems</code>).
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/ItemDao.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Dao
+interface ItemDao {
+
+    // THE RETURN TRIP: a query that returns Flow is LIVE. Room watches the "items" table and
+    // re-runs this SELECT on every change, pushing a fresh List down the stream.
+    @Query("SELECT * FROM items ORDER BY id DESC")        // &lt;-- reactive read; re-emits on every change
+    fun observeItems(): Flow&lt;List&lt;StoredItem&gt;&gt;
+
+    // THE WRITE: suspend because it touches disk. Returns the new row's auto-generated id.
+    @Insert
+    suspend fun insert(item: StoredItem): Long            // &lt;-- disk write =&gt; suspend; returns the new id
+
+    @Delete
+    suspend fun delete(item: StoredItem)                  // &lt;-- disk write =&gt; suspend
+
+    @Query("DELETE FROM items")
+    suspend fun clearAll()                                // &lt;-- disk write =&gt; suspend
+}</pre>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">⬇ The write</span></div>
+            <div class="card-body"><p class="dense"><code>insert</code> is <code>suspend</code>: Room runs the disk write on a background thread for you, so you call it from a coroutine and never freeze the UI. It returns the new id straight from SQLite.</p></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">⬆ The reactive read</span></div>
+            <div class="card-body"><p class="dense"><code>observeItems()</code> returns <code>Flow&lt;List&lt;StoredItem&gt;&gt;</code> — a live stream. You subscribe once; Room re-emits the whole list every time the table changes. No manual "reload" call exists anywhere in this app.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8. REPO ============ -->
+    <section class="band anchor" id="repo">
+      <div class="band-inner">
+        <p class="eyebrow">Step 4 · the boundary</p>
+        <h2>The repository — the storage component's front door</h2>
+        <p class="dense">
+          The repository is the one named place the rest of the app talks to for persistence. The ViewModel
+          never touches the DAO directly. It is also the honest vantage point to <strong>narrate</strong> the
+          write: right here we watch the call go into Room and the new id come back, so this is where the
+          Repository and Room legs of the journey are recorded.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/ItemRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// The live list of saved items, straight from Room's reactive query.
+val items: Flow&lt;List&lt;StoredItem&gt;&gt; = dao.observeItems()
+
+suspend fun save(item: StoredItem): Long {
+    journey.record(
+        JourneyStage.REPOSITORY,
+        "Repository.save(...) handed the element to the engine: dao.insert(item) — a " +
+            "suspend write Room runs off the main thread.",
+    )
+    val newId = dao.insert(item)                       // &lt;-- THE write; suspends until SQLite commits
+    journey.record(
+        JourneyStage.ROOM,
+        "Room executed INSERT INTO items(...) and SQLite committed the row to " +
+            "journey.db as id #$newId. The element is now on disk.",
+    )
+    return newId
+}</pre>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">Why <code>suspend</code> ripples up</span>
+          Because <code>dao.insert</code> is <code>suspend</code>, so is <code>save</code>, so the ViewModel must
+          call it inside a coroutine. That is how the disk write stays off the main thread without anyone naming
+          a background thread — the type system enforces it.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 9. VIEWMODEL ============ -->
+    <section class="band anchor" id="viewmodel">
+      <div class="band-inner">
+        <p class="eyebrow">Step 5 · the conductor</p>
+        <h2>The ViewModel — wiring, and the write path as prose</h2>
+        <p class="dense">
+          The ViewModel turns Room's <code>Flow</code> into UI state and owns the write action. The
+          <code>items</code> property below is the <strong>return trip</strong>; <code>addItem()</code> is the
+          <strong>write path</strong> — read it top-to-bottom and you are reading steps 1→4 in order.
+        </p>
+
+        <h3>The return trip: Flow → StateFlow (and record the Flow leg)</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">StorageJourneyViewModel.kt · items</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val items: StateFlow&lt;List&lt;StoredItem&gt;&gt; = repository.items
+    .onEach { list -&gt;
+        journeyLog.record(
+            JourneyStage.FLOW,
+            "Room re-ran SELECT * FROM items, found ${list.size} row(s), and pushed a " +
+                "new List down the Flow. collectAsStateWithLifecycle turns that into a recomposition.",
+        )
+    }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())</pre>
+        </div>
+        <ul class="kicker-list">
+          <li><strong><code>.onEach { ... }</code></strong> runs once when the screen first subscribes (Room reads what is already on disk) and again after every write — that is exactly when we record the green Flow leg.</li>
+          <li><strong><code>.stateIn(...)</code></strong> converts the cold <code>Flow</code> into a hot <code>StateFlow</code> that always has a value and is shared across collectors. <code>WhileSubscribed(5_000)</code> keeps it alive 5s after the last collector leaves, so a quick rotation does not re-query.</li>
+        </ul>
+
+        <h3>The write path: addItem() is the journey</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">StorageJourneyViewModel.kt · addItem</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun addItem(rawLabel: String) {
+    val label = rawLabel.trim()
+    if (label.isEmpty()) return                            // ignore empty submissions
+
+    journeyLog.reset()                                     // 1. fresh trace for this trip
+    journeyLog.record(
+        JourneyStage.UI,
+        "The Save button captured \"$label\" from the OutlinedTextField and called " +
+            "viewModel.addItem(\"$label\").",
+    )
+
+    // 3. Stamp metadata in the ViewModel. id stays 0 so SQLite assigns the real key on insert.
+    val element = StoredItem(label = label, createdAt = System.currentTimeMillis())
+    journeyLog.record(
+        JourneyStage.VIEWMODEL,
+        "ViewModel built StoredItem(label=\"$label\", createdAt=…) and launched a " +
+            "coroutine on viewModelScope so the suspend write never blocks the UI thread.",
+    )
+
+    viewModelScope.launch {                                // coroutine -&gt; safe to call suspend save
+        repository.save(element)                           // records Repository + Room; then Flow re-emits
+    }
+}</pre>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">Steps 1–4 are literally here</span>
+          The UI and ViewModel legs are recorded inline; the coroutine then calls <code>repository.save</code>,
+          which records the Repository and Room legs; and the <code>items</code> Flow above records the Flow leg
+          when Room re-emits. Five files, one continuous trip.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. UI ============ -->
+    <section class="band anchor" id="ui">
+      <div class="band-inner">
+        <p class="eyebrow">Step 6 · where it starts and ends on screen</p>
+        <h2>The screen — capture the text, render the result</h2>
+        <p class="dense">
+          The journey begins with a tap and ends with a recomposition, both here. The stateful wrapper collects
+          the two flows; the Save button captures the text and kicks off <code>addItem</code>.
+        </p>
+
+        <h3>Collect the state (the return trip arrives here)</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · JourneyRoute</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val items by viewModel.items.collectAsStateWithLifecycle()       // live rows from Room
+val journey by viewModel.journey.collectAsStateWithLifecycle()   // the recorded trip</pre>
+        </div>
+        <p class="dense">
+          <code>collectAsStateWithLifecycle()</code> subscribes to a <code>StateFlow</code>, wraps its latest
+          value in Compose <code>State</code>, and recomposes whatever reads it — pausing while the screen is
+          off-screen. A new emission flips the state, and only the parts that read it redraw.
+        </p>
+
+        <h3>Capture the text and launch the write</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · the input + Save button</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">OutlinedTextField(
+    value = label,
+    onValueChange = { label = it },                    // local UI state only
+    label = { Text("Text to store") },
+    singleLine = true,
+    modifier = Modifier.fillMaxWidth(),
+)
+Spacer(Modifier.height(8.dp))
+Button(
+    onClick = {
+        onSave(label)                                  // -&gt; ViewModel.addItem -&gt; Room insert
+        label = ""                                     // clear the local input field
+    },
+    modifier = Modifier.fillMaxWidth(),
+) {
+    Text("Save to storage")
+}</pre>
+        </div>
+
+        <h3>Render the trip (the Journey panel)</h3>
+        <p class="dense">The recorded steps are drawn with <code>forEachIndexed</code>, so the list position gives the step number — the same numbers you see on this page.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · JourneyPanel</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">journey.forEachIndexed { index, step -&gt;
+    JourneyStepRow(number = index + 1, step = step)
+    if (index != journey.lastIndex) Spacer(Modifier.height(8.dp))
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. TRIP (stepper) ============ -->
+    <section class="band anchor" id="trip">
+      <div class="band-inner">
+        <p class="eyebrow">All together</p>
+        <h2>The full trip, one tap at a time</h2>
+        <p class="dense">
+          Step through the exact chain the code follows when you save the word <em>"milk"</em>. This is the same
+          sequence the in-app Journey panel prints, plus the final recomposition.
+        </p>
+        <div class="stepper" id="sortStepper">
+          <div class="stepper-head">
+            <span class="s-title">Scenario: you type “milk” and tap Save to storage</span>
+            <div class="stepper-ctrl">
+              <button id="stepPrev" type="button">‹ Prev</button>
+              <span class="s-count" id="stepCount">1 / 6</span>
+              <button id="stepNext" type="button">Next ›</button>
+            </div>
+          </div>
+          <ol class="steps" id="stepList">
+            <li class="step" data-step><div class="s-num">1</div><div class="s-body"><strong>UI.</strong> The Button's <code>onClick</code> reads the text field and calls <code>onSave("milk")</code>, which is <code>viewModel::addItem</code>.<span class="s-where">MainActivity.kt · Button(onClick = { onSave(label) })</span></div></li>
+            <li class="step" data-step><div class="s-num">2</div><div class="s-body"><strong>ViewModel.</strong> <code>addItem</code> trims the text, resets the trace, builds <code>StoredItem(label="milk", createdAt=now)</code>, and launches a coroutine on <code>viewModelScope</code>.<span class="s-where">StorageJourneyViewModel.kt · addItem()</span></div></li>
+            <li class="step" data-step><div class="s-num">3</div><div class="s-body"><strong>Repository.</strong> Inside the coroutine, <code>repository.save(item)</code> calls the suspend <code>dao.insert(item)</code> — the storage boundary handing the element to the engine.<span class="s-where">ItemRepository.kt · save()</span></div></li>
+            <li class="step" data-step><div class="s-num">4</div><div class="s-body"><strong>Room · disk.</strong> Room runs <code>INSERT INTO items(...)</code>, SQLite assigns id <code>#1</code> and commits the row to <code>journey.db</code>. <code>insert</code> returns that id.<span class="s-where">ItemDao.kt · @Insert suspend fun insert(): Long</span></div></li>
+            <li class="step" data-step><div class="s-num">5</div><div class="s-body"><strong>Flow.</strong> The write changes the table, so Room re-runs <code>observeItems()</code> and pushes a new <code>List</code> down the <code>Flow</code>. The ViewModel's <code>.onEach</code> records this leg; <code>stateIn</code> caches it as the new <code>items</code> value.<span class="s-where">StorageJourneyViewModel.kt · items (onEach + stateIn)</span></div></li>
+            <li class="step" data-step><div class="s-num">6</div><div class="s-body"><strong>Recompose.</strong> <code>collectAsStateWithLifecycle()</code> sees the new value, flips Compose <code>State</code>, and the saved-items list redraws with <code>#1 milk</code> — no manual refresh anywhere.<span class="s-where">MainActivity.kt · JourneyRoute + ItemRow</span></div></li>
+          </ol>
+        </div>
+        <div class="callout">
+          <span class="callout-label">The point</span>
+          You wrote <em>once</em> (step 4). Steps 5–6 happened on their own because the read side is a reactive
+          <code>Flow</code>. That is the whole reason to prefer Room's <code>Flow</code> queries over a one-shot
+          read: the UI can never drift out of sync with the database.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12. SURVIVES ============ -->
+    <section class="band anchor" id="survives">
+      <div class="band-inner">
+        <p class="eyebrow">The end of the journey</p>
+        <h2>What survives — and when the element is finally gone</h2>
+        <p class="dense">
+          Because the row lives in <code>journey.db</code> on disk, it outlives the things that wipe in-memory
+          state. The journey only truly <em>ends</em> when the user clears the app's data or uninstalls.
+        </p>
+        <table class="tbl">
+          <thead><tr><th>Event</th><th>Does the saved element survive?</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Recompose / rotate the screen</td><td><span class="dot yes">✓</span></td><td>The row is on disk; the ViewModel and its <code>StateFlow</code> also survive rotation.</td></tr>
+            <tr><td>Kill the process / swipe the app away</td><td><span class="dot yes">✓</span></td><td>SQLite already committed the file. On relaunch, <code>observeItems()</code> reads it back on first subscription.</td></tr>
+            <tr><td>Reboot the device</td><td><span class="dot yes">✓</span></td><td>The database file persists across reboots.</td></tr>
+            <tr><td>Tap “Clear storage” in the app</td><td><span class="dot no">✕</span></td><td>That calls <code>DELETE FROM items</code> — you deleted it on purpose.</td></tr>
+            <tr><td>Settings → Clear data / Clear storage</td><td><span class="dot no">✕</span></td><td>Android deletes the app's private files, including <code>journey.db</code>.</td></tr>
+            <tr><td>Uninstall the app</td><td><span class="dot no">✕</span></td><td>Private app storage is removed with the app. This is the true end of the journey.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <span class="callout-label">Re-open = the read path, alone</span>
+          When you relaunch, no write happens — yet the list fills in. That is the return trip running by itself:
+          the screen subscribes, <code>observeItems()</code> emits the persisted rows, and the Journey panel's
+          first entry is a lone green <strong>Flow</strong> step (“Room … found N row(s)”). Storage with no save in sight.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 13. RUN ============ -->
+    <section class="band anchor" id="run">
+      <div class="band-inner">
+        <p class="eyebrow">Try it yourself</p>
+        <h2>Run &amp; inspect</h2>
+        <p class="dense">Compile (which runs Room's KSP processor), run the unit tests, or install on a device. The repo uses the Android Studio JBR (JDK 21) for command-line builds.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal · from StorageJourney/</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash">JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+  ./gradlew :compileDebugKotlin     # type-check + run Room's KSP code generation
+./gradlew :testDebugUnitTest        # run the JourneyLog JVM unit tests
+./gradlew installDebug              # build &amp; install on a running device/emulator</pre>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Watch the row land</span></div>
+            <div class="card-body"><p class="dense">In Android Studio: <strong>View ▸ Tool Windows ▸ App Inspection ▸ Database Inspector</strong>, open <code>journey.db</code>, and watch the <code>items</code> table gain a row the instant you tap Save.</p></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Watch the trip</span></div>
+            <div class="card-body"><p class="dense">In the app, the <strong>Journey panel</strong> prints the numbered steps with timings every time you save — the live version of this page.</p></div>
+          </div>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">Where to go next</span>
+          Want breadth instead of depth? <a href="../StorageShowcase/how-storageshowcase-works.html">Storage Showcase</a>
+          adds Preferences DataStore, a typed DataStore, and file storage. Not sure which API to reach for at all?
+          Start with the <a href="../STORAGE_GUIDE.md">Storage decision guide</a>.
+        </div>
+        <p class="foot">Storage Journey · one element, one store, start to finish · part of the AndroidStudioProjects teaching set.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+</body>
+</html>

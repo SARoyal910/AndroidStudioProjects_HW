@@ -37,6 +37,21 @@ const html = `<!DOCTYPE html>
       <p>Everything you persist on-device — key/value settings with <b>DataStore</b>, structured records with <b>Room</b>, files &amp; media under <b>scoped storage</b>, plus encryption, backup and migrations — explained in real depth and made tweakable. Insert rows and watch a reactive <code>Flow</code> re-emit, flip <code>@Entity</code> annotations and watch the <code>CREATE&nbsp;TABLE</code> change, break a migration and watch it crash.</p>
       <p class="meta"><b>${sections.length} sections</b> · written for Android devs who want to <em>understand</em> persistence, not just paste it. The playgrounds are hand-built simulations of real Android behavior; the generated Kotlin &amp; SQL are the real thing.</p>
     </header>
+    <section class="quick-start" aria-label="Storage quick start">
+      <h2>Start here if the storage choices feel tangled</h2>
+      <p>Use this page as the deep reference, not the first explanation. First answer what shape the data has, then jump into the matching section.</p>
+      <div class="quick-grid">
+        <div class="quick-item"><strong>Small private settings</strong><span>Use DataStore. Examples: dark mode, sort order, last-opened tab.</span></div>
+        <div class="quick-item"><strong>Many records to query</strong><span>Use Room. Examples: notes, tasks, messages, cached API rows.</span></div>
+        <div class="quick-item"><strong>Files or user media</strong><span>Use filesDir/cacheDir for private app files, MediaStore or SAF for user-visible files.</span></div>
+      </div>
+      <div class="quick-path">
+        <a href="#landscape">Choose an API</a>
+        <a href="#where-it-lives">What survives?</a>
+        <a href="#room-why">Room basics</a>
+        <a href="#sharedprefs-vs-datastore">DataStore basics</a>
+      </div>
+    </section>
     <div id="sections"></div>
     <footer class="foot">
       <p>A standalone, offline interactive lab. The running Android app these concepts come from is <code>RoomAndPreferences</code> in this repo — Room (via KSP) for the notes table + DataStore Preferences for settings.</p>

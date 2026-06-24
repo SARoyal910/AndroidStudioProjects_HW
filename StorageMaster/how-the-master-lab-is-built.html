@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the Master Lab is Built — Storage Master</title>
+<meta name="description" content="A step-by-step walkthrough of the Storage Master Lab project: how a single offline HTML tutorial is generated from sections.json (data) + engine.js (renderer) + build.mjs (assembler), file by file, plus a tour of the 21-section curriculum.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">SM</div>
+      <div>
+        <div class="brand-title">Storage Master Lab</div>
+        <div class="brand-subtitle">How the lab is built</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">The idea</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>What gets built</span></a>
+      <a class="nav-link" href="#architecture"><span class="nav-num">2</span><span>Data → engine → build</span></a>
+      <a class="nav-link" href="#map"><span class="nav-num">3</span><span>Project map</span></a>
+      <div class="nav-title">The three source files</div>
+      <a class="nav-link" href="#data"><span class="nav-num">4</span><span>The data (sections.json)</span></a>
+      <a class="nav-link" href="#build"><span class="nav-num">5</span><span>The assembler (build.mjs)</span></a>
+      <a class="nav-link" href="#helpers"><span class="nav-num">6</span><span>The engine toolkit</span></a>
+      <div class="nav-title">The engine</div>
+      <a class="nav-link" href="#render"><span class="nav-num">7</span><span>Rendering a section</span></a>
+      <a class="nav-link" href="#playgrounds"><span class="nav-num">8</span><span>The playground system</span></a>
+      <a class="nav-link" href="#init"><span class="nav-num">9</span><span>Nav, scrollspy, theme</span></a>
+      <div class="nav-title">The whole thing</div>
+      <a class="nav-link" href="#curriculum"><span class="nav-num">10</span><span>What it teaches</span></a>
+      <a class="nav-link" href="#trip"><span class="nav-num">11</span><span>The full build, step by step</span></a>
+      <a class="nav-link" href="#run"><span class="nav-num">12</span><span>Build &amp; extend</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      Prefer to play with it?
+      <a href="storage-master-explorer.html">Interactive explainer →</a>
+      <a href="storage-tutorial.html">Open the Master Lab itself →</a>
+      <a href="../StorageJourney/how-an-item-reaches-storage.html">Storage Journey walkthrough →</a>
+      <a href="../STORAGE_GUIDE.md">Storage decision guide →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">SM</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · What gets built</option>
+        <option value="#architecture">2 · Data → engine → build</option>
+        <option value="#map">3 · Project map</option>
+        <option value="#data">4 · The data (sections.json)</option>
+        <option value="#build">5 · The assembler (build.mjs)</option>
+        <option value="#helpers">6 · The engine toolkit</option>
+        <option value="#render">7 · Rendering a section</option>
+        <option value="#playgrounds">8 · The playground system</option>
+        <option value="#init">9 · Nav, scrollspy, theme</option>
+        <option value="#curriculum">10 · What it teaches</option>
+        <option value="#trip">11 · The full build, step by step</option>
+        <option value="#run">12 · Build &amp; extend</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">A tutorial that builds itself</p>
+        <h1>How the Master Lab is built</h1>
+        <p class="lead">
+          The <strong>Storage Master Lab</strong> (<code>storage-tutorial.html</code>) is the longest, deepest piece in
+          this teaching set: <strong>21 sections</strong> across six categories, each with a hand-built interactive
+          playground and real generated Kotlin/SQL — all in a <em>single offline HTML file</em>. Unlike the other
+          explainers, that file is not hand-written. It is <strong>generated</strong> from three small source files. This
+          page follows that build, in order, as blocks of real code.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">Node.js build</span>
+          <span class="tag blue">21 sections · 6 categories</span>
+          <span class="tag violet">10 interactive playgrounds</span>
+          <span class="tag amber">no JS libraries</span>
+          <span class="tag">single offline HTML</span>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">The one sentence to hold onto</span>
+          The lab is <strong>data + a renderer, baked into one file</strong>: <code>sections.json</code> holds the
+          content, <code>engine.js</code> knows how to turn a section into interactive DOM, and <code>build.mjs</code>
+          inlines both into a self-contained <code>storage-tutorial.html</code> that runs offline with no server and no
+          JavaScript libraries — it only fetches optional web fonts, falling back to system fonts offline.
+        </div>
+        <h3>Why generate it instead of writing the HTML by hand?</h3>
+        <ul class="kicker-list">
+          <li><strong>Content stays separate from presentation.</strong> Editing a lesson means editing JSON, never touching layout code.</li>
+          <li><strong>Every section is consistent.</strong> One <code>renderSection</code> function lays out all 21 — heading, summary, key points, playground, gotchas, canonical code — so nothing drifts.</li>
+          <li><strong>It ships as one file.</strong> The build inlines the CSS, the engine, and the data, so the result is a single document you can email, host, or open from disk.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 2. ARCHITECTURE ============ -->
+    <section class="band anchor" id="architecture">
+      <div class="band-inner">
+        <p class="eyebrow">The shape of the build</p>
+        <h2>Data → engine → build → one HTML file</h2>
+        <p class="dense">
+          Three inputs flow into one output. The data describes <em>what</em> to teach, the engine describes <em>how</em>
+          to render and animate it, and the assembler welds them together with the stylesheet into the finished page.
+        </p>
+        <div class="layers">
+          <div class="layer ui">
+            <div class="l-name">① Data — the curriculum</div>
+            <div class="l-desc">An array of 21 section objects: title, category, summary, explanation, key points, a playground spec, gotchas, and canonical code blocks.</div>
+            <div class="l-files"><code>sections.json</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;JSON.parse → injected as the global SECTIONS</div>
+          <div class="layer vm">
+            <div class="l-name">② Engine — the renderer</div>
+            <div class="l-desc">Pure browser JS: DOM helpers, Kotlin/SQL/XML highlighters, a code-panel, and a family of 10 storage-specific playground widgets, plus the page builder.</div>
+            <div class="l-files"><code>engine.js</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;renderSection() per item, on load</div>
+          <div class="layer engine">
+            <div class="l-name">③ Build — the assembler</div>
+            <div class="l-desc">A tiny Node script that reads the stylesheet, the engine, and the data, and inlines all three into one HTML template.</div>
+            <div class="l-files"><code>build.mjs</code><code>styles.css</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;writeFileSync(...)</div>
+          <div class="layer disk">
+            <div class="l-name">④ Output — the offline lab</div>
+            <div class="l-desc">A single self-contained file: sidebar nav, hero, quick-start, and all 21 rendered sections with live playgrounds. No server and no JavaScript libraries (only optional web fonts).</div>
+            <div class="l-files"><code>../storage-tutorial.html</code></div>
+          </div>
+          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;open it in any browser — <code>init()</code> builds the page from <code>SECTIONS</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. MAP ============ -->
+    <section class="band anchor" id="map">
+      <div class="band-inner">
+        <p class="eyebrow">Where everything lives</p>
+        <h2>Project map</h2>
+        <p class="dense">Four source files in <code>storage-tutorial/</code> produce one HTML file one directory up. The source is what you edit; the HTML is the build artifact.</p>
+        <div class="tree">
+<span class="dir">StorageMaster/</span>
+  <span class="f">storage-tutorial.html</span>          <span class="note"># BUILD ARTIFACT — the single offline lab (generated)</span>
+  <span class="dir">storage-tutorial/</span>             <span class="note"># the source you edit</span>
+    <span class="f">sections.json</span>               <span class="note"># DATA — 21 section objects (the curriculum)</span>
+    <span class="f">engine.js</span>                   <span class="note"># ENGINE — renderer + 10 playground widgets</span>
+    <span class="f">build.mjs</span>                   <span class="note"># BUILD — inlines css+engine+json → one HTML</span>
+    <span class="f">styles.css</span>                  <span class="note"># the stylesheet (inlined at build time)</span>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Read this page like the build runs</span>
+          We start with the <strong>data</strong> (what a section is), then the <strong>assembler</strong> (how the file
+          is welded together), then walk the <strong>engine</strong> from its small helpers up to the page builder.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. DATA ============ -->
+    <section class="band anchor" id="data">
+      <div class="band-inner">
+        <p class="eyebrow">Source file 1 of 3 · the curriculum</p>
+        <h2>The data — a section is a JSON object</h2>
+        <p class="dense">
+          <code>sections.json</code> is an array of 21 objects, one per lesson. Each object is pure content — no markup
+          decisions — so authoring a lesson never means touching layout code. Here is the shape, using the first section
+          (<em>The storage landscape</em>) trimmed for length.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">sections.json · one element of the array (trimmed)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="json">{
+  "id": "landscape",
+  "title": "The storage landscape: choosing the right tool",
+  "category": "Foundations",
+  "emoji": "🗺️",
+  "summary": "Android gives you key/value, structured-database, and file storage options — picking the right one up front saves you from painful rewrites.",
+  "explanation_html": "&lt;p&gt;Every Android storage decision collapses onto four axes…&lt;/p&gt;",
+  "key_points": [
+    "Decide with four axes: data shape, size, ownership, and whether you need reactive &lt;code&gt;Flow&lt;/code&gt; updates.",
+    "Use &lt;strong&gt;Preferences DataStore&lt;/strong&gt; for a few simple settings/flags…"
+  ],
+  "playground": {
+    "kind": "storage-chooser",
+    "title": "Decision tree: which storage should I use?",
+    "intro": "Answer a couple of questions and get a recommendation."
+  },
+  "gotchas_html": "&lt;p&gt;Most storage bugs are really category errors…&lt;/p&gt;",
+  "canonical_blocks": [
+    { "label": "Preferences DataStore — simple settings", "lang": "kotlin", "code": "import android.content.Context\n…" }
+  ]
+}</pre>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Field</th><th>What it is</th><th>Rendered as</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>URL anchor + scrollspy key</td><td><code>&lt;section id="…"&gt;</code> + nav link</td></tr>
+            <tr><td><code>title</code> · <code>emoji</code> · <code>category</code></td><td>Heading and grouping</td><td>Section head + category badge</td></tr>
+            <tr><td><code>summary</code></td><td>One-line lede</td><td><code>.summary</code> paragraph</td></tr>
+            <tr><td><code>explanation_html</code></td><td>The full prose (trusted HTML)</td><td><code>.explain</code> block</td></tr>
+            <tr><td><code>key_points[]</code></td><td>Bullet takeaways (may contain HTML)</td><td>"Key points" list</td></tr>
+            <tr><td><code>playground</code></td><td>A spec: <code>kind</code> + widget options</td><td>An interactive widget</td></tr>
+            <tr><td><code>gotchas_html</code></td><td>Common mistakes</td><td>"⚠️ Common mistakes" block</td></tr>
+            <tr><td><code>canonical_blocks[]</code></td><td><code>{label, lang, code}</code> real snippets</td><td>Syntax-highlighted code panels</td></tr>
+          </tbody>
+        </table>
+        <div class="callout warn">
+          <span class="callout-label">Why HTML lives in the JSON</span>
+          <code>explanation_html</code>, <code>key_points</code>, and <code>gotchas_html</code> hold real HTML and are
+          inserted with <code>innerHTML</code>. That keeps rich formatting (links, <code>&lt;code&gt;</code>, lists) in
+          the content layer — fine here because the author <em>is</em> the data source. If this content ever came from
+          untrusted users, those fields would need sanitizing.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. BUILD ============ -->
+    <section class="band anchor" id="build">
+      <div class="band-inner">
+        <p class="eyebrow">Source file 2 of 3 · the assembler</p>
+        <h2>The build — inline everything into one file</h2>
+        <p class="dense">
+          <code>build.mjs</code> is a ~70-line Node script. It reads the three pieces, drops them into one HTML template,
+          and writes the result. The key trick is on one line: <code>const SECTIONS = ${JSON.stringify(sections)}</code>
+          turns the entire data file into a JavaScript global the engine can read with no <code>fetch</code> — which is
+          what makes the page work offline from <code>file://</code>.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.mjs · read, template, write</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const css = readFileSync(join(here, "styles.css"), "utf8");
+const engine = readFileSync(join(here, "engine.js"), "utf8");
+const sections = JSON.parse(readFileSync(join(here, "sections.json"), "utf8"));
+const out = join(here, "..", "storage-tutorial.html");
+
+const html = `&lt;!DOCTYPE html&gt;
+&lt;html lang="en" data-theme="light"&gt;
+...
+&lt;style&gt;${css}&lt;/style&gt;
+...
+&lt;div id="sections"&gt;&lt;/div&gt;   &lt;!-- engine fills this on load --&gt;
+...
+&lt;script&gt;
+const SECTIONS = ${JSON.stringify(sections)};   // the whole curriculum, inlined
+${engine}                                        // the renderer, inlined
+&lt;/script&gt;`;
+
+writeFileSync(out, html);
+console.log("wrote", out, "(" + html.length + " bytes,", sections.length, "sections)");</pre>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">Same idea as this page</span>
+          The four explainer pages in this teaching set use the same "inline everything" approach — a small generator
+          welds shared CSS and JavaScript into standalone HTML. One file, no build step to <em>view</em> it.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. HELPERS ============ -->
+    <section class="band anchor" id="helpers">
+      <div class="band-inner">
+        <p class="eyebrow">Source file 3 of 3 · the engine, bottom-up</p>
+        <h2>The engine toolkit — tiny DOM + code helpers</h2>
+        <p class="dense">
+          <code>engine.js</code> is one IIFE. At the bottom are small, dependency-free helpers everything else is built
+          from: element creators, an HTML escaper, three single-pass syntax highlighters, a copyable code panel, and a
+          couple of form controls.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">engine.js · DOM + escape helpers</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">// h(tag, class, html): the quick one. el(tag, attrs, kids): the structured one.
+function h(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+function esc(s) { return String(s == null ? "" : s).replace(/&amp;/g, "&amp;amp;").replace(/&lt;/g, "&amp;lt;").replace(/&gt;/g, "&amp;gt;"); }
+function el(tag, attrs, kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) { if (k === "class") e.className = attrs[k]; else if (k === "html") e.innerHTML = attrs[k]; else if (k === "text") e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  if (kids) kids.forEach(function (k) { if (k) e.appendChild(k); });
+  return e;
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">engine.js · a copyable, highlighted code panel</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">function codePanel(title, getCode, lang) {
+  const panel = h("div", "codepanel");
+  const ch = h("div", "ch", "&lt;span&gt;" + esc(title) + "&lt;/span&gt;");
+  const copy = h("button", null, "Copy"); ch.appendChild(copy);
+  const pre = h("pre");
+  panel.appendChild(ch); panel.appendChild(pre);
+  const hl = lang === "sql" ? sql : lang === "xml" ? xml : kt;     // pick a highlighter
+  panel.update = function () { const c = getCode(); pre.innerHTML = hl(c); panel._raw = c; };
+  copy.addEventListener("click", function () {
+    navigator.clipboard &amp;&amp; navigator.clipboard.writeText(panel._raw || getCode());
+    copy.textContent = "Copied!"; setTimeout(function () { copy.textContent = "Copy"; }, 1200);
+  });
+  panel.update();
+  return panel;
+}</pre>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">Three single-pass highlighters</span>
+          <code>kt()</code> (Kotlin), <code>sql()</code>, and <code>xml()</code> each run one regular expression over the
+          code and wrap matches in <code>&lt;span class="tok-…"&gt;</code>. A single pass means a string or comment can
+          never be re-highlighted from inside — the source of most naive-highlighter bugs. The
+          <code>codePanel</code>'s <code>update()</code> re-renders on demand, which is how playgrounds show code that
+          changes as you flip options.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. RENDER ============ -->
+    <section class="band anchor" id="render">
+      <div class="band-inner">
+        <p class="eyebrow">The engine · one section</p>
+        <h2>Rendering a section — the consistent layout</h2>
+        <p class="dense">
+          <code>renderSection(s)</code> turns one data object into one DOM <code>&lt;section&gt;</code>. It assembles the
+          same parts in the same order every time, and each part is optional — present it only if the data has it. That
+          single function is why all 21 sections look identical in structure.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">engine.js · renderSection (condensed)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">function renderSection(s) {
+  const sec = h("section", "section"); sec.id = s.id;            // id = the anchor
+  const head = h("div", "section-head");
+  head.appendChild(h("div", "emoji", esc(s.emoji || "▫️")));
+  const ht = h("div"); ht.appendChild(h("h2", null, esc(s.title)));
+  if (s.category) ht.appendChild(h("span", "cat-badge", esc(s.category)));
+  head.appendChild(ht); sec.appendChild(head);
+
+  if (s.summary) sec.appendChild(h("p", "summary", esc(s.summary)));
+  if (s.explanation_html) sec.appendChild(h("div", "explain", s.explanation_html));
+  if (s.key_points &amp;&amp; s.key_points.length) { /* build a "Key points" list */ }
+  if (s.playground) sec.appendChild(buildPlayground(s.playground));   // the interactive part
+  if (s.gotchas_html) sec.appendChild(h("div", "gotchas", "&lt;h4&gt;⚠️ Common mistakes&lt;/h4&gt;" + s.gotchas_html));
+  if (s.canonical_blocks) { /* a codePanel per {label, lang, code} */ }
+  return sec;
+}</pre>
+        </div>
+        <ul class="kicker-list">
+          <li><strong>Order is fixed:</strong> head → summary → explanation → key points → playground → gotchas → canonical code. Authors get a uniform reading rhythm for free.</li>
+          <li><strong>Everything is guarded:</strong> a section with no playground or no gotchas simply omits that block — no empty shells.</li>
+          <li><strong>Trusted vs escaped:</strong> titles/summaries go through <code>esc()</code>; the <code>_html</code> fields and canonical code are inserted as markup on purpose.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 8. PLAYGROUNDS ============ -->
+    <section class="band anchor" id="playgrounds">
+      <div class="band-inner">
+        <p class="eyebrow">The engine · the interactive part</p>
+        <h2>The playground system — a spec picks a widget</h2>
+        <p class="dense">
+          Each section's <code>playground</code> spec has a <code>kind</code>. <code>buildPlayground</code> looks that
+          <code>kind</code> up in a <code>WIDGETS</code> map and calls the matching builder, wrapping it in a try/catch so
+          one broken widget never blanks the page. This is a small dispatch table — adding a new playground type is one
+          new function plus one map entry.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">engine.js · the dispatch table + builder</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">const WIDGETS = {
+  "db-live": wDbLive,                 "entity-schema": wEntitySchema,
+  "dao-builder": wDaoBuilder,         "storage-chooser": wStorageChooser,
+  "prefs-datastore": wPrefsDatastore, "device-map": wDeviceMap,
+  "migration": wMigration,            "threading": wThreading,
+  "type-converter": wTypeConverter,   "backup-rules": wBackupRules,
+};
+
+function buildPlayground(pg) {
+  const root = h("div");
+  root.appendChild(h("div", "pg-label", pg.title || "Interactive playground"));
+  if (pg.intro) root.appendChild(h("p", "pg-intro", pg.intro));
+  const board = h("div", "playground");
+  const builder = WIDGETS[pg.kind];
+  if (builder) { try { builder(pg, board); } catch (e) { board.appendChild(h("div", "hint", "playground error: " + esc(e.message))); } }
+  else board.appendChild(h("div", "hint", "Unknown playground: " + esc(pg.kind)));
+  root.appendChild(board);
+  return root;
+}</pre>
+        </div>
+        <h3>The ten playgrounds</h3>
+        <p class="dense">Each is a hand-built simulation of real Android behavior — no emulator, just DOM that mirrors what the API actually does.</p>
+        <table class="tbl">
+          <thead><tr><th>kind</th><th>Builder</th><th>What you can do</th></tr></thead>
+          <tbody>
+            <tr><td><code>storage-chooser</code></td><td><code>wStorageChooser</code></td><td>Answer "which storage do I use?" and get a recommendation</td></tr>
+            <tr><td><code>device-map</code></td><td><code>wDeviceMap</code></td><td>See where data lives + what survives clear-cache / clear-data / uninstall</td></tr>
+            <tr><td><code>threading</code></td><td><code>wThreading</code></td><td>Main-thread blocking vs <code>suspend</code> on Room's executor</td></tr>
+            <tr><td><code>prefs-datastore</code></td><td><code>wPrefsDatastore</code></td><td>SharedPreferences (sync, ANR-prone) vs DataStore (Flow)</td></tr>
+            <tr><td><code>entity-schema</code></td><td><code>wEntitySchema</code></td><td>Flip <code>@Entity</code> annotations → generated Kotlin + <code>CREATE TABLE</code></td></tr>
+            <tr><td><code>dao-builder</code></td><td><code>wDaoBuilder</code></td><td>Pick a DAO operation → generated method + SQL + result</td></tr>
+            <tr><td><code>db-live</code></td><td><code>wDbLive</code></td><td>Insert/update/delete → watch a <code>Flow&lt;List&lt;Note&gt;&gt;</code> re-emit</td></tr>
+            <tr><td><code>type-converter</code></td><td><code>wTypeConverter</code></td><td>Non-primitive Kotlin types → the stored column value</td></tr>
+            <tr><td><code>migration</code></td><td><code>wMigration</code></td><td>Bump the schema and watch it preserve / crash / wipe</td></tr>
+            <tr><td><code>backup-rules</code></td><td><code>wBackupRules</code></td><td>Pick buckets → generated <code>data_extraction_rules.xml</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 9. INIT ============ -->
+    <section class="band anchor" id="init">
+      <div class="band-inner">
+        <p class="eyebrow">The engine · on load</p>
+        <h2>init() — build the nav, the sections, and the chrome</h2>
+        <p class="dense">
+          When the page loads, <code>init()</code> reads the global <code>SECTIONS</code>, groups them by category to
+          build the sidebar, renders every section into <code>#sections</code>, then wires a scroll-spy and the theme
+          toggle. Everything you see is produced here from data.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">engine.js · init (condensed)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">function init() {
+  const nav = document.getElementById("nav");
+  const main = document.getElementById("sections");
+
+  // 1) group sections by category, build the sidebar
+  const cats = []; const byCat = {};
+  SECTIONS.forEach(function (s) { const c = s.category || "Sections"; if (!byCat[c]) { byCat[c] = []; cats.push(c); } byCat[c].push(s); });
+  cats.forEach(function (cat) { /* a nav-group heading + a link per section */ });
+
+  // 2) render every section
+  SECTIONS.forEach(function (s) { main.appendChild(renderSection(s)); });
+
+  // 3) scroll-spy: highlight the nav link of the section in view
+  const io = new IntersectionObserver(/* toggle .active */, { rootMargin: "-10% 0px -75% 0px" });
+  SECTIONS.forEach(function (s) { const e = document.getElementById(s.id); if (e) io.observe(e); });
+
+  // 4) theme toggle: flip data-theme on &lt;html&gt;
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();</pre>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Data-driven all the way down</span>
+          The sidebar's groups, the section order, the anchors, and the scroll-spy targets are all derived from
+          <code>SECTIONS</code>. Add an object to <code>sections.json</code> and a fully wired section + nav entry appears
+          after the next build — no other code changes.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. CURRICULUM ============ -->
+    <section class="band anchor" id="curriculum">
+      <div class="band-inner">
+        <p class="eyebrow">The payload</p>
+        <h2>What the 21 sections teach</h2>
+        <p class="dense">
+          The data isn't filler — it is a complete tour of on-device storage, ordered from foundations to architecture.
+          Six categories, twenty-one sections.
+        </p>
+        <table class="tbl">
+          <thead><tr><th>Category</th><th>Sections</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Foundations</strong></td><td>🗺️ The storage landscape · 📍 Where your data physically lives · 🧵 Persistence is disk I/O — stay off the main thread</td></tr>
+            <tr><td><strong>Key–value · DataStore</strong></td><td>⚖️ SharedPreferences vs DataStore · 🔑 Preferences DataStore in depth · 🧱 Typed (Proto) DataStore</td></tr>
+            <tr><td><strong>Room · structured data</strong></td><td>🏛️ Why Room &amp; its three components · 🧬 @Entity · 📇 @Dao · 💧 Reactive Flow queries · 🏗️ @Database &amp; singleton · 🔄 @TypeConverter · 🔗 Relations, foreign keys &amp; indices · 🪜 Schema migrations</td></tr>
+            <tr><td><strong>Files &amp; media</strong></td><td>📁 Internal &amp; cache files · 🖼️ Shared media &amp; scoped storage</td></tr>
+            <tr><td><strong>Security &amp; lifecycle</strong></td><td>🔐 Encryption at rest · ☁️ Auto Backup &amp; data-extraction rules</td></tr>
+            <tr><td><strong>Architecture &amp; wiring</strong></td><td>🧩 Wiring persistence into the app · 🔬 Inspecting &amp; testing storage · 🎯 The persistence cheat sheet</td></tr>
+          </tbody>
+        </table>
+        <div class="callout good">
+          <span class="callout-label">It maps onto the runnable apps</span>
+          The concepts here are demonstrated for real in this repo: <code>RoomAndPreferences</code> (Room + Preferences),
+          <a href="../StorageShowcase/how-a-note-reaches-storage.html">Storage Showcase</a> (all four local stores), and
+          <a href="../StorageJourney/how-an-item-reaches-storage.html">Storage Journey</a> (one element, Room only). The
+          lab is the deep reference; those apps are where you watch it run.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. TRIP (stepper) ============ -->
+    <section class="band anchor" id="trip">
+      <div class="band-inner">
+        <p class="eyebrow">All together</p>
+        <h2>The full build, step by step</h2>
+        <p class="dense">
+          From running one command to a rendered, interactive section in your browser — here is the whole chain, in order.
+        </p>
+        <div class="stepper" id="sortStepper">
+          <div class="stepper-head">
+            <span class="s-title">Scenario: you run <code>node build.mjs</code>, then open the file</span>
+            <div class="stepper-ctrl">
+              <button id="stepPrev" type="button">‹ Prev</button>
+              <span class="s-count" id="stepCount">1 / 6</span>
+              <button id="stepNext" type="button">Next ›</button>
+            </div>
+          </div>
+          <ol class="steps" id="stepList">
+            <li class="step" data-step><div class="s-num">1</div><div class="s-body"><strong>Read.</strong> <code>build.mjs</code> reads <code>styles.css</code>, <code>engine.js</code>, and parses <code>sections.json</code> into an array.<span class="s-where">build.mjs · readFileSync / JSON.parse</span></div></li>
+            <li class="step" data-step><div class="s-num">2</div><div class="s-body"><strong>Inline.</strong> It drops the CSS into a <code>&lt;style&gt;</code>, then writes <code>const SECTIONS = […]</code> and the whole engine into one <code>&lt;script&gt;</code>.<span class="s-where">build.mjs · the html template literal</span></div></li>
+            <li class="step" data-step><div class="s-num">3</div><div class="s-body"><strong>Write.</strong> <code>writeFileSync</code> emits <code>../storage-tutorial.html</code> — a single self-contained document. The build is done.<span class="s-where">storage-tutorial.html (≈ one directory up)</span></div></li>
+            <li class="step" data-step><div class="s-num">4</div><div class="s-body"><strong>Open.</strong> You open the file in a browser. The inlined <code>&lt;script&gt;</code> runs; <code>init()</code> fires on <code>DOMContentLoaded</code>.<span class="s-where">engine.js · init()</span></div></li>
+            <li class="step" data-step><div class="s-num">5</div><div class="s-body"><strong>Render.</strong> <code>init()</code> groups <code>SECTIONS</code> into the sidebar, then calls <code>renderSection</code> for each, appending live DOM into <code>#sections</code>.<span class="s-where">engine.js · renderSection()</span></div></li>
+            <li class="step" data-step><div class="s-num">6</div><div class="s-body"><strong>Animate.</strong> Each section with a <code>playground</code> spec gets its widget built by <code>buildPlayground</code> → <code>WIDGETS[kind]</code>, and the scroll-spy lights the nav as you read.<span class="s-where">engine.js · buildPlayground + IntersectionObserver</span></div></li>
+          </ol>
+        </div>
+        <div class="callout">
+          <span class="callout-label">The point</span>
+          Steps 1–3 happen once, at build time, in Node. Steps 4–6 happen every time someone opens the file, in the
+          browser — with no server and no JavaScript libraries (only an optional web-font fetch). Data and renderer, baked into one document.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12. RUN ============ -->
+    <section class="band anchor" id="run">
+      <div class="band-inner">
+        <p class="eyebrow">Try it yourself</p>
+        <h2>Build &amp; extend</h2>
+        <p class="dense">The build needs only Node — no install step, no dependencies.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal · from StorageMaster/storage-tutorial/</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash">node build.mjs        # reads css + engine + json, writes ../storage-tutorial.html
+# then open ../storage-tutorial.html in any browser (works from file://)</pre>
+        </div>
+        <h3>Adding a new lesson</h3>
+        <ul class="kicker-list">
+          <li><strong>Append an object</strong> to <code>sections.json</code> with a unique <code>id</code>, a <code>category</code> (reuse an existing one to slot it into that group), a <code>title</code>, <code>summary</code>, and <code>explanation_html</code>.</li>
+          <li><strong>Pick a playground</strong> by setting <code>playground.kind</code> to one of the ten existing widgets — or add a new <code>w…</code> function in <code>engine.js</code> and one entry in the <code>WIDGETS</code> map.</li>
+          <li><strong>Re-run <code>node build.mjs</code>.</strong> The new section, its nav link, and its scroll-spy target all appear automatically.</li>
+        </ul>
+        <div class="callout good">
+          <span class="callout-label">Where to go next</span>
+          Want to <em>play</em> with the architecture instead of read it? Open the
+          <a href="storage-master-explorer.html">interactive explainer</a> — it has a live storage-decision chooser, a
+          clickable build-pipeline map, and a source explorer. Or jump straight into the
+          <a href="storage-tutorial.html">Master Lab</a> itself.
+        </div>
+        <p class="foot">Storage Master Lab · data + a renderer, baked into one file · part of the AndroidStudioProjects teaching set.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+</body>
+</html>

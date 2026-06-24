@@ -32,7 +32,14 @@ comments, so you can diff any two projects to see exactly what a feature adds.
 > master class on local persistence — DataStore, Room (entities, DAOs, reactive `Flow`,
 > migrations, relations), files & scoped storage, encryption and backup — with ten hand-built
 > widgets. The runnable companion app is [`StorageShowcase`](./StorageShowcase); both are the
-> deep-dive behind [`RoomAndPreferences`](./RoomAndPreferences).
+> deep-dive behind [`RoomAndPreferences`](./RoomAndPreferences). To instead watch **one element**
+> travel all the way into storage and back, open [`StorageJourney`](./StorageJourney) — its
+> [interactive explainer](./StorageJourney/storage-journey-explorer.html) runs a live in-browser
+> simulator, and its [`how-an-item-reaches-storage.html`](./StorageJourney/how-an-item-reaches-storage.html)
+> shows each step as code.
+> If the storage materials feel like too much at once, start with
+> **[`STORAGE_GUIDE.md`](./STORAGE_GUIDE.md)**. It is the short decision guide that
+> explains which storage API to use and which local project demonstrates it.
 >
 > ✅ Prefer to **practice**? **[`labs/`](./labs)** is a set of guided, browser-based
 > **hands-on exercises** with instant checking — a task, starter code, and success
@@ -100,6 +107,7 @@ Same Kotlin / Compose / Material 3 / Gradle-KTS stack; each has its own README.
 | [`MvvmState`](./MvvmState) | MVVM: `ViewModel`, `StateFlow`, immutable `UiState`, UI events, unidirectional data flow (fake data). |
 | [`RoomAndPreferences`](./RoomAndPreferences) | Local persistence: **Room** (via KSP) for structured data + **DataStore Preferences** for settings. |
 | [`StorageShowcase`](./StorageShowcase) | Local-storage **capstone**: one tabbed app covering Room (entity, DAO, reactive `Flow`, `@TypeConverter`, `@ForeignKey`/`@Relation`, a `Migration`), Preferences DataStore, **Typed (JSON) DataStore**, and internal file storage. The runnable companion to the [Storage Master Lab](./StorageMaster/storage-tutorial.html). |
+| [`StorageJourney`](./StorageJourney) | **Depth on one round trip**: follow a single element from the text field through ViewModel → Repository → **Room** → disk and back, with a live in-app **Journey panel**. Two HTML companions: an [interactive explainer](./StorageJourney/storage-journey-explorer.html) (live in-browser simulator) and a [step-by-step code walkthrough](./StorageJourney/how-an-item-reaches-storage.html). Room-only, heavily commented. |
 | [`AppReleaseBasics`](./AppReleaseBasics) | Release basics: manifest, runtime permissions, version/build types, signing concepts, App Bundle (README). |
 
 ---

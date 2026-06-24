@@ -389,6 +389,7 @@ h3 {
 
 .tool-body {
   padding: 16px;
+  min-width: 0;
 }
 
 .split {
@@ -396,6 +397,14 @@ h3 {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+  min-width: 0;
+}
+
+.split > *,
+.hero-grid > *,
+.control-grid > *,
+.three > *,
+.four > * {
   min-width: 0;
 }
 
@@ -415,11 +424,13 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  min-width: 0;
 }
 
 .control {
   display: grid;
   gap: 5px;
+  min-width: 0;
 }
 
 .control label,
@@ -433,6 +444,7 @@ h3 {
 .text-input,
 .range {
   width: 100%;
+  min-width: 0;
 }
 
 .select,
@@ -527,6 +539,7 @@ h3 {
   grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
+  min-width: 0;
 }
 
 input[type="range"] {
@@ -712,6 +725,155 @@ input[type="range"] {
   background: var(--surface-alt);
   border-radius: 8px;
   padding: 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.deep-layout {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.deep-menu {
+  display: grid;
+  gap: 7px;
+}
+
+.deep-menu button {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-height: 50px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.deep-menu button:hover,
+.deep-menu button.on {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.deep-menu b {
+  display: block;
+  font-size: 0.86rem;
+  line-height: 1.2;
+}
+
+.deep-menu span:last-child {
+  color: var(--muted);
+  display: block;
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+}
+
+.deep-token {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--surface-strong);
+  color: var(--blue);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.deep-detail {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.deep-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 9px 0 12px;
+}
+
+.deep-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.deep-card {
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.deep-card h4 {
+  margin: 0 0 8px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.deep-card ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.deep-card li {
+  margin: 4px 0;
+}
+
+.sequence {
+  display: grid;
+  gap: 8px;
+  counter-reset: sequence;
+}
+
+.sequence-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 10px;
+}
+
+.sequence-step::before {
+  counter-increment: sequence;
+  content: counter(sequence);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green);
+  font-weight: 900;
+}
+
+.sequence-step strong {
+  display: block;
+}
+
+.sequence-step span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.88rem;
+  margin-top: 2px;
 }
 
 .recommendation-title {
@@ -720,6 +882,7 @@ input[type="range"] {
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 8px;
+  min-width: 0;
 }
 
 .recommendation-title h3 {
@@ -740,6 +903,7 @@ input[type="range"] {
   color: var(--code-ink);
   border-radius: 8px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .code-head {
@@ -757,7 +921,9 @@ input[type="range"] {
 .code-panel pre {
   margin: 0;
   padding: 12px;
-  overflow: auto;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   font-family: var(--mono);
   font-size: 0.82rem;
   line-height: 1.55;
@@ -876,6 +1042,186 @@ input[type="range"] {
   font-family: var(--mono);
   font-size: 1.2rem;
   margin-top: 6px;
+}
+
+.scenario-panel,
+.journey-panel,
+.whatif-panel {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.scenario-panel {
+  margin-top: 14px;
+}
+
+.scenario-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.scenario-head strong {
+  display: block;
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.scenario-card {
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 74px;
+  padding: 9px 10px;
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+}
+
+.scenario-card:hover,
+.scenario-card.on {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.scenario-card strong {
+  display: block;
+  line-height: 1.2;
+  margin-bottom: 3px;
+}
+
+.scenario-card span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.journey-panel {
+  margin-top: 10px;
+  background: var(--surface-alt);
+}
+
+.journey-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.journey-title h3 {
+  margin: 0;
+}
+
+.journey-steps {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.journey-step {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.journey-step b {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 0.78rem;
+}
+
+.journey-step span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.layer-extra {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.layer-extra-card {
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.layer-extra-card strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.layer-extra-card span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.whatif-panel {
+  margin-top: 12px;
+}
+
+.whatif-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.whatif-controls button {
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 999px;
+  min-height: 30px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.whatif-controls button:hover,
+.whatif-controls button.on {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.whatif-output {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
+  color: var(--ink);
+  min-height: 58px;
+}
+
+.whatif-output strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.whatif-output span {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .pulse {
@@ -1238,6 +1584,9 @@ input[type="range"] {
 
   .section-head,
   .control-grid,
+  .deep-layout,
+  .deep-columns,
+  .scenario-grid,
   .three,
   .four,
   .state-grid {
@@ -1274,6 +1623,15 @@ input[type="range"] {
     columns: 1;
   }
 }
+.plain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(244px,1fr));gap:14px;margin:18px 0;}
+.plain-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;}
+.plain-card .pc-emoji{font-size:26px;line-height:1;}
+.plain-card h4{margin:8px 0 5px;font-size:15.5px;}
+.plain-card p{margin:0 0 8px;color:var(--muted);font-size:14px;line-height:1.5;}
+.plain-card .pc-good{color:var(--ink);font-size:13.5px;}
+.plain-card .pc-name{margin-bottom:0;font-size:12.5px;}
+.plain-card .pc-meta{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);display:grid;gap:4px;font-size:12px;color:var(--muted);line-height:1.45;}
+.plain-card .pc-meta b{color:var(--ink);font-weight:650;}
 </style>
 </head>
 <body>
@@ -1287,8 +1645,10 @@ input[type="range"] {
       </div>
     </div>
     <div class="nav-title">Explore</div>
-    <a class="nav-link active" href="#overview"><span class="nav-icon"></span><span>Storage map</span></a>
+    <a class="nav-link active" href="#start"><span class="nav-icon round"></span><span>Start here</span></a>
+    <a class="nav-link" href="#overview"><span class="nav-icon"></span><span>Storage map</span></a>
     <a class="nav-link" href="#chooser"><span class="nav-icon round"></span><span>Decision engine</span></a>
+    <a class="nav-link" href="#types"><span class="nav-icon"></span><span>Storage type guide</span></a>
     <a class="nav-link" href="#lifecycle"><span class="nav-icon line"></span><span>Lifecycle lab</span></a>
     <a class="nav-link" href="#permissions"><span class="nav-icon"></span><span>Permissions</span></a>
     <a class="nav-link" href="#room"><span class="nav-icon round"></span><span>Room</span></a>
@@ -1308,8 +1668,10 @@ input[type="range"] {
   <main class="content">
     <div class="topbar">
       <select id="mobileNav" aria-label="Jump to lesson section">
+        <option value="#start">Start here</option>
         <option value="#overview">Storage map</option>
         <option value="#chooser">Decision engine</option>
+        <option value="#types">Storage type guide</option>
         <option value="#lifecycle">Lifecycle lab</option>
         <option value="#permissions">Permissions</option>
         <option value="#room">Room</option>
@@ -1322,12 +1684,135 @@ input[type="range"] {
       </select>
     </div>
 
+    <section class="band" id="start">
+      <div class="band-inner">
+        <p class="eyebrow">Start here - no experience needed</p>
+        <h2>The simplest version: where can an app keep things?</h2>
+        <p class="lead">An app often needs to remember things - a setting you picked, a note you typed, a photo you took. There is not one big box for all of it. Instead, Android gives an app a few different "places" to keep data, and each place is good for a different kind of thing - a bit like how, at home, you keep your keys, your photo albums, and your scratch paper in different spots. Here are the main places, in plain words.</p>
+
+        <div class="callout good">
+          <strong>If you only remember one sentence:</strong> use <b>DataStore</b> for small settings,
+          <b>Room</b> for lists of records you query, <b>filesDir</b> for private files that must last,
+          <b>cacheDir</b> for files you can rebuild, and <b>MediaStore</b> or the system picker when the
+          user should see, keep, or choose the file.
+        </div>
+
+        <div class="callout">
+          <strong>First, what does "volatile" mean?</strong> Volatile data disappears the moment the power goes off - that is the phone's memory (RAM), where things live only while the app is running, like a variable or a screen's temporary state. Non-volatile data is written to the phone's storage chip (or a server) and is still there after a restart. Every place below is non-volatile - it all survives the phone turning off and on. (The cache is the one twist: it is non-volatile, but the system may delete it to free up space.)
+        </div>
+
+        <div class="callout good">
+          <strong>Want to see this in real code?</strong> The runnable <strong>Storage Showcase</strong> app puts every mechanism on this page into one Compose app (one tab each), and <a href="how-storageshowcase-works.html">How Storage Showcase works</a> is a file-by-file walkthrough of how it's wired together.
+        </div>
+
+        <div class="callout">
+          <strong>Recommended path through these storage docs:</strong> read this Start Here section,
+          try the <a href="#chooser">decision engine</a>, open the
+          <a href="../Playground/storage-playground.html">Room playground</a> only when you are ready
+          to focus on database rows, then use the Master Lab as the detailed reference.
+        </div>
+
+        <div class="plain-grid">
+          <div class="plain-card">
+            <div class="pc-emoji">🗒️</div>
+            <h4>1. A short list of settings</h4>
+            <p>For small choices and short answers - "is dark mode on?", "what name did they type?". You keep a little list of labels and their values. It is the simplest place: this setting equals that value.</p>
+            <p class="pc-good"><b>Good for:</b> on/off switches, the user's name, the last tab they opened.</p>
+            <p class="pc-name">Android calls this <code>DataStore</code> (the older version was <code>SharedPreferences</code>).</p>
+            <div class="pc-meta">
+              <span><b>Where on the phone:</b> your app's own private area in internal storage.</span>
+              <span><b>Volatile?</b> Non-volatile - it survives the phone restarting.</span>
+            </div>
+          </div>
+          <div class="plain-card">
+            <div class="pc-emoji">🗄️</div>
+            <h4>2. A filing cabinet for lots of records</h4>
+            <p>When you have many similar things - notes, to-do items, contacts - and you need to find, sort, or filter them, you want a database. Picture a spreadsheet: each thing is a row, and you can search through them.</p>
+            <p class="pc-good"><b>Good for:</b> a notes app's notes, a to-do list, saved messages.</p>
+            <p class="pc-name">Android's tool for this is <code>Room</code> (a helper for the database built into every phone).</p>
+            <div class="pc-meta">
+              <span><b>Where on the phone:</b> a database file in your app's private area in internal storage.</span>
+              <span><b>Volatile?</b> Non-volatile - survives a restart.</span>
+            </div>
+          </div>
+          <div class="plain-card">
+            <div class="pc-emoji">📁</div>
+            <h4>3. Your app's own private folder</h4>
+            <p>Sometimes the data is just a file - a chunk of text, or a picture your app made. You can save it in a folder only your app is allowed to open, like a drawer only you have the key to.</p>
+            <p class="pc-good"><b>Good for:</b> a saved document, a drawing, data your app reads back later.</p>
+            <p class="pc-name">Android calls this internal storage (the folder is named <code>filesDir</code>).</p>
+            <div class="pc-meta">
+              <span><b>Where on the phone:</b> your app's private folder in internal storage.</span>
+              <span><b>Volatile?</b> Non-volatile - survives a restart.</span>
+            </div>
+          </div>
+          <div class="plain-card">
+            <div class="pc-emoji">🧽</div>
+            <h4>4. A scratch folder you can lose</h4>
+            <p>For things you can always make again - like a smaller copy kept around to make the app feel faster - there is a "cache". The phone may empty it whenever it needs space, so never keep anything important here. Think of scratch paper you would not mind tossing.</p>
+            <p class="pc-good"><b>Good for:</b> thumbnail images, a downloaded copy of something that is also online.</p>
+            <p class="pc-name">Android calls this the cache folder (<code>cacheDir</code>).</p>
+            <div class="pc-meta">
+              <span><b>Where on the phone:</b> your app's cache folder in internal storage.</span>
+              <span><b>Volatile?</b> Non-volatile, but the phone may erase it at any time to free up space.</span>
+            </div>
+          </div>
+          <div class="plain-card">
+            <div class="pc-emoji">🖼️</div>
+            <h4>5. The phone's shared photo &amp; music library</h4>
+            <p>If you save a photo, video, or song the user should see in their Gallery or Music app - not just hidden inside your app - it goes into the phone's shared library that all apps can use. Like adding a photo to the family album everyone can open.</p>
+            <p class="pc-good"><b>Good for:</b> a photo the user took in your app, a video you exported.</p>
+            <p class="pc-name">Android calls this <code>MediaStore</code>.</p>
+            <div class="pc-meta">
+              <span><b>Where on the phone:</b> the shared storage area that all apps can use.</span>
+              <span><b>Volatile?</b> Non-volatile - survives a restart, and even your app being uninstalled.</span>
+            </div>
+          </div>
+          <div class="plain-card">
+            <div class="pc-emoji">🤝</div>
+            <h4>6. Let the user pick or place a file</h4>
+            <p>Sometimes you do not store the file yourself - you ask the user. "Pick a photo for your avatar." "Choose where to save this PDF." The phone shows a picker, the user chooses, and your app gets just the one file they pointed at.</p>
+            <p class="pc-good"><b>Good for:</b> choosing a profile picture, importing a document, exporting a file.</p>
+            <p class="pc-name">Android calls these the <code>Photo Picker</code> (for pictures and videos) and the <code>Storage Access Framework</code> (for other documents).</p>
+            <div class="pc-meta">
+              <span><b>Where on the phone:</b> wherever the file already lives - the phone's storage, or even a cloud app like Google Drive.</span>
+              <span><b>Volatile?</b> Non-volatile - you are borrowing the user's file, not keeping your own copy.</span>
+            </div>
+          </div>
+          <div class="plain-card">
+            <div class="pc-emoji">☁️</div>
+            <h4>7. Out on the internet (a server)</h4>
+            <p>Everything above lives on this one phone. If the data must also show up on the user's other devices, or be shared with other people, it has to live on the internet instead - on a server or a cloud database. That is a bigger topic, but it is why "where does this live?" is sometimes "not on the phone at all."</p>
+            <p class="pc-good"><b>Good for:</b> an account that follows you between phones, shared documents.</p>
+            <p class="pc-name">No single Android name - you would use a backend such as Firebase or your own server.</p>
+            <div class="pc-meta">
+              <span><b>Where on the phone:</b> nowhere - it lives on another computer (a server) out on the internet.</span>
+              <span><b>Volatile?</b> Non-volatile - stored on the server's disk.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout good">
+          <strong>How do I pick one?</strong> Three plain questions usually decide it:<br>
+          1. <b>One tiny setting, or a pile of records?</b> A tiny setting goes in the settings list; a pile of records goes in the database.<br>
+          2. <b>Just for your app, or should the user see it in other apps?</b> Just yours stays in your private folder or database; if the user should see it, use the shared library - or let the user pick.<br>
+          3. <b>Must it stick around, or can you remake it?</b> Must stick around: settings, files, or the database. Can remake it: the cache.
+        </div>
+
+        <div class="callout">
+          <strong>Does my data stick around?</strong> Your settings, files, and database stay until the app is uninstalled. The cache can disappear at any time. A photo you place in the shared library stays even after your app is gone - it belongs to the user now.
+        </div>
+
+        <p class="dense" style="margin-top:14px;">Everything below is this same set of ideas in more detail - an interactive map, a "which one should I use?" helper, and real code for each. Take your time; you already have the big picture now.</p>
+      </div>
+    </section>
+
     <section class="band" id="overview">
       <div class="band-inner hero-grid">
         <div>
           <p class="eyebrow">The useful mental model</p>
           <h1>Android storage is a set of scoped places, not one shared disk.</h1>
-          <p class="lead">Every storage choice answers five questions: who owns the data, who should see it, how structured it is, whether it should survive uninstall, and whether the user should explicitly choose the file or media.</p>
+          <p class="lead">Picking where to put data comes down to five plain questions: Who owns it - your app or the user? Who should be able to see it? Is it neat rows, or just a blob of bytes? Should it survive the app being uninstalled? And should the user pick the file or photo themselves?</p>
           <div class="callout good">
             <strong>Rule of thumb:</strong> default to the narrowest storage surface that satisfies the feature. Private app state belongs in the app sandbox. User-visible media belongs in MediaStore. Arbitrary user documents belong behind the system picker.
           </div>
@@ -1345,12 +1830,34 @@ input[type="range"] {
               <span>Photo Picker and SAF return content URIs. Your app receives access to exactly what the user selected.</span>
             </div>
           </div>
+          <div class="scenario-panel">
+            <div class="scenario-head">
+              <div>
+                <strong>Try common app features</strong>
+                <span class="dense">Pick a feature and watch the map select the storage boundary, access pattern, and lifecycle result.</span>
+              </div>
+              <span class="tag green" id="scenarioBadge">Scenario</span>
+            </div>
+            <div class="scenario-grid" id="storageScenarioGrid"></div>
+            <div class="journey-panel" id="storageJourney"></div>
+          </div>
         </div>
 
         <div class="device-shell" aria-label="Interactive Android storage map">
           <div class="device-label"><span>Tap a layer</span><span class="tag blue">API aware</span></div>
           <div class="storage-stack" id="storageStack"></div>
           <div class="layer-detail" id="layerDetail"></div>
+          <div class="whatif-panel">
+            <div class="device-label"><span>What happens if...</span><span class="tag" id="whatIfLayer">Layer</span></div>
+            <div class="whatif-controls" id="whatIfControls" role="group" aria-label="Storage what-if simulator">
+              <button type="button" class="on" data-whatif="restart">Restart</button>
+              <button type="button" data-whatif="clearCache">Clear cache</button>
+              <button type="button" data-whatif="clearStorage">Clear storage</button>
+              <button type="button" data-whatif="uninstall">Uninstall</button>
+              <button type="button" data-whatif="share">Share</button>
+            </div>
+            <div class="whatif-output" id="whatIfOutput"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -1360,8 +1867,8 @@ input[type="range"] {
         <div class="section-head">
           <div>
             <p class="eyebrow">Decision engine</p>
-            <h2>Choose the right storage API by describing the data.</h2>
-            <p class="lead">Change the inputs and watch the recommendation, tradeoffs, and Kotlin entry point update. This is the fastest way to avoid using broad permissions when a narrower API is enough.</p>
+            <h2>Not sure which one to use? Describe your data.</h2>
+            <p class="lead">Answer a few quick questions about what you are storing. The panel on the right updates instantly with a recommended place to put it - and starter Kotlin code you can copy. Pick what you are storing first, then tick any boxes that are true.</p>
           </div>
           <span class="tag green">Interactive</span>
         </div>
@@ -1376,14 +1883,14 @@ input[type="range"] {
               <div class="control">
                 <label for="dataKind">What are you storing?</label>
                 <select class="select" id="dataKind">
-                  <option value="setting">Small setting or flag</option>
-                  <option value="profile">Typed app object</option>
-                  <option value="records">Structured rows you query</option>
-                  <option value="privateFile">Private blob or text file</option>
-                  <option value="cache">Re-creatable cache</option>
-                  <option value="photo">Photo or video user should see</option>
-                  <option value="audio">Audio user should see</option>
-                  <option value="document">Arbitrary user document</option>
+                  <option value="setting">A small setting or on/off flag</option>
+                  <option value="profile">One app object (like a profile)</option>
+                  <option value="records">Many records to search or sort</option>
+                  <option value="privateFile">A private file (text or bytes)</option>
+                  <option value="cache">Temporary data I can rebuild</option>
+                  <option value="photo">A photo or video the user should see</option>
+                  <option value="audio">Audio the user should see</option>
+                  <option value="document">A document the user picks</option>
                 </select>
               </div>
               <div class="control">
@@ -1393,14 +1900,67 @@ input[type="range"] {
                   <span class="value-badge" id="sizeLabel">KBs</span>
                 </div>
               </div>
-              <label class="check-row"><input type="checkbox" id="mustShare">Other apps should access it</label>
-              <label class="check-row"><input type="checkbox" id="surviveUninstall">It should remain after uninstall</label>
-              <label class="check-row"><input type="checkbox" id="needsQuery">Needs search, sort, relations, or transactions</label>
-              <label class="check-row"><input type="checkbox" id="userChooses">User should choose the exact file</label>
-              <label class="check-row"><input type="checkbox" id="sensitive">Contains sensitive data</label>
-              <label class="check-row"><input type="checkbox" id="offlineReliable" checked>Must be available at app start</label>
+              <label class="check-row"><input type="checkbox" id="mustShare">Other apps need to see it too</label>
+              <label class="check-row"><input type="checkbox" id="surviveUninstall">It should survive the app being uninstalled</label>
+              <label class="check-row"><input type="checkbox" id="needsQuery">I need to search, sort, or link many records</label>
+              <label class="check-row"><input type="checkbox" id="userChooses">The user picks the file (or where to save it)</label>
+              <label class="check-row"><input type="checkbox" id="sensitive">It is sensitive (passwords, private info)</label>
+              <label class="check-row"><input type="checkbox" id="offlineReliable" checked>It must be ready the instant the app opens</label>
             </div>
             <div class="result-panel" id="chooserResult"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="types">
+      <div class="band-inner">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Storage type guide</p>
+            <h2>Understand each storage type, not just the API name.</h2>
+            <p class="lead">The important choice is not "file versus database." It is whether the data is private or shared, structured or raw bytes, disposable or durable, app-owned or user-owned, and chosen by the user or created by your app.</p>
+          </div>
+          <span class="tag green">Deep dive</span>
+        </div>
+
+        <div class="tool">
+          <div class="tool-head">
+            <div class="tool-title">Storage type inspector</div>
+            <span class="tag">Tap a type</span>
+          </div>
+          <div class="tool-body deep-layout">
+            <div class="deep-menu" id="deepTypeMenu" aria-label="Storage type choices"></div>
+            <div class="deep-detail" id="deepTypeDetail"></div>
+          </div>
+        </div>
+
+        <div class="tool" style="margin-top: 14px;">
+          <div class="tool-head">
+            <div class="tool-title">Practical decision sequence</div>
+            <span class="tag blue">Use in code reviews</span>
+          </div>
+          <div class="tool-body">
+            <div class="sequence">
+              <div class="sequence-step">
+                <div><strong>Is it queryable structured app data?</strong><span>Use Room when you need rows, indexes, relations, filtering, sorting, transactions, or migrations.</span></div>
+              </div>
+              <div class="sequence-step">
+                <div><strong>Is it a small private setting or one typed app object?</strong><span>Use Preferences DataStore for simple keys; use typed or Proto DataStore for a single schema-backed object.</span></div>
+              </div>
+              <div class="sequence-step">
+                <div><strong>Is it private app-owned bytes?</strong><span>Use filesDir for durable bytes, cacheDir for rebuildable bytes, and noBackupFilesDir for data that should not restore.</span></div>
+              </div>
+              <div class="sequence-step">
+                <div><strong>Should the user see it after uninstall?</strong><span>Use shared storage. Photos, videos, and audio belong in MediaStore. Arbitrary documents usually belong behind SAF.</span></div>
+              </div>
+              <div class="sequence-step">
+                <div><strong>Is the user selecting existing media or a document?</strong><span>Prefer Photo Picker for visual media and SAF for documents. They return content URIs and avoid broad storage access.</span></div>
+              </div>
+              <div class="sequence-step">
+                <div><strong>Are you about to request broad storage access?</strong><span>Stop and prove the app is a file manager, backup/restore tool, antivirus, or another narrowly eligible core use case.</span></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1456,8 +2016,8 @@ input[type="range"] {
         <div class="section-head">
           <div>
             <p class="eyebrow">Permissions by API level</p>
-            <h2>Modern storage access is mostly URI and collection based.</h2>
-            <p class="lead">Use the sliders to compare device API level, target SDK, and operation. Android 13 introduced granular media permissions. Android 14 added selected photo/video access in the permission prompt. Photo Picker and SAF avoid storage permissions for user-selected content.</p>
+            <h2>Permissions: modern Android rarely needs the big storage permission.</h2>
+            <p class="lead">Move the sliders to see how access changes across Android versions. The trend is clear: instead of one broad storage permission, newer Android hands your app specific URIs. Android 13 split media permissions by type (photos, video, audio); Android 14 added a "selected photos" option. The Photo Picker and SAF need no storage permission at all, because the user does the choosing.</p>
           </div>
           <span class="tag blue">Scoped storage</span>
         </div>
@@ -1524,8 +2084,8 @@ input[type="range"] {
         <div class="section-head">
           <div>
             <p class="eyebrow">Room and SQLite</p>
-            <h2>Room stores structured app data and emits reactive query results.</h2>
-            <p class="lead">Use Room when data has rows, relationships, queries, sorting, transactions, or migrations. A DAO can return <code>Flow&lt;List&lt;Note&gt;&gt;</code>; writes invalidate the query and the UI receives a new list.</p>
+            <h2>Room: a real database for your app's structured data.</h2>
+            <p class="lead">Reach for Room when your data looks like a spreadsheet - many records you sort, filter, or link together. You fetch it with a query, and because a query can return a <code>Flow&lt;List&lt;Note&gt;&gt;</code>, the screen gets a fresh list automatically every time the rows change. No manual refresh.</p>
           </div>
           <span class="tag green">Structured data</span>
         </div>
@@ -1599,8 +2159,8 @@ input[type="range"] {
         <div class="section-head">
           <div>
             <p class="eyebrow">DataStore</p>
-            <h2>DataStore is for small private state, read as a Flow and written transactionally.</h2>
-            <p class="lead">Preferences DataStore stores key-value preferences. Proto or typed DataStore stores one typed object. Both are asynchronous and transactional, which makes them a better default than legacy SharedPreferences for new code.</p>
+            <h2>DataStore: the modern home for small settings.</h2>
+            <p class="lead">Use DataStore for little pieces of private state, like a dark-theme switch. Preferences DataStore holds simple key-value settings; typed DataStore holds one whole object (such as a user profile). Both read as a Flow and save safely in the background, which makes them the modern replacement for the older SharedPreferences.</p>
           </div>
           <span class="tag green">Small app state</span>
         </div>
@@ -1658,8 +2218,8 @@ input[type="range"] {
         <div class="section-head">
           <div>
             <p class="eyebrow">Files and cache</p>
-            <h2>Internal files are private bytes; cache is disposable bytes.</h2>
-            <p class="lead">Use files when the app owns the bytes and does not need table queries. Use cache only for data you can rebuild. Raw file I/O is blocking, so Android apps should move it off the main thread.</p>
+            <h2>Files keep private bytes; the cache holds bytes you can lose.</h2>
+            <p class="lead">When your data is just a file - a text draft, an exported JSON - and you do not need database-style queries, write it to your app's private files folder. Use the cache folder only for things you can recreate, because the system or the user can wipe it at any time. Reading and writing files is slow, so always do it off the main (UI) thread.</p>
           </div>
           <span class="tag amber">Bytes on disk</span>
         </div>
@@ -1699,8 +2259,8 @@ input[type="range"] {
         <div class="section-head">
           <div>
             <p class="eyebrow">MediaStore</p>
-            <h2>Shared photos, videos, and audio are addressed through collections and URIs.</h2>
-            <p class="lead">MediaStore lets your app add user-visible media and query media collections. On Android 10 and higher, your app can add its own media without storage permission. Reading other apps' media depends on Photo Picker or media permissions.</p>
+            <h2>MediaStore: the shared library for photos, video, and audio.</h2>
+            <p class="lead">When the user should see a file in the Gallery or Files app - a photo you saved, a video you exported - it goes into MediaStore, the device's shared media library. You do not write to a raw path; you hand the file to the system and get back a URI that points to it. On Android 10 and higher, adding your own media needs no permission; reading other apps' media needs the Photo Picker or a media permission.</p>
           </div>
           <span class="tag blue">Shared media</span>
         </div>
@@ -1739,8 +2299,8 @@ input[type="range"] {
         <div class="section-head">
           <div>
             <p class="eyebrow">Storage Access Framework</p>
-            <h2>SAF is the user-controlled path for arbitrary documents.</h2>
-            <p class="lead">SAF returns a content URI from a system picker. Your app does not need storage permission because the user selects the document or directory. Android 11 and higher restrict broad tree access to sensitive roots such as storage root, Downloads, Android/data, and Android/obb.</p>
+            <h2>Storage Access Framework: let the user pick the file.</h2>
+            <p class="lead">For documents your app does not own - open this PDF, save my export here - you open the system file picker and let the user choose. Because the user picked it, your app needs no storage permission; it simply gets a URI for that one file or folder. (Android 11 and higher block picking whole sensitive folders such as the storage root, Downloads, and Android/data.)</p>
           </div>
           <span class="tag blue">User selected URI</span>
         </div>
@@ -1779,8 +2339,8 @@ input[type="range"] {
         <div class="section-head">
           <div>
             <p class="eyebrow">Backup, privacy, and security</p>
-            <h2>Persistence is not the same thing as secrecy.</h2>
-            <p class="lead">Android's app sandbox prevents casual cross-app reads, but your own storage files are still plain app data unless you encrypt them. Backup behavior is a separate policy decision.</p>
+            <h2>Saved is not the same as secret.</h2>
+            <p class="lead">The app sandbox stops other apps from casually reading your files, but the files themselves are still plain, unencrypted data - "private" does not mean "encrypted". If something is truly sensitive, you have to encrypt it yourself. And whether a file is copied to cloud backup is a separate choice you control.</p>
           </div>
           <span class="tag red">Risk model</span>
         </div>
@@ -2076,7 +2636,557 @@ launcher.launch(intent)`
     }
   ];
 
-  let activeLayer = "sandbox";
+  const layerGuidance = {
+    "sandbox": {
+      use: "Use for app-owned state that should be private: Room rows, DataStore settings, internal files, and cache.",
+      avoid: "Avoid when the user expects the item to remain after uninstall or be visible in Gallery, Files, Music, or another app.",
+      access: "Your app uses Context directories, Room, or DataStore. Android enforces the app sandbox, so no storage permission is needed.",
+      examples: "notes.db, settings.preferences_pb, scratch.txt, thumbnails in cacheDir",
+      events: {
+        restart: ["Still there", "Disk-backed sandbox data survives process death and normal app restarts."],
+        clearCache: ["Mostly still there", "Only cacheDir is cleared. Room, DataStore, and filesDir remain."],
+        clearStorage: ["Removed", "Clear storage deletes app-specific data, including databases, DataStore files, internal files, and cache."],
+        uninstall: ["Removed", "Uninstall removes the app sandbox."],
+        share: ["Not directly shareable", "Share by exposing a specific file through FileProvider or exporting to a user-visible location."]
+      }
+    },
+    "external-app": {
+      use: "Use for larger app-owned files that do not need to appear in shared media or document locations.",
+      avoid: "Avoid for startup-critical data because external volumes may be unavailable, and avoid for user-visible media.",
+      access: "Use getExternalFilesDir() or getExternalCacheDir(). For your own app-specific external directory, modern Android does not require storage permission.",
+      examples: "offline packages, app-owned map tiles, large private export staging files",
+      events: {
+        restart: ["Usually still there", "The file remains if the external volume is still mounted and available."],
+        clearCache: ["Depends on directory", "getExternalCacheDir() is disposable; getExternalFilesDir() is durable app-specific storage."],
+        clearStorage: ["Removed", "Clear storage removes app-specific external files owned by the app."],
+        uninstall: ["Removed", "Android removes the app-specific external directory when the app is uninstalled."],
+        share: ["Not automatically public", "Export to MediaStore/SAF or share a specific URI if another app needs access."]
+      }
+    },
+    "mediastore": {
+      use: "Use for user-visible photos, videos, audio, and downloads that should live in shared collections.",
+      avoid: "Avoid for private implementation files, settings, structured rows, or temporary cache.",
+      access: "Use ContentResolver and MediaStore collection URIs. Adding your own media on Android 10+ does not require storage permission; reading other apps' media has separate rules.",
+      examples: "camera photo in Pictures, edited video in Movies, exported song in Music",
+      events: {
+        restart: ["Still there", "Shared media remains because it is not tied to your process."],
+        clearCache: ["Still there", "Clear cache does not delete shared media."],
+        clearStorage: ["Usually still there", "The media file remains in shared storage, though app-private references may be removed."],
+        uninstall: ["Still there", "User-visible media can remain after uninstall."],
+        share: ["Already shareable by design", "Other apps can access it when they have permission or the user chooses it."]
+      }
+    },
+    "photo-picker": {
+      use: "Use when the user selects existing images or videos for a specific action, such as avatar upload or attaching photos.",
+      avoid: "Avoid when your app needs to publish new media, scan the full library, or select non-visual documents.",
+      access: "Launch the system picker. Android returns content URIs for selected visual media, avoiding broad media-library permission.",
+      examples: "choose profile avatar, attach receipt photos, pick a video for upload",
+      events: {
+        restart: ["Media remains", "The selected item remains in shared storage. Your app should handle URI grants according to the picker flow."],
+        clearCache: ["Unaffected", "Picker-selected media is not your cache."],
+        clearStorage: ["Grant/reference may be lost", "The media remains, but app-private references or persisted state can be removed."],
+        uninstall: ["App access removed", "The media remains, but the uninstalled app no longer has grants."],
+        share: ["Selected item only", "Your app can use the URI the user selected, not the entire media library."]
+      }
+    },
+    "saf": {
+      use: "Use for arbitrary user documents: open a PDF, import a CSV, create an export file, or choose a folder.",
+      avoid: "Avoid for private app files, app settings, Room data, cache, or simple photo picking.",
+      access: "Launch ACTION_OPEN_DOCUMENT, ACTION_CREATE_DOCUMENT, or ACTION_OPEN_DOCUMENT_TREE. The user chooses a provider and grants a content URI.",
+      examples: "invoice.pdf, export.zip, contacts.csv, user-selected backup folder",
+      events: {
+        restart: ["Depends on grant", "The document remains with its provider. Persist URI permission if your flow needs future access and the provider allows it."],
+        clearCache: ["Unaffected", "The document is not your cache."],
+        clearStorage: ["Grant/reference may be lost", "The document remains, but app-private records of the URI or persisted grants can be removed."],
+        uninstall: ["Document remains", "The provider keeps the document; your app's grants disappear."],
+        share: ["User/provider controlled", "Access is scoped to the selected URI or tree, not broad storage."]
+      }
+    },
+    "all-files": {
+      use: "Use only for core file-management categories such as file managers, backup/restore, or antivirus-style scanning.",
+      avoid: "Avoid for ordinary import/export, attaching media, publishing media, or working with app-private files.",
+      access: "Requires MANAGE_EXTERNAL_STORAGE special app access and policy justification. It should not replace MediaStore, Photo Picker, or SAF.",
+      examples: "file manager, storage-wide backup utility, antivirus scanner",
+      events: {
+        restart: ["Access can continue", "If the user keeps special access enabled, broad file operations can continue."],
+        clearCache: ["No direct effect", "Clear cache affects your app cache, not broad shared storage."],
+        clearStorage: ["App state removed", "Your app's private state is removed; shared files remain."],
+        uninstall: ["Shared files remain", "Uninstall removes the app and its grants, not the user's shared files."],
+        share: ["Broad but sensitive", "The app may see many shared files, so UX, consent, and policy constraints are much stricter."]
+      }
+    }
+  };
+
+  const storageScenarios = [
+    {
+      id: "avatar",
+      title: "Pick an avatar",
+      short: "User chooses one photo.",
+      layer: "photo-picker",
+      badge: "No gallery permission",
+      result: "Use Photo Picker because the user is intentionally selecting a small set of visual media.",
+      steps: [
+        "Launch the system Photo Picker from your UI.",
+        "User selects one image; Android returns a content URI.",
+        "Decode/upload that URI. Your app never receives broad media-library access."
+      ]
+    },
+    {
+      id: "note",
+      title: "Save notes",
+      short: "Rows, categories, search.",
+      layer: "sandbox",
+      badge: "Room",
+      result: "Use Room inside the app sandbox because notes are private structured rows.",
+      steps: [
+        "Model Note and Category as Room entities.",
+        "Expose DAO queries as Flow so the UI reacts to inserts and updates.",
+        "Migrate schema versions when fields or relationships change."
+      ]
+    },
+    {
+      id: "camera",
+      title: "Create a photo",
+      short: "Photo should appear in Gallery.",
+      layer: "mediastore",
+      badge: "Shared media",
+      result: "Use MediaStore because the app is publishing user-visible media.",
+      steps: [
+        "Insert metadata into the Images collection with ContentResolver.",
+        "Write bytes through the returned content URI.",
+        "The photo remains visible to the user and can survive uninstall."
+      ]
+    },
+    {
+      id: "export",
+      title: "Export a PDF",
+      short: "User picks destination.",
+      layer: "saf",
+      badge: "Document URI",
+      result: "Use SAF because the user should choose the exact document location.",
+      steps: [
+        "Launch ACTION_CREATE_DOCUMENT with a PDF MIME type.",
+        "User chooses a provider and filename.",
+        "Write to the returned URI with ContentResolver."
+      ]
+    },
+    {
+      id: "cache",
+      title: "Cache thumbnails",
+      short: "Rebuildable speed-up files.",
+      layer: "sandbox",
+      badge: "cacheDir",
+      result: "Use cacheDir because thumbnails are private and can be regenerated.",
+      steps: [
+        "Create thumbnails from original data.",
+        "Write them into cacheDir using background I/O.",
+        "On read, handle missing files and rebuild them."
+      ]
+    },
+    {
+      id: "file-manager",
+      title: "File manager",
+      short: "Core app scans many files.",
+      layer: "all-files",
+      badge: "Special access",
+      result: "Consider all-files access only if broad file management is the app's core purpose.",
+      steps: [
+        "First prove MediaStore, Photo Picker, and SAF cannot satisfy the core workflow.",
+        "Request MANAGE_EXTERNAL_STORAGE through special app access.",
+        "Design clear consent, deletion, and privacy behavior."
+      ]
+    }
+  ];
+
+  const deepStorageTypes = [
+    {
+      id: "preferences-datastore",
+      token: "PD",
+      title: "Preferences DataStore",
+      category: "Private key-value app state",
+      summary: "A coroutine and Flow-based store for small primitive settings: booleans, strings, numbers, enum names, and simple feature flags.",
+      lifetime: "Private app data. Survives process death and app restart. Removed when the app is uninstalled or app storage is cleared.",
+      permissions: "No storage permission. Stored in the app sandbox.",
+      backup: "Usually eligible for Auto Backup unless excluded by backup rules.",
+      use: [
+        "Theme choice, sort order, onboarding-complete flags, last selected tab, lightweight user preferences.",
+        "Values the UI observes continuously with Flow.",
+        "Settings that should update transactionally instead of through ad hoc in-memory state."
+      ],
+      avoid: [
+        "Lists of records, search results, history tables, or anything that needs SQL-style queries.",
+        "Large blobs, images, files, or unbounded logs.",
+        "Secrets that need application-level encryption without adding a security layer."
+      ],
+      gotchas: [
+        "Preferences DataStore has no schema, so key naming discipline matters.",
+        "Do not read or write it directly from composables; keep it in a repository or data layer.",
+        "It replaces many SharedPreferences use cases, but it is not a database."
+      ],
+      examples: ["dark_theme=true", "sort_order=NEWEST", "last_sync_epoch=1781723000"],
+      snippet: code.setting
+    },
+    {
+      id: "typed-datastore",
+      token: "TD",
+      title: "Typed or Proto DataStore",
+      category: "One private typed object",
+      summary: "A transactional store for one schema-backed object. Proto DataStore uses protocol buffers; many teaching apps also demonstrate a typed JSON serializer pattern.",
+      lifetime: "Private app data. Survives process death and app restart. Removed on uninstall or clear storage.",
+      permissions: "No storage permission. Stored in the app sandbox.",
+      backup: "Usually eligible for Auto Backup unless excluded.",
+      use: [
+        "A single user profile object, app session preferences, or one cohesive settings document.",
+        "State that benefits from type safety and a clear schema.",
+        "Objects that are read as a whole rather than queried row by row."
+      ],
+      avoid: [
+        "Collections that grow indefinitely.",
+        "Many independent records that need partial updates, indexes, joins, or filtering.",
+        "Binary files or media."
+      ],
+      gotchas: [
+        "Proto DataStore requires schema planning and migration thinking.",
+        "Because the object is updated as a unit, avoid making it a dumping ground for unrelated app state.",
+        "If you repeatedly need to query inside the object, you probably wanted Room."
+      ],
+      examples: ["UserProfile(name, avatar, accentColor)", "NotificationPreferences", "One app configuration object"],
+      snippet: code.profile
+    },
+    {
+      id: "room",
+      token: "RM",
+      title: "Room database",
+      category: "Private structured relational data",
+      summary: "A SQLite abstraction for app-owned tables. Use it when the data has shape: entities, primary keys, relations, queries, sort order, transactions, and migrations.",
+      lifetime: "Private app data. Survives app restart. Removed on uninstall or clear storage.",
+      permissions: "No storage permission. The database file is in the app sandbox.",
+      backup: "Usually eligible for Auto Backup unless excluded. Restores must be compatible with migrations.",
+      use: [
+        "Notes, tasks, playlists, offline cache metadata, shopping carts, message history, object relationships.",
+        "Data that needs filtering, sorting, joining, indexing, paging, or transactional updates.",
+        "Screens that should react automatically through Flow queries."
+      ],
+      avoid: [
+        "A single setting or a handful of flags.",
+        "Raw files such as images, videos, PDFs, or large binary payloads. Store the file elsewhere and keep metadata in Room.",
+        "User-visible shared media that should appear outside the app."
+      ],
+      gotchas: [
+        "Schema changes need migrations if you want to keep user data.",
+        "Do database work through DAOs and repositories, not directly in UI code.",
+        "Do not store huge blobs in rows unless you have a strong reason; it makes queries and backups heavier."
+      ],
+      examples: ["Note(id, categoryId, title, done)", "Category with @Relation", "DownloadItem metadata"],
+      snippet: code.records
+    },
+    {
+      id: "files-dir",
+      token: "FD",
+      title: "Internal filesDir",
+      category: "Private durable files",
+      summary: "A private directory for app-owned bytes that are not naturally rows. Think text drafts, JSON exports used only by the app, serialized models, and private attachments.",
+      lifetime: "Private app data. Survives app restart. Removed on uninstall or clear storage.",
+      permissions: "No storage permission. Other apps cannot browse it through normal APIs.",
+      backup: "Usually eligible for Auto Backup unless excluded.",
+      use: [
+        "Durable app-owned text, JSON, binary data, or attachments that the user does not need to see in other apps.",
+        "Files whose names and organization are implementation details.",
+        "Bytes that do not need SQL queries."
+      ],
+      avoid: [
+        "Rebuildable cache data; use cacheDir.",
+        "Files the user expects in Gallery, Music, Downloads, or a document provider.",
+        "Secrets without explicit encryption."
+      ],
+      gotchas: [
+        "Raw File I/O is blocking; use Dispatchers.IO or another background mechanism.",
+        "If the UI needs searchable metadata, keep metadata in Room and the bytes in filesDir.",
+        "File paths are app-private implementation details; prefer content URIs when sharing outside the app."
+      ],
+      examples: ["scratch.txt", "private-draft.json", "model-cache.bin"],
+      snippet: code.privateFile
+    },
+    {
+      id: "cache-dir",
+      token: "CD",
+      title: "Internal cacheDir",
+      category: "Private disposable files",
+      summary: "A private directory for bytes you can recreate. Android and the user may clear it, so every read must handle a cache miss.",
+      lifetime: "May disappear at any time under storage pressure, clear cache, clear storage, or uninstall.",
+      permissions: "No storage permission. Private to the app.",
+      backup: "Not included in Auto Backup.",
+      use: [
+        "Image thumbnails, temporary downloads, decoded previews, network response caches, compiled derived artifacts.",
+        "Large data that speeds the app up but can be rebuilt from source or network.",
+        "Scratch files during import/export operations."
+      ],
+      avoid: [
+        "Only copies of user-created work.",
+        "App state required for startup.",
+        "Anything where a missing file would corrupt the user's data."
+      ],
+      gotchas: [
+        "Always check existence before reading.",
+        "A cache key should map back to a source so the file can be rebuilt.",
+        "Clear cache should not sign the user out or destroy work."
+      ],
+      examples: ["thumb_128.tmp", "http-cache entry", "decoded waveform preview"],
+      snippet: code.cache
+    },
+    {
+      id: "no-backup",
+      token: "NB",
+      title: "noBackupFilesDir",
+      category: "Private durable, not restored",
+      summary: "A private app directory excluded from cloud/device restore. Use it for local-only generated state that should not appear on a replacement device.",
+      lifetime: "Survives app restart. Removed on uninstall or clear storage. Excluded from Auto Backup.",
+      permissions: "No storage permission. Private to the app.",
+      backup: "Explicitly not backed up.",
+      use: [
+        "Device-local generated identifiers when restore would be wrong.",
+        "Files that reference device-specific resources.",
+        "Local-only session helpers or data that should be regenerated after install."
+      ],
+      avoid: [
+        "User-created work that should survive device replacement.",
+        "Anything the user expects to restore after reinstalling on a new device.",
+        "General cache data; use cacheDir if it is disposable."
+      ],
+      gotchas: [
+        "Excluding a file from backup can create dangling references if Room or DataStore stores paths to it.",
+        "For cryptographic secrets, combine this choice with Android Keystore or another explicit security design.",
+        "Document why the data must not restore."
+      ],
+      examples: ["local_session_state.json", "device_bound_cache_index", "restore-incompatible file"],
+      snippet: `val file = File(context.noBackupFilesDir, "local-only.json")
+
+withContext(Dispatchers.IO) {
+    file.writeText(json)
+}`
+    },
+    {
+      id: "external-app",
+      token: "EA",
+      title: "External app-specific storage",
+      category: "App-owned files on external storage",
+      summary: "A directory on external storage reserved for your app. Useful for larger app-owned files that do not need to be user-visible shared media.",
+      lifetime: "Removed on uninstall. Can become unavailable if the storage volume is removed or not mounted.",
+      permissions: "No storage permission for your own app-specific external directory on Android 4.4 and higher.",
+      backup: "Not the same guarantee as internal app backup; design as app-owned external files.",
+      use: [
+        "Large app-owned files where internal space is a concern.",
+        "Export staging files that still belong only to your app.",
+        "Media-like app data that should not show up in public collections."
+      ],
+      avoid: [
+        "Data required for app startup when external storage might be unavailable.",
+        "Photos, videos, audio, or downloads the user should see in other apps; use MediaStore or SAF.",
+        "Sensitive data that should stay in internal storage."
+      ],
+      gotchas: [
+        "Check external storage state before reading or writing.",
+        "Do not assume stable raw paths across devices and users.",
+        "On uninstall, Android removes your app-specific external directory."
+      ],
+      examples: ["large offline package", "private map tiles", "app-owned export staging file"],
+      snippet: `val dir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+val file = File(dir, "offline-package.json")
+
+withContext(Dispatchers.IO) {
+    file.writeText(json)
+}`
+    },
+    {
+      id: "mediastore",
+      token: "MS",
+      title: "MediaStore",
+      category: "User-visible shared media",
+      summary: "The collection API for photos, videos, audio, and some downloads. Use ContentResolver and content URIs instead of treating shared storage as a raw file tree.",
+      lifetime: "Shared user data. Files can remain after uninstall and can be changed or deleted by the user.",
+      permissions: "Adding your own media on Android 10+ does not require storage permission. Reading other apps' media depends on Photo Picker or media permissions.",
+      backup: "Not backed up as app-private data; media is user/shared device data.",
+      use: [
+        "Camera images, edited videos, recorded audio, music exports, and files the user expects in gallery or media apps.",
+        "Media metadata queries against shared collections.",
+        "Publishing app-created media to a user-visible folder."
+      ],
+      avoid: [
+        "Private app-only attachments.",
+        "Arbitrary documents that are not media; use SAF.",
+        "Temporary or rebuildable cache files."
+      ],
+      gotchas: [
+        "Always work through content URIs and ContentResolver.",
+        "User or other allowed apps may move, edit, or delete shared media.",
+        "Android 13+ splits media read permissions by images/video/audio for apps targeting modern SDKs."
+      ],
+      examples: ["receipt.jpg in Pictures", "lesson.mp4 in Movies", "mixdown.mp3 in Music"],
+      snippet: code.photo
+    },
+    {
+      id: "photo-picker",
+      token: "PP",
+      title: "Photo Picker",
+      category: "User-selected visual media",
+      summary: "A system picker that lets users grant access to selected images or videos without giving the app broad media-library access.",
+      lifetime: "Returns content URIs for selected media. The media itself remains user/shared data.",
+      permissions: "No media-library permission for picker-selected visual media.",
+      backup: "The selected media is not app backup data. Your app should persist only metadata or URI references when appropriate.",
+      use: [
+        "Profile avatar selection, attaching a photo, uploading a video, choosing a few receipts.",
+        "Features where the user explicitly picks media at the moment of use.",
+        "Apps that do not need to scan or index the full media library."
+      ],
+      avoid: [
+        "Background media-library scanning.",
+        "Audio selection; use MediaStore audio access or SAF as appropriate.",
+        "App-created media publishing; use MediaStore."
+      ],
+      gotchas: [
+        "Treat returned URIs as permissions to selected items, not as a file path guarantee.",
+        "If you need long-term access, design and test URI persistence behavior for your flow.",
+        "On Android 14+, selected photo access also exists in the permission prompt, but Photo Picker is still simpler for user-picked media."
+      ],
+      examples: ["choose avatar", "attach 3 vacation photos", "select a video for upload"],
+      snippet: `val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+pickMediaLauncher.launch(request)
+
+// Callback receives a content:// URI for the selected item.`
+    },
+    {
+      id: "saf",
+      token: "SA",
+      title: "Storage Access Framework",
+      category: "User-selected documents and folders",
+      summary: "A system document picker for opening, creating, or granting tree access to files from local or cloud document providers.",
+      lifetime: "The document belongs to the user/provider and can remain after uninstall. Your app's URI grants are app-specific.",
+      permissions: "No storage permission. The user's picker action grants access to the selected URI.",
+      backup: "The provider owns the document. App backup should store only references or metadata if that makes sense.",
+      use: [
+        "Open a PDF, import a CSV, export a JSON file, let the user choose where to save a backup.",
+        "Cloud-backed or provider-backed documents.",
+        "User-controlled file workflows where exact location matters."
+      ],
+      avoid: [
+        "App-private implementation files.",
+        "Gallery-style photo selection; prefer Photo Picker.",
+        "Trying to get broad access to restricted roots such as Android/data on modern Android."
+      ],
+      gotchas: [
+        "Use ACTION_OPEN_DOCUMENT, ACTION_CREATE_DOCUMENT, or ACTION_OPEN_DOCUMENT_TREE based on the user task.",
+        "Persist URI permission only when the user flow truly requires future access.",
+        "Document providers can be cloud-backed, slow, offline, or revoked; handle failures."
+      ],
+      examples: ["open invoice.pdf", "export backup.zip", "import contacts.csv"],
+      snippet: code.document
+    },
+    {
+      id: "shared-preferences",
+      token: "SP",
+      title: "SharedPreferences",
+      category: "Legacy private key-value storage",
+      summary: "An older API for small private key-value preferences. In new coroutine-based apps, DataStore is usually the better replacement.",
+      lifetime: "Private app data. Survives restart. Removed on uninstall or clear storage.",
+      permissions: "No storage permission.",
+      backup: "Usually eligible for Auto Backup unless excluded.",
+      use: [
+        "Maintaining existing legacy code.",
+        "Very small synchronous reads in old code paths where migration is not yet scheduled.",
+        "Temporary compatibility while moving settings to DataStore."
+      ],
+      avoid: [
+        "New app architecture when DataStore is available.",
+        "Concurrent complex updates or reactive Flow-based UI state.",
+        "Structured records, files, media, or secrets."
+      ],
+      gotchas: [
+        "Synchronous APIs can tempt main-thread disk access.",
+        "No schema and no built-in coroutine Flow model.",
+        "Plan a migration path instead of spreading new keys through the app."
+      ],
+      examples: ["legacy preference file", "migration source for DataStore"],
+      snippet: `val prefs = context.getSharedPreferences("legacy", Context.MODE_PRIVATE)
+
+prefs.edit()
+    .putBoolean("dark_theme", true)
+    .apply()
+
+// Prefer DataStore for new code.`
+    },
+    {
+      id: "all-files",
+      token: "AF",
+      title: "All files access",
+      category: "Rare broad shared-storage access",
+      summary: "A special access path for apps whose core function truly requires broad file management. It is not a general solution for ordinary import, export, media, or document flows.",
+      lifetime: "Accesses shared user storage. Files generally remain after uninstall unless the user deletes them.",
+      permissions: "Requires MANAGE_EXTERNAL_STORAGE special app access and is policy-sensitive.",
+      backup: "Not app-private backup data.",
+      use: [
+        "File managers, backup and restore apps, antivirus scanners, and similar narrowly eligible core use cases.",
+        "Repeated broad file operations where SAF would make the core app impossible to use.",
+        "Cases that satisfy platform and store policy requirements."
+      ],
+      avoid: [
+        "Picking one document, exporting one file, attaching photos, reading a gallery, or managing app-private files.",
+        "Working around scoped storage because ContentResolver feels unfamiliar.",
+        "Any feature that can be implemented with app-specific storage, MediaStore, Photo Picker, or SAF."
+      ],
+      gotchas: [
+        "Expect additional user trust, review, and policy burden.",
+        "Still design careful deletion, privacy, and consent flows.",
+        "This access should be tied directly to the app's core purpose."
+      ],
+      examples: ["full file manager", "device backup utility", "storage-wide antivirus scan"],
+      snippet: `<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
+// Then send the user to the special app access settings screen.
+// Prefer MediaStore, Photo Picker, or SAF whenever they can satisfy the task.`
+    }
+  ];
+
+  // Plain-English "how it works" narrative for each storage type — the mechanism and
+  // mental model behind the when-to-use bullets. Keyed by the same id as deepStorageTypes
+  // and rendered (HTML-escaped) just under the one-line summary.
+  const howItWorks = {
+    "preferences-datastore": "Think of it as a small settings file that tells you the instant something changes. You read values as a Flow, so a screen watching 'dark theme' updates by itself. You write with edit { }, which saves the change safely in the background and hands back the new values. It is the modern, coroutine-friendly replacement for SharedPreferences.",
+    "typed-datastore": "Same idea as Preferences DataStore, but instead of loose keys it stores one whole object - say a user profile - with a real shape. You give it a small Serializer that knows how to turn the object into text and back. To change it you call updateData { }, hand back a copy with your edits, and it saves the whole thing at once. Use it when your state is one tidy object rather than many separate rows.",
+    "room": "Room is a friendly wrapper around SQLite, the database built into every Android phone. You describe your tables as plain Kotlin classes and your queries as simple functions, and Room writes the SQL for you - and checks it while the app builds, so a typo in a query fails to compile instead of crashing later. A query can hand back a Flow, so the screen redraws by itself whenever the rows change. Reach for Room once your data has many records, relationships, or needs sorting and filtering.",
+    "files-dir": "This is just a private folder only your app can open (context.filesDir). You read and write normal files there - a text draft, some JSON - the same way you would on a computer. No other app can see them, and they are deleted when your app is uninstalled. One rule: file reading and writing is slow and freezes its thread, so always do it off the main thread (Dispatchers.IO).",
+    "cache-dir": "The cache folder is the same as the files folder with one catch: Android, or the user tapping 'Clear cache', can delete it whenever space runs low. So only put things there that you can rebuild - thumbnails, downloaded copies, previews. Always check whether the file is still there before using it, and recreate it if it is gone. Clearing the cache should never lose the user's real work.",
+    "no-backup": "A private folder exactly like the files folder, except Android's automatic cloud backup skips it. That is what you want for data that should not follow the user to a new phone - a device-specific id, or a cache index tied to this install. It still survives restarts and is still removed on uninstall; it simply will not be restored onto a different device. Use it on purpose, and leave a note saying why.",
+    "external-app": "Your app also gets a private folder out on shared or SD-card storage (getExternalFilesDir). It needs no permission and is removed on uninstall, just like internal storage - but it lives on a drive that can fill up, be slow, or be popped out, so it is not always there. Use it for big app-owned files when internal space is tight. Check that the drive is available first, and never keep anything the app needs in order to start up.",
+    "mediastore": "MediaStore is the phone's shared library of photos, videos, audio, and downloads. Instead of writing to a file path, you ask the system to add an entry and it gives you back a URI pointing to the new file. Because it lives in the shared library, it shows up in the Gallery and Files apps and can stay even after your app is uninstalled. Adding your own media needs no permission on Android 10+; reading other apps' media needs the Photo Picker or a media permission.",
+    "photo-picker": "When the user just needs to choose a photo or video, you open the system Photo Picker. They pick inside a trusted system screen, and your app gets access to only the items they chose - nothing else in their gallery, and usually with no permission prompt at all. That is why Google recommends it for the everyday 'pick an avatar' or 'attach a photo' case. You get back URIs to the chosen items, not file paths.",
+    "saf": "The Storage Access Framework is how the user, not your app, decides where a file lives. You open the system file picker - to open a document, create one, or pick a folder - and they choose from any source, including local storage and Google Drive. Your app gets a URI for just that item, and can ask to keep access across reboots. Use it for 'open this PDF', 'export to a place I choose', or 'pick a backup folder'.",
+    "shared-preferences": "The original tiny settings store: a small file of key-value pairs you read and write with a simple get/put API. It still works, but its writes can stutter the main thread and it cannot stream changes to the UI - the exact problems DataStore fixes. Treat it as the old way: fine for reading settings that already exist, but use Preferences DataStore for anything new. Like other app data, it survives restarts and is wiped on uninstall.",
+    "all-files": "This is the rare 'see everything' permission (MANAGE_EXTERNAL_STORAGE) that lets an app browse most of shared storage like a real file tree. It is locked behind a special Play Store approval and a separate settings toggle, and Google only allows it for apps whose whole job is managing files - file managers, backup tools, antivirus. It is not a way to skip scoped storage; asking for it without a real reason gets the app rejected. For normal import, export, or media, use SAF, the Photo Picker, or MediaStore instead."
+  };
+
+  // Where each storage type physically lives on the device, and whether it is volatile
+  // (lost on power off - i.e. RAM) or non-volatile (written to storage, survives a restart).
+  // NOTE: every on-device option here is non-volatile; the volatile contrast is in-memory
+  // state such as a plain variable or a ViewModel, which is lost when the process ends.
+  const placeFacts = {
+    "preferences-datastore": { where: "App's private internal storage (a small file in the app's data folder)", volatile: "Non-volatile (survives restart)" },
+    "typed-datastore": { where: "App's private internal storage (a file in the app's data folder)", volatile: "Non-volatile (survives restart)" },
+    "room": { where: "App's private internal storage (a .db database file in the app's data folder)", volatile: "Non-volatile (survives restart)" },
+    "files-dir": { where: "App's private internal storage (the filesDir folder)", volatile: "Non-volatile (survives restart)" },
+    "cache-dir": { where: "App's private internal storage (the cacheDir folder)", volatile: "Non-volatile, but the system may erase it anytime" },
+    "no-backup": { where: "App's private internal storage (the noBackupFilesDir folder)", volatile: "Non-volatile (survives restart)" },
+    "external-app": { where: "Shared/external storage, in your app's own folder", volatile: "Non-volatile (but the volume can be unmounted/unavailable)" },
+    "mediastore": { where: "The device's shared media storage (all apps share it)", volatile: "Non-volatile (survives restart and uninstall)" },
+    "photo-picker": { where: "Wherever the chosen item already lives (usually shared media); the picker only grants access", volatile: "Non-volatile (you access the user's file, not a copy)" },
+    "saf": { where: "Wherever the chosen document lives - local storage or a cloud provider", volatile: "Non-volatile (you access the user's file, not a copy)" },
+    "shared-preferences": { where: "App's private internal storage (an XML file)", volatile: "Non-volatile (survives restart)" },
+    "all-files": { where: "Across the device's shared storage", volatile: "Non-volatile (survives restart)" }
+  };
+
+  let activeDeepType = "preferences-datastore";
+  let activeScenario = "avatar";
+  let activeWhatIf = "restart";
+  let activeLayer = "photo-picker";
 
   function initStorageMap() {
     const stack = $("#storageStack");
@@ -2094,17 +3204,141 @@ launcher.launch(intent)`
       activeLayer = button.dataset.layer;
       renderStorageMap();
     });
+
+    $("#whatIfControls")?.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-whatif]");
+      if (!button) return;
+      activeWhatIf = button.dataset.whatif;
+      renderWhatIf();
+    });
     renderStorageMap();
   }
 
   function renderStorageMap() {
     $$(".storage-layer").forEach(button => button.classList.toggle("active", button.dataset.layer === activeLayer));
     const layer = layers.find(item => item.id === activeLayer);
+    const guidance = layerGuidance[layer.id];
     $("#layerDetail").innerHTML = `
       <h3>${layer.title}</h3>
       <p class="dense">${layer.detail}</p>
       <div class="fact-list">
         ${layer.facts.map(([label, value]) => `<div class="fact"><b>${label}</b><span>${value}</span></div>`).join("")}
+      </div>
+      <div class="layer-extra">
+        <div class="layer-extra-card"><strong>How access works</strong><span>${guidance.access}</span></div>
+        <div class="layer-extra-card"><strong>Use when</strong><span>${guidance.use}</span></div>
+        <div class="layer-extra-card"><strong>Avoid when</strong><span>${guidance.avoid}</span></div>
+        <div class="layer-extra-card"><strong>Concrete examples</strong><span>${guidance.examples}</span></div>
+      </div>
+    `;
+    renderWhatIf();
+  }
+
+  function initStorageScenarios() {
+    const grid = $("#storageScenarioGrid");
+    grid.innerHTML = storageScenarios.map(item => `
+      <button class="scenario-card ${item.id === activeScenario ? "on" : ""}" type="button" data-scenario="${item.id}">
+        <strong>${item.title}</strong>
+        <span>${item.short}</span>
+      </button>
+    `).join("");
+
+    grid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-scenario]");
+      if (!button) return;
+      activeScenario = button.dataset.scenario;
+      const scenario = storageScenarios.find(item => item.id === activeScenario);
+      activeLayer = scenario.layer;
+      renderStorageScenario();
+      renderStorageMap();
+    });
+    renderStorageScenario();
+  }
+
+  function renderStorageScenario() {
+    const scenario = storageScenarios.find(item => item.id === activeScenario);
+    $$("#storageScenarioGrid .scenario-card").forEach(button => button.classList.toggle("on", button.dataset.scenario === activeScenario));
+    $("#scenarioBadge").textContent = scenario.badge;
+    $("#storageJourney").innerHTML = `
+      <div class="journey-title">
+        <div>
+          <h3>${scenario.title}</h3>
+          <p class="dense" style="margin:4px 0 0;">${scenario.result}</p>
+        </div>
+        <span class="tag blue">${layers.find(layer => layer.id === scenario.layer).title}</span>
+      </div>
+      <div class="journey-steps">
+        ${scenario.steps.map((step, index) => `<div class="journey-step"><b>${index + 1}</b><span>${step}</span></div>`).join("")}
+      </div>
+    `;
+  }
+
+  function renderWhatIf() {
+    const layer = layers.find(item => item.id === activeLayer);
+    const guidance = layerGuidance[layer.id];
+    if (!guidance) return;
+    const event = guidance.events[activeWhatIf];
+    $$("#whatIfControls button").forEach(button => button.classList.toggle("on", button.dataset.whatif === activeWhatIf));
+    $("#whatIfLayer").textContent = layer.title;
+    $("#whatIfOutput").innerHTML = `<strong>${event[0]}</strong><span>${event[1]}</span>`;
+  }
+
+  function initDeepTypes() {
+    const menu = $("#deepTypeMenu");
+    menu.innerHTML = deepStorageTypes.map(item => `
+      <button class="${item.id === activeDeepType ? "on" : ""}" type="button" data-deep-type="${item.id}">
+        <span class="deep-token">${item.token}</span>
+        <span><b>${item.title}</b><span>${item.category}</span></span>
+      </button>
+    `).join("");
+
+    menu.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-deep-type]");
+      if (!button) return;
+      activeDeepType = button.dataset.deepType;
+      renderDeepType();
+    });
+    renderDeepType();
+  }
+
+  function renderDeepType() {
+    const item = deepStorageTypes.find(entry => entry.id === activeDeepType);
+    $$("#deepTypeMenu button").forEach(button => button.classList.toggle("on", button.dataset.deepType === activeDeepType));
+    $("#deepTypeDetail").innerHTML = `
+      <div class="recommendation-title">
+        <h3>${item.title}</h3>
+        <span class="tag blue">${item.category}</span>
+      </div>
+      <p>${item.summary}</p>
+      ${howItWorks[item.id] ? `<div class="deep-card" style="margin:14px 0 4px;"><h4>How it works</h4><p style="margin:0;">${escapeHtml(howItWorks[item.id])}</p></div>` : ""}
+      <div class="deep-meta">
+        <span class="tag green">Lifetime: ${item.lifetime}</span>
+        <span class="tag">Permissions: ${item.permissions}</span>
+        <span class="tag amber">Backup: ${item.backup}</span>
+        <span class="tag">Where: ${placeFacts[item.id] ? placeFacts[item.id].where : "-"}</span>
+        <span class="tag">Storage: ${placeFacts[item.id] ? placeFacts[item.id].volatile : "-"}</span>
+      </div>
+      <div class="deep-columns">
+        <div class="deep-card">
+          <h4>Use when</h4>
+          <ul>${item.use.map(value => `<li>${value}</li>`).join("")}</ul>
+        </div>
+        <div class="deep-card">
+          <h4>Avoid when</h4>
+          <ul>${item.avoid.map(value => `<li>${value}</li>`).join("")}</ul>
+        </div>
+        <div class="deep-card">
+          <h4>Examples</h4>
+          <ul>${item.examples.map(value => `<li>${value}</li>`).join("")}</ul>
+        </div>
+        <div class="deep-card">
+          <h4>Gotchas</h4>
+          <ul>${item.gotchas.map(value => `<li>${value}</li>`).join("")}</ul>
+        </div>
+      </div>
+      <div class="code-panel" style="margin-top:12px;">
+        <div class="code-head"><span>Starting pattern</span><button class="copy-btn" type="button" data-copy="#deepTypeCode">Copy</button></div>
+        <pre id="deepTypeCode">${escapeHtml(item.snippet)}</pre>
       </div>
     `;
   }
@@ -2936,6 +4170,8 @@ launcher.launch(intent)
   initTheme();
   initNavigation();
   initStorageMap();
+  initStorageScenarios();
+  initDeepTypes();
   initChooser();
   initLifecycle();
   initPermissions();

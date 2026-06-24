@@ -6,6 +6,10 @@ technique** in one place — the runnable capstone behind the interactive
 [Room Storage Playground](../Playground/storage-playground.html)), and a broader sibling to
 [`RoomAndPreferences`](../RoomAndPreferences).
 
+> 📖 **Architecture walkthrough:** [How Storage Showcase works](how-storageshowcase-works.html) — a
+> detailed, file-by-file tour of the layers, the reactive `Flow` → `StateFlow` → Compose data flow, and
+> each storage mechanism as it's actually wired (open in a browser).
+
 Four tabs, one storage mechanism each — everything you change survives an app restart:
 
 | Tab | Mechanism | What it shows |

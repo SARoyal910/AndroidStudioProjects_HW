@@ -79,6 +79,7 @@ jobs:
             "WebSocketLive|WebSocketLive|WebSocketLive"
             "ExampleProject|ExampleProject|ExampleProject"
             "StorageShowcase|StorageShowcase|StorageShowcase"
+            "StorageJourney|StorageJourney|StorageJourney"
           )
 
           all=false

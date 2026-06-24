@@ -24,6 +24,7 @@ import com.example.storageshowcase.data.ProfileRepository
 import com.example.storageshowcase.data.SettingsRepository
 import com.example.storageshowcase.data.SortOrder
 import com.example.storageshowcase.data.StorageDatabase
+import com.example.storageshowcase.data.StoragePaths
 import com.example.storageshowcase.data.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,6 +44,9 @@ class StorageViewModel(app: Application) : AndroidViewModel(app) {
     private val settings = SettingsRepository(app)
     private val profileRepo = ProfileRepository(app)
     private val fileStore = FileStore(app)
+
+    /** The real on-disk path each store writes to (shown in the UI so it's concrete). */
+    val paths: StoragePaths = StoragePaths.of(app)
 
     private val started = SharingStarted.WhileSubscribed(5_000)
 

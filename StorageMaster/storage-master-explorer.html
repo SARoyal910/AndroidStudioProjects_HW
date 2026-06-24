@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storage Master Lab — Interactive Explainer</title>
+<meta name="description" content="An interactive explainer for the Storage Master Lab project: a guided storage-decision chooser, a clickable map of the JSON-to-engine-to-build pipeline that generates the lab, a source explorer, the 21-section curriculum, a glossary, and a quiz.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+/* ============ interactive explorer additions ============ */
+:root {
+  --ui: #2d64c8; --vm: #6d58b8; --repo: #0a8f9a; --room: #b56c00; --flow: #1b8a5a;
+}
+[data-theme="dark"] {
+  --ui: #6f9bff; --vm: #a78bfa; --repo: #38c7d4; --room: #e0a44a; --flow: #54c98a;
+}
+
+/* segmented controls / buttons */
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+.btn {
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  border-radius: 9px; min-height: 38px; padding: 0 14px; font-weight: 750; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; transition: background .15s, transform .05s;
+}
+.btn:hover { background: var(--surface-alt); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--muted); min-height: 36px; padding: 0 13px; font-weight: 750; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--blue); color: #fff; }
+.hint { color: var(--muted); font-size: 0.84rem; }
+
+/* simulator layout */
+.sim { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 16px; margin: 14px 0; }
+.sim-low { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; margin-top: 14px; }
+@media (max-width: 900px) { .sim, .sim-low { grid-template-columns: 1fr; } }
+
+/* fake device */
+.device {
+  border: 1px solid var(--line); border-radius: 18px; background: var(--surface);
+  box-shadow: 0 6px 26px rgba(0,0,0,0.08); overflow: hidden; min-width: 0;
+}
+.device-bar { height: 30px; background: var(--surface-strong); display: flex; align-items: center; justify-content: center; gap: 6px; border-bottom: 1px solid var(--line); }
+.device-bar .dot3 { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.device-body { padding: 14px; }
+.device-title { font-weight: 850; font-size: 1.02rem; }
+.device-sub { color: var(--muted); font-size: 0.82rem; margin-bottom: 10px; }
+.field { border: 1.5px solid var(--line-strong); border-radius: 9px; padding: 9px 11px; display: flex; align-items: center; }
+.field input { border: 0; outline: 0; background: transparent; color: var(--ink); width: 100%; font-size: 0.95rem; }
+.field.focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.items { margin-top: 12px; display: grid; gap: 6px; min-height: 40px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); animation: pop .35s ease; }
+.item-row.flash { animation: flashrow 1s ease; }
+@keyframes pop { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@keyframes flashrow { 0% { background: var(--flow); } 100% { background: var(--bg); } }
+.id-badge { font-family: var(--mono); font-size: 0.78rem; font-weight: 800; background: var(--violet-soft); color: var(--violet); border-radius: 6px; padding: 2px 7px; }
+.item-row .lbl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.x-btn { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 7px; min-height: 28px; padding: 0 9px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+.x-btn:hover { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.empty-note { color: var(--muted); font-size: 0.86rem; padding: 6px 2px; }
+
+/* pipeline */
+.pipe { display: grid; gap: 0; }
+.pl {
+  border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px;
+  padding: 10px 13px; background: var(--surface); transition: opacity .25s, box-shadow .25s, transform .25s, background .25s;
+  opacity: 0.5;
+}
+.band:nth-child(odd) .pl { background: var(--bg); }
+.pl.ui { border-left-color: var(--ui); }
+.pl.vm { border-left-color: var(--vm); }
+.pl.repo { border-left-color: var(--repo); }
+.pl.room { border-left-color: var(--room); }
+.pl.disk { border-left-color: var(--flow); }
+.pl.done { opacity: 0.82; }
+.pl.active { opacity: 1; transform: translateX(5px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.pl.ui.active { box-shadow: 0 0 0 2px var(--ui), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.vm.active { box-shadow: 0 0 0 2px var(--vm), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.repo.active { box-shadow: 0 0 0 2px var(--repo), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.room.active { box-shadow: 0 0 0 2px var(--room), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.disk.active { box-shadow: 0 0 0 2px var(--flow), 0 4px 16px rgba(0,0,0,0.12); }
+.pl-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pl-name { font-weight: 850; font-size: 0.94rem; display: flex; align-items: center; gap: 8px; }
+.pl-tag { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+.pl-sub { color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+.pl-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.carry { font-family: var(--mono); font-size: 0.74rem; font-weight: 800; border-radius: 6px; padding: 2px 8px; opacity: 0; transition: opacity .2s; white-space: nowrap; }
+.pl.active .carry { opacity: 1; }
+.pl.ui .carry { background: var(--blue-soft); color: var(--ui); }
+.pl.vm .carry { background: var(--violet-soft); color: var(--vm); }
+.pl.repo .carry { background: var(--teal-soft); color: var(--repo); }
+.pl.room .carry { background: var(--amber-soft); color: var(--room); }
+.pl.disk .carry { background: var(--green-soft); color: var(--flow); }
+.pl-arrow { display: grid; place-items: center; height: 18px; color: var(--line-strong); font-size: 0.95rem; transition: color .25s; }
+.pl-arrow.lit { color: var(--ui); }
+.pl-return { display: grid; place-items: center; min-height: 30px; color: var(--flow); font-weight: 800; font-size: 0.82rem; border: 1px dashed rgba(27,138,90,0.5); border-radius: 9px; margin-top: 6px; opacity: 0.45; transition: opacity .25s; }
+.pl-return.lit { opacity: 1; background: var(--green-soft); }
+
+/* journey log (live) */
+.jl { display: grid; gap: 8px; min-height: 60px; }
+.jl-row { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; animation: pop .3s ease; }
+.jl-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 0.8rem; }
+.jl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.jl-chip { font-size: 0.68rem; font-weight: 800; border-radius: 6px; padding: 1px 8px; }
+.jl-time { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.jl-msg { font-size: 0.86rem; margin-top: 2px; }
+.jl-empty { color: var(--muted); font-size: 0.86rem; }
+
+/* sqlite table */
+.dbcard .code-file { color: var(--muted); }
+.db-meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin-bottom: 8px; }
+table.db { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.82rem; }
+table.db th, table.db td { border: 1px solid var(--line); padding: 6px 9px; text-align: left; }
+table.db th { background: var(--surface-alt); color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+table.db tr.flash td { animation: flashrow 1s ease; }
+table.db .nodata td { text-align: center; color: var(--muted); font-family: var(--sans); }
+
+/* clickable architecture */
+.arch-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 12px 0; }
+@media (max-width: 760px) { .arch-grid { grid-template-columns: 1fr 1fr; } }
+.arch-chip { text-align: left; border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px; padding: 11px 13px; background: var(--surface); cursor: pointer; transition: transform .1s, box-shadow .15s; }
+.band:nth-child(odd) .arch-chip { background: var(--bg); }
+.arch-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.arch-chip.sel { box-shadow: 0 0 0 2px var(--blue); }
+.arch-chip.ui { border-left-color: var(--ui); }
+.arch-chip.vm { border-left-color: var(--vm); }
+.arch-chip.repo { border-left-color: var(--repo); }
+.arch-chip.room { border-left-color: var(--room); }
+.arch-chip.disk { border-left-color: var(--flow); }
+.arch-chip.log { border-left-color: var(--muted); }
+.arch-chip .ac-name { font-weight: 850; font-size: 0.92rem; }
+.arch-chip .ac-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+.arch-detail { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 14px 16px; margin-top: 6px; }
+.band:nth-child(odd) .arch-detail { background: var(--bg); }
+
+/* tabs (code explorer) */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.tab { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 8px 8px 0 0; min-height: 34px; padding: 0 12px; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.tab.on { background: var(--code-bg); color: #fff; border-color: var(--code-bg); }
+.tabpane { display: none; }
+.tabpane.on { display: block; }
+.concepts { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 0; }
+
+/* lifecycle */
+.life-row { display: flex; flex-wrap: wrap; gap: 9px; margin: 12px 0; }
+.life-stage { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); margin: 12px 0; }
+.band:nth-child(odd) .life-stage { background: var(--bg); }
+.life-chip { width: 86px; height: 86px; border-radius: 14px; display: grid; place-items: center; font-size: 2.2rem; border: 2px solid var(--line); background: var(--surface-alt); transition: all .3s; }
+.life-chip.present { border-color: var(--flow); background: var(--green-soft); }
+.life-chip.gone { border-color: var(--red); background: var(--red-soft); }
+.life-state { font-weight: 850; }
+.life-state.present { color: var(--flow); }
+.life-state.gone { color: var(--red); }
+.life-why { color: var(--muted); font-size: 0.9rem; margin-top: 3px; }
+
+/* glossary accordion */
+.acc { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin: 10px 0; background: var(--surface); }
+.band:nth-child(odd) .acc { background: var(--bg); }
+.acc-item + .acc-item { border-top: 1px solid var(--line); }
+.acc-q { width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: 12px 14px; font-weight: 750; color: var(--ink); display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: 0.95rem; }
+.acc-q:hover { background: var(--surface-alt); }
+.acc-q .plus { color: var(--muted); font-weight: 800; transition: transform .2s; }
+.acc-item.open .acc-q .plus { transform: rotate(45deg); }
+.acc-a { display: none; padding: 0 14px 13px; color: var(--muted); font-size: 0.92rem; }
+.acc-item.open .acc-a { display: block; }
+.acc-a code { color: var(--ink); }
+
+/* quiz */
+.quiz { display: grid; gap: 14px; margin: 12px 0; }
+.q { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+.band:nth-child(odd) .q { background: var(--bg); }
+.q-prompt { font-weight: 800; margin-bottom: 10px; }
+.q-opts { display: grid; gap: 8px; }
+.opt { text-align: left; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 9px; padding: 10px 12px; cursor: pointer; font-weight: 600; transition: background .12s; }
+.opt:hover { background: var(--surface-alt); }
+.opt.correct { border-color: var(--flow); background: var(--green-soft); }
+.opt.wrong { border-color: var(--red); background: var(--red-soft); }
+.opt:disabled { cursor: default; }
+.q-exp { margin-top: 10px; font-size: 0.9rem; color: var(--muted); display: none; border-left: 3px solid var(--blue); padding-left: 10px; }
+.q.answered .q-exp { display: block; }
+.quiz-score { font-weight: 850; font-size: 1.05rem; }
+
+.tiny { font-size: 0.78rem; color: var(--muted); }
+.kbd { font-family: var(--mono); background: var(--surface-alt); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 0.82em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">SM</div>
+      <div>
+        <div class="brand-title">Storage Master Lab</div>
+        <div class="brand-subtitle">Interactive explainer</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">Explore</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>What is this?</span></a>
+      <a class="nav-link" href="#chooser"><span class="nav-num">2</span><span>Storage chooser</span></a>
+      <a class="nav-link" href="#pipeline"><span class="nav-num">3</span><span>Build pipeline</span></a>
+      <a class="nav-link" href="#code"><span class="nav-num">4</span><span>Source explorer</span></a>
+      <div class="nav-title">What it covers</div>
+      <a class="nav-link" href="#curriculum"><span class="nav-num">5</span><span>The 21 sections</span></a>
+      <a class="nav-link" href="#playgrounds"><span class="nav-num">6</span><span>The 10 playgrounds</span></a>
+      <a class="nav-link" href="#glossary"><span class="nav-num">7</span><span>Glossary</span></a>
+      <a class="nav-link" href="#quiz"><span class="nav-num">8</span><span>Check yourself</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      The step-by-step page:
+      <a href="how-the-master-lab-is-built.html">How the lab is built →</a>
+      <a href="storage-tutorial.html">Open the Master Lab itself →</a>
+      <a href="../STORAGE_GUIDE.md">Storage decision guide →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">SM</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · What is this?</option>
+        <option value="#chooser">2 · Storage chooser</option>
+        <option value="#pipeline">3 · Build pipeline</option>
+        <option value="#code">4 · Source explorer</option>
+        <option value="#curriculum">5 · The 21 sections</option>
+        <option value="#playgrounds">6 · The 10 playgrounds</option>
+        <option value="#glossary">7 · Glossary</option>
+        <option value="#quiz">8 · Check yourself</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Interactive explainer</p>
+        <h1>Storage Master Lab, from the inside</h1>
+        <p class="lead">
+          The <strong>Storage Master Lab</strong> is the deepest reference in this teaching set: <strong>21 sections</strong>
+          across six categories, each with a hand-built interactive playground and real generated Kotlin/SQL, all in a
+          <em>single offline HTML file</em>. That file isn't hand-written — it's <strong>generated</strong> from three small
+          source files. This page lets you do two things: <strong>use a live storage-decision chooser</strong> to learn what
+          the lab teaches, and <strong>click through the build pipeline and source</strong> to learn how the lab is made.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">Node.js build</span>
+          <span class="tag blue">21 sections · 6 categories</span>
+          <span class="tag violet">10 interactive playgrounds</span>
+          <span class="tag amber">no JS libraries</span>
+          <span class="tag teal">single offline HTML</span>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><div class="card-head"><span class="card-title">🧭 Decide</span></div><div class="card-body"><p class="dense">The <a href="#chooser">Storage chooser</a> walks you to the right API for your data — and links to the matching lab section.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🔧 See how it's built</span></div><div class="card-body"><p class="dense">Click the <a href="#pipeline">build pipeline</a> (data → engine → build → HTML) and browse the <a href="#code">source</a>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">📚 See what it covers</span></div><div class="card-body"><p class="dense">Tour the <a href="#curriculum">21 sections</a> and the <a href="#playgrounds">10 playgrounds</a>, then <a href="#quiz">check yourself</a>.</p></div></div>
+        </div>
+
+        <div class="callout good">
+          <span class="callout-label">One sentence to hold onto</span>
+          The lab is <strong>data + a renderer, baked into one file</strong>: <code>sections.json</code> holds the content,
+          <code>engine.js</code> turns each section into interactive DOM, and <code>build.mjs</code> inlines both into a
+          self-contained <code>storage-tutorial.html</code> that runs offline with no server and no JavaScript libraries — it only fetches optional web fonts, falling back to system fonts offline.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. CHOOSER ============ -->
+    <section class="band anchor" id="chooser">
+      <div class="band-inner">
+        <p class="eyebrow">What the lab teaches · hands-on</p>
+        <h2>Storage chooser — which API should I use?</h2>
+        <p class="dense">
+          The lab's whole premise is that most storage bugs are <em>category errors</em> — the right tool for the wrong
+          kind of data. Answer a couple of questions and get a recommendation, with a one-line why and a jump into the
+          matching lab section. It's inspired by the lab's own <code>storage-chooser</code> playground.
+        </p>
+        <div class="card">
+          <div class="card-body"><div id="chooserBoard"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. PIPELINE ============ -->
+    <section class="band anchor" id="pipeline">
+      <div class="band-inner">
+        <p class="eyebrow">How the lab is built</p>
+        <h2>The build pipeline — click a stage</h2>
+        <p class="dense">Three inputs flow into one output. Tap any stage to see its job, the file it lives in, and what to look at in the source explorer.</p>
+        <div class="arch-grid" id="archGrid">
+          <button class="arch-chip ui sel" data-layer="data" type="button"><div class="ac-name">① Data</div><div class="ac-file">sections.json</div></button>
+          <button class="arch-chip vm" data-layer="engine" type="button"><div class="ac-name">② Engine</div><div class="ac-file">engine.js</div></button>
+          <button class="arch-chip repo" data-layer="build" type="button"><div class="ac-name">③ Build</div><div class="ac-file">build.mjs</div></button>
+          <button class="arch-chip disk" data-layer="output" type="button"><div class="ac-name">④ Output</div><div class="ac-file">storage-tutorial.html</div></button>
+        </div>
+        <div class="arch-detail" id="archDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ 4. CODE ============ -->
+    <section class="band anchor" id="code">
+      <div class="band-inner">
+        <p class="eyebrow">The source</p>
+        <h2>Source explorer</h2>
+        <p class="dense">The three source files, lightly trimmed. For the full, narrated tour open <a href="how-the-master-lab-is-built.html">the step-by-step page</a> or the files themselves.</p>
+        <div class="tabs" id="codeTabs">
+          <button class="tab on" data-tab="t-build" type="button">build.mjs</button>
+          <button class="tab" data-tab="t-data" type="button">sections.json</button>
+          <button class="tab" data-tab="t-helpers" type="button">engine.js · helpers</button>
+          <button class="tab" data-tab="t-render" type="button">engine.js · renderSection</button>
+          <button class="tab" data-tab="t-init" type="button">engine.js · init</button>
+        </div>
+
+        <div class="tabpane on" data-pane="t-build">
+          <div class="code-panel"><div class="code-head"><span class="code-file">build.mjs — inline css + engine + data into one HTML</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">const css = readFileSync(join(here, "styles.css"), "utf8");
+const engine = readFileSync(join(here, "engine.js"), "utf8");
+const sections = JSON.parse(readFileSync(join(here, "sections.json"), "utf8"));
+const out = join(here, "..", "storage-tutorial.html");
+
+const html = `&lt;!DOCTYPE html&gt;
+...
+&lt;style&gt;${css}&lt;/style&gt;
+...
+&lt;div id="sections"&gt;&lt;/div&gt;
+...
+&lt;script&gt;
+const SECTIONS = ${JSON.stringify(sections)};   // the whole curriculum, inlined
+${engine}                                        // the renderer, inlined
+&lt;/script&gt;`;
+
+writeFileSync(out, html);   // → a single offline file, no server, no deps</pre></div>
+          <div class="tag-row"><span class="tag green">Node fs</span><span class="tag">inline everything</span><span class="tag">offline output</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-data">
+          <div class="code-panel"><div class="code-head"><span class="code-file">sections.json — one element of the array (trimmed)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="json">{
+  "id": "landscape",
+  "title": "The storage landscape: choosing the right tool",
+  "category": "Foundations",
+  "emoji": "🗺️",
+  "summary": "Android gives you key/value, structured-database, and file storage options…",
+  "explanation_html": "&lt;p&gt;Every Android storage decision collapses onto four axes…&lt;/p&gt;",
+  "key_points": ["Decide with four axes: shape, size, ownership, reactivity…"],
+  "playground": { "kind": "storage-chooser", "title": "Decision tree: which storage should I use?" },
+  "gotchas_html": "&lt;p&gt;Most storage bugs are really category errors…&lt;/p&gt;",
+  "canonical_blocks": [ { "label": "Preferences DataStore", "lang": "kotlin", "code": "…" } ]
+}</pre></div>
+          <div class="tag-row"><span class="tag blue">21 objects</span><span class="tag">pure content</span><span class="tag">playground spec</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-helpers">
+          <div class="code-panel"><div class="code-head"><span class="code-file">engine.js — DOM + a copyable code panel</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">function h(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+function esc(s) { return String(s == null ? "" : s).replace(/&amp;/g, "&amp;amp;").replace(/&lt;/g, "&amp;lt;").replace(/&gt;/g, "&amp;gt;"); }
+
+function codePanel(title, getCode, lang) {
+  const panel = h("div", "codepanel");
+  const pre = h("pre");
+  const hl = lang === "sql" ? sql : lang === "xml" ? xml : kt;   // pick a highlighter
+  panel.update = function () { pre.innerHTML = hl(getCode()); };  // re-render on demand
+  panel.update();
+  return panel;
+}</pre></div>
+          <div class="tag-row"><span class="tag violet">h / el / esc</span><span class="tag">kt · sql · xml highlighters</span><span class="tag">single pass</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-render">
+          <div class="code-panel"><div class="code-head"><span class="code-file">engine.js — renderSection (the consistent layout)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">function renderSection(s) {
+  const sec = h("section", "section"); sec.id = s.id;            // id = anchor + scrollspy key
+  // head (emoji + title + category badge)
+  if (s.summary) sec.appendChild(h("p", "summary", esc(s.summary)));
+  if (s.explanation_html) sec.appendChild(h("div", "explain", s.explanation_html));
+  if (s.key_points) { /* a "Key points" list */ }
+  if (s.playground) sec.appendChild(buildPlayground(s.playground));   // the interactive part
+  if (s.gotchas_html) sec.appendChild(h("div", "gotchas", "⚠️ Common mistakes" + s.gotchas_html));
+  if (s.canonical_blocks) { /* a codePanel per {label, lang, code} */ }
+  return sec;
+}
+
+function buildPlayground(pg) {
+  const builder = WIDGETS[pg.kind];                  // dispatch by kind
+  // try/catch so one broken widget never blanks the page
+}</pre></div>
+          <div class="tag-row"><span class="tag amber">fixed order</span><span class="tag">every block guarded</span><span class="tag">WIDGETS dispatch</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-init">
+          <div class="code-panel"><div class="code-head"><span class="code-file">engine.js — init (build nav, sections, scrollspy, theme)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="javascript">function init() {
+  // 1) group SECTIONS by category → build the sidebar
+  const byCat = {}; SECTIONS.forEach(function (s) { (byCat[s.category] ||= []).push(s); });
+  // 2) render every section into #sections
+  SECTIONS.forEach(function (s) { main.appendChild(renderSection(s)); });
+  // 3) scroll-spy: highlight the nav link of the section in view
+  const io = new IntersectionObserver(/* toggle .active */);
+  // 4) theme toggle: flip data-theme on &lt;html&gt;
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();</pre></div>
+          <div class="tag-row"><span class="tag green">data-driven nav</span><span class="tag">IntersectionObserver</span><span class="tag">theme toggle</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. CURRICULUM ============ -->
+    <section class="band anchor" id="curriculum">
+      <div class="band-inner">
+        <p class="eyebrow">The payload</p>
+        <h2>The 21 sections — click a category</h2>
+        <p class="dense">The data is a complete tour of on-device storage, ordered from foundations to architecture. Pick a category to see its sections; each links into the lab itself.</p>
+        <div class="pillbar" id="curCats"></div>
+        <div id="curList"></div>
+      </div>
+    </section>
+
+    <!-- ============ 6. PLAYGROUNDS ============ -->
+    <section class="band anchor" id="playgrounds">
+      <div class="band-inner">
+        <p class="eyebrow">The interactive part</p>
+        <h2>The 10 playgrounds</h2>
+        <p class="dense">Each section can carry one playground — a hand-built simulation of real Android behavior, no emulator required. The engine dispatches on the spec's <code>kind</code>; here is the full family.</p>
+        <div class="grid3">
+          <div class="card"><div class="card-head"><span class="card-title">🧭 storage-chooser</span></div><div class="card-body"><p class="dense">A decision tree: answer "which storage do I use?" and get a recommendation.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">📍 device-map</span></div><div class="card-body"><p class="dense">Where each store lives on disk + what survives clear-cache / clear-data / uninstall.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧵 threading</span></div><div class="card-body"><p class="dense">Main-thread blocking (ANR) vs a <code>suspend</code> call on Room's executor.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">⚖️ prefs-datastore</span></div><div class="card-body"><p class="dense">SharedPreferences (sync, ANR-prone) vs DataStore (async, Flow-based).</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧬 entity-schema</span></div><div class="card-body"><p class="dense">Flip <code>@Entity</code> annotations → watch the generated Kotlin + <code>CREATE TABLE</code> change.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">📇 dao-builder</span></div><div class="card-body"><p class="dense">Pick a DAO operation → see the generated method, its SQL, and a sample result.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">💧 db-live</span></div><div class="card-body"><p class="dense">Insert / update / delete → watch a <code>Flow&lt;List&lt;Note&gt;&gt;</code> re-emit and the UI recompose.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🔄 type-converter</span></div><div class="card-body"><p class="dense">Feed a non-primitive Kotlin type → see the column value Room actually stores.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🪜 migration</span></div><div class="card-body"><p class="dense">Bump the schema version and watch it preserve, crash, or wipe the data.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">☁️ backup-rules</span></div><div class="card-body"><p class="dense">Pick which buckets to back up → generate a <code>data_extraction_rules.xml</code>.</p></div></div>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">Adding one is two edits</span>
+          A new playground is one <code>w…</code> function in <code>engine.js</code> plus one entry in the
+          <code>WIDGETS</code> map — then any section can request it by <code>kind</code>. The
+          <a href="how-the-master-lab-is-built.html#playgrounds">walkthrough</a> shows the dispatch table.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. GLOSSARY ============ -->
+    <section class="band anchor" id="glossary">
+      <div class="band-inner">
+        <p class="eyebrow">Plain-language terms</p>
+        <h2>Glossary — tap to expand</h2>
+        <div class="acc" id="acc"></div>
+      </div>
+    </section>
+
+    <!-- ============ 8. QUIZ ============ -->
+    <section class="band anchor" id="quiz">
+      <div class="band-inner">
+        <p class="eyebrow">Check yourself</p>
+        <h2>Did it click?</h2>
+        <p class="dense">Five questions about how the lab is built and what it teaches. <span class="quiz-score" id="quizScore">0 / 5</span></p>
+        <div class="quiz" id="quiz"></div>
+        <p class="foot">Storage Master Lab · data + a renderer, baked into one file · part of the AndroidStudioProjects teaching set. See also <a href="how-the-master-lab-is-built.html">the step-by-step page</a>.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+<script>
+/* ============ Storage Master Lab — interactive explorer logic ============ */
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var LAB = "storage-tutorial.html";
+
+  // ======================= STORAGE CHOOSER =======================
+  var RESULTS = {
+    viewmodel:  { api: "Compose state / a ViewModel — don't persist", why: "It's transient UI state. Hoist it into a ViewModel so it survives rotation, and stop there; persisting it just adds complexity.", anchor: "#landscape" },
+    prefs:      { api: "Preferences DataStore", why: "A few independent settings (a flag, a sort order). Reactive Flow reads, transactional edit { } writes — the modern SharedPreferences replacement.", anchor: "#preferences-datastore" },
+    typed:      { api: "Typed (Proto) DataStore", why: "One structured object with a schema and real defaults, stored via a Serializer<T> — type-safe, not a bag of loose keys.", anchor: "#proto-datastore" },
+    room:       { api: "Room (SQLite)", why: "Many records you query, sort, filter, relate, or migrate. Compile-time-checked SQL, reactive Flow queries, and real migrations.", anchor: "#room-why" },
+    filesdir:   { api: "Internal file storage · filesDir", why: "A private blob that must persist. It survives restart, is private to your app, and is removed only on clear-data or uninstall.", anchor: "#internal-files" },
+    cachedir:   { api: "Cache storage · cacheDir", why: "Rebuildable scratch bytes. The system may evict it under low storage and the user can clear it anytime — never put anything you can't recreate here.", anchor: "#internal-files" },
+    saf:        { api: "Storage Access Framework (the system picker)", why: "The user chooses the exact document or save location; you get access to just what they picked, usually with no broad storage permission.", anchor: "#shared-scoped" },
+    mediastore: { api: "MediaStore / Photo Picker", why: "User-visible photos, video, or audio that belong in shared collections and can outlive your app.", anchor: "#shared-scoped" },
+  };
+
+  var ch = { screenOnly: null, shape: null, fileSurvive: null, userPick: null };
+
+  function chReset() { ch = { screenOnly: null, shape: null, fileSurvive: null, userPick: null }; renderChooser(); }
+
+  function chResult() {
+    if (ch.screenOnly === "yes") return "viewmodel";
+    if (ch.screenOnly !== "no") return null;
+    if (ch.shape === "settings") return "prefs";
+    if (ch.shape === "object") return "typed";
+    if (ch.shape === "records") return "room";
+    if (ch.shape === "file") {
+      if (ch.fileSurvive === "yes") return "filesdir";
+      if (ch.fileSurvive === "no") return "cachedir";
+      return null;
+    }
+    if (ch.shape === "media") {
+      if (ch.userPick === "yes") return "saf";
+      if (ch.userPick === "no") return "mediastore";
+      return null;
+    }
+    return null;
+  }
+
+  function qBlock(prompt, options, current, onPick) {
+    var wrap = document.createElement("div"); wrap.style.marginBottom = "14px";
+    var p = document.createElement("div"); p.className = "pl-name"; p.style.marginBottom = "8px"; p.textContent = prompt;
+    wrap.appendChild(p);
+    var seg = document.createElement("div"); seg.className = "controls"; seg.style.margin = "0";
+    options.forEach(function (o) {
+      var b = document.createElement("button"); b.type = "button";
+      b.className = "btn" + (current === o.value ? " primary" : "");
+      b.textContent = o.label;
+      b.addEventListener("click", function () { onPick(o.value); });
+      seg.appendChild(b);
+    });
+    wrap.appendChild(seg);
+    return wrap;
+  }
+
+  function renderChooser() {
+    var board = $("#chooserBoard"); if (!board) return;
+    board.innerHTML = "";
+
+    board.appendChild(qBlock(
+      "1. Is this just on-screen state while the app is open (not persisted)?",
+      [{ label: "Yes — it's transient", value: "yes" }, { label: "No — it must survive", value: "no" }],
+      ch.screenOnly,
+      function (v) { ch.screenOnly = v; ch.shape = null; ch.fileSurvive = null; ch.userPick = null; renderChooser(); }
+    ));
+
+    if (ch.screenOnly === "no") {
+      board.appendChild(qBlock(
+        "2. What shape is the data?",
+        [
+          { label: "A few simple settings", value: "settings" },
+          { label: "One typed object", value: "object" },
+          { label: "Many records to query/relate", value: "records" },
+          { label: "A private file / blob", value: "file" },
+          { label: "A user-visible file or media", value: "media" },
+        ],
+        ch.shape,
+        function (v) { ch.shape = v; ch.fileSurvive = null; ch.userPick = null; renderChooser(); }
+      ));
+    }
+
+    if (ch.screenOnly === "no" && ch.shape === "file") {
+      board.appendChild(qBlock(
+        "3. Must the file survive app restarts?",
+        [{ label: "Yes — it must last", value: "yes" }, { label: "No — it's rebuildable scratch", value: "no" }],
+        ch.fileSurvive,
+        function (v) { ch.fileSurvive = v; renderChooser(); }
+      ));
+    }
+    if (ch.screenOnly === "no" && ch.shape === "media") {
+      board.appendChild(qBlock(
+        "3. Does the user pick the exact file or save location?",
+        [{ label: "Yes — a document they choose", value: "yes" }, { label: "No — it's photos/video/audio", value: "no" }],
+        ch.userPick,
+        function (v) { ch.userPick = v; renderChooser(); }
+      ));
+    }
+
+    var key = chResult();
+    if (key) {
+      var r = RESULTS[key];
+      var card = document.createElement("div");
+      card.className = "callout good"; card.style.marginTop = "14px";
+      var lab = document.createElement("span"); lab.className = "callout-label"; lab.textContent = "Recommendation";
+      var api = document.createElement("div"); api.style.fontWeight = "850"; api.style.fontSize = "1.05rem"; api.style.marginBottom = "4px"; api.textContent = "→ " + r.api;
+      var why = document.createElement("p"); why.className = "dense"; why.style.margin = "0 0 10px"; why.textContent = r.why;
+      var link = document.createElement("a"); link.className = "btn"; link.href = LAB + r.anchor; link.textContent = "Read this in the Master Lab ▸";
+      card.appendChild(lab); card.appendChild(api); card.appendChild(why); card.appendChild(link);
+      board.appendChild(card);
+    }
+
+    var reset = document.createElement("button");
+    reset.className = "btn ghost"; reset.type = "button"; reset.textContent = "↺ Start over"; reset.style.marginTop = "12px";
+    reset.addEventListener("click", chReset);
+    board.appendChild(reset);
+  }
+  renderChooser();
+
+  // ======================= BUILD PIPELINE (architecture) =======================
+  var ARCH = {
+    data:   { name: "① Data — the curriculum", file: "storage-tutorial/sections.json", tab: "t-data",
+      what: "An array of 21 section objects, one per lesson. Each is pure content — title, category, summary, explanation, key points, a playground spec, gotchas, and canonical code blocks — with no layout decisions baked in.",
+      points: ["21 objects across 6 categories", "Edit a lesson = edit JSON, never layout code", "Inlined at build time as the global SECTIONS"] },
+    engine: { name: "② Engine — the renderer", file: "storage-tutorial/engine.js", tab: "t-render",
+      what: "Pure browser JavaScript in one IIFE: DOM helpers, single-pass Kotlin/SQL/XML highlighters, a copyable code panel, ten storage-specific playground widgets, and the page builder (renderSection + init).",
+      points: ["renderSection() lays out every section identically", "WIDGETS map dispatches the 10 playgrounds", "init() builds nav + scrollspy + theme from the data"] },
+    build:  { name: "③ Build — the assembler", file: "storage-tutorial/build.mjs", tab: "t-build",
+      what: "A ~70-line Node script. It reads styles.css, engine.js, and sections.json, then inlines all three into one HTML template — the key line writes const SECTIONS = ${JSON.stringify(sections)} so the engine needs no fetch.",
+      points: ["readFileSync × 3 → one html template literal", "Inlines CSS, the data, and the engine", "writeFileSync → the offline file"] },
+    output: { name: "④ Output — the offline lab", file: "storage-tutorial.html (generated)", tab: LAB,
+      what: "A single self-contained document: sidebar nav, hero, quick-start, and all 21 rendered sections with live playgrounds. No server, no dependencies — it runs from file:// in any browser.",
+      points: ["One file you can email, host, or open from disk", "init() builds the whole page on load", "Regenerated by re-running build.mjs"] },
+  };
+  function renderArch(layer) {
+    var a = ARCH[layer]; var d = $("#archDetail");
+    d.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = a.name; h.style.marginTop = "0";
+    var f = document.createElement("div"); f.className = "pl-file"; f.style.marginBottom = "8px"; f.textContent = a.file;
+    var p = document.createElement("p"); p.className = "dense"; p.textContent = a.what;
+    var ul = document.createElement("ul"); ul.className = "kicker-list";
+    a.points.forEach(function (pt) { var li = document.createElement("li"); li.textContent = pt; ul.appendChild(li); });
+    d.appendChild(h); d.appendChild(f); d.appendChild(p); d.appendChild(ul);
+    if (a.tab && a.tab.indexOf("t-") === 0) {
+      var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "Open in the source explorer ▸";
+      btn.addEventListener("click", function () { openCodeTab(a.tab); var c = $("#code"); if (c) c.scrollIntoView({ behavior: "smooth" }); });
+      d.appendChild(btn);
+    } else if (a.tab) {
+      var link = document.createElement("a"); link.className = "btn"; link.href = a.tab; link.textContent = "Open the built lab ▸";
+      d.appendChild(link);
+    }
+  }
+  $$(".arch-chip").forEach(function (chip) {
+    chip.addEventListener("click", function () { $$(".arch-chip").forEach(function (x) { x.classList.remove("sel"); }); chip.classList.add("sel"); renderArch(chip.dataset.layer); });
+  });
+  renderArch("data");
+
+  // ======================= CODE TABS =======================
+  function openCodeTab(tabId) {
+    $$(".tab").forEach(function (x) { x.classList.toggle("on", x.dataset.tab === tabId); });
+    $$(".tabpane").forEach(function (x) { x.classList.toggle("on", x.dataset.pane === tabId); });
+  }
+  $$(".tab").forEach(function (t) { t.addEventListener("click", function () { openCodeTab(t.dataset.tab); }); });
+
+  // ======================= CURRICULUM =======================
+  var CURRICULUM = [
+    { cat: "Foundations", items: [
+      ["🗺️", "landscape", "The storage landscape: choosing the right tool"],
+      ["📍", "where-it-lives", "Where your data physically lives"],
+      ["🧵", "main-safe", "Persistence is disk I/O — stay off the main thread"],
+    ] },
+    { cat: "Key–value · DataStore", items: [
+      ["⚖️", "sharedprefs-vs-datastore", "SharedPreferences vs DataStore"],
+      ["🔑", "preferences-datastore", "Preferences DataStore in depth"],
+      ["🧱", "proto-datastore", "Typed (Proto) DataStore"],
+    ] },
+    { cat: "Room · structured data", items: [
+      ["🏛️", "room-why", "Why Room — and its three components"],
+      ["🧬", "entity", "@Entity — a table as a Kotlin class"],
+      ["📇", "dao", "@Dao — the read/write surface"],
+      ["💧", "reactive-flow", "Reactive queries: a Flow that updates itself"],
+      ["🏗️", "database-builder", "@Database — the holder & singleton"],
+      ["🔄", "converters", "@TypeConverter — storing non-primitive types"],
+      ["🔗", "relations", "Relations, foreign keys & indices"],
+      ["🪜", "migrations", "Schema migrations: evolve without losing data"],
+    ] },
+    { cat: "Files & media", items: [
+      ["📁", "internal-files", "Files your app owns: internal & cache"],
+      ["🖼️", "shared-scoped", "Shared media & scoped storage"],
+    ] },
+    { cat: "Security & lifecycle", items: [
+      ["🔐", "encryption", "Encryption at rest — and why the old advice is stale"],
+      ["☁️", "backup", "Auto Backup & data extraction rules"],
+    ] },
+    { cat: "Architecture & wiring", items: [
+      ["🧩", "repository-viewmodel", "Wiring persistence into the app"],
+      ["🔬", "testing-inspection", "Inspecting & testing your storage"],
+      ["🎯", "recap", "The whole picture — a persistence cheat sheet"],
+    ] },
+  ];
+  function renderCurriculum(idx) {
+    $$("#curCats button").forEach(function (b, i) { b.className = "tag" + (i === idx ? " teal" : ""); b.style.cursor = "pointer"; });
+    var group = CURRICULUM[idx];
+    var list = $("#curList"); list.innerHTML = "";
+    var head = document.createElement("p"); head.className = "dense"; head.textContent = group.cat + " — " + group.items.length + " section" + (group.items.length === 1 ? "" : "s") + ":";
+    list.appendChild(head);
+    group.items.forEach(function (it) {
+      var a = document.createElement("a");
+      a.href = LAB + "#" + it[1];
+      a.className = "card";
+      a.style.display = "block"; a.style.textDecoration = "none"; a.style.color = "inherit"; a.style.marginBottom = "8px";
+      var body = document.createElement("div"); body.className = "card-body";
+      body.style.display = "flex"; body.style.alignItems = "center"; body.style.gap = "12px";
+      var em = document.createElement("span"); em.style.fontSize = "1.4rem"; em.textContent = it[0];
+      var txt = document.createElement("span");
+      var t = document.createElement("strong"); t.textContent = it[2];
+      var sub = document.createElement("div"); sub.className = "tiny"; sub.textContent = "storage-tutorial.html#" + it[1] + "  ▸";
+      txt.appendChild(t); txt.appendChild(sub);
+      body.appendChild(em); body.appendChild(txt); a.appendChild(body);
+      list.appendChild(a);
+    });
+  }
+  (function () {
+    var bar = $("#curCats");
+    CURRICULUM.forEach(function (g, i) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "tag"; b.textContent = g.cat;
+      b.style.cursor = "pointer";
+      b.addEventListener("click", function () { renderCurriculum(i); });
+      bar.appendChild(b);
+    });
+    renderCurriculum(0);
+  })();
+
+  // ======================= GLOSSARY =======================
+  var TERMS = [
+    ["SECTIONS", "The global array build.mjs injects above engine.js: the entire parsed sections.json. The engine reads it with no fetch, which is what makes the page work offline."],
+    ["renderSection(s)", "Turns one section object into one DOM <section> — head, summary, explanation, key points, playground, gotchas, canonical code — in a fixed order, each block optional. Why all 21 sections look consistent."],
+    ["buildPlayground(pg)", "Looks pg.kind up in the WIDGETS map and calls the matching builder inside a try/catch, so one broken widget can't blank the page."],
+    ["WIDGETS", "A dispatch table mapping each playground kind ('db-live', 'migration', …) to its builder function. Adding a playground = one function + one entry."],
+    ["playground spec", "The object on a section ({ kind, title, intro, … }) that tells the engine which interactive widget to build and with what options."],
+    ["canonical_blocks", "An array of { label, lang, code } per section — the real Kotlin/SQL/XML shown in copyable, syntax-highlighted code panels."],
+    ["IIFE", "Immediately-Invoked Function Expression — the (function () { … })() wrapper engine.js uses so its helpers don't leak into the global scope."],
+    ["inline build", "build.mjs welds styles.css, the data, and engine.js into one HTML file. No bundler, no runtime dependencies, no server — open it from disk."],
+    ["scroll-spy", "An IntersectionObserver that highlights the sidebar link of whichever section is currently in view."],
+    ["Room", "Jetpack's SQLite layer (the lab's biggest category): annotated Kotlin classes become checked, SQLite-backed code. Covered across 8 of the 21 sections."],
+    ["DataStore", "The modern key/value (Preferences) and typed-object (Proto) storage APIs, both Flow-based — the lab contrasts them with SharedPreferences."],
+    ["scoped storage", "The modern model for user-visible files: reach media via MediaStore / the Photo Picker, and user-chosen documents via the Storage Access Framework."],
+    ["KSP", "Kotlin Symbol Processing — the build-time generator that turns Room's annotations into concrete implementation classes (covered in the Room sections)."],
+  ];
+  (function () {
+    var acc = $("#acc");
+    TERMS.forEach(function (t) {
+      var item = document.createElement("div"); item.className = "acc-item";
+      var q = document.createElement("button"); q.className = "acc-q"; q.type = "button";
+      var term = document.createElement("span"); term.innerHTML = "<code>" + t[0].replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
+      var plus = document.createElement("span"); plus.className = "plus"; plus.textContent = "+";
+      q.appendChild(term); q.appendChild(plus);
+      var a = document.createElement("div"); a.className = "acc-a"; a.textContent = t[1];
+      q.addEventListener("click", function () { item.classList.toggle("open"); });
+      item.appendChild(q); item.appendChild(a); acc.appendChild(item);
+    });
+  })();
+
+  // ======================= QUIZ =======================
+  var QUIZ = [
+    { q: "What makes the Master Lab work offline from a file:// URL with no server?",
+      opts: ["It fetches sections.json at runtime", "build.mjs inlines the data as a global SECTIONS array (plus the CSS and engine) into one HTML file", "It uses a service worker", "The browser caches it"],
+      correct: 1,
+      exp: "build.mjs writes const SECTIONS = ${JSON.stringify(sections)} and inlines engine.js + styles.css into one document, so there is nothing to fetch — it runs entirely from the single file." },
+    { q: "Where does the content of a lesson live?",
+      opts: ["Hard-coded in engine.js", "In sections.json — pure data with no layout decisions", "In storage-tutorial.html directly", "In styles.css"],
+      correct: 1,
+      exp: "Each lesson is one object in sections.json (title, summary, explanation, key points, playground spec, gotchas, code). Editing a lesson never means touching layout code." },
+    { q: "How does the engine decide which interactive playground to show for a section?",
+      opts: ["By the section's position", "buildPlayground looks up the spec's kind in the WIDGETS map and calls that builder", "It always shows db-live", "The author writes the DOM by hand"],
+      correct: 1,
+      exp: "The playground spec has a kind; buildPlayground dispatches through WIDGETS[kind] inside a try/catch, so one broken widget can't blank the page." },
+    { q: "You want to store a few simple settings like a dark-mode flag. Which API does the lab recommend?",
+      opts: ["Room", "Preferences DataStore", "A typed (Proto) DataStore", "MediaStore"],
+      correct: 1,
+      exp: "A handful of independent settings → Preferences DataStore: reactive Flow reads, transactional edit { } writes. Room is for many records; a typed DataStore is for one structured object." },
+    { q: "What does it take to add a brand-new section to the lab?",
+      opts: ["Rewrite storage-tutorial.html by hand", "Append an object to sections.json (and re-run node build.mjs); a new section, nav link, and scroll-spy target appear automatically", "Edit the generated HTML and the JSON", "Add a new build script"],
+      correct: 1,
+      exp: "Everything is data-driven from SECTIONS. Append a section object, optionally pick a playground kind, re-run the build, and the section + its nav entry are wired up automatically." },
+  ];
+  (function () {
+    var wrap = $("#quiz"); var answered = {}; var score = 0;
+    QUIZ.forEach(function (item, qi) {
+      var card = document.createElement("div"); card.className = "q";
+      var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
+      var opts = document.createElement("div"); opts.className = "q-opts";
+      item.opts.forEach(function (text, oi) {
+        var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
+        b.addEventListener("click", function () {
+          if (answered[qi]) return;
+          answered[qi] = true;
+          var buttons = $$(".opt", opts);
+          buttons.forEach(function (x, xi) { x.disabled = true; if (xi === item.correct) x.classList.add("correct"); });
+          if (oi !== item.correct) b.classList.add("wrong");
+          else score++;
+          card.classList.add("answered");
+          $("#quizScore").textContent = score + " / " + QUIZ.length;
+        });
+        opts.appendChild(b);
+      });
+      var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
+      card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
+    });
+  })();
+})();
+</script>
+</body>
+</html>

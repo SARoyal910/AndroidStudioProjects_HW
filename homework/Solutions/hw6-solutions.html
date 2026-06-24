@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 6 — Answer Key — A Task App: Navigation, Compose &amp; Room Storage</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84; --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed; --warn-line:#fde2c0;
+    --good-soft:#ecfdf3; --good-line:#c5ebd3;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 22px 80px;}
+  header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:30px; border-bottom:4px solid var(--accent);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px; color:var(--accent);
+    font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:66ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:12px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:15.5px; margin:20px 0 4px;}
+  p{margin:11px 0;}
+  ul,ol{margin:10px 0; padding-left:22px;} li{margin:5px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.9em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:15px 17px; border-radius:10px;
+    overflow:auto; font-size:13px; line-height:1.6; margin:13px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre code{background:none; padding:0; font-size:inherit; color:inherit;}
+
+  /* where-to-run tag (mirrors the assignment) */
+  .where{flex:none; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .where.pg{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}
+  .where.as{background:#fff3e6; color:#b4530a; border:1px solid var(--warn-line);}
+  .where.both{background:#eafaf1; color:var(--accent-deep); border:1px solid var(--good-line);}
+
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 8px; margin:16px 0; box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:2px;}
+  .qid{font-weight:800; color:var(--ink); font-size:16px;}
+  .ask{color:var(--muted); font-size:14.5px; margin:4px 0 10px;}
+  .ans{margin:12px 0;}
+  .ans b, .ask b{color:var(--ink);}
+  .file{font-size:12.5px; color:var(--muted); margin:0 0 8px;}
+  .file code{font-size:.92em;}
+  .trylink{margin:8px 0 4px;}
+  .trylink a{display:inline-block; font-size:13px; font-weight:750; color:var(--accent-deep); text-decoration:none;
+    background:var(--good-soft); border:1px solid var(--good-line); border-radius:999px; padding:5px 13px;}
+  .trylink a:hover{background:#dcf5e7;}
+
+  .callout{border-radius:10px; padding:12px 15px; margin:14px 0; font-size:14.5px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.good{background:var(--good-soft); border:1px solid var(--good-line);}
+  .callout.predict{background:var(--warn-soft); border:1px solid var(--warn-line); color:#7c4a12;}
+  .callout b{display:block; margin-bottom:2px;}
+  .callout.inline{font-size:13.5px; margin:12px 0 4px;}
+  .callout.inline b{display:inline; margin:0;}
+  .callout.inline code{background:#fff3e6; color:#b4530a;}
+
+  table.cmp{width:100%; border-collapse:collapse; font-size:14px; margin:12px 0;}
+  table.cmp th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.cmp td{padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.cmp td:first-child{font-weight:700; white-space:nowrap;}
+
+  footer{margin-top:42px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13.5px;}
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.callout,table.cmp{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Compose · Navigation 3 · Room · Answer Key</p>
+    <h1>Homework 6 — Solutions</h1>
+    <p class="sub">Complete, runnable answer key for the <b>Task App</b> — one starter that finally joins the three
+       big skills: <b>Navigation 3</b> (list ⇄ add/edit), <b>Compose</b> (list, rows, form), and <b>Room</b>
+       storage (tasks survive a restart). All <b>8 TODOs</b> are solved with the <em>real</em> finished code,
+       heavily commented in the teaching style — each with a "why it works", a "common mistake", and a one-tap
+       <b>interactive playground</b> to feel the concept. You edit exactly three files: <code>TaskDao.kt</code>,
+       <code>TaskViewModel.kt</code>, <code>MainActivity.kt</code>.</p>
+    <div class="meta">
+      <span><b>Project</b> · Hw6TaskList</span>
+      <span><b>Part A</b> Room · <b>B</b> ViewModel · <b>C</b> Compose · <b>D</b> Nav3</span>
+      <span>8 TODOs · 3 files</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="../../Playground/hw6-tasklist-playground.html">▶ HW6 Playground (interactive)</a>
+      <a href="../Assigned/hw6.html">← Homework 6 (assignment)</a>
+      <a href="../projects.html">Projects, Explained</a>
+      <a href="../../RoomAndPreferences">RoomAndPreferences</a>
+      <a href="../../NavListDetail">NavListDetail</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout proj">
+    <b>How to read this key</b>
+    The TODOs run in build order (1 → 8), grouped by the assignment's four parts. For every TODO you get the
+    <em>solution code</em> (the full pasteable function/property body, commented in the teaching style), a
+    one-or-two-sentence <b>why it works</b>, a <b>common mistake</b> to avoid, and a <b>▶ Practice in the
+    playground</b> link that drops you on a live, interactive demo of that exact concept. The whole app runs in
+    Android Studio on an emulator/device, so the <span class="where as">Android Studio</span> tag is on every TODO.
+  </div>
+
+  <div class="callout good">
+    <b>New: the interactive HW6 Playground</b>
+    Before (or while) you write the Kotlin, open the <a href="../../Playground/hw6-tasklist-playground.html">Homework 6 Playground</a> — a single offline page
+    that runs this exact app as a teaching model. <b>Tap the phone</b> to add/edit/toggle/delete and watch the Room
+    table, the reactive <code>Flow</code>, and the Nav3 back stack react with no manual refresh; <b>reorder the sort
+    keys</b> to build TODO 1's <code>ORDER BY</code>; and <b>flip a switch</b> to see what <code>Modifier.weight(1f)</code>
+    does to a row. Each module is tagged with the TODO it teaches.
+  </div>
+
+  <div class="callout predict">
+    <b>One idea carries the whole assignment: Room is the single source of truth, and it's reactive</b>
+    The DAO's <code>observeTasks()</code> returns a <code>Flow&lt;List&lt;Task&gt;&gt;</code> that Room
+    <em>re-emits every time the table changes</em>. The ViewModel turns that into a <code>StateFlow</code> (TODO 2);
+    every user action (add/edit/delete/toggle) is just a <code>suspend</code> write to Room (TODO 3–4); and because
+    the read is live, the UI updates itself with <b>no manual refresh</b> after any write. Navigation (TODO 8) only
+    moves between two screens — it never carries task data, it carries a <em>key</em> (a task id, or <code>null</code>
+    for "new"), and the screen looks the data up from the already-collected list.
+  </div>
+
+  <!-- ================= Part A. Storage — the Room query ================= -->
+  <h2><span class="part">Part A.</span> Storage — the Room query</h2>
+  <p class="lead">Make the database hand tasks back in a sensible order. One line of SQL in <code>data/TaskDao.kt</code>; the entity (<code>Task.kt</code>) and database wiring (<code>TaskDatabase.kt</code>) are your read-only reference.</p>
+
+  <!-- TODO 1 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">TODO 1 — Sort the reactive query with ORDER BY (unfinished, then high priority, then newest)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Add an <strong>ORDER BY</strong> to the reactive query so the list reads well: <strong>unfinished tasks first</strong>, then <strong>higher priority first</strong>, then <strong>newest first</strong>.</p>
+    <p class="file">Where: <code>data/TaskDao.kt -&gt; observeTasks()</code> <span class="where both" style="margin-left:6px;">builds on RoomAndPreferences - NoteDao.observeNotes (@Query returning Flow)</span></p>
+<pre><code>    // =========================================================================
+    // ★ TODO 1 — Room query (builds on RoomAndPreferences: NoteDao.observeNotes) ★
+    //
+    // Observe ALL tasks as a reactive Flow. THE KEY ROOM IDEA: a query that returns
+    // Flow is "live" — Room watches the "tasks" table and, on every insert/update/
+    // delete, re-runs this SELECT and pushes a brand-new List down the Flow, so the
+    // UI refreshes with zero extra work.
+    //
+    // We add an ORDER BY so the rows arrive in a sensible, stable order instead of
+    // SQLite's arbitrary insertion order. ORDER BY sorts ROWS, and you may sort by
+    // SEVERAL columns separated by commas — SQLite applies them left to right: it
+    // sorts by the first column, and only uses the next column to break TIES.
+    // =========================================================================
+    @Query(
+        // SELECT * FROM tasks  -&gt; read every column of every row from the "tasks" table.
+        "SELECT * FROM tasks " +
+        // ORDER BY (multi-key sort, applied left-to-right; later keys break ties):
+        //   done ASC      -&gt; 'done' is stored as 0/1; ASC puts 0 (unfinished) BEFORE
+        //                    1 (finished), so open tasks float to the top of the list.
+        //   priority DESC -&gt; within the same done-state, sort 2,1,0 (High before
+        //                    Normal before Low) — DESC = descending = biggest first.
+        //   createdAt DESC-&gt; final tie-breaker: 'createdAt' is epoch millis, so the
+        //                    LARGEST value is the most recent =&gt; newest task first.
+        "ORDER BY done ASC, priority DESC, createdAt DESC"
+        // Room CHECKS this SQL at COMPILE time against the Task entity: every name
+        // here (tasks, done, priority, createdAt) must really exist as a table/column,
+        // or the build fails with a clear Room error pointing at this line. That is
+        // Room protecting you — note it's `createdAt`, not `created_at`.
+    )
+    fun observeTasks(): Flow&lt;List&lt;Task&gt;&gt;   // returns Flow =&gt; Room re-emits a fresh, sorted list on every table change</code></pre>
+    <p class="ans"><b>Why it works:</b> Returning Flow&lt;List&lt;Task&gt;&gt; makes the query reactive: Room registers an observer on the "tasks" table and re-runs this exact SELECT (re-applying the ORDER BY) every time a row is inserted, updated, or deleted, so the collected list stays correctly sorted with no manual refresh. ORDER BY is a multi-key sort applied left to right — done ASC floats unfinished (0) above finished (1), priority DESC ranks High(2) over Normal(1) over Low(0) within the same done-state, and createdAt DESC breaks remaining ties by putting the largest epoch-millis (newest) first. The column names (done, priority, createdAt) and table name (tasks) match the Task @Entity exactly, so Room's compile-time SQL verification passes; the imports Query, Flow, and Task are all already present in the starter, so nothing extra is needed.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> Writing <code>created_at</code> instead of <code>createdAt</code> (Room verifies column names at <em>compile time</em> — a typo fails the build), or dropping <code>done ASC</code> so finished tasks intermix with open ones.</div>
+    <p class="trylink"><a href="../../Playground/hw6-tasklist-playground.html#todo1">▶ Practice in the playground — Build the ORDER BY live</a></p>
+  </div>
+
+  <!-- ================= Part B. Wire Room to the UI — the ViewModel ================= -->
+  <h2><span class="part">Part B.</span> Wire Room to the UI — the ViewModel</h2>
+  <p class="lead">Surface the database as Compose state, and turn user actions into Room writes. All in <code>TaskViewModel.kt</code> — the same shape as <code>RoomAndPreferences/NotesViewModel.kt</code>.</p>
+
+  <!-- TODO 2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">TODO 2 — Expose Room's Flow as UI state</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Replace the disconnected <code>MutableStateFlow</code> placeholder so <code>tasks</code> reflects the <strong>live Room table</strong> — convert the cold <code>Flow</code> into a hot <code>StateFlow</code> the UI can read at any time.</p>
+    <p class="file">Where: <code>TaskViewModel.kt -&gt; val tasks property</code> <span class="where both" style="margin-left:6px;">builds on RoomAndPreferences - NotesViewModel.notes</span></p>
+<pre><code>// =========================================================================
+// ★ TODO 2 — expose Room's Flow as UI state (builds on NotesViewModel.notes) ★
+//
+// taskDao.observeTasks() is a COLD Flow&lt;List&lt;Task&gt;&gt;: it does no work until
+// someone collects it, and it has no "current value" to read synchronously.
+// Compose needs a value it can read RIGHT NOW on every recomposition, so we
+// convert the cold Flow into a HOT StateFlow with stateIn(...).
+// =========================================================================
+val tasks: StateFlow&lt;List&lt;Task&gt;&gt; =                  // the screen collects this; it ALWAYS has a value
+    taskDao.observeTasks()                          // COLD Flow&lt;List&lt;Task&gt;&gt;; Room re-emits on every table change
+        .stateIn(                                   // turn that cold Flow into a hot, cached StateFlow
+            scope = viewModelScope,                 // collection lives exactly as long as this ViewModel (survives rotation)
+            started = SharingStarted.WhileSubscribed(5_000),  // stay subscribed to Room 5s after the last UI collector leaves (survives a rotation gap without re-querying)
+            initialValue = emptyList(),             // value to expose BEFORE Room's first emit, so the UI never sees null
+        )
+
+// NOTE: now that `tasks` is wired to observeTasks(), the MutableStateFlow
+// import at the top of the file is unused. Remove it (Alt+Enter / Optimize
+// Imports) so the finished file compiles with no leftover warnings.</code></pre>
+    <p class="ans"><b>Why it works:</b> stateIn collects the cold Flow inside viewModelScope and republishes its latest emission as a StateFlow, which always holds a readable current value for Compose. Because Room's observeTasks() re-emits the whole list on every insert/update/delete, the UI refreshes automatically with no manual reload. WhileSubscribed(5_000) keeps the collection alive for 5 seconds after the last collector unsubscribes, so a configuration change (rotation) reuses the cached list instead of re-running the query, and the initialValue of emptyList() means the list renders immediately rather than waiting for the first DB read.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> Leaving the placeholder <code>MutableStateFlow(emptyList())</code> in place — it compiles and shows an empty list but is <em>never connected to Room</em>, so nothing you add ever appears. Also: forgetting to delete the now-unused <code>MutableStateFlow</code> import.</div>
+    <p class="trylink"><a href="../../Playground/hw6-tasklist-playground.html#app">▶ Practice in the playground — Watch the Flow re-emit</a></p>
+  </div>
+
+  <!-- TODO 3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">TODO 3 — Save a task (insert OR update)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Implement <code>save(task)</code> so a <strong>new</strong> task (<code>id == 0L</code>) is <strong>inserted</strong> and an <strong>existing</strong> one is <strong>updated</strong> — both as <code>suspend</code> Room writes on a coroutine.</p>
+    <p class="file">Where: <code>TaskViewModel.kt -&gt; fun save(task: Task)</code> <span class="where both" style="margin-left:6px;">builds on RoomAndPreferences - @Insert/@Update</span></p>
+<pre><code>// =========================================================================
+// ★ TODO 3 — save a task (insert when new, update when editing) ★
+//
+// The edit screen hands us a Task. A NEW task still has its default id == 0L;
+// an EXISTING (already-saved) task carries a real, non-zero primary key. That
+// single fact tells us which DAO write to call. Both writes are `suspend`, so
+// they MUST run inside a coroutine — viewModelScope.launch starts one.
+// =========================================================================
+fun save(task: Task) {
+    viewModelScope.launch {                         // launch a coroutine tied to the ViewModel's lifetime (can call suspend fns; auto-cancels on clear)
+        if (task.id == 0L) taskDao.insert(task)     // id still 0 =&gt; brand-new row; @Insert lets SQLite autoGenerate the id
+        else               taskDao.update(task)     // id non-zero =&gt; existing row; @Update overwrites it by primary key
+    }                                               // no manual UI refresh: the write changes the table, so observeTasks() re-emits and `tasks` updates itself
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> taskDao.insert and taskDao.update are suspend functions (Room runs disk I/O off the main thread), so they can only be called from a coroutine — viewModelScope.launch provides one whose lifetime is bound to the ViewModel, so the work is cancelled automatically if the ViewModel is cleared. Checking task.id == 0L distinguishes a never-saved task (the @PrimaryKey(autoGenerate=true) default) from an edit of an existing row, routing to INSERT vs UPDATE. After either write the tasks table changes, which makes the reactive observeTasks() Flow re-emit, so the StateFlow from TODO 2 updates the UI with no extra code.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> Always calling <code>insert</code> — then editing a task creates a <em>duplicate</em> row instead of updating it. Or calling the <code>suspend</code> DAO method directly (outside <code>viewModelScope.launch</code>), which won't compile.</div>
+    <p class="trylink"><a href="../../Playground/hw6-tasklist-playground.html#app">▶ Practice in the playground — Add vs edit a task</a></p>
+  </div>
+
+  <!-- TODO 4 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">TODO 4 — Delete + toggle done</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Implement <code>delete(task)</code> and <code>toggleDone(task)</code> as <code>suspend</code> Room writes launched on <code>viewModelScope</code>; toggling persists the <strong>same task</strong> with its <code>done</code> flag flipped.</p>
+    <p class="file">Where: <code>TaskViewModel.kt -&gt; fun delete(task) and fun toggleDone(task)</code> <span class="where both" style="margin-left:6px;">builds on RoomAndPreferences - NotesViewModel.toggleDone</span></p>
+<pre><code>// =========================================================================
+// ★ TODO 4 — delete a task, and toggle its "done" flag ★
+//
+// Both are `suspend` Room writes, so each one is wrapped in its own
+// viewModelScope.launch { } coroutine. toggleDone doesn't need a new query:
+// because Task is a data class, copy() gives us an identical row with just the
+// `done` field flipped, which @Update then persists by primary key.
+// =========================================================================
+fun delete(task: Task) {
+    viewModelScope.launch {                         // suspend write =&gt; must run in a coroutine
+        taskDao.delete(task)                        // @Delete removes the row matched by its @PrimaryKey id
+    }                                               // table changed =&gt; observeTasks() re-emits =&gt; the row disappears from the list automatically
+}
+
+fun toggleDone(task: Task) {
+    viewModelScope.launch {                         // suspend write =&gt; must run in a coroutine
+        taskDao.update(task.copy(done = !task.done))// copy() clones the task changing ONLY done (flip it); @Update saves it by primary key
+    }                                               // same id =&gt; Room updates the existing row in place, and the reactive Flow refreshes the checkbox
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> delete and update are suspend Room writes, so each is launched on viewModelScope to run off the main thread within the ViewModel's lifecycle. toggleDone relies on Task being a data class: copy(done = !task.done) produces a new instance identical to the original except for the flipped flag, and because it keeps the same primary key id, @Update overwrites that exact row rather than creating a new one. Both operations mutate the tasks table, so the reactive observeTasks() Flow re-emits and the UI (the list and the row's checkbox) updates itself without any manual refresh.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> Flipping <code>task.done</code> in memory and expecting it to stick — <code>Task</code> is immutable, and nothing is persisted until you call <code>update(...)</code>. Use <code>task.copy(done = !task.done)</code> inside <code>viewModelScope.launch</code>.</div>
+    <p class="trylink"><a href="../../Playground/hw6-tasklist-playground.html#app">▶ Practice in the playground — Tap the checkbox / Delete</a></p>
+  </div>
+
+    <div class="callout good">
+      <b>The finished ViewModel</b>
+      a private <code>taskDao</code> handle (given) · <code>tasks: StateFlow</code> fed by <code>observeTasks().stateIn(...)</code> (TODO 2) · <code>save()</code> routing new→<code>insert</code> / existing→<code>update</code> (TODO 3) · <code>delete()</code> + <code>toggleDone()</code> as <code>viewModelScope.launch</code> suspend writes (TODO 4) · the <code>factory()</code> (given). Every action mutates the table, so the reactive <code>Flow</code> re-emits and the UI updates itself — no manual refresh anywhere.
+    </div>
+
+  <!-- ================= Part C. Compose the screens ================= -->
+  <h2><span class="part">Part C.</span> Compose the screens</h2>
+  <p class="lead">Build the list, one row, and the form — all in <code>MainActivity.kt</code>. The <code>@Preview</code> at the bottom renders <code>TaskListScreen</code> as you go, with no device or database needed.</p>
+
+  <!-- TODO 5 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">TODO 5 — Build the task list + an "add" control</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Build <code>TaskListScreen</code>: an <strong>add control</strong> that calls <code>onAddTask()</code>, the <strong>list</strong> — a <code>LazyColumn</code> of <code>TaskRow</code>s — and a friendly <strong>empty state</strong> when there are no tasks.</p>
+    <p class="file">Where: <code>MainActivity.kt -&gt; TaskListScreen()</code> <span class="where both" style="margin-left:6px;">builds on RoomAndPreferences list + hw5 Box/align (FAB)</span></p>
+<pre><code>@Composable
+fun TaskListScreen(
+    tasks: List&lt;Task&gt;,
+    onAddTask: () -&gt; Unit,
+    onOpenTask: (Task) -&gt; Unit,
+    onToggleDone: (Task) -&gt; Unit,
+    onDelete: (Task) -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Box lets two children OVERLAP in the same space (z-order), so the scrolling
+    // list and the "add" button can share the screen — the FAB floats ON TOP of
+    // the list. This is the same hw5 "align a small thing in a corner" trick.
+    // (Plain alternative: a Column with Button("New task") on top of the LazyColumn.)
+    Box(modifier = modifier.fillMaxSize()) {                    // fill the whole content area
+        if (tasks.isEmpty()) {
+            // EMPTY STATE: with no rows a LazyColumn would render a blank screen,
+            // which looks broken. Show a friendly message centered in the Box instead.
+            Text(
+                text = "No tasks yet.\nTap ＋ to add your first task.", // gentle hint, not a dead-end
+                style = MaterialTheme.typography.bodyLarge,         // readable body text from the theme
+                modifier = Modifier.align(Alignment.Center),       // center it inside the Box
+            )
+        } else {
+            // THE LIST: LazyColumn only composes the rows currently on screen, so a
+            // 10,000-task list stays fast (unlike a plain Column, which builds them all).
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),                 // take all the room so it scrolls
+                // contentPadding reserves blank space at the very bottom of the SCROLL
+                // content so the floating button can't sit on top of the last row.
+                // NOTE: PaddingValues is the one extra import this FAB layout needs:
+                //   import androidx.compose.foundation.layout.PaddingValues
+                contentPadding = PaddingValues(bottom = 88.dp),    // ~FAB height + margin
+            ) {
+                // items() emits one composable per element. key = { it.id } gives each
+                // row a STABLE identity, so when the list reorders/changes (reactive Room
+                // Flow) Compose moves/keeps the right rows instead of rebuilding everything.
+                items(tasks, key = { it.id }) { task -&gt;
+                    // TaskRow is stateless: we pass it the data plus lambdas that close
+                    // over THIS task, translating its no-arg callbacks back to (Task) ones.
+                    TaskRow(
+                        task = task,
+                        onToggleDone = { onToggleDone(task) },     // checkbox flipped -&gt; Room UPDATE
+                        onOpen = { onOpenTask(task) },             // row tapped -&gt; navigate to edit
+                        onDelete = { onDelete(task) },             // delete tapped -&gt; Room DELETE
+                    )
+                    HorizontalDivider()                            // thin line between rows for readability
+                }
+            }
+        }
+        // THE ADD CONTROL: a round Material "＋" button pinned bottom-right.
+        // align() places it in the BottomEnd corner of the Box; padding keeps it
+        // off the screen edge. Tapping it asks the host to navigate (TODO 8a).
+        FloatingActionButton(
+            onClick = onAddTask,                                   // report intent; the host navigates
+            modifier = Modifier
+                .align(Alignment.BottomEnd)                        // corner placement (the hw5 dot trick)
+                .padding(16.dp),                                   // breathing room from the edges
+        ) {
+            Text("＋")                                             // the universal "add" glyph
+        }
+    }
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> A LazyColumn renders only the visible rows, and items(tasks, key = { it.id }) gives each row a stable identity so the screen diffs correctly when Room's reactive Flow emits a new ordering. The screen is stateless — it just draws the tasks it's given and reports intents (onAddTask/onOpenTask/etc.) up to the navigation host. Box + Modifier.align(Alignment.BottomEnd) overlays the FAB on the list, and contentPadding(bottom = 88.dp) keeps the floating button from covering the last row. The only symbol beyond the starter imports is PaddingValues (androidx.compose.foundation.layout.PaddingValues).</p>
+    <div class="callout predict inline"><b>Common mistake:</b> Using a plain <code>Column</code> for the list (it builds <em>every</em> row, no recycling) instead of <code>LazyColumn</code>; omitting <code>key = { it.id }</code> (rows lose identity on re-sort); or a FAB that covers the last row (needs <code>contentPadding</code>).</div>
+    <p class="trylink"><a href="../../Playground/hw6-tasklist-playground.html#app">▶ Practice in the playground — Delete all → empty state</a></p>
+  </div>
+
+  <!-- TODO 6 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">TODO 6 — Build one task row</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Build <code>TaskRow</code>: a <code>Checkbox</code>, a <strong>weighted</strong> title + notes column that opens the editor when tapped, a small <strong>priority</strong> label, and a <strong>delete</strong> button.</p>
+    <p class="file">Where: <code>MainActivity.kt -&gt; TaskRow()</code> <span class="where both" style="margin-left:6px;">builds on hw5 settings row — Row + Modifier.weight(1f)</span></p>
+<pre><code>@Composable
+fun TaskRow(
+    task: Task,
+    onToggleDone: () -&gt; Unit,
+    onOpen: () -&gt; Unit,
+    onDelete: () -&gt; Unit,
+) {
+    // A Row lays its children out left-to-right. CenterVertically lines the checkbox,
+    // text, and buttons up on a single baseline; spacedBy(8.dp) puts an even gap
+    // between every child so we don't pepper each one with manual padding.
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()                                        // span the list's full width
+            .padding(horizontal = 16.dp, vertical = 8.dp),        // inset the row from the edges
+        verticalAlignment = Alignment.CenterVertically,           // vertically center all children
+        horizontalArrangement = Arrangement.spacedBy(8.dp),       // even 8.dp gaps between children
+    ) {
+        // The "done" control. checked reflects the CURRENT task.done; onCheckedChange
+        // fires when tapped. We ignore the new boolean and just call onToggleDone(),
+        // because the real source of truth is Room — the ViewModel flips it and the
+        // updated list flows back down (we don't keep local checkbox state here).
+        Checkbox(
+            checked = task.done,                                  // mirror the persisted value
+            onCheckedChange = { onToggleDone() },                 // tap -&gt; ask the host to UPDATE Room
+        )
+        // The weighted Column is the KEY to this layout: weight(1f) tells it to take
+        // ALL the leftover horizontal space, which shoves the priority label and the
+        // delete button to the far right. clickable makes tapping the text open the
+        // editor (the checkbox and buttons keep their own taps). weight is a RowScope
+        // extension, so it's available here without an extra import.
+        Column(
+            modifier = Modifier
+                .weight(1f)                                       // eat the remaining width -&gt; pushes siblings right
+                .clickable { onOpen() },                          // tap the text body -&gt; navigate to edit
+        ) {
+            Text(
+                text = task.title,                                // the task's headline
+                style = MaterialTheme.typography.titleMedium,     // a slightly larger "title" style
+            )
+            // Only show the notes line when there is something to show — a blank
+            // notes string would just add an empty gap under the title.
+            if (task.notes.isNotBlank()) {                        // skip the line entirely if empty
+                Text(
+                    text = task.notes,                            // the longer detail text
+                    style = MaterialTheme.typography.bodyMedium,  // smaller "body" style for secondary text
+                )
+            }
+        }
+        // Turn the stored priority Int into human text. else covers 0 (Low) AND any
+        // unexpected value, so the when is exhaustive without a separate branch.
+        Text(
+            text = when (task.priority) {                         // map 0/1/2 -&gt; words
+                2 -&gt; "High"                                       // 2 = High
+                1 -&gt; "Normal"                                     // 1 = Normal
+                else -&gt; "Low"                                     // 0 (or anything) = Low
+            },
+            style = MaterialTheme.typography.labelMedium,         // small label-sized text
+        )
+        // A bordered (secondary) button to remove the task. onClick reports the intent;
+        // the ViewModel performs the Room DELETE and the list flows back without it.
+        OutlinedButton(onClick = onDelete) {                      // bordered = less prominent than the FAB
+            Text("Delete")                                        // the button's label
+        }
+    }
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> Modifier.weight(1f) on the middle Column makes it absorb all leftover horizontal space, which pushes the priority label and Delete button to the right edge — the same weight technique from the hw5 settings row, and weight is a RowScope member so no extra import is needed. The row is stateless: the Checkbox shows task.done and just forwards the tap to onToggleDone() because Room (via the ViewModel) is the single source of truth, so the new state flows back down rather than being held locally. The when on task.priority uses else to cover 0 and any stray value, making it exhaustive.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> Forgetting <code>Modifier.weight(1f)</code> on the middle <code>Column</code>, so the Delete button never reaches the right edge; or making the <em>whole</em> <code>Row</code> <code>clickable</code> so tapping the checkbox or Delete also opens the editor.</div>
+    <p class="trylink"><a href="../../Playground/hw6-tasklist-playground.html#todo6">▶ Practice in the playground — Flip the weight switch</a></p>
+  </div>
+
+  <!-- TODO 7 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">TODO 7 — Build the add/edit form</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Build <code>TaskEditScreen</code>: local form state seeded from <code>existing</code>, <code>OutlinedTextField</code>s for title + notes, a <strong>priority</strong> control, a <code>done</code> checkbox, and <strong>Save</strong> / <strong>Cancel</strong>.</p>
+    <p class="file">Where: <code>MainActivity.kt -&gt; TaskEditScreen()</code> <span class="where both" style="margin-left:6px;">builds on RoomAndPreferences inputs + hw5 remembered state</span></p>
+<pre><code>@Composable
+fun TaskEditScreen(
+    existing: Task?,
+    onSave: (Task) -&gt; Unit,
+    onCancel: () -&gt; Unit,
+    modifier: Modifier = Modifier,
+) {
+    // LOCAL FORM STATE — this is the ONE screen that owns editable state. Each field
+    // is a remembered MutableState seeded from `existing` (or a blank default for a
+    // new task). KEYING each remember on `existing` is important: if the task arrives
+    // a moment later (e.g. the app was killed and reopened straight on this screen),
+    // the key change re-runs the lambda and RE-SEEDS the field — without the key,
+    // remember would cache its first (blank) value and the form would stay empty.
+    var title by remember(existing) { mutableStateOf(existing?.title ?: "") }      // text field state
+    var notes by remember(existing) { mutableStateOf(existing?.notes ?: "") }      // text field state
+    var done by remember(existing) { mutableStateOf(existing?.done ?: false) }     // checkbox state
+    var priority by remember(existing) { mutableStateOf(existing?.priority ?: 1) } // priority state (default Normal)
+
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {  // vertical form, inset from edges
+        Text(
+            text = if (existing == null) "New task" else "Edit task", // header reflects add-vs-edit
+            style = MaterialTheme.typography.headlineSmall,    // prominent screen title
+        )
+        Spacer(Modifier.height(12.dp))                         // gap below the header
+
+        // TITLE input. value is the current state; onValueChange writes every keystroke
+        // back into `title`, which recomposes the field to show what the user typed.
+        OutlinedTextField(
+            value = title,                                     // show current state
+            onValueChange = { title = it },                    // each keystroke updates state
+            label = { Text("Title") },                         // floating field label
+            modifier = Modifier.fillMaxWidth(),                // span the form width
+        )
+        Spacer(Modifier.height(8.dp))                          // gap between fields
+
+        // NOTES input — same pattern, bound to `notes`.
+        OutlinedTextField(
+            value = notes,                                     // show current state
+            onValueChange = { notes = it },                    // each keystroke updates state
+            label = { Text("Notes") },                         // floating field label
+            modifier = Modifier.fillMaxWidth(),                // span the form width
+        )
+        Spacer(Modifier.height(8.dp))                          // gap before the priority control
+
+        // PRIORITY control — ONE self-labelling button that both SHOWS the value and
+        // CYCLES it. (priority + 1) % 3 walks 0 -&gt; 1 -&gt; 2 -&gt; 0... and the same when()
+        // mapping as TaskRow turns the number into the word on the button.
+        Button(onClick = { priority = (priority + 1) % 3 }) {  // tap cycles Low-&gt;Normal-&gt;High-&gt;Low
+            Text(
+                "Priority: " + when (priority) {               // label reflects the current value
+                    2 -&gt; "High"                                // 2 = High
+                    1 -&gt; "Normal"                              // 1 = Normal
+                    else -&gt; "Low"                              // 0 = Low
+                }
+            )
+        }
+        Spacer(Modifier.height(8.dp))                          // gap before the done row
+
+        // DONE control — a checkbox plus a label, lined up in a Row.
+        Row(verticalAlignment = Alignment.CenterVertically) {  // center the box and its label
+            Checkbox(checked = done, onCheckedChange = { done = it }) // bind to local `done` state
+            Text("Done")                                       // label for the checkbox
+        }
+        Spacer(Modifier.height(20.dp))                         // gap before the action buttons
+
+        // ACTION buttons in a Row with even spacing.
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { // 8.dp gap between buttons
+            // SAVE — build a Task from the form and hand it up to be persisted.
+            // PRESERVING id and createdAt is what makes Room UPDATE the SAME row when
+            // editing: a non-zero id means "update this row"; id = 0 (new task) means
+            // "INSERT and assign me an id". trim() drops accidental leading/trailing spaces.
+            Button(
+                onClick = {
+                    onSave(
+                        Task(
+                            id = existing?.id ?: 0L,                        // 0 -&gt; INSERT, non-zero -&gt; UPDATE
+                            title = title.trim(),                          // clean up whitespace
+                            notes = notes.trim(),                          // clean up whitespace
+                            done = done,                                   // current checkbox value
+                            priority = priority,                           // current priority value
+                            createdAt = existing?.createdAt                 // keep original timestamp when editing
+                                ?: System.currentTimeMillis(),             // ...or stamp now for a new task
+                        )
+                    )
+                }
+            ) {
+                Text("Save")                                   // primary action label
+            }
+            // CANCEL — leave without saving. The host pops the back stack (TODO 8c).
+            OutlinedButton(onClick = onCancel) {               // bordered = secondary action
+                Text("Cancel")                                 // label
+            }
+        }
+    }
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> This is the one screen that owns editable state, so each field is a remembered MutableState; keying remember(existing) re-seeds the fields if the task loads after first composition (e.g. process death + reopen straight on this screen), which a plain remember would cache as blank. Save preserves existing?.id and existing?.createdAt so Room performs an UPDATE on the same row when editing (id != 0) but an INSERT for a new task (id = 0), avoiding duplicate rows and keeping the original creation time. The single cycling Button uses (priority + 1) % 3 to walk 0-&gt;1-&gt;2-&gt;0 and reuses the same when() mapping as TaskRow. Every symbol used (OutlinedTextField, Button, Checkbox, Spacer, remember, mutableStateOf, System.currentTimeMillis) is already imported in the starter.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> A plain <code>remember { … }</code> (not keyed on <code>existing</code>) leaves the form blank if the task loads a moment later; and dropping <code>id</code>/<code>createdAt</code> on Save makes an edit <em>insert a duplicate</em> instead of updating the same row.</div>
+    <p class="trylink"><a href="../../Playground/hw6-tasklist-playground.html#app">▶ Practice in the playground — Open the edit form</a></p>
+  </div>
+
+  <!-- ================= Part D. Navigation — connect the two screens ================= -->
+  <h2><span class="part">Part D.</span> Navigation — connect the two screens</h2>
+  <p class="lead">Make the buttons actually move between screens. In <code>AppNavigation</code>'s <code>entryProvider</code> — the Nav3 host, keys, and <code>NavDisplay</code> are the worked example (compare to <code>NavListDetail</code>); you fill the three one-liners.</p>
+
+  <!-- TODO 8 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">TODO 8 — Wire the three navigation actions</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Make the add button, row taps, and Save/Cancel <strong>actually navigate</strong> — push an edit key to go forward, pop the back stack to return.</p>
+    <p class="file">Where: <code>MainActivity.kt -&gt; AppNavigation() entryProvider</code> <span class="where both" style="margin-left:6px;">builds on NavListDetail — backStack.add / removeLastOrNull</span></p>
+<pre><code>        entryProvider = entryProvider {
+
+            // When TaskListKey is on top, show the full list of tasks.
+            entry&lt;TaskListKey&gt; {
+                TaskListScreen(
+                    tasks = tasks,
+                    onAddTask = {
+                        // TODO 8a — ADD: push an edit key with taskId = null. A null id
+                        // tells TaskEditScreen "this is a brand-new task", so the form
+                        // opens blank. add() puts the key on TOP of the back stack, and
+                        // NavDisplay immediately swaps to the screen for the new top key.
+                        backStack.add(TaskEditKey(taskId = null))
+                    },
+                    onOpenTask = { task -&gt;
+                        // TODO 8b — OPEN: push an edit key carrying THIS task's id. A
+                        // non-null id tells TaskEditScreen to pre-fill the form from the
+                        // matching task (looked up in the already-loaded list).
+                        backStack.add(TaskEditKey(taskId = task.id))
+                    },
+                    onToggleDone = viewModel::toggleDone,       // flip done -&gt; Room UPDATE (TODO 4b)
+                    onDelete = viewModel::delete,               // delete -&gt; Room DELETE (TODO 4a)
+                )
+            }
+
+            // When a TaskEditKey is on top, show the add/edit form for that key.
+            entry&lt;TaskEditKey&gt; { key -&gt;
+                // Resolve WHICH task we're editing. A null taskId means "new task", so
+                // `existing` stays null and the form starts blank. Otherwise we find the
+                // task in the already-loaded list (no extra DB round-trip needed).
+                val existing: Task? = key.taskId?.let { id -&gt; tasks.find { it.id == id } }
+                TaskEditScreen(
+                    existing = existing,
+                    onSave = { task -&gt;
+                        viewModel.save(task)                    // persist via Room FIRST (TODO 3)
+                        // TODO 8c — BACK: pop the edit screen off the stack AFTER saving so
+                        // the top key becomes TaskListKey again. removeLastOrNull() is the
+                        // safe pop (no crash if the stack is somehow empty). The list updates
+                        // itself because Room's reactive Flow re-emits — no manual refresh.
+                        backStack.removeLastOrNull()
+                    },
+                    onCancel = {
+                        // TODO 8c — BACK (cancel path): same pop, but WITHOUT saving, so
+                        // the form's edits are simply discarded and we return to the list.
+                        backStack.removeLastOrNull()
+                    },
+                )
+            }
+        }</code></pre>
+    <p class="ans"><b>Why it works:</b> In Nav3 the back stack is the single source of navigation truth: backStack.add(key) pushes a new top key (navigating forward) and backStack.removeLastOrNull() pops it (navigating back, safely no-op if empty), and NavDisplay re-renders whenever the top key changes. Passing TaskEditKey(taskId = null) vs TaskEditKey(taskId = task.id) is how the SAME edit screen serves both add and edit — the key carries the argument that selects blank-vs-prefilled. onSave calls viewModel.save(task) BEFORE popping so the write is issued first; the list then refreshes on its own because Room emits a new list through its Flow, so popping back to TaskListKey shows the change with no manual refresh.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> Popping <em>before</em> saving (or forgetting to pop, so the form stays up); pushing a fresh <code>TaskListKey</code> to "go back" instead of <code>removeLastOrNull()</code>; or stuffing the whole <code>Task</code> into the key instead of just its id.</div>
+    <p class="trylink"><a href="../../Playground/hw6-tasklist-playground.html#app">▶ Practice in the playground — Drive the back stack</a></p>
+  </div>
+
+    <div class="callout good">
+      <b>The whole loop, end to end</b>
+      list shows Room-sorted tasks (A) → tap <strong>＋</strong> or a row pushes <code>TaskEditKey</code> (8a/8b) → the form edits remembered state (7) → <strong>Save</strong> calls <code>viewModel.save()</code> then pops (8c, B) → Room re-emits → the list reflects the change with no manual refresh, and it all survives a full restart because every write hits SQLite. <b>See this exact loop run live in the <a href="../../Playground/hw6-tasklist-playground.html#app">playground</a>.</b>
+    </div>
+
+  <!-- ================= SKILLS MAP ================= -->
+  <h2>Where each skill came from</h2>
+  <table class="cmp">
+    <thead><tr><th>TODO</th><th>Skill</th><th>Worked example</th></tr></thead>
+    <tbody>
+      <tr><td>A · 1</td><td><code>@Query</code> + <code>ORDER BY</code> (multi-key sort) on a reactive <code>Flow</code></td><td>RoomAndPreferences</td></tr>
+      <tr><td>B · 2</td><td>cold <code>Flow</code> → hot <code>StateFlow</code> with <code>stateIn(viewModelScope, WhileSubscribed, emptyList())</code></td><td>RoomAndPreferences</td></tr>
+      <tr><td>B · 3</td><td><code>viewModelScope.launch</code> + <code>id == 0L ? insert : update</code> (<code>suspend</code> writes)</td><td>RoomAndPreferences</td></tr>
+      <tr><td>B · 4</td><td><code>delete</code> + <code>toggleDone</code> via <code>copy(done = !done)</code> on the data class</td><td>RoomAndPreferences</td></tr>
+      <tr><td>C · 5</td><td><code>LazyColumn</code> + <code>items(key=)</code>, empty state, <code>Box</code> + <code>align</code> FAB</td><td>RoomAndPreferences + hw5</td></tr>
+      <tr><td>C · 6</td><td><code>Row</code> + <code>Modifier.weight(1f)</code> pushing the control to the end</td><td>hw5 settings row</td></tr>
+      <tr><td>C · 7</td><td><code>remember(existing){ mutableStateOf(...) }</code> form state; preserve <code>id</code>+<code>createdAt</code></td><td>RoomAndPreferences + hw5</td></tr>
+      <tr><td>D · 8</td><td><code>backStack.add(key)</code> to push, <code>removeLastOrNull()</code> to pop</td><td>NavListDetail</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ================= CHECKLIST ================= -->
+  <h2>Self-check before you submit</h2>
+  <table class="cmp">
+    <thead><tr><th>Behavior</th><th>How to confirm</th></tr></thead>
+    <tbody>
+      <tr><td>Sorted list</td><td>unfinished tasks sit above finished; within each, High &gt; Normal &gt; Low; ties newest-first (TODO 1)</td></tr>
+      <tr><td>Reactive add</td><td>saving from the form makes the task appear in the list with <em>no manual refresh</em> (TODO 2 + 3)</td></tr>
+      <tr><td>Edit in place</td><td>tapping a row opens it pre-filled; saving updates the <em>same</em> row — no duplicate (TODO 7 + 8b)</td></tr>
+      <tr><td>Toggle &amp; delete persist</td><td>the checkbox and Delete change the list immediately and stick (TODO 4 + 6)</td></tr>
+      <tr><td>Survives restart</td><td>fully close and reopen the app — your tasks are still there, still sorted (Room on disk)</td></tr>
+      <tr><td>No placeholders left</td><td>the app builds and runs and no "TODO N" text is visible on screen</td></tr>
+      <tr><td>Screenshots</td><td>the list with a few tasks, and the add/edit form</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Answer key for Homework 6 — A Task App: Navigation, Compose &amp; Room Storage (project <code>Hw6TaskList</code>).
+    Edit only <code>data/TaskDao.kt</code>, <code>TaskViewModel.kt</code>, and <code>MainActivity.kt</code>; the
+    <code>data/</code> entity + database and the Nav3 host are the worked reference. Practice the concepts in the
+    <a href="../../Playground/hw6-tasklist-playground.html">HW6 Playground</a>, then study
+    <a href="../../RoomAndPreferences">RoomAndPreferences</a> (Room),
+    <a href="../../NavListDetail">NavListDetail</a> (Nav3), and <a href="../Assigned/hw5.html">Homework 5</a> (Compose).
+    Open in any browser; use <em>Print → Save as PDF</em> to hand out.
+  </footer>
+
+</div>
+</body>
+</html>

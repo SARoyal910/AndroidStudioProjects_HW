@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 6 — A Task App: Navigation, Compose &amp; Room Storage</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84;        /* Android green */
+    --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:0 22px 80px;}
+
+  /* Header */
+  header.hero{
+    background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:34px;
+    border-bottom:4px solid var(--accent);
+  }
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px;
+    color:var(--accent); font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:64ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:10px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:16px; margin:24px 0 6px;}
+  h3 code{font-size:.95em;}
+
+  p{margin:12px 0;}
+  ul,ol{margin:10px 0 10px; padding-left:22px;}
+  li{margin:6px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.92em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:16px 18px; border-radius:10px;
+    overflow:auto; font-size:13.5px; line-height:1.55; margin:14px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre .c{color:#7d8aa0;}          /* comment */
+  pre .k{color:#c792ea;}          /* keyword */
+  pre .s{color:#a5e8a0;}          /* string  */
+  pre .f{color:#82aaff;}          /* fn/type */
+
+  /* Where-to-work tag on each task */
+  .where{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.04em;
+    text-transform:uppercase; padding:2px 8px; border-radius:999px; margin-left:8px; vertical-align:middle;}
+  .where.pg{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}     /* playground */
+  .where.as{background:#fff3e6; color:#b4530a; border:1px solid #fde2c0;}     /* Android Studio */
+  .where.both{background:#eafaf1; color:var(--accent-deep); border:1px solid #c5ebd3;}
+
+  /* Project / problem blocks */
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 6px; margin:16px 0;
+     box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .q > .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
+  .q .qid{font-weight:800; color:var(--ink);}
+  .deliver{margin:10px 0 4px; font-size:14px; color:var(--accent-deep); font-weight:700;}
+  .deliver span{color:var(--muted); font-weight:500;}
+
+  /* Project facts strip at the top of each project card */
+  .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin:8px 0 14px;}
+  .facts div{background:var(--pill); border:1px solid var(--line); border-radius:8px; padding:8px 11px;
+    font-size:12.5px;}
+  .facts div b{display:block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+    color:#9aa8b8; margin-bottom:2px;}
+  .facts code{background:#f1f7f3; color:var(--accent-deep); font-weight:600; font-size:11.5px;}
+
+  /* Per-TODO block inside a project */
+  .todo{border:1px solid var(--line); border-radius:10px; padding:12px 14px 4px; margin:14px 0; background:#fff;}
+  .todo .th{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .todo .tn{flex:none; width:auto; min-width:30px; height:24px; padding:0 9px; border-radius:999px;
+    background:var(--accent); color:#063; font-weight:800; display:inline-grid; place-items:center; font-size:12px;}
+  .todo .ttl{font-weight:800; font-size:15px;}
+  .todo .builds{font-size:11.5px; font-weight:700; letter-spacing:.03em; color:#2454c9;
+    background:#eef4ff; border:1px solid #d3e0ff; border-radius:999px; padding:2px 9px;}
+  .todo .file{font-size:11.5px; font-weight:700; letter-spacing:.02em; color:#7c4a12;
+    background:#fff3e6; border:1px solid #fde2c0; border-radius:999px; padding:2px 9px;}
+  .todo p{margin:8px 0;}
+  .hint{font-size:13.5px; color:#7c4a12; background:var(--warn-soft); border:1px solid #fde2c0;
+    border-radius:8px; padding:8px 11px; margin:8px 0;}
+  .hint b{color:#7c4a12;}
+  .hint code{background:#fff3e6; color:#b4530a;}
+
+  .callout{border-radius:10px; padding:13px 16px; margin:16px 0; font-size:15px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.tip{background:#ecfdf3; border:1px solid #c5ebd3;}
+  .callout.warn{background:var(--warn-soft); border:1px solid #fde2c0; color:#7c4a12;}
+  .callout b{color:inherit;}
+
+  .progression{display:grid; grid-template-columns:1fr; gap:10px; margin:18px 0;}
+  .step{display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid var(--line);
+    border-radius:10px; padding:12px 14px;}
+  .step .n{flex:none; width:26px; height:26px; border-radius:50%; background:var(--accent);
+    color:#063; font-weight:800; display:grid; place-items:center; font-size:13px;}
+  .step h4{margin:0 0 2px; font-size:15px;}
+  .step p{margin:0; color:var(--muted); font-size:14px;}
+  .step code{font-size:.85em;}
+
+  /* "Done when" checklist */
+  ul.check{list-style:none; padding-left:0; margin:8px 0;}
+  ul.check li{position:relative; padding-left:26px; margin:5px 0; font-size:14.5px;}
+  ul.check li::before{content:"☐"; position:absolute; left:0; top:0; color:var(--accent-deep);
+    font-weight:800; font-size:15px;}
+
+  /* Reference grid */
+  .refgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; margin:16px 0;}
+  .refcard{border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:#fff;}
+  .refcard h4{margin:0 0 6px; font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:#9aa8b8;}
+  .refcard code{display:inline-block; margin:2px 4px 2px 0; font-size:11.5px; color:var(--accent-deep);
+    background:#f1f7f3; font-weight:600;}
+
+  table.grade{width:100%; border-collapse:collapse; font-size:14.5px; margin-top:8px;}
+  table.grade th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.grade td{padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.grade code{font-size:.86em;}
+
+  footer{margin-top:46px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:13.5px;}
+
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.step,.callout,.refcard,.todo{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Compose · Navigation 3 · Room</p>
+    <h1>Homework 6 — A Task App: Navigation, Compose &amp; Room Storage</h1>
+    <p class="sub">One ready-to-run starter app that finally combines the three big skills you've built
+       up: <b>Navigation</b> (move between a list and an add/edit screen), <b>Compose</b> (build the list,
+       rows, and a form), and <b>basic storage with Room</b> (save tasks to a real on-device SQLite
+       database so they survive an app restart). The scaffolding compiles and runs from the first launch —
+       you fill in <b>8 numbered TODOs</b>. No solution is provided.</p>
+    <div class="meta">
+      <span><b>Project:</b> Hw6TaskList</span>
+      <span><b>1 starter app</b> · 8 TODOs · starter-only (no solutions)</span>
+      <span><b>Tools:</b> Android Studio + emulator/device</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="../../Playground/storage-playground.html">▶ Storage Playground</a>
+      <a href="../projects.html">Projects, Explained</a>
+      <a href="./hw5.html">← Homework 5</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ CONTEXT ============ -->
+  <section>
+    <p>Each earlier homework leaned on one area: <b>navigation</b> (Homework 1's foundations, Homework 3's deep
+       stacks + ViewModel state) and <b>Compose</b> (Homework 4's layout / modifiers / state, Homework 5's
+       composing several widgets into a screen). Along the way you saw a worked <b>Room</b> persistence app
+       (<a href="../../RoomAndPreferences"><code>RoomAndPreferences</code></a>). This assignment is where they
+       meet: a small but real <b>task app</b> that navigates between two screens <em>and</em> remembers its data
+       on disk.</p>
+
+    <div class="progression">
+      <div class="step"><div class="n">1</div><div>
+        <h4>A list screen (Compose + Room)</h4>
+        <p>A scrolling list of tasks read <em>live</em> from a Room database — each row has a done checkbox,
+           a title + notes, a priority label, and a delete button. A "＋" button starts a new task.</p>
+      </div></div>
+      <div class="step"><div class="n">2</div><div>
+        <h4>An add/edit screen (Compose + Navigation)</h4>
+        <p>Tapping "＋" or a row <b>navigates</b> to a form (Nav3 pushes a key onto the back stack). Save
+           writes to Room and pops back; the list updates automatically because Room's query is reactive.</p>
+      </div></div>
+      <div class="step"><div class="n">3</div><div>
+        <h4>It survives a restart (Room)</h4>
+        <p>Because every add / edit / delete / toggle is written to SQLite (not just held in memory), fully
+           closing and reopening the app shows your tasks exactly as you left them.</p>
+      </div></div>
+    </div>
+
+    <h3>The app's flow</h3>
+    <pre><span class="c">TaskListScreen (all tasks)  --tap "＋"----&gt;   TaskEditScreen (new task)</span>
+<span class="c">                            --tap a row--&gt;   TaskEditScreen (edit that task)</span>
+<span class="c">                            &lt;--Save / Cancel / system-back  (pops the back stack)--</span></pre>
+
+    <h3>How to work this assignment</h3>
+    <div class="progression">
+      <div class="step"><div class="n">1</div><div>
+        <h4>Open the project folder</h4>
+        <p>In Android Studio: <code>File ▸ Open…</code>, then select the <code>Hw6TaskList</code> <em>folder
+           itself</em> (not a file inside it). Let Gradle sync — it downloads Compose, Navigation 3, and Room.</p>
+      </div></div>
+      <div class="step"><div class="n">2</div><div>
+        <h4>Run it once before changing anything</h4>
+        <p>Press <b>Run ▶</b>. The app builds and shows the list screen with a "TODO 5" placeholder. It already
+           compiles — the placeholders are visible markers where your work goes. (The starter pre-imports the
+           APIs the TODOs need, so Android Studio shows a few greyed-out "unused import" warnings at first —
+           that's expected, and they clear as you complete the TODOs.)</p>
+      </div></div>
+      <div class="step"><div class="n">3</div><div>
+        <h4>Do the TODOs in order (1 → 8), re-running as you go</h4>
+        <p>They build on each other: storage first, then the ViewModel that exposes it, then the screens, then
+           navigation. After each TODO, re-run to see the app come further to life.</p>
+      </div></div>
+    </div>
+
+    <h3>Your files (and what's already done)</h3>
+    <div class="facts">
+      <div><b>Project folder</b> <code>Hw6TaskList</code></div>
+      <div><b>Package</b> <code>com.example.hw6tasklist</code></div>
+      <div><b>Theme wrapper</b> <code>Hw6TaskListTheme</code></div>
+      <div><b>Compose BOM</b> <code>2026.02.01</code></div>
+      <div><b>Navigation 3</b> <code>1.0.1</code></div>
+      <div><b>Room (via KSP)</b> <code>2.7.2</code></div>
+    </div>
+    <p><b>You edit exactly three files:</b></p>
+    <ul>
+      <li><code>data/TaskDao.kt</code> — <b>TODO 1</b> (one Room query).</li>
+      <li><code>TaskViewModel.kt</code> — <b>TODO 2, 3, 4</b> (wire Room to the UI).</li>
+      <li><code>MainActivity.kt</code> — <b>TODO 5, 6, 7, 8</b> (the two screens + navigation).</li>
+    </ul>
+
+    <div class="callout proj"><b>Already done for you (your reference — don't re-implement).</b> The whole Room
+      <em>shape</em> is written and heavily commented: the <code>@Entity</code> (<code>data/Task.kt</code>),
+      the <code>@Database</code> + singleton (<code>data/TaskDatabase.kt</code>), and the DAO's insert / update /
+      delete. The <b>Navigation 3 host</b> in <code>MainActivity.kt</code> — <code>AppNavigation</code>,
+      <code>NavDisplay</code>, the <code>entryProvider { entry&lt;…&gt; { } }</code> wiring, and both
+      <code>@Serializable</code> keys — is the worked example (compare it to
+      <a href="../../NavListDetail"><code>NavListDetail</code></a>). The <code>TaskViewModel</code> factory and the
+      DAO handle are done. You only fill the 8 TODOs.</div>
+
+    <div class="callout warn">
+      <b>How to submit.</b> Submit <b>(1)</b> your three finished files
+      (<code>TaskDao.kt</code>, <code>TaskViewModel.kt</code>, <code>MainActivity.kt</code>) and <b>(2)</b> two
+      emulator/device screenshots: the list with a few tasks, and the add/edit form. Comment every line you add
+      in the same heavy teaching style as the surrounding starter code. Starter-only means <b>no solution is
+      provided</b> — the hints name the exact API; the rest is yours.
+    </div>
+
+    <div class="callout tip">
+      <b>Stuck on one skill?</b> Each TODO names a worked example to re-open: <code>RoomAndPreferences</code> for
+      Room/ViewModel, <code>NavListDetail</code> for Nav3, and Homework 5 for the Compose layout pieces (Row +
+      <code>weight</code>, <code>Box</code> + align, remembered state).
+    </div>
+  </section>
+
+  <!-- ============ PART A — STORAGE (ROOM) ============ -->
+  <h2><span class="part">Part A.</span> Storage — the Room query <span class="where as">Android Studio</span></h2>
+  <p class="lead">Make the database hand back tasks in a sensible order. First, read the three
+     <code>data/</code> files — they're your Room reference.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Read <code>data/Task.kt</code> + <code>data/TaskDatabase.kt</code>, then complete TODO 1 in <code>data/TaskDao.kt</code></span></div>
+
+    <p><b>What Room gives you here.</b> <code>Task</code> is a <code>@Entity</code> — one annotated Kotlin class
+       that becomes a SQLite table named <code>tasks</code>, one row per task (fields: <code>id</code>,
+       <code>title</code>, <code>notes</code>, <code>done</code>, <code>priority</code> 0–2,
+       <code>createdAt</code>). <code>TaskDatabase</code> ties the entity to its DAO and builds the on-disk
+       file. The DAO's <code>observeTasks()</code> returns a <b>reactive</b> <code>Flow&lt;List&lt;Task&gt;&gt;</code>
+       — Room re-runs the query and re-emits a fresh list every time the table changes, so the UI never has to
+       manually reload.</p>
+
+    <!-- TODO 1 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 1</span>
+        <span class="ttl">Sort the task query</span>
+        <span class="file">data/TaskDao.kt</span>
+        <span class="builds">builds on RoomAndPreferences — @Query</span>
+      </div>
+      <p>The shipped query is <code>SELECT * FROM tasks</code> with <b>no order</b>, so rows come back
+         arbitrarily. Add an <code>ORDER BY</code> so the list reads well: <b>unfinished tasks first</b>, then
+         <b>higher priority first</b>, then <b>newest first</b>.</p>
+      <div class="hint"><b>Hint (API only):</b> edit just the SQL string —
+        <code>@Query("SELECT * FROM tasks ORDER BY done ASC, priority DESC, createdAt DESC")</code>. Room checks
+        this SQL <em>at compile time</em> against the <code>Task</code> columns, so a typo (it's
+        <code>createdAt</code>, not <code>created_at</code>) fails the build with a clear message — that's Room
+        protecting you.</div>
+    </div>
+  </div>
+
+  <!-- ============ PART B — WIRE ROOM TO THE UI (VIEWMODEL) ============ -->
+  <h2><span class="part">Part B.</span> Wire Room to the UI — the ViewModel <span class="where as">Android Studio</span></h2>
+  <p class="lead">Surface the database as Compose state, and turn user actions into Room writes. All in
+     <code>TaskViewModel.kt</code> — compare it to <code>RoomAndPreferences/NotesViewModel.kt</code>.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Complete TODO 2–4 in <code>TaskViewModel.kt</code></span></div>
+
+    <!-- TODO 2 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 2</span>
+        <span class="ttl">Expose Room's Flow as UI state</span>
+        <span class="file">TaskViewModel.kt</span>
+        <span class="builds">builds on NotesViewModel.notes</span>
+      </div>
+      <p>The placeholder <code>tasks</code> is an empty, <em>disconnected</em> <code>MutableStateFlow</code>.
+         Replace it with the real thing: collect <code>taskDao.observeTasks()</code> and convert that cold
+         <code>Flow</code> into a hot <code>StateFlow</code> the UI can read at any time.</p>
+      <div class="hint"><b>Hint (API only):</b>
+        <code>taskDao.observeTasks().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())</code>.
+        Those three imports are already at the top of the file.</div>
+    </div>
+
+    <!-- TODO 3 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 3</span>
+        <span class="ttl">Save a task (insert OR update)</span>
+        <span class="file">TaskViewModel.kt</span>
+        <span class="builds">builds on RoomAndPreferences — @Insert/@Update</span>
+      </div>
+      <p>Implement <code>save(task)</code>. A <b>new</b> task has <code>id == 0L</code> (the entity default) →
+         <code>insert</code>; an <b>existing</b> task has a real id → <code>update</code>. Both DAO calls are
+         <code>suspend</code>, so they must run inside a coroutine.</p>
+      <div class="hint"><b>Hint (API only):</b>
+        <code>viewModelScope.launch { if (task.id == 0L) taskDao.insert(task) else taskDao.update(task) }</code>.</div>
+    </div>
+
+    <!-- TODO 4 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 4</span>
+        <span class="ttl">Delete + toggle done</span>
+        <span class="file">TaskViewModel.kt</span>
+        <span class="builds">builds on NotesViewModel.toggleDone</span>
+      </div>
+      <p>Implement <code>delete(task)</code> and <code>toggleDone(task)</code>, both as <code>suspend</code>
+         Room writes launched on <code>viewModelScope</code>. Toggling persists the same task with its
+         <code>done</code> flag flipped.</p>
+      <div class="hint"><b>Hint (API only):</b>
+        <code>viewModelScope.launch { taskDao.delete(task) }</code> and
+        <code>viewModelScope.launch { taskDao.update(task.copy(done = !task.done)) }</code> — <code>copy()</code>
+        comes free with the <code>data class</code>.</div>
+    </div>
+  </div>
+
+  <!-- ============ PART C — COMPOSE THE SCREENS ============ -->
+  <h2><span class="part">Part C.</span> Compose the screens <span class="where as">Android Studio</span></h2>
+  <p class="lead">Build the list, one row, and the form. All in <code>MainActivity.kt</code>. The
+     <code>@Preview</code> at the bottom of the file renders your list as you go.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Complete TODO 5–7 in <code>MainActivity.kt</code></span></div>
+
+    <!-- TODO 5 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 5</span>
+        <span class="ttl">The task list + add button</span>
+        <span class="file">MainActivity.kt → TaskListScreen</span>
+        <span class="builds">builds on RoomAndPreferences list + hw5 Box/align</span>
+      </div>
+      <p>Replace the placeholder in <code>TaskListScreen</code> with: an <b>add control</b> (a
+         <code>FloatingActionButton</code> with a "＋", or a plain <code>Button</code>) that calls
+         <code>onAddTask()</code>; the <b>list</b> — a <code>LazyColumn</code> emitting one
+         <code>TaskRow(…)</code> per task; and an <b>empty state</b> when <code>tasks</code> is empty.</p>
+      <div class="hint"><b>Hint (API only):</b> the list is
+        <code>LazyColumn { items(tasks, key = { it.id }) { task -&gt; TaskRow(task, onToggleDone = { onToggleDone(task) }, onOpen = { onOpenTask(task) }, onDelete = { onDelete(task) }); HorizontalDivider() } }</code>.
+        <b>Simplest add control:</b> a plain <code>Button(onClick = onAddTask) { Text("New task") }</code> at the
+        top of a <code>Column</code>, above the list — exactly like <code>RoomAndPreferences</code>. <b>Optional
+        stretch:</b> a <code>FloatingActionButton</code> pinned bottom-right — put the list and the FAB as
+        siblings inside one <code>Box(Modifier.fillMaxSize())</code>, give the FAB
+        <code>Modifier.align(Alignment.BottomEnd)</code> (the hw5 online-dot trick), and add
+        <code>contentPadding = PaddingValues(bottom = 88.dp)</code> to the <code>LazyColumn</code> so the FAB
+        doesn't cover the last row.</div>
+    </div>
+
+    <!-- TODO 6 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 6</span>
+        <span class="ttl">One task row</span>
+        <span class="file">MainActivity.kt → TaskRow</span>
+        <span class="builds">builds on hw5 settings row — Row + weight</span>
+      </div>
+      <p>Build <code>TaskRow</code> as a <code>Row</code> (vertically centered): a <code>Checkbox</code> for
+         <code>done</code>; a <code>Column</code> with <code>Modifier.weight(1f)</code> holding the title and (if
+         not blank) the notes, made <code>clickable</code> to open the editor; a small <b>priority</b> label; and
+         a delete button.</p>
+      <div class="hint"><b>Hint (API only):</b> give the <code>Row</code>
+        <code>horizontalArrangement = Arrangement.spacedBy(8.dp)</code> for even gaps;
+        <code>Checkbox(checked = task.done, onCheckedChange = { onToggleDone() })</code>; the weighted
+        <code>Column</code> is what pushes the delete button to the end; map priority with
+        <code>when (task.priority) { 2 -&gt; "High"; 1 -&gt; "Normal"; else -&gt; "Low" }</code>;
+        <code>OutlinedButton(onClick = onDelete) { Text("Delete") }</code>.</div>
+    </div>
+
+    <!-- TODO 7 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 7</span>
+        <span class="ttl">The add/edit form</span>
+        <span class="file">MainActivity.kt → TaskEditScreen</span>
+        <span class="builds">builds on RoomAndPreferences inputs + hw5 state</span>
+      </div>
+      <p>Build <code>TaskEditScreen</code>. Hold local form state seeded from <code>existing</code> (or blank for
+         a new task), render <code>OutlinedTextField</code>s for title + notes, a control to set
+         <code>priority</code>, and a <code>Checkbox</code> for <code>done</code>. <b>Save</b> builds a
+         <code>Task</code> and calls <code>onSave(...)</code>; <b>Cancel</b> calls <code>onCancel()</code>.</p>
+      <div class="hint"><b>Hint (API only):</b> seed state with
+        <code>var title by remember(existing) { mutableStateOf(existing?.title ?: "") }</code> (same for notes /
+        done / priority) — keying the <code>remember</code> on <code>existing</code> makes the form re-seed if the
+        task loads a moment later. A simple, self-labelling priority control:
+        <code>Button(onClick = { priority = (priority + 1) % 3 }) { Text("Priority: " + when (priority) { 2 -&gt; "High"; 1 -&gt; "Normal"; else -&gt; "Low" }) }</code>.
+        When saving, <b>preserve</b> the id and createdAt so Room updates the same row:
+        <code>onSave(Task(id = existing?.id ?: 0L, title = title.trim(), notes = notes.trim(), done = done, priority = priority, createdAt = existing?.createdAt ?: System.currentTimeMillis()))</code>.</div>
+    </div>
+  </div>
+
+  <!-- ============ PART D — NAVIGATION (NAV3) ============ -->
+  <h2><span class="part">Part D.</span> Navigation — connect the two screens <span class="where as">Android Studio</span></h2>
+  <p class="lead">Make the buttons actually move between screens. In <code>MainActivity.kt</code>'s
+     <code>AppNavigation</code> — compare to <code>NavListDetail</code>.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Complete TODO 8 in <code>MainActivity.kt</code> (the <code>entryProvider</code>)</span></div>
+
+    <p><b>How Nav3 works here.</b> The single Activity holds a <b>back stack</b> of keys
+       (<code>rememberNavBackStack(TaskListKey)</code>). <code>NavDisplay</code> draws whichever key is on top.
+       You move by changing the stack: <code>backStack.add(key)</code> pushes a screen on,
+       <code>backStack.removeLastOrNull()</code> pops back. The two <code>@Serializable</code> keys are
+       <code>TaskListKey</code> (no args) and <code>TaskEditKey(taskId)</code> — where a <b>null</b> taskId means
+       "new task" and a non-null id means "edit that task".</p>
+
+    <!-- TODO 8 -->
+    <div class="todo">
+      <div class="th">
+        <span class="tn">TODO 8</span>
+        <span class="ttl">Wire the three nav actions</span>
+        <span class="file">MainActivity.kt → AppNavigation</span>
+        <span class="builds">builds on NavListDetail — add / removeLastOrNull</span>
+      </div>
+      <p>The add button, row taps, and Save/Cancel currently do nothing. In the <code>entryProvider</code>, make
+         each one navigate:</p>
+      <ul>
+        <li><b>8a — Add:</b> <code>onAddTask</code> → <code>backStack.add(TaskEditKey(taskId = null))</code>
+            (open the form for a brand-new task).</li>
+        <li><b>8b — Open:</b> <code>onOpenTask</code> → <code>backStack.add(TaskEditKey(taskId = task.id))</code>
+            (open the form to edit that task).</li>
+        <li><b>8c — Back:</b> in <code>onSave</code> (after <code>viewModel.save(task)</code>) <em>and</em> in
+            <code>onCancel</code> → <code>backStack.removeLastOrNull()</code> (pop back to the list).</li>
+      </ul>
+      <div class="hint"><b>Hint:</b> these are one-liners that go where each <code>// TODO 8a/8b/8c</code> comment
+        already sits. System-back already pops (see <code>NavDisplay(onBack = …)</code>), so once 8c is in, all
+        three ways out of the form work.</div>
+    </div>
+
+    <p class="deliver" style="margin-top:14px;">Done when…</p>
+    <ul class="check">
+      <li>the list shows tasks ordered unfinished-first, then high priority, then newest;</li>
+      <li>adding a task from the form makes it appear in the list <em>without any manual refresh</em> (reactive Room Flow);</li>
+      <li>tapping a row opens it pre-filled; saving edits updates the same row (no duplicate);</li>
+      <li>the checkbox, delete, and priority all work and persist;</li>
+      <li>fully closing and reopening the app shows the same tasks (they're on disk);</li>
+      <li>the app builds and runs, and no TODO placeholder text is still visible on screen.</li>
+    </ul>
+    <div class="deliver">Deliver: <span>finished <code>TaskDao.kt</code> + <code>TaskViewModel.kt</code> +
+      <code>MainActivity.kt</code>, plus two screenshots (list with tasks, and the edit form).</span></div>
+  </div>
+
+  <!-- ============ REFERENCE ============ -->
+  <h2>Quick reference</h2>
+  <p class="lead">The exact APIs the TODOs name, grouped by topic. Each maps back to a worked example — open it
+     if one is unfamiliar.</p>
+
+  <div class="refgrid">
+    <div class="refcard">
+      <h4>Room — entity/dao/db</h4>
+      <code>@Entity</code><code>@PrimaryKey</code><code>@Dao</code><code>@Query</code><code>@Insert</code><code>@Update</code><code>@Delete</code>
+    </div>
+    <div class="refcard">
+      <h4>Room — reactive read</h4>
+      <code>Flow&lt;List&lt;Task&gt;&gt;</code><code>observeTasks()</code><code>ORDER BY</code>
+    </div>
+    <div class="refcard">
+      <h4>ViewModel ↔ Room</h4>
+      <code>stateIn</code><code>SharingStarted.WhileSubscribed</code><code>viewModelScope.launch</code><code>suspend</code><code>copy()</code>
+    </div>
+    <div class="refcard">
+      <h4>State in Compose</h4>
+      <code>collectAsStateWithLifecycle()</code><code>remember</code><code>mutableStateOf</code><code>by</code>
+    </div>
+    <div class="refcard">
+      <h4>Navigation 3</h4>
+      <code>NavDisplay</code><code>rememberNavBackStack</code><code>entryProvider</code><code>entry&lt;Key&gt;</code><code>backStack.add</code><code>removeLastOrNull</code>
+    </div>
+    <div class="refcard">
+      <h4>Nav keys</h4>
+      <code>NavKey</code><code>@Serializable</code><code>data object</code><code>data class</code>
+    </div>
+    <div class="refcard">
+      <h4>Lists &amp; layout</h4>
+      <code>LazyColumn</code><code>items</code><code>Row</code><code>Column</code><code>Box</code><code>Modifier.weight(1f)</code><code>Alignment</code>
+    </div>
+    <div class="refcard">
+      <h4>Components</h4>
+      <code>Checkbox</code><code>OutlinedTextField</code><code>Button</code><code>OutlinedButton</code><code>FloatingActionButton</code><code>clickable</code>
+    </div>
+  </div>
+
+  <!-- ============ OVERVIEW ============ -->
+  <h2>Overview &amp; checklist</h2>
+  <table class="grade">
+    <thead><tr><th>Part</th><th>File</th><th>TODOs</th></tr></thead>
+    <tbody>
+      <tr><td><b>A · Storage (Room)</b></td><td><code>data/TaskDao.kt</code></td><td>1 — sort the query (<code>ORDER BY</code>)</td></tr>
+      <tr><td><b>B · Wire Room → UI</b></td><td><code>TaskViewModel.kt</code></td><td>2 — Flow→StateFlow · 3 — save (insert/update) · 4 — delete + toggle</td></tr>
+      <tr><td><b>C · Compose screens</b></td><td><code>MainActivity.kt</code></td><td>5 — list + add · 6 — task row · 7 — edit form</td></tr>
+      <tr><td><b>D · Navigation (Nav3)</b></td><td><code>MainActivity.kt</code></td><td>8 — push add · push edit · pop back</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip" style="margin-top:18px;">
+    <b>You're done when</b> the app builds and runs, all 8 placeholders are gone, you can add / edit / toggle /
+    delete tasks, the list re-sorts and updates itself, navigation moves cleanly between the two screens, and —
+    the whole point of Room — your tasks are still there after you fully close and reopen the app.
+  </div>
+
+  <footer>
+    Homework 6 · Navigation + Compose + Room · one starter project, no solutions — <code>Hw6TaskList</code>.
+    Study <a href="../../RoomAndPreferences"><code>RoomAndPreferences</code></a> (Room),
+    <a href="../../NavListDetail"><code>NavListDetail</code></a> (Nav3), and
+    <a href="./hw5.html">Homework 5</a> (Compose), then assemble them here. Edit only
+    <code>TaskDao.kt</code>, <code>TaskViewModel.kt</code>, and <code>MainActivity.kt</code>; the emulator is the
+    source of truth.
+  </footer>
+
+</div>
+</body>
+</html>

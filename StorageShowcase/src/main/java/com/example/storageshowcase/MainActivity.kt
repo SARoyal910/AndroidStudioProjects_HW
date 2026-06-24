@@ -32,6 +32,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -53,6 +54,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -139,6 +141,7 @@ fun NotesTab(vm: StorageViewModel) {
     val categoryName = remember(categories) { categories.associate { it.id to it.name } }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
+        SavedToBanner("Room SQLite database · storage.db", vm.paths.roomDb)
         // category chooser
         if (categories.isNotEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -192,6 +195,29 @@ fun NotesTab(vm: StorageViewModel) {
     }
 }
 
+/** Shows the real on-disk file the current screen's data is being saved to. */
+@Composable
+private fun SavedToBanner(label: String, path: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
+            Text(
+                "💾  Saved to · $label",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                path,
+                style = MaterialTheme.typography.labelSmall,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
 @Composable
 fun NoteCard(note: Note, categoryName: String, onToggleDone: () -> Unit, onDelete: () -> Unit) {
     Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -228,6 +254,7 @@ fun SettingsTab(vm: StorageViewModel) {
     val count by vm.noteCount.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SavedToBanner("Preferences DataStore · settings.preferences_pb", vm.paths.preferences)
         Text("Preferences DataStore", style = MaterialTheme.typography.titleLarge)
         Text("These settings are written to a settings.preferences_pb file and survive restart.",
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -256,6 +283,7 @@ fun ProfileTab(vm: StorageViewModel) {
     var name by remember(profile.displayName) { mutableStateOf(profile.displayName) }
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SavedToBanner("Typed DataStore · user_profile.json", vm.paths.profile)
         Text("Typed DataStore", style = MaterialTheme.typography.titleLarge)
         Text("One @Serializable UserProfile object stored as JSON (type-safe, not loose keys).",
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -288,6 +316,7 @@ fun FilesTab(vm: StorageViewModel) {
     val info by vm.fileInfo.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SavedToBanner("Internal file · filesDir/scratch.txt", vm.paths.scratchFile)
         Text("Internal file storage", style = MaterialTheme.typography.titleLarge)
         Text("A scratch note written to filesDir (persists, gone on uninstall) and a cacheDir blob (evictable).",
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

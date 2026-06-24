@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How a Note Is Fetched — Network Parsing</title>
+<meta name="description" content="A step-by-step walkthrough of the Network Parsing Android app: follow one request from the screen through the ViewModel, Repository, and Retrofit out to a JSON API, then watch the response parse into notes and come back as a Loading / Success / Error UI state — each step shown as a real block of code.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">NP</div>
+      <div>
+        <div class="brand-title">Network Parsing</div>
+        <div class="brand-subtitle">How a note is fetched</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">The idea</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>The request &amp; its states</span></a>
+      <a class="nav-link" href="#layers"><span class="nav-num">2</span><span>The round trip</span></a>
+      <a class="nav-link" href="#map"><span class="nav-num">3</span><span>Project map</span></a>
+      <div class="nav-title">The data layer</div>
+      <a class="nav-link" href="#init"><span class="nav-num">4</span><span>Build wiring</span></a>
+      <a class="nav-link" href="#dto"><span class="nav-num">5</span><span>DTO &amp; domain model</span></a>
+      <a class="nav-link" href="#api"><span class="nav-num">6</span><span>The Retrofit API</span></a>
+      <a class="nav-link" href="#repo"><span class="nav-num">7</span><span>Repository (Real/Fake)</span></a>
+      <div class="nav-title">State &amp; UI</div>
+      <a class="nav-link" href="#state"><span class="nav-num">8</span><span>The three UI states</span></a>
+      <a class="nav-link" href="#viewmodel"><span class="nav-num">9</span><span>The ViewModel</span></a>
+      <a class="nav-link" href="#ui"><span class="nav-num">10</span><span>The screen</span></a>
+      <div class="nav-title">The round trip</div>
+      <a class="nav-link" href="#trip"><span class="nav-num">11</span><span>The full trip</span></a>
+      <a class="nav-link" href="#errors"><span class="nav-num">12</span><span>Error handling</span></a>
+      <a class="nav-link" href="#run"><span class="nav-num">13</span><span>Run &amp; inspect</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      Prefer to play with it?
+      <a href="network-parsing-explorer.html">Interactive explainer →</a>
+      <a href="../WebSocketLive/how-a-message-arrives.html">WebSocket Live (a live stream) →</a>
+      <a href="../StorageJourney/how-an-item-reaches-storage.html">Storage Journey (local data) →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">NP</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · The request &amp; its states</option>
+        <option value="#layers">2 · The round trip</option>
+        <option value="#map">3 · Project map</option>
+        <option value="#init">4 · Build wiring</option>
+        <option value="#dto">5 · DTO &amp; domain model</option>
+        <option value="#api">6 · The Retrofit API</option>
+        <option value="#repo">7 · Repository (Real/Fake)</option>
+        <option value="#state">8 · The three UI states</option>
+        <option value="#viewmodel">9 · The ViewModel</option>
+        <option value="#ui">10 · The screen</option>
+        <option value="#trip">11 · The full trip</option>
+        <option value="#errors">12 · Error handling</option>
+        <option value="#run">13 · Run &amp; inspect</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Networking, one request at a time</p>
+        <h1>How a note is fetched</h1>
+        <p class="lead">
+          <strong>Network Parsing</strong> answers one question in detail: <em>how does an Android app talk to a
+          network, turn the JSON it gets back into objects, and show the result safely?</em> It fetches a list of notes
+          from a public JSON API with <strong>Retrofit</strong> + <strong>kotlinx.serialization</strong>, and surfaces
+          the outcome as three explicit states — <strong>Loading</strong>, <strong>Success</strong>, or
+          <strong>Error</strong> — exposed through a <code>StateFlow</code>. This page is that round trip as
+          <strong>blocks of real code</strong>, in order.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">Retrofit</span>
+          <span class="tag blue">kotlinx.serialization</span>
+          <span class="tag violet">ViewModel + StateFlow</span>
+          <span class="tag amber">Loading / Success / Error</span>
+          <span class="tag">Kotlin</span>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">The one sentence to hold onto</span>
+          The screen is a <strong>pure function of one sealed state</strong>. You don't "show the data" — you render
+          whichever of <code>Loading</code>, <code>Success(notes)</code>, or <code>Error(message)</code> is current, and
+          a single <code>try/catch</code> in the ViewModel guarantees a failure becomes an <code>Error</code> state, never
+          a crash.
+        </div>
+        <h3>Runs offline by default</h3>
+        <p class="dense">
+          The app ships in <strong>fake mode</strong> (<code>provideNoteRepository(useFake = true)</code>): it parses a
+          hardcoded JSON string after a short delay, so it builds, runs, and unit-tests with <em>no network</em>. One flag
+          flips it to the live API at <code>https://jsonplaceholder.typicode.com/posts</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ 2. LAYERS ============ -->
+    <section class="band anchor" id="layers">
+      <div class="band-inner">
+        <p class="eyebrow">The shape of the trip</p>
+        <h2>The round trip a request takes</h2>
+        <p class="dense">
+          The screen asks for notes; the request travels <em>down</em> through the layers and out to the network (the
+          <strong>request path</strong>). The JSON that comes back is parsed and mapped, and the result travels back
+          <em>up</em> as a new <code>StateFlow</code> value (the <strong>return trip</strong>, in green).
+        </p>
+        <div class="layers">
+          <div class="layer ui">
+            <div class="l-name">① UI — the screen</div>
+            <div class="l-desc">On first composition (or a Retry tap) the screen observes the ViewModel's <code>StateFlow</code>.</div>
+            <div class="l-files"><code>MainActivity.kt · NotesScreen</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;viewModel.loadNotes()</div>
+          <div class="layer vm">
+            <div class="l-name">② ViewModel — the conductor</div>
+            <div class="l-desc">Sets <code>Loading</code>, launches a coroutine, and wraps the call in <code>try/catch</code>.</div>
+            <div class="l-files"><code>NotesViewModel.kt · loadNotes()</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;repository.getNotes() &nbsp;<em>(suspend)</em></div>
+          <div class="layer repo">
+            <div class="l-name">③ Repository — the source of truth</div>
+            <div class="l-desc">Hides <em>where</em> notes come from: the real network impl, or the offline fake.</div>
+            <div class="l-files"><code>NoteRepository.kt</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;api.fetchNotes()</div>
+          <div class="layer engine">
+            <div class="l-name">④ Retrofit — the HTTP client</div>
+            <div class="l-desc">Turns <code>@GET("posts")</code> into a real HTTP GET and decodes the JSON array with kotlinx.serialization.</div>
+            <div class="l-files"><code>NoteApi.kt</code></div>
+          </div>
+          <div class="arrow">↓ &nbsp;HTTP GET /posts</div>
+          <div class="layer disk">
+            <div class="l-name">⑤ The network — the JSON API</div>
+            <div class="l-desc">The server returns a JSON array of posts.</div>
+            <div class="l-files"><code>https://jsonplaceholder.typicode.com/posts</code></div>
+          </div>
+          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;the return trip: JSON → <code>List&lt;NoteDto&gt;</code> → <code>.map { toNote() }</code> → <code>Success(notes)</code> → recompose</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. MAP ============ -->
+    <section class="band anchor" id="map">
+      <div class="band-inner">
+        <p class="eyebrow">Where everything lives</p>
+        <h2>Project map</h2>
+        <p class="dense">Five small Kotlin files. The data layer is the three files <code>Note.kt</code>, <code>NoteApi.kt</code>, and <code>NoteRepository.kt</code>; the ViewModel turns it into state, and <code>MainActivity</code> renders it.</p>
+        <div class="tree">
+<span class="dir">NetworkParsing/</span>
+  <span class="f">build.gradle.kts</span>          <span class="note"># Retrofit + kotlinx.serialization + OkHttp wiring</span>
+  <span class="dir">src/main/java/com/example/networkparsing/</span>
+    <span class="f">Note.kt</span>                 <span class="note"># NoteDto (@Serializable) + Note (domain) + toNote() mapper</span>
+    <span class="f">NoteApi.kt</span>              <span class="note"># the Retrofit interface + provideNoteApi()</span>
+    <span class="f">NoteRepository.kt</span>       <span class="note"># interface + Real (network) + Fake (offline) + the switch</span>
+    <span class="f">NotesViewModel.kt</span>       <span class="note"># NotesUiState sealed interface + StateFlow + loadNotes()</span>
+    <span class="f">MainActivity.kt</span>         <span class="note"># NotesScreen (collect) + stateless NotesContent + previews</span>
+  <span class="dir">src/test/java/.../</span>
+    <span class="f">ExampleUnitTest.kt</span>      <span class="note"># tests for the mapper + the offline fake</span>
+  <span class="f">AndroidManifest.xml</span>          <span class="note"># declares the INTERNET permission</span>
+  <span class="f">how-a-note-is-fetched.html</span>   <span class="note"># (this page)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. INIT ============ -->
+    <section class="band anchor" id="init">
+      <div class="band-inner">
+        <p class="eyebrow">Initialization · before any request</p>
+        <h2>Step 0 — wiring networking on</h2>
+        <p class="dense">
+          Three libraries do the work: <strong>Retrofit</strong> builds the HTTP client, <strong>OkHttp</strong> is the
+          engine under it, and <strong>kotlinx.serialization</strong> decodes JSON. The serialization compiler plugin
+          generates the serializer for <code>@Serializable NoteDto</code>.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.gradle.kts · plugins + networking deps</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kts">plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    // Generates serializers for @Serializable NoteDto.
+    alias(libs.plugins.kotlin.serialization)
+}
+
+dependencies {
+    // kotlinx.serialization: maps JSON &lt;-&gt; @Serializable NoteDto.
+    implementation(libs.kotlinx.serialization.json)
+    // Retrofit: builds a type-safe HTTP client from the NoteApi interface.
+    implementation(libs.retrofit)
+    // Lets Retrofit decode response bodies with kotlinx.serialization.
+    implementation(libs.retrofit.converter.kotlinx.serialization)
+    // OkHttp: the HTTP engine + MediaType used when wiring the converter factory.
+    implementation(libs.okhttp)
+}</pre>
+        </div>
+        <div class="callout warn">
+          <span class="callout-label">The INTERNET permission</span>
+          <code>AndroidManifest.xml</code> declares <code>&lt;uses-permission android:name="android.permission.INTERNET" /&gt;</code>
+          actively, so flipping to the real API works with no manifest edit. <code>INTERNET</code> is a <em>normal</em>
+          (install-time) permission — there is no runtime request — and it's harmless while the app runs in its default
+          offline fake mode.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. DTO ============ -->
+    <section class="band anchor" id="dto">
+      <div class="band-inner">
+        <p class="eyebrow">Step 1 · the parsing boundary</p>
+        <h2>DTO vs domain model — two shapes, one mapper</h2>
+        <p class="dense">
+          Keep the shape the <em>network</em> speaks (the <strong>DTO</strong>) separate from the shape your <em>app</em>
+          speaks (the <strong>domain model</strong>), and convert between them in exactly one place. JSON text arrives,
+          kotlinx.serialization turns it into a <code>NoteDto</code>, and a mapper turns that into a clean <code>Note</code>.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">Note.kt · the DTO (network shape)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Serializable                                  // &lt;-- makes this class JSON-decodable
+data class NoteDto(
+    val userId: Int,                           // matches JSON "userId" (parsed, then dropped)
+    val id: Int,                               // matches JSON "id"
+    val title: String,                         // matches JSON "title"
+    val body: String,                          // matches JSON "body"
+)</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">Note.kt · the domain model + the mapper</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// A PLAIN data class: no @Serializable, no knowledge of JSON, and NO userId.
+data class Note(
+    val id: Int,
+    val title: String,
+    val body: String,
+)
+
+// The SINGLE place network-shape becomes app-shape.
+fun NoteDto.toNote(): Note =                   // extension fn: reads like dto.toNote()
+    Note(id = id, title = title, body = body)  // userId is intentionally ignored</pre>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">Why two shapes</span>
+          The UI and ViewModel never depend on the API's exact wire format. If the server renamed a field or added twenty
+          more, only <code>NoteDto</code> and <code>toNote()</code> would change — not the screens or the ViewModel. The
+          mapper is the one testable seam between "network shape" and "app shape".
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. API ============ -->
+    <section class="band anchor" id="api">
+      <div class="band-inner">
+        <p class="eyebrow">Step 2 · the endpoint, as an interface</p>
+        <h2>The Retrofit API — describe it, don't write it</h2>
+        <p class="dense">
+          With Retrofit you <strong>describe</strong> the endpoint as an annotated interface method; Retrofit generates
+          the actual HTTP code at runtime. You never write sockets, hand-built URLs, or manual JSON parsing — you declare
+          "GET <code>/posts</code> returns a <code>List&lt;NoteDto&gt;</code>" and call a <code>suspend</code> function.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">NoteApi.kt · the interface</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface NoteApi {
+    // GET {baseUrl}/posts -&gt; a JSON array, decoded into List&lt;NoteDto&gt;.
+    // suspend: Retrofit runs the network I/O off the main thread and resumes you with the parsed list.
+    @GET("posts")
+    suspend fun fetchNotes(): List&lt;NoteDto&gt;
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">NoteApi.kt · assembling Retrofit</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// ignoreUnknownKeys = true -&gt; if the server adds NEW fields we didn't model, decoding
+// keeps working instead of throwing. The #1 real-world robustness setting.
+private val json = Json { ignoreUnknownKeys = true }
+
+fun provideNoteApi(): NoteApi =
+    Retrofit.Builder()
+        .baseUrl("https://jsonplaceholder.typicode.com/")   // every @GET path is appended here; MUST end in "/"
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+        .create(NoteApi::class.java)                         // Retrofit generates the implementation</pre>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Two robustness details</span>
+          The <code>baseUrl</code> must end in <code>/</code> (Retrofit appends the relative path), and
+          <code>ignoreUnknownKeys = true</code> means a server that grows new fields won't break your parser.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. REPO ============ -->
+    <section class="band anchor" id="repo">
+      <div class="band-inner">
+        <p class="eyebrow">Step 3 · one source of truth</p>
+        <h2>The repository — Real, Fake, and the switch</h2>
+        <p class="dense">
+          The rest of the app should not care <em>where</em> notes come from. It asks a <code>NoteRepository</code> for
+          notes; behind that interface sits either a <strong>Real</strong> implementation (hits the network and maps the
+          DTOs) or a <strong>Fake</strong> one (parses a hardcoded JSON string after a small delay). Swapping them is a
+          one-line change — which is what lets the app and the tests run completely offline.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">NoteRepository.kt · contract + real + fake + switch</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface NoteRepository {
+    // suspend because the real impl does network I/O; may THROW on failure.
+    suspend fun getNotes(): List&lt;Note&gt;
+}
+
+class RealNoteRepository(private val api: NoteApi = provideNoteApi()) : NoteRepository {
+    override suspend fun getNotes(): List&lt;Note&gt; {
+        val dtos: List&lt;NoteDto&gt; = api.fetchNotes()   // network + parse (throws if offline)
+        return dtos.map { it.toNote() }              // DTO -&gt; domain, the parsing payoff
+    }
+}
+
+class FakeNoteRepository : NoteRepository {
+    private val json = Json { ignoreUnknownKeys = true }
+    override suspend fun getNotes(): List&lt;Note&gt; {
+        delay(600)                                   // imitate latency so Loading is visible
+        val dtos: List&lt;NoteDto&gt; = json.decodeFromString(FAKE_NOTES_JSON)  // still parses JSON!
+        return dtos.map { it.toNote() }
+    }
+}
+
+// THE SWITCH — change one argument to toggle offline (default) vs live.
+fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
+    if (useFake) FakeNoteRepository() else RealNoteRepository()</pre>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">The fake still parses real JSON</span>
+          Rather than building <code>NoteDto</code> objects by hand, the fake <code>decodeFromString</code>s a hardcoded
+          JSON payload shaped exactly like the real response — so it exercises the same parse step, just without the
+          network. That's why the offline tests genuinely test parsing.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8. STATE ============ -->
+    <section class="band anchor" id="state">
+      <div class="band-inner">
+        <p class="eyebrow">Step 4 · the screen has exactly three states</p>
+        <h2>The UiState pattern — a sealed interface</h2>
+        <p class="dense">
+          A network screen is never just "the data". At any moment it is in <em>one</em> of three states — still
+          <strong>Loading</strong>, loaded <strong>Success</strong> (with data), or failed <strong>Error</strong> (with a
+          message). Model those with a <strong>sealed interface</strong>, and the compiler knows the complete set, so a
+          <code>when</code> over it is exhaustive — you physically cannot forget a case.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">NotesViewModel.kt · NotesUiState</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">sealed interface NotesUiState {
+    /** The request is in flight; show a spinner. (A singleton — no data to carry.) */
+    data object Loading : NotesUiState
+
+    /** The request succeeded. */
+    data class Success(val notes: List&lt;Note&gt;) : NotesUiState
+
+    /** The request failed; carry a human-readable reason. */
+    data class Error(val message: String) : NotesUiState
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 9. VIEWMODEL ============ -->
+    <section class="band anchor" id="viewmodel">
+      <div class="band-inner">
+        <p class="eyebrow">Step 5 · the conductor</p>
+        <h2>The ViewModel — load, and turn failures into a state</h2>
+        <p class="dense">
+          The ViewModel exposes a private <code>MutableStateFlow</code> as a public read-only <code>StateFlow</code>,
+          kicks off the first load in <code>init</code>, and wraps the suspending call in a single <code>try/catch</code> —
+          the one place any failure becomes a visible <code>Error</code> state instead of a crash.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">NotesViewModel.kt · state + loadNotes()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class NotesViewModel(
+    private val repository: NoteRepository = provideNoteRepository(),   // injected; defaults to offline fake
+) : ViewModel() {
+
+    // private mutable -> public read-only: the standard one-way exposure.
+    private val _uiState = MutableStateFlow&lt;NotesUiState&gt;(NotesUiState.Loading)
+    val uiState: StateFlow&lt;NotesUiState&gt; = _uiState.asStateFlow()
+
+    init { loadNotes() }                                   // start fetching immediately
+
+    fun loadNotes() {
+        viewModelScope.launch {
+            _uiState.value = NotesUiState.Loading           // 1) show the spinner
+            try {
+                val notes = repository.getNotes()           // 2) suspend: network/parse
+                _uiState.value = NotesUiState.Success(notes) // 3a) publish the data
+            } catch (e: Exception) {
+                _uiState.value = NotesUiState.Error(         // 3b) ANY failure -&gt; Error state
+                    e.message ?: "Something went wrong while loading notes."
+                )
+            }
+        }
+    }
+}</pre>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">Why <code>viewModelScope</code></span>
+          The coroutine is tied to the ViewModel's lifetime, so it's cancelled if the ViewModel is cleared, and the
+          suspending <code>getNotes()</code> never blocks the main thread. <code>loadNotes()</code> is safe to call again —
+          that's exactly what the Retry button does.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. UI ============ -->
+    <section class="band anchor" id="ui">
+      <div class="band-inner">
+        <p class="eyebrow">Step 6 · where it starts and ends on screen</p>
+        <h2>The screen — collect the state, render it exhaustively</h2>
+        <p class="dense">
+          The <strong>stateful</strong> <code>NotesScreen</code> obtains the ViewModel and observes its
+          <code>StateFlow</code>; the <strong>stateless</strong> <code>NotesContent</code> draws whichever state is
+          current. Splitting "get the state" from "draw the state" is what makes the screen previewable without a real
+          ViewModel.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · NotesScreen (stateful)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Composable
+fun NotesScreen(modifier: Modifier = Modifier, viewModel: NotesViewModel = viewModel()) {
+    // Subscribe to the StateFlow lifecycle-awarely (pauses while off-screen).
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    NotesContent(uiState = uiState, onRetry = viewModel::loadNotes, modifier = modifier)
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · NotesContent (stateless) — one exhaustive when</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Composable
+fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifier = Modifier) {
+    when (uiState) {                                       // exhaustive: sealed type, no else needed
+        is NotesUiState.Loading -&gt; LoadingState(modifier)            // a centered spinner
+        is NotesUiState.Success -&gt; NotesList(uiState.notes, modifier) // a LazyColumn of notes
+        is NotesUiState.Error   -&gt; ErrorState(uiState.message, onRetry, modifier) // message + Retry
+    }
+}</pre>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">Previews drive the stateless half</span>
+          The <code>@Preview</code>s pass hand-made states (<code>Success(previewNotes)</code>, <code>Loading</code>,
+          <code>Error("No internet connection.")</code>) straight into <code>NotesContent</code> — never a real
+          ViewModel, which would try to run a coroutine the design pane can't execute.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. TRIP (stepper) ============ -->
+    <section class="band anchor" id="trip">
+      <div class="band-inner">
+        <p class="eyebrow">All together</p>
+        <h2>The full trip, one step at a time</h2>
+        <p class="dense">Step through the exact chain the code follows on a successful load. The first steps are the request path; the last two are the return trip that updates the screen.</p>
+        <div class="stepper" id="sortStepper">
+          <div class="stepper-head">
+            <span class="s-title">Scenario: the screen opens and notes load successfully</span>
+            <div class="stepper-ctrl">
+              <button id="stepPrev" type="button">‹ Prev</button>
+              <span class="s-count" id="stepCount">1 / 7</span>
+              <button id="stepNext" type="button">Next ›</button>
+            </div>
+          </div>
+          <ol class="steps" id="stepList">
+            <li class="step" data-step><div class="s-num">1</div><div class="s-body"><strong>UI.</strong> <code>NotesScreen</code> obtains the ViewModel, whose <code>init</code> calls <code>loadNotes()</code>. The screen collects <code>uiState</code> and immediately shows <code>Loading</code>.<span class="s-where">MainActivity.kt · NotesScreen + collectAsStateWithLifecycle</span></div></li>
+            <li class="step" data-step><div class="s-num">2</div><div class="s-body"><strong>ViewModel.</strong> <code>loadNotes()</code> sets <code>_uiState = Loading</code> and launches a coroutine on <code>viewModelScope</code>, entering the <code>try</code> block.<span class="s-where">NotesViewModel.kt · loadNotes()</span></div></li>
+            <li class="step" data-step><div class="s-num">3</div><div class="s-body"><strong>Repository.</strong> <code>repository.getNotes()</code> (suspend) runs. In real mode it calls the API; in fake mode it delays and parses the hardcoded JSON.<span class="s-where">NoteRepository.kt · getNotes()</span></div></li>
+            <li class="step" data-step><div class="s-num">4</div><div class="s-body"><strong>Retrofit + network.</strong> <code>api.fetchNotes()</code> performs <code>GET /posts</code>; the server returns a JSON array of posts.<span class="s-where">NoteApi.kt · @GET("posts")</span></div></li>
+            <li class="step" data-step><div class="s-num">5</div><div class="s-body"><strong>Parse.</strong> The kotlinx.serialization converter decodes the JSON array into <code>List&lt;NoteDto&gt;</code>.<span class="s-where">NoteApi.kt · the converter factory</span></div></li>
+            <li class="step" data-step><div class="s-num">6</div><div class="s-body"><strong>Map.</strong> <code>dtos.map { it.toNote() }</code> converts each network DTO into a clean domain <code>Note</code>, dropping <code>userId</code>.<span class="s-where">Note.kt · toNote()</span></div></li>
+            <li class="step" data-step><div class="s-num">7</div><div class="s-body"><strong>State → recompose.</strong> Back in the ViewModel, <code>_uiState = Success(notes)</code>. The <code>StateFlow</code> emits, <code>collectAsStateWithLifecycle()</code> flips Compose state, and <code>NotesContent</code> redraws the list.<span class="s-where">NotesViewModel.kt + MainActivity.kt</span></div></li>
+          </ol>
+        </div>
+        <div class="callout">
+          <span class="callout-label">The point</span>
+          Nobody "refreshed the UI". The ViewModel set a new state value; because the screen is a pure function of that
+          <code>StateFlow</code>, the right UI followed automatically — the same reactive idea as the storage demos,
+          applied to a network result.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12. ERRORS ============ -->
+    <section class="band anchor" id="errors">
+      <div class="band-inner">
+        <p class="eyebrow">When things go wrong</p>
+        <h2>Error handling — one catch, one Error state</h2>
+        <p class="dense">
+          A real network call can fail in many ways. The single <code>try/catch</code> in <code>loadNotes()</code> turns
+          <em>any</em> of them into one <code>Error(message)</code> state with a Retry button — never a crash.
+        </p>
+        <table class="tbl">
+          <thead><tr><th>What goes wrong</th><th>The thrown failure</th><th>What the user sees</th></tr></thead>
+          <tbody>
+            <tr><td>No network / airplane mode</td><td><code>UnknownHostException</code></td><td>“Couldn't load notes” + the message + Retry</td></tr>
+            <tr><td>Slow server / timeout</td><td><code>SocketTimeoutException</code></td><td>Same Error state; Retry re-runs the load</td></tr>
+            <tr><td>Malformed / unexpected JSON</td><td><code>SerializationException</code></td><td>Same Error state (a parse failure, not a crash)</td></tr>
+            <tr><td>HTTP 4xx / 5xx</td><td><code>HttpException</code></td><td>Same Error state with the status message</td></tr>
+          </tbody>
+        </table>
+        <div class="callout good">
+          <span class="callout-label">Retry is just loadNotes() again</span>
+          The error screen's button is wired to <code>viewModel::loadNotes</code>. Because <code>loadNotes()</code> resets
+          to <code>Loading</code> and re-enters the same <code>try/catch</code>, recovering from a transient failure costs
+          one tap and zero extra code.
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">ignoreUnknownKeys handles the friendly case</span>
+          Note that a server merely <em>adding</em> fields does <strong>not</strong> land here — <code>Json { ignoreUnknownKeys = true }</code>
+          decodes successfully and the extra fields are dropped. Only genuinely malformed or type-mismatched JSON throws.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 13. RUN ============ -->
+    <section class="band anchor" id="run">
+      <div class="band-inner">
+        <p class="eyebrow">Try it yourself</p>
+        <h2>Run &amp; inspect</h2>
+        <p class="dense">The app builds and tests offline by default. Build from the <code>NetworkParsing/</code> project directory:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal · from NetworkParsing/</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash">./gradlew assembleDebug --console=plain --stacktrace   # build (offline fake mode)
+./gradlew testDebugUnitTest                            # mapper + fake-repository unit tests</pre>
+        </div>
+        <h3>Switch to the live API</h3>
+        <ul class="kicker-list">
+          <li><strong>In <code>NoteRepository.kt</code></strong>, change the default to <code>provideNoteRepository(useFake = false)</code>.</li>
+          <li><strong>The <code>INTERNET</code> permission</strong> is already declared in <code>AndroidManifest.xml</code>, so no manifest edit is needed.</li>
+          <li><strong>Run on a device/emulator with a connection</strong> — it will hit <code>https://jsonplaceholder.typicode.com/posts</code> live.</li>
+        </ul>
+        <div class="callout good">
+          <span class="callout-label">Where to go next</span>
+          Want a <em>different</em> network protocol? <a href="../WebSocketLive/how-a-message-arrives.html">WebSocket Live</a>
+          keeps a single connection open and streams messages both ways — the full-duplex contrast to this HTTP
+          request/response. Want to play with this one? Open the <a href="network-parsing-explorer.html">interactive explainer</a>.
+        </div>
+        <p class="foot">Network Parsing · one request, three states · part of the AndroidStudioProjects teaching set.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+</body>
+</html>

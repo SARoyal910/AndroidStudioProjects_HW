@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storage Journey — Interactive Explainer</title>
+<meta name="description" content="An interactive explainer for the Storage Journey Android app. Run a live simulator that walks one element through the UI, ViewModel, Repository, Room, and back via a reactive Flow; explore the architecture and source; play with persistence and the reactive read; and check yourself with a quiz.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+/* ============ interactive explorer additions ============ */
+:root {
+  --ui: #2d64c8; --vm: #6d58b8; --repo: #0a8f9a; --room: #b56c00; --flow: #1b8a5a;
+}
+[data-theme="dark"] {
+  --ui: #6f9bff; --vm: #a78bfa; --repo: #38c7d4; --room: #e0a44a; --flow: #54c98a;
+}
+
+/* segmented controls / buttons */
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+.btn {
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  border-radius: 9px; min-height: 38px; padding: 0 14px; font-weight: 750; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; transition: background .15s, transform .05s;
+}
+.btn:hover { background: var(--surface-alt); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--muted); min-height: 36px; padding: 0 13px; font-weight: 750; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--blue); color: #fff; }
+.hint { color: var(--muted); font-size: 0.84rem; }
+
+/* simulator layout */
+.sim { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 16px; margin: 14px 0; }
+.sim-low { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; margin-top: 14px; }
+@media (max-width: 900px) { .sim, .sim-low { grid-template-columns: 1fr; } }
+
+/* fake device */
+.device {
+  border: 1px solid var(--line); border-radius: 18px; background: var(--surface);
+  box-shadow: 0 6px 26px rgba(0,0,0,0.08); overflow: hidden; min-width: 0;
+}
+.device-bar { height: 30px; background: var(--surface-strong); display: flex; align-items: center; justify-content: center; gap: 6px; border-bottom: 1px solid var(--line); }
+.device-bar .dot3 { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.device-body { padding: 14px; }
+.device-title { font-weight: 850; font-size: 1.02rem; }
+.device-sub { color: var(--muted); font-size: 0.82rem; margin-bottom: 10px; }
+.field { border: 1.5px solid var(--line-strong); border-radius: 9px; padding: 9px 11px; display: flex; align-items: center; }
+.field input { border: 0; outline: 0; background: transparent; color: var(--ink); width: 100%; font-size: 0.95rem; }
+.field.focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.items { margin-top: 12px; display: grid; gap: 6px; min-height: 40px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); animation: pop .35s ease; }
+.item-row.flash { animation: flashrow 1s ease; }
+@keyframes pop { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@keyframes flashrow { 0% { background: var(--flow); } 100% { background: var(--bg); } }
+.id-badge { font-family: var(--mono); font-size: 0.78rem; font-weight: 800; background: var(--violet-soft); color: var(--violet); border-radius: 6px; padding: 2px 7px; }
+.item-row .lbl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.x-btn { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 7px; min-height: 28px; padding: 0 9px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+.x-btn:hover { color: var(--red); border-color: rgba(195,61,61,0.4); }
+.empty-note { color: var(--muted); font-size: 0.86rem; padding: 6px 2px; }
+
+/* pipeline */
+.pipe { display: grid; gap: 0; }
+.pl {
+  border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px;
+  padding: 10px 13px; background: var(--surface); transition: opacity .25s, box-shadow .25s, transform .25s, background .25s;
+  opacity: 0.5;
+}
+.band:nth-child(odd) .pl { background: var(--bg); }
+.pl.ui { border-left-color: var(--ui); }
+.pl.vm { border-left-color: var(--vm); }
+.pl.repo { border-left-color: var(--repo); }
+.pl.room { border-left-color: var(--room); }
+.pl.disk { border-left-color: var(--flow); }
+.pl.done { opacity: 0.82; }
+.pl.active { opacity: 1; transform: translateX(5px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.pl.ui.active { box-shadow: 0 0 0 2px var(--ui), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.vm.active { box-shadow: 0 0 0 2px var(--vm), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.repo.active { box-shadow: 0 0 0 2px var(--repo), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.room.active { box-shadow: 0 0 0 2px var(--room), 0 4px 16px rgba(0,0,0,0.12); }
+.pl.disk.active { box-shadow: 0 0 0 2px var(--flow), 0 4px 16px rgba(0,0,0,0.12); }
+.pl-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pl-name { font-weight: 850; font-size: 0.94rem; display: flex; align-items: center; gap: 8px; }
+.pl-tag { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+.pl-sub { color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+.pl-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.carry { font-family: var(--mono); font-size: 0.74rem; font-weight: 800; border-radius: 6px; padding: 2px 8px; opacity: 0; transition: opacity .2s; white-space: nowrap; }
+.pl.active .carry { opacity: 1; }
+.pl.ui .carry { background: var(--blue-soft); color: var(--ui); }
+.pl.vm .carry { background: var(--violet-soft); color: var(--vm); }
+.pl.repo .carry { background: var(--teal-soft); color: var(--repo); }
+.pl.room .carry { background: var(--amber-soft); color: var(--room); }
+.pl.disk .carry { background: var(--green-soft); color: var(--flow); }
+.pl-arrow { display: grid; place-items: center; height: 18px; color: var(--line-strong); font-size: 0.95rem; transition: color .25s; }
+.pl-arrow.lit { color: var(--ui); }
+.pl-return { display: grid; place-items: center; min-height: 30px; color: var(--flow); font-weight: 800; font-size: 0.82rem; border: 1px dashed rgba(27,138,90,0.5); border-radius: 9px; margin-top: 6px; opacity: 0.45; transition: opacity .25s; }
+.pl-return.lit { opacity: 1; background: var(--green-soft); }
+
+/* journey log (live) */
+.jl { display: grid; gap: 8px; min-height: 60px; }
+.jl-row { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; animation: pop .3s ease; }
+.jl-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 0.8rem; }
+.jl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.jl-chip { font-size: 0.68rem; font-weight: 800; border-radius: 6px; padding: 1px 8px; }
+.jl-time { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.jl-msg { font-size: 0.86rem; margin-top: 2px; }
+.jl-empty { color: var(--muted); font-size: 0.86rem; }
+
+/* sqlite table */
+.dbcard .code-file { color: var(--muted); }
+.db-meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin-bottom: 8px; }
+table.db { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.82rem; }
+table.db th, table.db td { border: 1px solid var(--line); padding: 6px 9px; text-align: left; }
+table.db th { background: var(--surface-alt); color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+table.db tr.flash td { animation: flashrow 1s ease; }
+table.db .nodata td { text-align: center; color: var(--muted); font-family: var(--sans); }
+
+/* clickable architecture */
+.arch-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 12px 0; }
+@media (max-width: 760px) { .arch-grid { grid-template-columns: 1fr 1fr; } }
+.arch-chip { text-align: left; border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 11px; padding: 11px 13px; background: var(--surface); cursor: pointer; transition: transform .1s, box-shadow .15s; }
+.band:nth-child(odd) .arch-chip { background: var(--bg); }
+.arch-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.arch-chip.sel { box-shadow: 0 0 0 2px var(--blue); }
+.arch-chip.ui { border-left-color: var(--ui); }
+.arch-chip.vm { border-left-color: var(--vm); }
+.arch-chip.repo { border-left-color: var(--repo); }
+.arch-chip.room { border-left-color: var(--room); }
+.arch-chip.disk { border-left-color: var(--flow); }
+.arch-chip.log { border-left-color: var(--muted); }
+.arch-chip .ac-name { font-weight: 850; font-size: 0.92rem; }
+.arch-chip .ac-file { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+.arch-detail { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 14px 16px; margin-top: 6px; }
+.band:nth-child(odd) .arch-detail { background: var(--bg); }
+
+/* tabs (code explorer) */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.tab { border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); border-radius: 8px 8px 0 0; min-height: 34px; padding: 0 12px; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.tab.on { background: var(--code-bg); color: #fff; border-color: var(--code-bg); }
+.tabpane { display: none; }
+.tabpane.on { display: block; }
+.concepts { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 0; }
+
+/* lifecycle */
+.life-row { display: flex; flex-wrap: wrap; gap: 9px; margin: 12px 0; }
+.life-stage { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); margin: 12px 0; }
+.band:nth-child(odd) .life-stage { background: var(--bg); }
+.life-chip { width: 86px; height: 86px; border-radius: 14px; display: grid; place-items: center; font-size: 2.2rem; border: 2px solid var(--line); background: var(--surface-alt); transition: all .3s; }
+.life-chip.present { border-color: var(--flow); background: var(--green-soft); }
+.life-chip.gone { border-color: var(--red); background: var(--red-soft); }
+.life-state { font-weight: 850; }
+.life-state.present { color: var(--flow); }
+.life-state.gone { color: var(--red); }
+.life-why { color: var(--muted); font-size: 0.9rem; margin-top: 3px; }
+
+/* glossary accordion */
+.acc { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin: 10px 0; background: var(--surface); }
+.band:nth-child(odd) .acc { background: var(--bg); }
+.acc-item + .acc-item { border-top: 1px solid var(--line); }
+.acc-q { width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: 12px 14px; font-weight: 750; color: var(--ink); display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: 0.95rem; }
+.acc-q:hover { background: var(--surface-alt); }
+.acc-q .plus { color: var(--muted); font-weight: 800; transition: transform .2s; }
+.acc-item.open .acc-q .plus { transform: rotate(45deg); }
+.acc-a { display: none; padding: 0 14px 13px; color: var(--muted); font-size: 0.92rem; }
+.acc-item.open .acc-a { display: block; }
+.acc-a code { color: var(--ink); }
+
+/* quiz */
+.quiz { display: grid; gap: 14px; margin: 12px 0; }
+.q { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+.band:nth-child(odd) .q { background: var(--bg); }
+.q-prompt { font-weight: 800; margin-bottom: 10px; }
+.q-opts { display: grid; gap: 8px; }
+.opt { text-align: left; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 9px; padding: 10px 12px; cursor: pointer; font-weight: 600; transition: background .12s; }
+.opt:hover { background: var(--surface-alt); }
+.opt.correct { border-color: var(--flow); background: var(--green-soft); }
+.opt.wrong { border-color: var(--red); background: var(--red-soft); }
+.opt:disabled { cursor: default; }
+.q-exp { margin-top: 10px; font-size: 0.9rem; color: var(--muted); display: none; border-left: 3px solid var(--blue); padding-left: 10px; }
+.q.answered .q-exp { display: block; }
+.quiz-score { font-weight: 850; font-size: 1.05rem; }
+
+.tiny { font-size: 0.78rem; color: var(--muted); }
+.kbd { font-family: var(--mono); background: var(--surface-alt); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 0.82em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">SJ</div>
+      <div>
+        <div class="brand-title">Storage Journey</div>
+        <div class="brand-subtitle">Interactive explainer</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">Explore</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>What is this?</span></a>
+      <a class="nav-link" href="#simulator"><span class="nav-num">2</span><span>Live simulator</span></a>
+      <a class="nav-link" href="#architecture"><span class="nav-num">3</span><span>Architecture</span></a>
+      <a class="nav-link" href="#code"><span class="nav-num">4</span><span>Code explorer</span></a>
+      <div class="nav-title">Key ideas</div>
+      <a class="nav-link" href="#reactive"><span class="nav-num">5</span><span>Why a reactive Flow</span></a>
+      <a class="nav-link" href="#survives"><span class="nav-num">6</span><span>What survives</span></a>
+      <a class="nav-link" href="#glossary"><span class="nav-num">7</span><span>Glossary</span></a>
+      <a class="nav-link" href="#quiz"><span class="nav-num">8</span><span>Check yourself</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      The step-by-step code page:
+      <a href="how-an-item-reaches-storage.html">How an item reaches storage →</a>
+      <a href="README.md">Project README →</a>
+      <a href="../STORAGE_GUIDE.md">Storage decision guide →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">SJ</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · What is this?</option>
+        <option value="#simulator">2 · Live simulator</option>
+        <option value="#architecture">3 · Architecture</option>
+        <option value="#code">4 · Code explorer</option>
+        <option value="#reactive">5 · Why a reactive Flow</option>
+        <option value="#survives">6 · What survives</option>
+        <option value="#glossary">7 · Glossary</option>
+        <option value="#quiz">8 · Check yourself</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Interactive explainer</p>
+        <h1>Storage Journey, hands-on</h1>
+        <p class="lead">
+          <strong>Storage Journey</strong> is a small Android app with one job: make it impossible to miss
+          <em>how a piece of data actually gets into storage</em>. Type a line of text, tap Save, and the app
+          follows that single element through every layer on the way to disk — and back to the screen. This page
+          lets you <strong>run that trip yourself</strong>, click through the architecture and source, and poke at
+          the two ideas that make it work: a reactive <code>Flow</code> and on-disk persistence.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">Room · SQLite</span>
+          <span class="tag blue">Jetpack Compose</span>
+          <span class="tag violet">ViewModel + Flow</span>
+          <span class="tag">Kotlin</span>
+          <span class="tag teal">runnable + this explainer</span>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><div class="card-head"><span class="card-title">▶ Run it</span></div><div class="card-body"><p class="dense">The <a href="#simulator">Live simulator</a> reproduces the app's exact pipeline in your browser — same five legs, same journey log, a live SQLite table.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧭 Explore it</span></div><div class="card-body"><p class="dense">Click any layer in the <a href="#architecture">Architecture</a> map to see its job and code, or browse every file in the <a href="#code">Code explorer</a>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">🧠 Get it</span></div><div class="card-body"><p class="dense">See <a href="#reactive">why a reactive Flow</a> means you never refresh by hand, what <a href="#survives">survives</a> a restart, then <a href="#quiz">check yourself</a>.</p></div></div>
+        </div>
+
+        <div class="callout good">
+          <span class="callout-label">One sentence to hold onto</span>
+          You <strong>write once</strong> (an insert). Because the read side is a reactive <code>Flow</code>, Room
+          re-runs the query and pushes the new data back to the screen <em>for you</em> — no manual reload anywhere.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. SIMULATOR ============ -->
+    <section class="band anchor" id="simulator">
+      <div class="band-inner">
+        <p class="eyebrow">The main event</p>
+        <h2>Live simulator — watch one element travel</h2>
+        <p class="dense">
+          Type something and press <strong>Save to storage</strong>. The same pipeline the real app runs lights up
+          one layer at a time, the <strong>Journey log</strong> records each leg with a timestamp, and the
+          <strong>SQLite table</strong> gains a row with the id SQLite assigned. Switch to <span class="kbd">Manual</span>
+          mode to advance the trip one step at a time.
+        </p>
+
+        <div class="controls">
+          <span class="hint">Mode:</span>
+          <span class="seg" id="modeSeg">
+            <button data-mode="auto" class="on" type="button">Auto-play</button>
+            <button data-mode="manual" type="button">Manual steps</button>
+          </span>
+          <span class="hint">Speed:</span>
+          <span class="seg" id="spdSeg">
+            <button data-ms="900" type="button">Slow</button>
+            <button data-ms="520" class="on" type="button">Normal</button>
+            <button data-ms="240" type="button">Fast</button>
+          </span>
+          <button class="btn" id="simNext" type="button" disabled>Next step ▸</button>
+        </div>
+
+        <div class="sim">
+          <!-- fake device -->
+          <div class="device">
+            <div class="device-bar"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></div>
+            <div class="device-body">
+              <div class="device-title">Storage Journey</div>
+              <div class="device-sub">Save a line of text — it lands in journey.db.</div>
+              <div class="field" id="simField">
+                <input id="simInput" type="text" placeholder="Text to store" value="milk" autocomplete="off" />
+              </div>
+              <div style="margin-top:8px;">
+                <button class="btn primary" id="simSave" type="button" style="width:100%; justify-content:center;">Save to storage</button>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+                <strong id="simCount" style="font-size:0.92rem;">Saved items (0)</strong>
+                <button class="x-btn" id="simClear" type="button">Clear storage</button>
+              </div>
+              <div class="items" id="simItems"></div>
+            </div>
+          </div>
+
+          <!-- pipeline -->
+          <div>
+            <div class="pipe" id="pipe">
+              <div class="pl ui" id="pl-ui">
+                <div class="pl-top"><span class="pl-name">① UI — the screen</span><span class="carry" id="carry-ui"></span></div>
+                <div class="pl-sub">The tap captures the typed text and calls the ViewModel.</div>
+                <div class="pl-file">MainActivity.kt</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl vm" id="pl-vm">
+                <div class="pl-top"><span class="pl-name">② ViewModel — the conductor</span><span class="carry" id="carry-vm"></span></div>
+                <div class="pl-sub">Stamps createdAt, builds StoredItem, launches a coroutine (off the UI thread).</div>
+                <div class="pl-file">StorageJourneyViewModel.kt</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl repo" id="pl-repo">
+                <div class="pl-top"><span class="pl-name">③ Repository — the storage boundary</span><span class="carry" id="carry-repo"></span></div>
+                <div class="pl-sub">The one front door to persistence; hands the element to the DAO.</div>
+                <div class="pl-file">data/ItemRepository.kt</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl room" id="pl-room">
+                <div class="pl-top"><span class="pl-name">④ Room — the SQLite engine</span><span class="carry" id="carry-room"></span></div>
+                <div class="pl-sub">Runs INSERT, assigns a primary key, commits the row.</div>
+                <div class="pl-file">data/ItemDao.kt · data/ItemDatabase.kt</div>
+              </div>
+              <div class="pl-arrow" data-arrow>↓</div>
+              <div class="pl disk" id="pl-disk">
+                <div class="pl-top"><span class="pl-name">⑤ journey.db — bytes on disk</span><span class="carry" id="carry-disk"></span></div>
+                <div class="pl-sub">Private SQLite file. The element now survives restarts.</div>
+                <div class="pl-file">/data/data/com.example.storagejourney/databases/journey.db</div>
+              </div>
+              <div class="pl-return" id="pl-return">↑ return trip: Room re-emits its Flow → the screen recomposes</div>
+            </div>
+            <div class="controls" style="margin-top:14px;">
+              <button class="btn" id="simRelaunch" type="button">⟳ Kill &amp; relaunch app</button>
+              <button class="btn danger" id="simUninstall" type="button">🗑 Clear app data</button>
+            </div>
+            <p class="tiny">“Kill &amp; relaunch” keeps the rows (they’re on disk) and shows the lone read step. “Clear app data” wipes <code>journey.db</code> — the true end of the journey.</p>
+          </div>
+        </div>
+
+        <div class="sim-low">
+          <div class="card">
+            <div class="card-head"><span class="card-title">Journey of the last element</span></div>
+            <div class="card-body"><div class="jl" id="simJourney"><div class="jl-empty">Press <strong>Save to storage</strong> to record a trip.</div></div></div>
+          </div>
+          <div class="card dbcard">
+            <div class="card-head"><span class="card-title">SQLite · items table</span></div>
+            <div class="card-body">
+              <div class="db-meta" id="simDbMeta">journey.db · 0 rows</div>
+              <table class="db">
+                <thead><tr><th>id</th><th>label</th><th>createdAt</th></tr></thead>
+                <tbody id="simTbl"><tr class="nodata"><td colspan="3">no rows yet</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. ARCHITECTURE ============ -->
+    <section class="band anchor" id="architecture">
+      <div class="band-inner">
+        <p class="eyebrow">The pieces</p>
+        <h2>Architecture — click a layer</h2>
+        <p class="dense">Six small parts. Tap any one to see its job, the file it lives in, and a snippet. The colors match the simulator and the journey log.</p>
+        <div class="arch-grid" id="archGrid">
+          <button class="arch-chip ui sel" data-layer="ui" type="button"><div class="ac-name">① UI · screen</div><div class="ac-file">MainActivity.kt</div></button>
+          <button class="arch-chip vm" data-layer="vm" type="button"><div class="ac-name">② ViewModel</div><div class="ac-file">StorageJourneyViewModel.kt</div></button>
+          <button class="arch-chip repo" data-layer="repo" type="button"><div class="ac-name">③ Repository</div><div class="ac-file">data/ItemRepository.kt</div></button>
+          <button class="arch-chip room" data-layer="room" type="button"><div class="ac-name">④ Room (DAO + DB)</div><div class="ac-file">data/ItemDao.kt</div></button>
+          <button class="arch-chip disk" data-layer="disk" type="button"><div class="ac-name">⑤ journey.db</div><div class="ac-file">on disk</div></button>
+          <button class="arch-chip log" data-layer="log" type="button"><div class="ac-name">★ JourneyLog</div><div class="ac-file">journey/JourneyLog.kt</div></button>
+        </div>
+        <div class="arch-detail" id="archDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ 4. CODE ============ -->
+    <section class="band anchor" id="code">
+      <div class="band-inner">
+        <p class="eyebrow">The source</p>
+        <h2>Code explorer</h2>
+        <p class="dense">Every file in the project, lightly trimmed for focus. For the full, verbatim code with line-by-line comments, open <a href="how-an-item-reaches-storage.html">the step-by-step page</a> or the files themselves.</p>
+        <div class="tabs" id="codeTabs">
+          <button class="tab on" data-tab="t-item" type="button">StoredItem.kt</button>
+          <button class="tab" data-tab="t-dao" type="button">ItemDao.kt</button>
+          <button class="tab" data-tab="t-db" type="button">ItemDatabase.kt</button>
+          <button class="tab" data-tab="t-repo" type="button">ItemRepository.kt</button>
+          <button class="tab" data-tab="t-log" type="button">JourneyLog.kt</button>
+          <button class="tab" data-tab="t-vm" type="button">ViewModel.kt</button>
+          <button class="tab" data-tab="t-ui" type="button">MainActivity.kt</button>
+        </div>
+
+        <div class="tabpane on" data-pane="t-item">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/StoredItem.kt — the element (one row)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Entity(tableName = "items")                 // this class IS a table named "items"
+data class StoredItem(
+    @PrimaryKey(autoGenerate = true)         // unique row id; SQLite auto-increments it
+    val id: Long = 0,                        // 0 =&gt; "let Room/SQLite pick the id on insert"
+    val label: String,                       // TEXT column "label" (the user's text)
+    val createdAt: Long,                     // INTEGER column "createdAt" (epoch millis)
+)</pre></div>
+          <div class="tag-row"><span class="tag green">@Entity</span><span class="tag">@PrimaryKey</span><span class="tag">data class</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-dao">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/ItemDao.kt — the read/write door</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Dao
+interface ItemDao {
+
+    // Reactive READ: a Flow that re-emits the whole list on every table change.
+    @Query("SELECT * FROM items ORDER BY id DESC")
+    fun observeItems(): Flow&lt;List&lt;StoredItem&gt;&gt;
+
+    // The WRITE: suspend (touches disk); returns the new row's auto-generated id.
+    @Insert
+    suspend fun insert(item: StoredItem): Long
+
+    @Delete
+    suspend fun delete(item: StoredItem)
+
+    @Query("DELETE FROM items")
+    suspend fun clearAll()
+}</pre></div>
+          <div class="tag-row"><span class="tag green">@Dao</span><span class="tag">Flow query</span><span class="tag">suspend</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-db">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/ItemDatabase.kt — the store (singleton)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Database(entities = [StoredItem::class], version = 1, exportSchema = false)
+abstract class ItemDatabase : RoomDatabase() {
+
+    abstract fun itemDao(): ItemDao         // Room generates ItemDao_Impl
+
+    companion object {
+        @Volatile private var INSTANCE: ItemDatabase? = null
+
+        fun getInstance(context: Context): ItemDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    ItemDatabase::class.java,
+                    "journey.db",                       // the SQLite FILE on disk
+                ).build().also { INSTANCE = it }
+            }
+    }
+}</pre></div>
+          <div class="tag-row"><span class="tag green">@Database</span><span class="tag">singleton</span><span class="tag">@Volatile</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-repo">
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/ItemRepository.kt — the storage boundary</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class ItemRepository(
+    private val dao: ItemDao,
+    private val journey: JourneyLog,
+) {
+    val items: Flow&lt;List&lt;StoredItem&gt;&gt; = dao.observeItems()
+
+    suspend fun save(item: StoredItem): Long {
+        journey.record(JourneyStage.REPOSITORY, "… dao.insert(item) — a suspend write …")
+        val newId = dao.insert(item)            // suspends until SQLite commits
+        journey.record(JourneyStage.ROOM, "… SQLite committed the row as id #$newId …")
+        return newId
+    }
+
+    suspend fun delete(item: StoredItem) = dao.delete(item)
+    suspend fun clear() = dao.clearAll()
+}</pre></div>
+          <div class="tag-row"><span class="tag teal">Repository</span><span class="tag">suspend</span><span class="tag">records the trip</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-log">
+          <div class="code-panel"><div class="code-head"><span class="code-file">journey/JourneyLog.kt — the observable trace</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">enum class JourneyStage(val label: String) {
+    UI("UI"), VIEWMODEL("ViewModel"), REPOSITORY("Repository"),
+    ROOM("Room · SQLite"), FLOW("Flow · UI"),
+}
+
+data class JourneyStep(val stage: JourneyStage, val message: String, val sinceStartMillis: Long)
+
+class JourneyLog(private val now: () -&gt; Long = { System.currentTimeMillis() }) {
+    @Volatile private var startMillis: Long = now()
+    private val _steps = MutableStateFlow&lt;List&lt;JourneyStep&gt;&gt;(emptyList())
+    val steps: StateFlow&lt;List&lt;JourneyStep&gt;&gt; = _steps.asStateFlow()
+
+    fun reset() { startMillis = now(); _steps.value = emptyList() }
+
+    fun record(stage: JourneyStage, message: String) {
+        val elapsed = now() - startMillis
+        _steps.update { old -&gt; old + JourneyStep(stage, message, elapsed) }
+    }
+}</pre></div>
+          <div class="tag-row"><span class="tag">enum</span><span class="tag">MutableStateFlow</span><span class="tag">.update</span><span class="tag">Android-free (testable)</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-vm">
+          <div class="code-panel"><div class="code-head"><span class="code-file">StorageJourneyViewModel.kt — items + addItem</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val items: StateFlow&lt;List&lt;StoredItem&gt;&gt; = repository.items
+    .onEach { list -&gt; journeyLog.record(JourneyStage.FLOW, "Room re-ran … ${list.size} row(s) …") }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+fun addItem(rawLabel: String) {
+    val label = rawLabel.trim()
+    if (label.isEmpty()) return
+
+    journeyLog.reset()
+    journeyLog.record(JourneyStage.UI, "The Save button captured \"$label\" …")
+
+    val element = StoredItem(label = label, createdAt = System.currentTimeMillis())
+    journeyLog.record(JourneyStage.VIEWMODEL, "ViewModel built StoredItem(…) and launched a coroutine …")
+
+    viewModelScope.launch { repository.save(element) }   // records Repository + Room; then Flow re-emits
+}</pre></div>
+          <div class="tag-row"><span class="tag violet">stateIn</span><span class="tag">onEach</span><span class="tag">viewModelScope.launch</span></div>
+        </div>
+
+        <div class="tabpane" data-pane="t-ui">
+          <div class="code-panel"><div class="code-head"><span class="code-file">MainActivity.kt — the screen (excerpt)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// Stateful wrapper: collect the two StateFlows into Compose state.
+val items by viewModel.items.collectAsStateWithLifecycle()
+val journey by viewModel.journey.collectAsStateWithLifecycle()
+
+// Inside the stateless screen: capture text, launch the write.
+OutlinedTextField(value = label, onValueChange = { label = it }, singleLine = true)
+Button(onClick = {
+    onSave(label)        // -&gt; viewModel.addItem(label) -&gt; Room insert
+    label = ""           // clear the local input
+}) { Text("Save to storage") }
+
+// Render the recorded trip; list position gives the step number.
+journey.forEachIndexed { index, step -&gt;
+    JourneyStepRow(number = index + 1, step = step)
+}</pre></div>
+          <div class="tag-row"><span class="tag blue">Compose</span><span class="tag">collectAsStateWithLifecycle</span><span class="tag">stateless screen</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. REACTIVE ============ -->
+    <section class="band anchor" id="reactive">
+      <div class="band-inner">
+        <p class="eyebrow">The key idea #1</p>
+        <h2>Why a reactive <code>Flow</code> (and not a one-shot read)</h2>
+        <p class="dense">
+          The whole reason the screen stays correct without any “reload the list” code is that the read side is a
+          <strong>live <code>Flow</code></strong>. Change the database below and watch what happens with the Flow
+          <strong>on</strong> versus <strong>off</strong>.
+        </p>
+        <div class="controls">
+          <span class="hint">The screen reads via:</span>
+          <span class="seg" id="rxSeg">
+            <button data-rx="flow" class="on" type="button">Reactive Flow (Room)</button>
+            <button data-rx="manual" type="button">One-shot read</button>
+          </span>
+        </div>
+        <div class="sim-low">
+          <div class="card">
+            <div class="card-head"><span class="card-title">The database (disk)</span></div>
+            <div class="card-body">
+              <div class="db-meta">items table — <span id="rxDb">0</span> row(s)</div>
+              <div class="controls">
+                <button class="btn primary" id="rxAdd" type="button">+ INSERT a row</button>
+                <button class="btn" id="rxDel" type="button">− DELETE a row</button>
+              </div>
+              <p class="tiny" id="rxFlowNote">With a Flow, every write re-emits automatically.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">The screen (what the user sees)</span></div>
+            <div class="card-body">
+              <div class="db-meta">UI shows: <strong id="rxScreen" style="font-size:1.4rem;">0</strong> row(s)</div>
+              <div class="controls"><button class="btn" id="rxReload" type="button" style="display:none;">Call reload() manually</button></div>
+              <p class="tiny" id="rxStale" style="display:none; color:var(--red);">⚠ Stale! The DB changed but the screen didn’t. Someone has to remember to reload().</p>
+              <p class="tiny" id="rxFresh">✓ In sync — the screen tracks the database automatically.</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">That’s the lesson</span>
+          With the reactive <code>Flow</code> (how this app really works), the screen can never drift out of sync.
+          With a one-shot read, every writer must remember to refresh every reader — exactly the bug Room’s
+          <code>Flow</code> queries delete for you.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. SURVIVES ============ -->
+    <section class="band anchor" id="survives">
+      <div class="band-inner">
+        <p class="eyebrow">The key idea #2</p>
+        <h2>What survives — the end of the journey</h2>
+        <p class="dense">
+          The row lives in <code>journey.db</code> on disk, so it outlives in-memory state. Run an event against
+          the demo row and see whether it survives — and why. The journey only truly <em>ends</em> at clear-data
+          or uninstall.
+        </p>
+        <div class="life-stage">
+          <div class="life-chip present" id="lifeChip">🧱</div>
+          <div>
+            <div class="life-state present" id="lifeState">Stored: #1 “milk” is on disk</div>
+            <div class="life-why" id="lifeWhy">Tap an event to see whether the saved element survives it.</div>
+          </div>
+        </div>
+        <div class="life-row" id="lifeBtns">
+          <button class="btn" data-ev="rotate" type="button">🔄 Rotate screen</button>
+          <button class="btn" data-ev="kill" type="button">✖ Kill the process</button>
+          <button class="btn" data-ev="reboot" type="button">⚡ Reboot device</button>
+          <button class="btn danger" data-ev="cleardata" type="button">🧹 Clear app data</button>
+          <button class="btn danger" data-ev="uninstall" type="button">🗑 Uninstall</button>
+          <button class="btn ghost" data-ev="restore" type="button">↺ Restore demo</button>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Event</th><th>Survives?</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Recompose / rotate</td><td><span class="dot yes">✓</span></td><td>Row is on disk; the ViewModel + <code>StateFlow</code> also survive rotation.</td></tr>
+            <tr><td>Kill process / swipe away</td><td><span class="dot yes">✓</span></td><td>SQLite already committed the file; on relaunch <code>observeItems()</code> reads it back.</td></tr>
+            <tr><td>Reboot</td><td><span class="dot yes">✓</span></td><td>The database file persists across reboots.</td></tr>
+            <tr><td>Clear app data / Clear storage</td><td><span class="dot no">✕</span></td><td>Android deletes the app’s private files, including <code>journey.db</code>.</td></tr>
+            <tr><td>Uninstall</td><td><span class="dot no">✕</span></td><td>Private app storage is removed with the app — the true end.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ 7. GLOSSARY ============ -->
+    <section class="band anchor" id="glossary">
+      <div class="band-inner">
+        <p class="eyebrow">Plain-language terms</p>
+        <h2>Glossary — tap to expand</h2>
+        <div class="acc" id="acc"></div>
+      </div>
+    </section>
+
+    <!-- ============ 8. QUIZ ============ -->
+    <section class="band anchor" id="quiz">
+      <div class="band-inner">
+        <p class="eyebrow">Check yourself</p>
+        <h2>Did it click?</h2>
+        <p class="dense">Five questions. Pick an answer to see if it’s right and why. <span class="quiz-score" id="quizScore">0 / 5</span></p>
+        <div class="quiz" id="quiz"></div>
+        <p class="foot">Storage Journey · one element, one store, start to finish · part of the AndroidStudioProjects teaching set. See also <a href="how-an-item-reaches-storage.html">the step-by-step code page</a>.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+<script>
+/* ============ interactive explorer logic ============ */
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  // stage metadata shared by the simulator + journey log (colors match the CSS vars)
+  var STAGE = {
+    UI:         { label: "UI",            color: "var(--ui)",   soft: "var(--blue-soft)" },
+    VIEWMODEL:  { label: "ViewModel",     color: "var(--vm)",   soft: "var(--violet-soft)" },
+    REPOSITORY: { label: "Repository",    color: "var(--repo)", soft: "var(--teal-soft)" },
+    ROOM:       { label: "Room · SQLite", color: "var(--room)", soft: "var(--amber-soft)" },
+    FLOW:       { label: "Flow · UI",     color: "var(--flow)", soft: "var(--green-soft)" },
+  };
+  var ORDER = ["ui", "vm", "repo", "room", "disk"];
+
+  // ======================= LIVE SIMULATOR =======================
+  var sim = { items: [], nextId: 1, journey: [], delay: 520, mode: "auto", queue: [], qi: 0, running: false, timer: null, pending: null };
+
+  function two(n) { return String(n).padStart(2, "0"); }
+
+  function renderItems(flash) {
+    var el = $("#simItems"); el.innerHTML = "";
+    $("#simCount").textContent = "Saved items (" + sim.items.length + ")";
+    if (!sim.items.length) { el.innerHTML = '<div class="empty-note">Nothing stored yet — Save something above.</div>'; return; }
+    sim.items.forEach(function (it, idx) {
+      var row = document.createElement("div");
+      row.className = "item-row" + (flash && idx === 0 ? " flash" : "");
+      var badge = document.createElement("span"); badge.className = "id-badge"; badge.textContent = "#" + it.id;
+      var lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = it.label; // textContent => no HTML injection
+      var x = document.createElement("button"); x.className = "x-btn"; x.type = "button"; x.textContent = "Delete";
+      x.addEventListener("click", function () { if (!sim.running) startJourney(buildDeleteSteps(it)); });
+      row.appendChild(badge); row.appendChild(lbl); row.appendChild(x); el.appendChild(row);
+    });
+  }
+
+  function renderTable() {
+    var tb = $("#simTbl"); tb.innerHTML = "";
+    $("#simDbMeta").textContent = "journey.db · " + sim.items.length + " row" + (sim.items.length === 1 ? "" : "s");
+    if (!sim.items.length) { tb.innerHTML = '<tr class="nodata"><td colspan="3">no rows yet</td></tr>'; return; }
+    sim.items.forEach(function (it, idx) {
+      var tr = document.createElement("tr"); if (idx === 0) tr.className = "flash";
+      var d = new Date(it.createdAt);
+      var cells = [String(it.id), it.label, two(d.getHours()) + ":" + two(d.getMinutes()) + ":" + two(d.getSeconds())];
+      cells.forEach(function (v) { var td = document.createElement("td"); td.textContent = v; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+  }
+
+  function renderJourney() {
+    var el = $("#simJourney"); el.innerHTML = "";
+    if (!sim.journey.length) { el.innerHTML = '<div class="jl-empty">Press <strong>Save to storage</strong> to record a trip.</div>'; return; }
+    sim.journey.forEach(function (s, idx) {
+      var meta = STAGE[s.stage];
+      var row = document.createElement("div"); row.className = "jl-row";
+      var num = document.createElement("div"); num.className = "jl-num"; num.textContent = idx + 1; num.style.background = meta.color;
+      var body = document.createElement("div");
+      var head = document.createElement("div"); head.className = "jl-head";
+      var chip = document.createElement("span"); chip.className = "jl-chip"; chip.textContent = meta.label; chip.style.color = meta.color; chip.style.background = meta.soft;
+      var time = document.createElement("span"); time.className = "jl-time"; time.textContent = "+" + s.at + " ms";
+      head.appendChild(chip); head.appendChild(time);
+      var msg = document.createElement("div"); msg.className = "jl-msg"; msg.textContent = s.msg;
+      body.appendChild(head); body.appendChild(msg); row.appendChild(num); row.appendChild(body); el.appendChild(row);
+    });
+  }
+
+  function clearPipe() {
+    $$(".pl").forEach(function (p) { p.classList.remove("active", "done"); });
+    $$("[data-arrow]").forEach(function (a) { a.classList.remove("lit"); });
+    var ret = $("#pl-return"); if (ret) ret.classList.remove("lit");
+    ORDER.forEach(function (c) { var el = $("#carry-" + c); if (el) el.textContent = ""; });
+  }
+
+  function visual(idx) {
+    clearPipe();
+    var touched = {};
+    for (var k = 0; k <= idx; k++) sim.queue[k].boxes.forEach(function (b) { if (b !== "return") touched[b] = true; });
+    Object.keys(touched).forEach(function (b) { var el = $("#pl-" + b); if (el) el.classList.add("done"); });
+    var cur = sim.queue[idx];
+    cur.boxes.forEach(function (b) {
+      if (b === "return") { var r = $("#pl-return"); if (r) r.classList.add("lit"); return; }
+      var el = $("#pl-" + b); if (el) { el.classList.remove("done"); el.classList.add("active"); var c = $("#carry-" + b); if (c && cur.carry) c.textContent = cur.carry; }
+    });
+    var n = ORDER.filter(function (b) { return touched[b]; }).length;
+    $$("[data-arrow]").forEach(function (a, j) { a.classList.toggle("lit", j < n - 1); });
+  }
+
+  function advance() {
+    if (sim.qi >= sim.queue.length) { finish(); return; }
+    var step = sim.queue[sim.qi];
+    if (step.apply) step.apply();                 // mutate state + (for late steps) set step.msg
+    sim.journey.push({ stage: step.stage, msg: step.msg, at: step.at });
+    renderJourney();
+    visual(sim.qi);
+    sim.qi++;
+    updateNextBtn();
+  }
+
+  function autoRun() {
+    advance();
+    if (sim.qi < sim.queue.length) sim.timer = setTimeout(autoRun, sim.delay);
+    else finish();
+  }
+
+  function startJourney(steps) {
+    if (sim.running) return;
+    sim.queue = steps; sim.qi = 0; sim.journey = []; sim.running = true;
+    renderJourney(); $("#simSave").disabled = true;
+    if (sim.mode === "auto") autoRun();
+    else { advance(); updateNextBtn(); }          // manual: show first step, then wait for "Next"
+  }
+
+  function finish() {
+    sim.running = false; if (sim.timer) { clearTimeout(sim.timer); sim.timer = null; }
+    $("#simSave").disabled = false; updateNextBtn();
+  }
+
+  function updateNextBtn() {
+    $("#simNext").disabled = !(sim.mode === "manual" && sim.running && sim.qi < sim.queue.length);
+  }
+
+  function buildSaveSteps(label) {
+    return [
+      { stage: "UI", boxes: ["ui"], carry: '"' + label + '"', at: 0,
+        msg: 'The Save button captured "' + label + '" and called viewModel.addItem("' + label + '").' },
+      { stage: "VIEWMODEL", boxes: ["vm"], carry: "StoredItem", at: 1,
+        msg: 'ViewModel built StoredItem(label="' + label + '", createdAt=now) and launched a coroutine on viewModelScope so the write never blocks the UI thread.',
+        apply: function () { sim.pending = { id: 0, label: label, createdAt: Date.now() }; } },
+      { stage: "REPOSITORY", boxes: ["repo"], carry: "insert(item)", at: 2,
+        msg: "Repository.save(...) called the suspend dao.insert(item) — the storage boundary handing the element to Room." },
+      { stage: "ROOM", boxes: ["room", "disk"], carry: "INSERT", at: 6,
+        msg: "",
+        apply: function () { var it = sim.pending; it.id = sim.nextId++; sim.items.unshift(it); this.msg = "Room ran INSERT, SQLite assigned id #" + it.id + " and committed the row to journey.db. The element is on disk."; renderTable(); } },
+      { stage: "FLOW", boxes: ["return"], at: 8,
+        msg: "",
+        apply: function () { this.msg = "Room re-ran SELECT * FROM items, found " + sim.items.length + " row(s), and pushed a new List down the Flow → the screen recomposes. (No manual reload!)"; renderItems(true); } },
+    ];
+  }
+
+  function buildDeleteSteps(item) {
+    return [
+      { stage: "UI", boxes: ["ui"], carry: "delete", at: 0,
+        msg: 'Delete tapped on "' + item.label + '" → viewModelScope.launch { repository.delete(item) }.',
+        apply: function () { sim.items = sim.items.filter(function (x) { return x.id !== item.id; }); renderTable(); } },
+      { stage: "FLOW", boxes: ["return"], at: 3,
+        msg: "",
+        apply: function () { this.msg = "Room re-ran the query, found " + sim.items.length + " row(s), and re-emitted the Flow — deletes update the screen the same reactive way."; renderItems(true); } },
+    ];
+  }
+
+  function buildClearSteps() {
+    return [
+      { stage: "UI", boxes: ["ui"], carry: "clear", at: 0,
+        msg: "Clear storage tapped → viewModelScope.launch { repository.clear() } runs DELETE FROM items.",
+        apply: function () { sim.items = []; renderTable(); } },
+      { stage: "FLOW", boxes: ["return"], at: 4,
+        msg: "Room re-emitted an empty List down the Flow → the list clears on screen.",
+        apply: function () { renderItems(false); } },
+    ];
+  }
+
+  function buildRelaunchSteps() {
+    return [
+      { stage: "FLOW", boxes: ["return"], at: 1,
+        msg: "",
+        apply: function () { this.msg = "App relaunched. On first subscription Room read " + sim.items.length + " row(s) back from journey.db — a lone Flow step, no save in sight. That is persistence."; renderItems(true); renderTable(); } },
+    ];
+  }
+
+  // wire simulator controls
+  $("#simSave").addEventListener("click", function () {
+    var label = $("#simInput").value.trim();
+    if (!label) { var f = $("#simField"); f.classList.add("focus"); setTimeout(function () { f.classList.remove("focus"); }, 600); return; }
+    $("#simInput").value = "";
+    startJourney(buildSaveSteps(label));
+  });
+  $("#simInput").addEventListener("keydown", function (e) { if (e.key === "Enter") $("#simSave").click(); });
+  $("#simInput").addEventListener("focus", function () { $("#simField").classList.add("focus"); });
+  $("#simInput").addEventListener("blur", function () { $("#simField").classList.remove("focus"); });
+  $("#simNext").addEventListener("click", function () { if (sim.mode === "manual" && sim.running) { advance(); if (sim.qi >= sim.queue.length) finish(); } });
+  $("#simClear").addEventListener("click", function () { if (!sim.running && sim.items.length) startJourney(buildClearSteps()); });
+  $("#simRelaunch").addEventListener("click", function () { if (!sim.running) startJourney(buildRelaunchSteps()); });
+  $("#simUninstall").addEventListener("click", function () {
+    if (sim.running) return;
+    sim.items = []; sim.nextId = 1; sim.journey = []; clearPipe();
+    renderItems(false); renderTable(); renderJourney();
+  });
+  $$("#modeSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { $$("#modeSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.mode = b.dataset.mode; updateNextBtn(); });
+  });
+  $$("#spdSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { $$("#spdSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.delay = parseInt(b.dataset.ms, 10); });
+  });
+  renderItems(false); renderTable(); renderJourney();
+
+  // ======================= ARCHITECTURE =======================
+  var ARCH = {
+    ui:   { name: "① UI — the screen", file: "MainActivity.kt", tab: "t-ui",
+      what: "A single Jetpack Compose screen: an OutlinedTextField, a Save button, the saved-items list, and the Journey panel. The tap captures the typed text and calls the ViewModel; it collects the ViewModel's StateFlows and recomposes when they change.",
+      points: ["Captures input as local Compose state", "Calls viewModel.addItem(label) on Save", "Reads items + journey via collectAsStateWithLifecycle()"] },
+    vm:   { name: "② ViewModel — the conductor", file: "StorageJourneyViewModel.kt", tab: "t-vm",
+      what: "Survives rotation, owns the write action, and turns Room's Flow into a cached StateFlow. addItem() reads top-to-bottom as the write path: stamp metadata, record the UI + ViewModel legs, launch a coroutine for the suspend save.",
+      points: ["Builds StoredItem and stamps createdAt", "viewModelScope.launch { repository.save(...) }", "Exposes items via .onEach{record FLOW}.stateIn(...)"] },
+    repo: { name: "③ Repository — the storage boundary", file: "data/ItemRepository.kt", tab: "t-repo",
+      what: "The one named place the app talks to for persistence. The ViewModel never touches the DAO directly. It is also the honest spot to record the Repository and Room legs of the journey, because here you can watch the new id come back.",
+      points: ["Wraps the DAO (the only Room caller)", "save(item): suspend → dao.insert(item)", "Re-exposes dao.observeItems() as items"] },
+    room: { name: "④ Room — the SQLite engine", file: "data/ItemDao.kt + data/ItemDatabase.kt", tab: "t-dao",
+      what: "You describe tables (@Entity), queries (@Dao), and the database (@Database); KSP generates the SQLite-backed implementation at build time. The @Insert runs a real INSERT and returns the new id; the @Query returning Flow re-emits on every change.",
+      points: ["@Insert suspend fun insert(): Long (the write)", "observeItems(): Flow — the reactive read", "Singleton database over the journey.db file"] },
+    disk: { name: "⑤ journey.db — bytes on disk", file: "internal app storage", tab: "t-db",
+      what: "The app's private SQLite file at /data/data/com.example.storagejourney/databases/journey.db. Once SQLite commits, the row outlives process death and reboots — it is only gone on clear-data or uninstall.",
+      points: ["Private to the app (no permissions needed)", "Survives restart + reboot", "Removed on clear-data / uninstall"] },
+    log:  { name: "★ JourneyLog — the narrator", file: "journey/JourneyLog.kt", tab: "t-log",
+      what: "An observable, Android-free trace. Each layer records a short step into a MutableStateFlow; the UI collects it and renders the Journey panel. It is the same reactive Flow → UI pattern Room uses for the data, applied to the story of the trip — and it is unit-tested on the JVM.",
+      points: ["MutableStateFlow<List<JourneyStep>> of steps", "record(stage, message) + reset()", "No Android imports → JVM unit tests"] },
+  };
+  function renderArch(layer) {
+    var a = ARCH[layer]; var d = $("#archDetail");
+    d.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = a.name; h.style.marginTop = "0";
+    var f = document.createElement("div"); f.className = "pl-file"; f.style.marginBottom = "8px"; f.textContent = a.file;
+    var p = document.createElement("p"); p.className = "dense"; p.textContent = a.what;
+    var ul = document.createElement("ul"); ul.className = "kicker-list";
+    a.points.forEach(function (pt) { var li = document.createElement("li"); li.textContent = pt; ul.appendChild(li); });
+    var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "Open " + a.file.split(" ")[0] + " in the code explorer ▸";
+    btn.addEventListener("click", function () { openCodeTab(a.tab); var c = $("#code"); if (c) c.scrollIntoView({ behavior: "smooth" }); });
+    d.appendChild(h); d.appendChild(f); d.appendChild(p); d.appendChild(ul); d.appendChild(btn);
+  }
+  $$(".arch-chip").forEach(function (chip) {
+    chip.addEventListener("click", function () { $$(".arch-chip").forEach(function (x) { x.classList.remove("sel"); }); chip.classList.add("sel"); renderArch(chip.dataset.layer); });
+  });
+  renderArch("ui");
+
+  // ======================= CODE TABS =======================
+  function openCodeTab(tabId) {
+    $$(".tab").forEach(function (x) { x.classList.toggle("on", x.dataset.tab === tabId); });
+    $$(".tabpane").forEach(function (x) { x.classList.toggle("on", x.dataset.pane === tabId); });
+  }
+  $$(".tab").forEach(function (t) { t.addEventListener("click", function () { openCodeTab(t.dataset.tab); }); });
+
+  // ======================= REACTIVE DEMO =======================
+  var rx = { db: 0, screen: 0, mode: "flow" };
+  function renderRx() {
+    $("#rxDb").textContent = rx.db; $("#rxScreen").textContent = rx.screen;
+    var stale = rx.db !== rx.screen;
+    $("#rxReload").style.display = rx.mode === "manual" ? "" : "none";
+    $("#rxStale").style.display = stale ? "" : "none";
+    $("#rxFresh").style.display = stale ? "none" : "";
+    $("#rxFlowNote").textContent = rx.mode === "flow"
+      ? "With a Flow, every write re-emits automatically — the screen follows."
+      : "One-shot read: the screen only changes when someone calls reload().";
+  }
+  function rxSync() { if (rx.mode === "flow") rx.screen = rx.db; }
+  $("#rxAdd").addEventListener("click", function () { rx.db++; rxSync(); renderRx(); });
+  $("#rxDel").addEventListener("click", function () { if (rx.db > 0) rx.db--; rxSync(); renderRx(); });
+  $("#rxReload").addEventListener("click", function () { rx.screen = rx.db; renderRx(); });
+  $$("#rxSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { $$("#rxSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); rx.mode = b.dataset.rx; rxSync(); renderRx(); });
+  });
+  renderRx();
+
+  // ======================= LIFECYCLE =======================
+  var LIFE = {
+    rotate:    { keep: true,  emoji: "🧱", state: "Survives: #1 “milk” is still on disk", why: "Rotation just recreates the screen. The row is on disk, and the ViewModel + its StateFlow also survive a configuration change, so nothing re-queries from scratch." },
+    kill:      { keep: true,  emoji: "🧱", state: "Survives: #1 “milk” is still on disk", why: "SQLite already committed the file. When the app relaunches, observeItems() reads the row back on first subscription — that lone Flow step you saw in the simulator." },
+    reboot:    { keep: true,  emoji: "🧱", state: "Survives: #1 “milk” is still on disk", why: "The journey.db file lives in the app's private storage on disk, which persists across device reboots." },
+    cleardata: { keep: false, emoji: "💨", state: "Gone: app data cleared", why: "Settings → Clear data deletes the app's private files, including journey.db. This is one of only two ways the element truly disappears." },
+    uninstall: { keep: false, emoji: "∅", state: "Gone: app uninstalled", why: "Uninstalling removes the app's private storage with it. This is the true end of the journey." },
+    restore:   { keep: true,  emoji: "🧱", state: "Stored: #1 “milk” is on disk", why: "Demo reset — the element is back on disk. Try an event to see whether it survives." },
+  };
+  function renderLife(ev) {
+    var L = LIFE[ev]; var chip = $("#lifeChip");
+    chip.textContent = L.emoji;
+    chip.className = "life-chip " + (L.keep ? "present" : "gone");
+    var st = $("#lifeState"); st.textContent = L.state; st.className = "life-state " + (L.keep ? "present" : "gone");
+    $("#lifeWhy").textContent = L.why;
+  }
+  $$("#lifeBtns button").forEach(function (b) { b.addEventListener("click", function () { renderLife(b.dataset.ev); }); });
+
+  // ======================= GLOSSARY =======================
+  var TERMS = [
+    ["@Entity", "A Kotlin class Room turns into a SQLite table at build time. Each property becomes a column; each instance a row. Here: StoredItem."],
+    ["@Dao", "Data Access Object — an interface of read/write methods. Room generates the implementation (ItemDao_Impl). Here: ItemDao with insert + observeItems."],
+    ["@Database", "The holder that ties the entity + DAO to one SQLite file and exposes the DAO. Built once via Room.databaseBuilder into journey.db."],
+    ["KSP", "Kotlin Symbol Processing — the build-time code generator that reads Room's annotations and writes ItemDatabase_Impl / ItemDao_Impl. Without it, the app compiles but fails at first use."],
+    ["suspend", "Marks a function that can pause without blocking its thread. dao.insert is suspend; Room runs the disk write off-thread inside it, then resumes your code where it left off (on the same thread it was called from). That's why writes never freeze the UI."],
+    ["Flow", "A cold, asynchronous stream of values. A Room @Query returning Flow is LIVE: Room re-runs the query and emits a fresh list every time the table changes."],
+    ["StateFlow", "A hot Flow that always holds a current value and shares it across collectors. The ViewModel turns Room's Flow into a StateFlow with stateIn(...)."],
+    ["stateIn", "Converts a cold Flow into a hot StateFlow scoped to viewModelScope, with an initial value. WhileSubscribed(5000) keeps it alive 5s after the last collector leaves (surviving a quick rotation)."],
+    ["onEach", "Runs a side effect for each emission of a Flow without changing it. Here it records the green FLOW leg every time Room re-emits."],
+    ["collectAsStateWithLifecycle()", "Subscribes a composable to a StateFlow, wraps the latest value in Compose State, and recomposes when it changes — pausing collection while the screen is off-screen."],
+    ["viewModelScope", "A CoroutineScope tied to the ViewModel's lifetime (Dispatchers.Main.immediate). launch{} here runs coroutines that are cancelled when the ViewModel is cleared."],
+    ["Repository", "The single boundary the app uses for persistence, so the ViewModel never touches Room directly. A clean seam for caching, validation, or a second data source later."],
+    ["Recomposition", "Compose re-running the parts of the UI that read a changed value. A new StateFlow emission flips Compose State, and only the readers redraw — no manual refresh."],
+    ["journey.db", "The app's private SQLite file on disk. Survives process death and reboot; removed only on clear-data or uninstall."],
+  ];
+  (function () {
+    var acc = $("#acc");
+    TERMS.forEach(function (t) {
+      var item = document.createElement("div"); item.className = "acc-item";
+      var q = document.createElement("button"); q.className = "acc-q"; q.type = "button";
+      var term = document.createElement("span"); term.innerHTML = "<code>" + t[0].replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
+      var plus = document.createElement("span"); plus.className = "plus"; plus.textContent = "+";
+      q.appendChild(term); q.appendChild(plus);
+      var a = document.createElement("div"); a.className = "acc-a"; a.textContent = t[1];
+      q.addEventListener("click", function () { item.classList.toggle("open"); });
+      item.appendChild(q); item.appendChild(a); acc.appendChild(item);
+    });
+  })();
+
+  // ======================= QUIZ =======================
+  var QUIZ = [
+    { q: "After you tap Save, what actually makes the new row appear in the list?",
+      opts: ["MainActivity manually reloads the list", "Room re-runs its Flow query, the StateFlow updates, and Compose recomposes", "The Repository pushes the row straight into the UI", "onCreate runs again"],
+      correct: 1,
+      exp: "The read side is a reactive Flow. The insert changes the table, Room re-emits, the StateFlow updates, and the screen recomposes — no manual reload anywhere." },
+    { q: "Why is dao.insert a suspend function?",
+      opts: ["So it returns faster", "So the disk write runs off the main thread (Room handles that), keeping the UI smooth", "So it can run twice", "Because Compose requires it"],
+      correct: 1,
+      exp: "suspend lets Room run the disk write off-thread inside insert, then resume your code. The ViewModel calls it from viewModelScope.launch so the UI never blocks." },
+    { q: "What does KSP do in this project?",
+      opts: ["Runs the app", "Generates ItemDatabase_Impl / ItemDao_Impl from Room's annotations at build time", "Encrypts the database", "Downloads dependencies"],
+      correct: 1,
+      exp: "KSP (Kotlin Symbol Processing) reads Room's @Entity/@Dao/@Database annotations and generates the SQLite-backed implementation classes during the build." },
+    { q: "Where is each StoredItem's createdAt timestamp set?",
+      opts: ["In the SQLite table default", "In the DAO", "In the ViewModel, just before saving", "In the HTML"],
+      correct: 2,
+      exp: "addItem() stamps createdAt = System.currentTimeMillis() when it builds the StoredItem, so the row carries its own 'saved at' moment." },
+    { q: "Which of these makes the saved row truly disappear?",
+      opts: ["Rotating the screen", "Killing the app process", "Rebooting the device", "Uninstalling the app (or Clear data)"],
+      correct: 3,
+      exp: "The row lives in journey.db on disk, so it survives rotation, process death, and reboot. Only clear-data or uninstall removes the app's private storage." },
+  ];
+  (function () {
+    var wrap = $("#quiz"); var answered = {}; var score = 0;
+    QUIZ.forEach(function (item, qi) {
+      var card = document.createElement("div"); card.className = "q";
+      var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
+      var opts = document.createElement("div"); opts.className = "q-opts";
+      item.opts.forEach(function (text, oi) {
+        var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
+        b.addEventListener("click", function () {
+          if (answered[qi]) return;
+          answered[qi] = true;
+          var buttons = $$(".opt", opts);
+          buttons.forEach(function (x, xi) { x.disabled = true; if (xi === item.correct) x.classList.add("correct"); });
+          if (oi !== item.correct) b.classList.add("wrong");
+          else score++;
+          card.classList.add("answered");
+          $("#quizScore").textContent = score + " / " + QUIZ.length;
+        });
+        opts.appendChild(b);
+      });
+      var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
+      card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
+    });
+  })();
+})();
+</script>
+</body>
+</html>

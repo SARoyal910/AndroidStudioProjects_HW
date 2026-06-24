@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How a Message Arrives — WebSocket Live</title>
+<meta name="description" content="A step-by-step walkthrough of the WebSocket Live Android app: follow the open socket as it streams connection events into a Flow, folds each one into immutable UI state with a pure reducer, and renders a live status and transcript — plus how sending a message works optimistically — each step shown as a real block of code.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">WS</div>
+      <div>
+        <div class="brand-title">WebSocket Live</div>
+        <div class="brand-subtitle">How a message arrives</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">The idea</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>A live, two-way connection</span></a>
+      <a class="nav-link" href="#layers"><span class="nav-num">2</span><span>The event stream</span></a>
+      <a class="nav-link" href="#map"><span class="nav-num">3</span><span>Project map</span></a>
+      <div class="nav-title">The connection layer</div>
+      <a class="nav-link" href="#init"><span class="nav-num">4</span><span>Build wiring</span></a>
+      <a class="nav-link" href="#events"><span class="nav-num">5</span><span>The events &amp; models</span></a>
+      <a class="nav-link" href="#connection"><span class="nav-num">6</span><span>The connection (Real/Fake)</span></a>
+      <div class="nav-title">State &amp; UI</div>
+      <a class="nav-link" href="#reducer"><span class="nav-num">7</span><span>The pure reducer</span></a>
+      <a class="nav-link" href="#viewmodel"><span class="nav-num">8</span><span>The ViewModel</span></a>
+      <a class="nav-link" href="#ui"><span class="nav-num">9</span><span>The screen</span></a>
+      <div class="nav-title">The round trip</div>
+      <a class="nav-link" href="#trip"><span class="nav-num">10</span><span>The full trip</span></a>
+      <a class="nav-link" href="#httpvsws"><span class="nav-num">11</span><span>WebSocket vs HTTP</span></a>
+      <a class="nav-link" href="#run"><span class="nav-num">12</span><span>Run &amp; inspect</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      Prefer to play with it?
+      <a href="websocket-live-explorer.html">Interactive explainer →</a>
+      <a href="../NetworkParsing/how-a-note-is-fetched.html">Network Parsing (HTTP request) →</a>
+      <a href="../StorageJourney/how-an-item-reaches-storage.html">Storage Journey (local data) →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">WS</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · A live, two-way connection</option>
+        <option value="#layers">2 · The event stream</option>
+        <option value="#map">3 · Project map</option>
+        <option value="#init">4 · Build wiring</option>
+        <option value="#events">5 · The events &amp; models</option>
+        <option value="#connection">6 · The connection (Real/Fake)</option>
+        <option value="#reducer">7 · The pure reducer</option>
+        <option value="#viewmodel">8 · The ViewModel</option>
+        <option value="#ui">9 · The screen</option>
+        <option value="#trip">10 · The full trip</option>
+        <option value="#httpvsws">11 · WebSocket vs HTTP</option>
+        <option value="#run">12 · Run &amp; inspect</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">A second network protocol</p>
+        <h1>How a message arrives</h1>
+        <p class="lead">
+          <strong>WebSocket Live</strong> teaches <em>backend communication over a different protocol</em>. Where the
+          <a href="../NetworkParsing/how-a-note-is-fetched.html">Network Parsing</a> demo does HTTP request → response
+          (ask once, get one answer), this keeps a <strong>single full-duplex connection open</strong> so either side can
+          push messages at any time. It shows a live connection status, a running transcript, and a box to send text that
+          an echo server sends straight back — built on <strong>OkHttp's WebSocket</strong> behind a <code>ViewModel</code>.
+          This page is that flow as <strong>blocks of real code</strong>.
+        </p>
+        <div class="tag-row">
+          <span class="tag green">OkHttp WebSocket</span>
+          <span class="tag blue">Flow&lt;ConnectionEvent&gt;</span>
+          <span class="tag violet">pure reducer</span>
+          <span class="tag amber">StateFlow + Compose</span>
+          <span class="tag">Kotlin</span>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">The one sentence to hold onto</span>
+          A socket is a <strong>stream of events over time</strong>, not a single call. The connection's callbacks become
+          a <code>Flow&lt;ConnectionEvent&gt;</code>; a <strong>pure reducer</strong> folds each event into one immutable
+          <code>LiveUiState</code>; and the screen renders that state. Because the reducer is pure, the whole state machine
+          is unit-testable with no coroutines.
+        </div>
+        <h3>Runs offline by default</h3>
+        <p class="dense">
+          The app ships in <strong>fake mode</strong> — the <code>LiveViewModel</code> constructor defaults to
+          <code>FakeWebSocketClient()</code>, which scripts a connect and echoes whatever you send, so it builds, runs, and
+          unit-tests with <em>no network</em>. Wiring in <code>RealWebSocketClient()</code> flips it to a live socket at
+          <code>wss://echo.websocket.events</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ 2. LAYERS ============ -->
+    <section class="band anchor" id="layers">
+      <div class="band-inner">
+        <p class="eyebrow">The shape of the stream</p>
+        <h2>The event stream, folded into state</h2>
+        <p class="dense">
+          Unlike a one-shot request, the connection reports a <em>sequence</em> of things over time. Each one flows
+          <em>up</em> through the layers: the socket's callbacks become events, the reducer folds them into a new state,
+          and the screen recomposes. Sending text flows the other way — and is shown optimistically before the echo
+          returns.
+        </p>
+        <div class="layers">
+          <div class="layer disk">
+            <div class="l-name">① The socket — OkHttp WebSocket</div>
+            <div class="l-desc">A single open connection to <code>wss://echo.websocket.events</code>. Its <code>WebSocketListener</code> fires <code>onOpen</code>, <code>onMessage</code>, <code>onClosing</code>, <code>onFailure</code>.</div>
+            <div class="l-files"><code>WebSocketClient.kt · RealWebSocketClient</code></div>
+          </div>
+          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;each callback → <code>events.tryEmit(ConnectionEvent.…)</code></div>
+          <div class="layer repo">
+            <div class="l-name">② The connection — a Flow of events</div>
+            <div class="l-desc">Callbacks are funnelled into a <code>MutableSharedFlow&lt;ConnectionEvent&gt;</code>, exposed as <code>events(): Flow&lt;ConnectionEvent&gt;</code>.</div>
+            <div class="l-files"><code>WebSocketClient.kt · LiveConnection</code></div>
+          </div>
+          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;collected in the ViewModel</div>
+          <div class="layer engine">
+            <div class="l-name">③ The reducer — fold event into state</div>
+            <div class="l-desc">A pure <code>reduceLiveState(state, event)</code> returns the next immutable <code>LiveUiState</code> (status + transcript).</div>
+            <div class="l-files"><code>LiveViewModel.kt · reduceLiveState</code></div>
+          </div>
+          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;_uiState.update { reduceLiveState(it, event) }</div>
+          <div class="layer vm">
+            <div class="l-name">④ ViewModel — the StateFlow</div>
+            <div class="l-desc">Collects <code>events()</code> for its whole lifetime and publishes the folded state as a <code>StateFlow&lt;LiveUiState&gt;</code>.</div>
+            <div class="l-files"><code>LiveViewModel.kt</code></div>
+          </div>
+          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;collectAsStateWithLifecycle()</div>
+          <div class="layer ui">
+            <div class="l-name">⑤ UI — status chip + transcript</div>
+            <div class="l-desc">Renders the connection status and the running transcript; an input row sends text back down.</div>
+            <div class="l-files"><code>MainActivity.kt · LiveContent</code></div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Sending goes the other way</span>
+          <code>send(text)</code> calls <code>connection.send(text)</code> <em>and</em> optimistically appends your line as
+          <code>fromMe = true</code> right away. The server's echo arrives later as a <code>MessageReceived</code> event and
+          is appended by the reducer as a <code>fromMe = false</code> line.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. MAP ============ -->
+    <section class="band anchor" id="map">
+      <div class="band-inner">
+        <p class="eyebrow">Where everything lives</p>
+        <h2>Project map</h2>
+        <p class="dense">Four small Kotlin files: the events and models, the connection (with the Real/Fake switch), the ViewModel with its pure reducer, and the screen.</p>
+        <div class="tree">
+<span class="dir">WebSocketLive/</span>
+  <span class="f">build.gradle.kts</span>          <span class="note"># OkHttp wiring (no serialization plugin — there's no @Serializable state)</span>
+  <span class="dir">src/main/java/com/example/websocketlive/</span>
+    <span class="f">ConnectionEvent.kt</span>      <span class="note"># sealed ConnectionEvent + ChatMessage + ConnectionStatus</span>
+    <span class="f">WebSocketClient.kt</span>      <span class="note"># LiveConnection + Real (OkHttp) + Fake (offline) + the switch</span>
+    <span class="f">LiveViewModel.kt</span>        <span class="note"># LiveUiState + the pure reduceLiveState + the ViewModel</span>
+    <span class="f">MainActivity.kt</span>         <span class="note"># LiveScreen (opens the socket once) + stateless LiveContent + previews</span>
+  <span class="dir">src/test/java/.../</span>
+    <span class="f">ExampleUnitTest.kt</span>      <span class="note"># tests for the reducer, the fake stream, and the ViewModel</span>
+  <span class="f">AndroidManifest.xml</span>          <span class="note"># declares the INTERNET permission</span>
+  <span class="f">how-a-message-arrives.html</span>   <span class="note"># (this page)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. INIT ============ -->
+    <section class="band anchor" id="init">
+      <div class="band-inner">
+        <p class="eyebrow">Initialization · before any frame</p>
+        <h2>Step 0 — wiring the socket on</h2>
+        <p class="dense">
+          This project needs just <strong>one</strong> networking library: <strong>OkHttp</strong>, whose
+          <code>WebSocket</code> is the full-duplex transport. There is no <code>@Serializable</code> state here, so —
+          unlike Network Parsing — the kotlinx.serialization plugin is deliberately <em>not</em> applied.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.gradle.kts · plugins + the one networking dep</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kts">plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    // Only the Android + Compose plugins; there is no @Serializable state here, so
+    // kotlin.serialization is intentionally NOT applied.
+}
+
+dependencies {
+    // OkHttp's WebSocket is the full-duplex transport this project demonstrates.
+    implementation(libs.okhttp)
+    // viewModel() + collectAsStateWithLifecycle() to observe StateFlow&lt;LiveUiState&gt;.
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+}</pre>
+        </div>
+        <div class="callout warn">
+          <span class="callout-label">The INTERNET permission</span>
+          <code>AndroidManifest.xml</code> declares <code>&lt;uses-permission android:name="android.permission.INTERNET" /&gt;</code>
+          actively, so flipping to the real socket works with no manifest edit. It's harmless in the default offline fake
+          mode.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. EVENTS ============ -->
+    <section class="band anchor" id="events">
+      <div class="band-inner">
+        <p class="eyebrow">Step 1 · what can happen on the wire</p>
+        <h2>The events &amp; UI models</h2>
+        <p class="dense">
+          A WebSocket is a stream, so we model the <em>closed set</em> of things that can happen as a sealed
+          <code>ConnectionEvent</code>. Because it's sealed, the reducer's <code>when</code> over it is exhaustive. Two
+          small UI models go alongside it: the coarse <code>ConnectionStatus</code> chip and one transcript line,
+          <code>ChatMessage</code>.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">ConnectionEvent.kt · the wire events</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">sealed interface ConnectionEvent {
+    data object Connecting : ConnectionEvent                    // handshake started
+    data object Open : ConnectionEvent                          // open and ready
+    data class MessageReceived(val text: String) : ConnectionEvent  // a text frame arrived
+    data class Closed(val reason: String) : ConnectionEvent     // closed cleanly
+    data class Failure(val error: String) : ConnectionEvent     // network dropped / handshake rejected
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">ConnectionEvent.kt · the UI models</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// The coarse status shown as a header chip, derived from the event stream.
+enum class ConnectionStatus { Disconnected, Connecting, Connected, Failed }
+
+// One transcript line. fromMe = true if WE sent it; false if it arrived from the server.
+data class ChatMessage(val text: String, val fromMe: Boolean)</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. CONNECTION ============ -->
+    <section class="band anchor" id="connection">
+      <div class="band-inner">
+        <p class="eyebrow">Step 2 · the connection, Real and Fake</p>
+        <h2>The connection — callbacks become a Flow</h2>
+        <p class="dense">
+          The protocol hides behind a small <code>LiveConnection</code> interface: an <code>events()</code> stream plus
+          the actions <code>connect()</code> / <code>send()</code> / <code>close()</code>. The real implementation wires
+          OkHttp's <code>WebSocketListener</code> callbacks into a <code>MutableSharedFlow</code>; the fake scripts the
+          same events offline.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">WebSocketClient.kt · the contract</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface LiveConnection {
+    fun events(): Flow&lt;ConnectionEvent&gt;   // everything the socket reports, as a stream
+    fun connect()                         // open (async; watch events for Connecting/Open)
+    fun send(text: String)                // send a text frame (no-op if not open)
+    fun close()                           // close cleanly
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">WebSocketClient.kt · RealWebSocketClient (OkHttp)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class RealWebSocketClient(
+    private val url: String = "wss://echo.websocket.events",
+    private val httpClient: OkHttpClient = OkHttpClient(),
+) : LiveConnection {
+
+    private var webSocket: WebSocket? = null
+    // extraBufferCapacity lets callbacks emit with tryEmit() — never suspending the OkHttp thread.
+    private val events = MutableSharedFlow&lt;ConnectionEvent&gt;(extraBufferCapacity = 64)
+    override fun events(): Flow&lt;ConnectionEvent&gt; = events.asSharedFlow()
+
+    override fun connect() {
+        events.tryEmit(ConnectionEvent.Connecting)
+        val request = Request.Builder().url(url).build()
+        webSocket = httpClient.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                events.tryEmit(ConnectionEvent.Open)
+            }
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                events.tryEmit(ConnectionEvent.MessageReceived(text))
+            }
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                webSocket.close(NORMAL_CLOSURE, null)
+                events.tryEmit(ConnectionEvent.Closed(reason.ifBlank { "closed" }))
+            }
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                events.tryEmit(ConnectionEvent.Failure(t.message ?: "connection failed"))
+            }
+        })
+    }
+
+    override fun send(text: String) { webSocket?.send(text) }    // OkHttp queues the frame
+    override fun close() { webSocket?.close(NORMAL_CLOSURE, "client closed"); webSocket = null }
+
+    private companion object { const val NORMAL_CLOSURE = 1000 }  // WebSocket "normal closure" code
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">WebSocketClient.kt · FakeWebSocketClient + the switch</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class FakeWebSocketClient : LiveConnection {
+    private val events = MutableSharedFlow&lt;ConnectionEvent&gt;(extraBufferCapacity = 64)
+    override fun events(): Flow&lt;ConnectionEvent&gt; = events.asSharedFlow()
+
+    override fun connect() {
+        events.tryEmit(ConnectionEvent.Connecting)
+        events.tryEmit(ConnectionEvent.Open)
+        events.tryEmit(ConnectionEvent.MessageReceived("Connected to the OFFLINE fake echo server."))
+    }
+    override fun send(text: String) {
+        events.tryEmit(ConnectionEvent.MessageReceived(text))   // echo it straight back, like the real server
+    }
+    override fun close() { events.tryEmit(ConnectionEvent.Closed("client closed")) }
+}
+
+// THE SWITCH — change one argument to toggle offline (default) vs the live wss:// server.
+fun provideLiveConnection(useFake: Boolean = true): LiveConnection =
+    if (useFake) FakeWebSocketClient() else RealWebSocketClient()</pre>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">Why <code>tryEmit</code> and <code>MutableSharedFlow</code></span>
+          OkHttp delivers callbacks on its own thread, which must never block. A <code>MutableSharedFlow</code> with spare
+          buffer capacity lets each callback emit with the non-suspending <code>tryEmit()</code> — so socket events flow
+          into the app without ever stalling the network thread.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. REDUCER ============ -->
+    <section class="band anchor" id="reducer">
+      <div class="band-inner">
+        <p class="eyebrow">Step 3 · the state machine</p>
+        <h2>The pure reducer — fold one event into the next state</h2>
+        <p class="dense">
+          The heart of the app is a single pure function: given the current <code>LiveUiState</code> and one
+          <code>ConnectionEvent</code>, return the next state. No coroutines, no side effects — so the entire state
+          machine is trivially unit-testable.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">LiveViewModel.kt · LiveUiState + reduceLiveState</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">data class LiveUiState(
+    val status: ConnectionStatus = ConnectionStatus.Disconnected,
+    val messages: List&lt;ChatMessage&gt; = emptyList(),     // the transcript, oldest first
+)
+
+fun reduceLiveState(state: LiveUiState, event: ConnectionEvent): LiveUiState =
+    when (event) {
+        is ConnectionEvent.Connecting -&gt; state.copy(status = ConnectionStatus.Connecting)
+        is ConnectionEvent.Open       -&gt; state.copy(status = ConnectionStatus.Connected)
+        is ConnectionEvent.MessageReceived -&gt;
+            state.copy(messages = state.messages + ChatMessage(event.text, fromMe = false))
+        is ConnectionEvent.Closed     -&gt; state.copy(status = ConnectionStatus.Disconnected)
+        is ConnectionEvent.Failure    -&gt; state.copy(status = ConnectionStatus.Failed)
+    }</pre>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">Pure = testable</span>
+          Because <code>reduceLiveState</code> takes a state and an event and returns a state — with no I/O — the unit
+          tests check the whole machine with plain assertions: <code>reduceLiveState(LiveUiState(), Open).status == Connected</code>.
+          No dispatcher, no socket.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8. VIEWMODEL ============ -->
+    <section class="band anchor" id="viewmodel">
+      <div class="band-inner">
+        <p class="eyebrow">Step 4 · the conductor</p>
+        <h2>The ViewModel — collect the stream, fold it, expose it</h2>
+        <p class="dense">
+          The ViewModel collects the connection's <code>events()</code> for its whole lifetime, folding each event into
+          the state with the pure reducer, and publishes the result as a <code>StateFlow</code>. Sending optimistically
+          appends your own line; the echo arrives later through the same stream.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">LiveViewModel.kt · collect in init + send()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class LiveViewModel(
+    private val connection: LiveConnection = FakeWebSocketClient(),   // injected; defaults to offline fake
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(LiveUiState())
+    val uiState: StateFlow&lt;LiveUiState&gt; = _uiState.asStateFlow()
+
+    init {
+        // Collect the event stream for the ViewModel's whole lifetime, folding each
+        // event into the UI state with the pure reducer.
+        viewModelScope.launch {
+            connection.events().collect { event -&gt;
+                _uiState.update { current -&gt; reduceLiveState(current, event) }
+            }
+        }
+    }
+
+    fun connect() = connection.connect()
+
+    fun send(text: String) {
+        if (text.isBlank()) return
+        connection.send(text)                                        // ask the server (echo)
+        _uiState.update { it.copy(messages = it.messages + ChatMessage(text, fromMe = true)) }  // optimistic
+    }
+
+    fun disconnect() = connection.close()
+}</pre>
+        </div>
+        <div class="callout violet">
+          <span class="callout-label">Optimistic UI</span>
+          <code>send()</code> appends your outgoing line immediately so the UI feels instant; the server's echo returns
+          as a separate <code>MessageReceived</code> event and is appended (as <code>fromMe = false</code>) by the
+          reducer. Two lines, two sources, one transcript.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 9. UI ============ -->
+    <section class="band anchor" id="ui">
+      <div class="band-inner">
+        <p class="eyebrow">Step 5 · where it appears on screen</p>
+        <h2>The screen — open once, render the stream</h2>
+        <p class="dense">
+          The stateful <code>LiveScreen</code> observes the state, owns the input text, and opens the socket exactly once
+          with <code>LaunchedEffect(Unit)</code>. The stateless <code>LiveContent</code> draws the status chip, the
+          transcript, and the input row — so previews can drive it with hand-made state, no real socket.
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · LiveScreen (stateful)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Composable
+fun LiveScreen(modifier: Modifier = Modifier, viewModel: LiveViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // Open the connection exactly once when the screen first appears (Unit key = run once).
+    LaunchedEffect(Unit) { viewModel.connect() }
+    var input by remember { mutableStateOf("") }
+    LiveContent(
+        uiState = uiState,
+        input = input,
+        onInputChange = { input = it },
+        onSend = { viewModel.send(input); input = "" },   // send, then clear the box
+        modifier = modifier,
+    )
+}</pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · LiveContent (stateless) — status, transcript, input</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">Text("Status: ${uiState.status}", color = when (uiState.status) {
+    ConnectionStatus.Connected -&gt; MaterialTheme.colorScheme.primary
+    ConnectionStatus.Failed    -&gt; MaterialTheme.colorScheme.error
+    else                       -&gt; MaterialTheme.colorScheme.onSurfaceVariant
+})
+
+LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {   // the transcript fills the middle
+    items(uiState.messages) { message -&gt; MessageRow(message) }
+}
+
+Row {                                                         // the input row
+    OutlinedTextField(value = input, onValueChange = onInputChange, /* … */)
+    Button(onClick = onSend, enabled = input.isNotBlank()) { Text("Send") }
+}</pre>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Sent vs received, at a glance</span>
+          <code>MessageRow</code> renders <code>fromMe</code> lines right-aligned in the primary colour (“you: …”) and
+          server lines left-aligned (“server: …”), so the two-way nature of the socket is visible in the transcript.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. TRIP (stepper) ============ -->
+    <section class="band anchor" id="trip">
+      <div class="band-inner">
+        <p class="eyebrow">All together</p>
+        <h2>The full trip, one step at a time</h2>
+        <p class="dense">Step through the chain from opening the socket to seeing your echoed message — in offline fake mode, which mirrors the real server exactly.</p>
+        <div class="stepper" id="sortStepper">
+          <div class="stepper-head">
+            <span class="s-title">Scenario: the screen opens, you connect, then send “hello”</span>
+            <div class="stepper-ctrl">
+              <button id="stepPrev" type="button">‹ Prev</button>
+              <span class="s-count" id="stepCount">1 / 7</span>
+              <button id="stepNext" type="button">Next ›</button>
+            </div>
+          </div>
+          <ol class="steps" id="stepList">
+            <li class="step" data-step><div class="s-num">1</div><div class="s-body"><strong>Open once.</strong> <code>LiveScreen</code> runs <code>LaunchedEffect(Unit) { viewModel.connect() }</code>, which calls <code>connection.connect()</code>.<span class="s-where">MainActivity.kt · LaunchedEffect(Unit)</span></div></li>
+            <li class="step" data-step><div class="s-num">2</div><div class="s-body"><strong>Connecting → Open.</strong> The connection emits <code>Connecting</code> then <code>Open</code>. The collector folds them: status becomes <code>Connecting</code>, then <code>Connected</code>.<span class="s-where">WebSocketClient.kt · connect() → reduceLiveState</span></div></li>
+            <li class="step" data-step><div class="s-num">3</div><div class="s-body"><strong>Greeting.</strong> A <code>MessageReceived("Connected to the OFFLINE fake echo server.")</code> arrives; the reducer appends it as a <code>fromMe = false</code> line.<span class="s-where">LiveViewModel.kt · reduceLiveState (MessageReceived)</span></div></li>
+            <li class="step" data-step><div class="s-num">4</div><div class="s-body"><strong>You type “hello”, tap Send.</strong> <code>onSend</code> calls <code>viewModel.send("hello")</code>.<span class="s-where">MainActivity.kt · Button(onClick = onSend)</span></div></li>
+            <li class="step" data-step><div class="s-num">5</div><div class="s-body"><strong>Optimistic append.</strong> <code>send()</code> calls <code>connection.send("hello")</code> and immediately appends your line as <code>fromMe = true</code> — the UI updates instantly.<span class="s-where">LiveViewModel.kt · send()</span></div></li>
+            <li class="step" data-step><div class="s-num">6</div><div class="s-body"><strong>The echo returns.</strong> The (fake or real) server sends “hello” back, arriving as a <code>MessageReceived("hello")</code> event.<span class="s-where">WebSocketClient.kt · send() echoes</span></div></li>
+            <li class="step" data-step><div class="s-num">7</div><div class="s-body"><strong>Fold → recompose.</strong> The collector folds the echo into a <code>fromMe = false</code> line; the <code>StateFlow</code> emits and the transcript recomposes with both lines.<span class="s-where">LiveViewModel.kt + MainActivity.kt</span></div></li>
+          </ol>
+        </div>
+        <div class="callout">
+          <span class="callout-label">The point</span>
+          One connection stayed open the whole time. Your message and the server's reply are <em>two separate events</em>
+          on that single socket — exactly the full-duplex behaviour HTTP can't express in one call.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. HTTP vs WS ============ -->
+    <section class="band anchor" id="httpvsws">
+      <div class="band-inner">
+        <p class="eyebrow">Two protocols, side by side</p>
+        <h2>WebSocket vs HTTP</h2>
+        <p class="dense">
+          The sibling <a href="../NetworkParsing/how-a-note-is-fetched.html">Network Parsing</a> demo uses HTTP. Putting
+          them next to each other is the fastest way to feel why a socket is a different tool.
+        </p>
+        <table class="tbl">
+          <thead><tr><th>&nbsp;</th><th>HTTP (Network Parsing)</th><th>WebSocket (this app)</th></tr></thead>
+          <tbody>
+            <tr><td>Shape</td><td>One request → one response</td><td>One open connection, many frames over time</td></tr>
+            <tr><td>Who can speak</td><td>Client asks; server answers</td><td>Either side pushes at any time (full-duplex)</td></tr>
+            <tr><td>Modelled as</td><td>A single <code>suspend</code> call returning data</td><td>A <code>Flow&lt;ConnectionEvent&gt;</code> stream</td></tr>
+            <tr><td>UI state</td><td><code>Loading / Success / Error</code></td><td>A status chip + a growing transcript</td></tr>
+            <tr><td>Library</td><td>Retrofit + kotlinx.serialization</td><td>OkHttp <code>WebSocket</code></td></tr>
+            <tr><td>Good for</td><td>Fetching/CRUD on demand</td><td>Live chat, tickers, presence, notifications</td></tr>
+          </tbody>
+        </table>
+        <div class="callout good">
+          <span class="callout-label">Same skeleton, different transport</span>
+          Both apps use the identical teaching spine: a Real/Fake switch for offline runs, a <code>ViewModel</code>
+          exposing a <code>StateFlow</code>, and a stateless Compose screen. Only the data layer differs — request/response
+          vs an event stream — which is exactly the comparison this pair is built to teach.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12. RUN ============ -->
+    <section class="band anchor" id="run">
+      <div class="band-inner">
+        <p class="eyebrow">Try it yourself</p>
+        <h2>Run &amp; inspect</h2>
+        <p class="dense">The app builds and tests offline by default. Build from the <code>WebSocketLive/</code> project directory:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal · from WebSocketLive/</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash">./gradlew assembleDebug --console=plain --stacktrace   # build (offline fake mode)
+./gradlew testDebugUnitTest                            # reducer + fake-stream + ViewModel tests</pre>
+        </div>
+        <h3>Open the live socket</h3>
+        <ul class="kicker-list">
+          <li><strong>Wire the real connection into the ViewModel:</strong> <code>LiveViewModel</code> currently defaults to <code>FakeWebSocketClient()</code>, so pass it <code>provideLiveConnection(useFake = false)</code> (or <code>RealWebSocketClient()</code>) — the <code>provideLiveConnection(...)</code> factory in <code>WebSocketClient.kt</code> is the single intended switch.</li>
+          <li><strong>The <code>INTERNET</code> permission</strong> is already declared, so no manifest edit is needed.</li>
+          <li><strong>Run on a device/emulator with a connection</strong> — type a message and the echo server at <code>wss://echo.websocket.events</code> returns it on the open socket.</li>
+        </ul>
+        <div class="callout good">
+          <span class="callout-label">Where to go next</span>
+          See the request/response contrast in <a href="../NetworkParsing/how-a-note-is-fetched.html">Network Parsing</a>,
+          or play with this one in the <a href="websocket-live-explorer.html">interactive explainer</a> — connect, send,
+          and watch events fold into state live.
+        </div>
+        <p class="foot">WebSocket Live · one open connection, a stream of events · part of the AndroidStudioProjects teaching set.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = highlight(code, lang);
+    } catch (e) { /* leave plain text on any error */ }
+  });
+})();
+</script>
+</body>
+</html>

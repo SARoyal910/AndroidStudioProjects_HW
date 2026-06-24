@@ -1,10 +1,9 @@
 // =============================================================================
 // data/storage/DestinationStore.kt  —  the STORAGE abstraction (repository)
 //
-// ⏭️ This whole package is a PREVIEW of the next topic: persistence (saving data
-// so it survives the app closing). The rest of the app deliberately keeps its
-// data in memory (it resets on rotation); this layer shows where "real" storage
-// plugs in.
+// This package is the app's PERSISTENCE layer: it's what makes your list survive
+// the app closing. WanderlistApp loads from it on launch and saves to it after
+// every edit (see persistLocal()), so the list you see is always backed by disk.
 //
 // THE KEY IDEA — depend on an INTERFACE, not a specific storage technology.
 // The UI calls save()/load() on a DestinationStore and does not care HOW the data

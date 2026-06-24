@@ -53,6 +53,10 @@ header.hero .links{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
 header.hero a.back{color:#dcfffb;text-decoration:none;font-size:13px;font-weight:700;
   border:1px solid rgba(255,255,255,.25);padding:6px 12px;border-radius:8px;white-space:nowrap;}
 header.hero a.back:hover{background:rgba(255,255,255,.1);}
+.scope-note{background:#fff;border-bottom:1px solid var(--line);padding:11px 22px;color:var(--muted);font-size:13px;}
+.scope-note strong{color:var(--ink);}
+.scope-note a{color:var(--accent-deep);font-weight:750;text-decoration:none;}
+.scope-note a:hover{text-decoration:underline;}
 
 /* --- Toolbar ---------------------------------------------------------------- */
 .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;background:#fff;
@@ -131,6 +135,8 @@ pre .px{color:var(--c-punct);}
 .dbtable th{color:#7c8aa0;font-weight:700;background:#fbfdff;}
 .dbtable td.done-1{color:var(--accent-deep);}
 .dbempty{padding:14px;text-align:center;color:#9aa8b8;font-size:12px;font-family:inherit;}
+.savedto{margin-top:8px;font-size:11px;color:#7c8aa0;line-height:1.55;}
+.savedto code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--accent-deep);font-size:10.5px;background:var(--teal-soft);border:1px solid var(--teal-line);padding:1px 5px;border-radius:5px;}
 
 /* the phone (the UI that COLLECTS the Flow) */
 .phone{width:300px;flex:none;border:10px solid #0b1220;border-radius:34px;background:#fff;overflow:hidden;
@@ -177,6 +183,46 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   .editorwrap{min-height:220px;}
   .pane.preview{min-height:620px;}
 }
+
+/* --- Room building blocks (detailed reference) ------------------------------ */
+.roomsec{flex:none;background:#f7f9fc;border-top:1px solid var(--line);}
+.rblock{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:14px;margin-top:6px;}
+.rcard{border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;}
+.rcard .rhead{padding:13px 16px 11px;}
+.rcard .rhead h4{margin:0 0 5px;font-size:15px;font-weight:800;}
+.rcard .rhead h4 code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--accent-deep);font-size:12.5px;font-weight:750;}
+.rcard .rhead p{margin:0;color:var(--muted);font-size:13px;line-height:1.55;}
+.rcard .rhead p code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--accent-deep);font-size:12px;}
+.rcard pre.rcode{margin:0;background:var(--code-bg);color:var(--code-ink);padding:13px 16px;overflow-x:auto;
+  font:12.5px/1.62 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;flex:1;}
+
+/* --- Interactive schema / database builder (Step 1) ------------------------- */
+.stephdr{max-width:1320px;margin:0 auto;padding:16px 22px 0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-deep);}
+.builder{flex:none;background:#fff;}
+.builder .binner{max-width:1320px;margin:0 auto;padding:4px 22px 6px;}
+.bgrid{display:grid;grid-template-columns:minmax(320px,390px) 1fr;gap:18px;align-items:start;margin-top:10px;}
+@media(max-width:900px){.bgrid{grid-template-columns:1fr;}}
+.bcontrols{display:flex;flex-direction:column;gap:12px;}
+.bcard{border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:#fbfdff;}
+.bcard .bch{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#9aa8b8;margin-bottom:8px;}
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap;}
+.brow:last-child{margin-bottom:0;}
+.brow input[type=text],.brow input[type=number],.brow select{font:inherit;font-size:12.5px;padding:4px 7px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);}
+.brow input.dbname{width:124px;} .brow input.ver{width:50px;} .brow input.cname{width:100px;}
+.brow select{cursor:pointer;}
+.brow label{font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;cursor:pointer;white-space:nowrap;}
+.brow .mini{font-size:11px;color:#9aa8b8;}
+.brow .rm{margin-left:auto;border:1px solid var(--line);background:#fff;color:#b4474a;border-radius:6px;font-size:14px;line-height:1;padding:1px 8px;cursor:pointer;}
+.brow .rm:hover{border-color:#b4474a;}
+.brow.pkrow{background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:8px;padding:6px 8px;}
+.baddcol{margin-top:2px;font-size:12px;font-weight:700;color:var(--accent-deep);background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:8px;padding:6px 12px;cursor:pointer;}
+.bcode{display:flex;flex-direction:column;gap:12px;min-width:0;}
+.bcode .lbl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#7c8aa0;margin:0 0 5px;}
+.bcode pre{margin:0;background:var(--code-bg);color:var(--code-ink);padding:12px 14px;border-radius:10px;overflow-x:auto;
+  font:12.5px/1.6 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre;box-shadow:var(--shadow);}
+.bcode pre .kw{color:#c792ea;} .bcode pre .id{color:#ffcb6b;}
+.bflow{font-size:12px;color:var(--muted);line-height:1.7;margin:4px 0 0;}
+.bflow b{color:var(--ink);} .bflow code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--accent-deep);font-size:11px;}
 </style>
 </head>
 <body>
@@ -189,7 +235,9 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
       <h1>Room Storage Playground</h1>
     </div>
     <div class="links">
+      <a class="back" href="../StorageShowcase/android-storage-lab.html">Storage chooser</a>
       <a class="back" href="../StorageMaster/storage-tutorial.html">📚 Storage Master Lab</a>
+      <a class="back" href="../StorageShowcase/how-storageshowcase-works.html">Storage Showcase</a>
       <a class="back" href="./playground.html">🎨 Compose</a>
       <a class="back" href="./nav-playground.html">🧭 Navigation</a>
       <a class="back" href="../homework/projects.html">← Projects</a>
@@ -197,6 +245,10 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   </div>
   <p class="sub">Local storage is just <b>operations on a persisted table</b>. A Room <code style="color:#cffaf5">@Query</code> that returns <code style="color:#cffaf5">Flow&lt;List&lt;Note&gt;&gt;</code> re-runs and <b>re-emits</b> on every write, so the UI re-renders automatically. <b>Edit</b> the DAO calls on the left — or <b>tap</b> a note on the phone — and watch the table, the SQL, and the list update live. (A teaching model, not a real database.)</p>
 </header>
+
+<div class="scope-note">
+  <strong>Scope:</strong> this page teaches the <b>Room</b> part of Android storage only. If you are deciding between Room, DataStore, files, cache, MediaStore, or SAF, start with the <a href="../StorageShowcase/android-storage-lab.html#chooser">storage chooser</a> first.
+</div>
 
 <!-- TOOLBAR -->
 <div class="toolbar">
@@ -208,6 +260,25 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   </div>
 </div>
 
+<!-- STEP 1: interactive — create the table & database -->
+<div class="stephdr">Step 1 · Create the database &amp; table — interactive</div>
+<section class="builder">
+  <div class="binner">
+    <p class="catintro" style="margin:6px 0 0;">Before you can <code>insert</code> a row you need a <b>table</b> and a <b>database</b>. Add or edit columns and the database settings on the left, and watch Room's three creation artifacts regenerate live: the <code>@Entity</code> (the table described as a class), the <code>CREATE TABLE</code> SQL Room runs, and the <code>@Database</code> + <code>databaseBuilder</code> that creates the file.</p>
+    <div class="bgrid">
+      <div class="bcontrols" id="bcontrols"></div>
+      <div class="bcode">
+        <div><p class="lbl">① @Entity — the table, described as a Kotlin class</p><pre id="genEntity"><code></code></pre></div>
+        <div><p class="lbl">② CREATE TABLE — the SQL Room generates &amp; runs</p><pre class="sql" id="genCreate"><code></code></pre></div>
+        <div><p class="lbl">③ @Database + databaseBuilder — create the file</p><pre id="genDb"><code></code></pre></div>
+        <p class="bflow" id="bflow"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 2: the existing live operations playground -->
+<div class="stephdr">Step 2 · Operate on the live table</div>
 <!-- MAIN: editable DAO code | live preview (SQL + table + phone) -->
 <div class="main">
   <section class="pane editor">
@@ -233,6 +304,7 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
           <div>
             <p class="dtitle">notes table (on disk)</p>
             <div class="dbtable" id="dbtable"></div>
+            <div class="savedto">💾 <b>Saved to:</b> in a real Room app this table lives in the app's private SQLite file at <code>/data/data/&lt;pkg&gt;/databases/notes.db</code>. (Settings would persist separately under <code>files/datastore/…</code>.) This playground holds it in memory only.</div>
           </div>
         </div>
         <div>
@@ -259,6 +331,15 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   </div>
 </section>
 
+<!-- ROOM BUILDING BLOCKS — the full picture in code + plain topics -->
+<section class="catalog roomsec">
+  <div class="catinner">
+    <h3 class="cattitle">The full Room picture: every building block</h3>
+    <p class="catintro">The playground above is the live <code>@Dao</code> calls. Here is the rest of Room — the pieces those calls depend on — each in plain words and real Kotlin. This is the same code as the runnable <b>StorageShowcase</b> app.</p>
+    <div class="rblock" id="roomBlocks"></div>
+  </div>
+</section>
+
 <script>
 (function(){
   'use strict';
@@ -266,7 +347,7 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
   // === 0 · helpers + Kotlin highlighter (shared look with the other playgrounds) ===
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function sq(s){ return String(s).replace(/'/g,"''"); }   // escape a SQL single-quote literal
-  var KW = ['val','var','fun','return','if','else','when','true','false','null','by','it','this'];
+  var KW = ['package','import','class','interface','object','data','enum','annotation','abstract','override','val','var','fun','suspend','companion','return','if','else','when','for','while','true','false','null','by','it','this','in','is','as','private','public','internal'];
   var FN = ['insert','update','delete','clear'];
   function hlKotlin(code){
     var re = new RegExp(
@@ -517,6 +598,210 @@ body.theme-dark .phone .napp-bar,body.theme-dark .phone .screen{ background:#141
     if(e.key === 'Tab'){ e.preventDefault(); var s=ta.selectionStart, en=ta.selectionEnd;
       ta.value = ta.value.slice(0,s) + '  ' + ta.value.slice(en); ta.selectionStart=ta.selectionEnd=s+2; render(); }
   });
+
+  // === 6 · Room building blocks reference (static, highlighted with the same colours) ===
+  var ROOM_BLOCKS = [
+    { title:"1 · The entity (your table)", tag:"@Entity",
+      topic:"An <code>@Entity</code> is a table. Each property is a column, and <code>@PrimaryKey</code> is the unique id for a row. This is the shape of one record.",
+      code:`@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,  // unique id, auto-numbered
+    val title: String,                                  // TEXT column
+    val body: String,                                   // TEXT column
+    val done: Boolean = false,                          // stored as INTEGER 0/1
+    val createdAt: Long = 0L,                           // epoch millis (INTEGER)
+)` },
+    { title:"2 · The DAO (your queries)", tag:"@Dao",
+      topic:"A <code>@Dao</code> is an interface of database methods; Room writes the real code and checks every query at build time. A <code>Flow</code> return re-emits on every change; a <code>suspend</code> write runs off the main thread.",
+      code:`@Dao
+interface NoteDao {
+    // reactive read: re-emits the whole list whenever the table changes
+    @Query("SELECT * FROM notes ORDER BY id DESC")
+    fun observeNotes(): Flow<List<Note>>
+
+    @Query("SELECT * FROM notes WHERE done = 0 ORDER BY title")
+    fun observeUndone(): Flow<List<Note>>
+
+    // one-shot writes (suspend = run on Room's background thread)
+    @Insert  suspend fun insert(note: Note): Long
+    @Update  suspend fun update(note: Note)
+    @Delete  suspend fun delete(note: Note)
+}` },
+    { title:"3 · The database", tag:"@Database",
+      topic:"The <code>@Database</code> ties your entities and DAOs to one file on disk, names it, and sets a version. Build it once and reuse it (a singleton) so the app never opens the file twice.",
+      code:`@Database(entities = [Note::class, Category::class], version = 2)
+@TypeConverters(Converters::class)
+abstract class StorageDatabase : RoomDatabase() {
+    abstract fun noteDao(): NoteDao
+
+    companion object {
+        @Volatile private var INSTANCE: StorageDatabase? = null
+        fun getInstance(context: Context): StorageDatabase =
+            INSTANCE ?: synchronized(this) {
+                Room.databaseBuilder(context, StorageDatabase::class.java, "storage.db")
+                    .addMigrations(MIGRATION_1_2)
+                    .build().also { INSTANCE = it }
+            }
+    }
+}` },
+    { title:"4 · Relationships (linking tables)", tag:"@ForeignKey + @Relation",
+      topic:"Real apps link tables: one Category has many Notes. A <code>@ForeignKey</code> makes each note point at a category (and <code>CASCADE</code> deletes its notes if the category is removed). <code>@Relation</code> reads a category plus all its notes in one shot.",
+      code:`@Entity(
+    tableName = "notes",
+    foreignKeys = [ForeignKey(
+        entity = Category::class,
+        parentColumns = ["id"], childColumns = ["categoryId"],
+        onDelete = ForeignKey.CASCADE,     // delete a category -> its notes go too
+    )],
+    indices = [Index("categoryId")],       // index the FK (Room warns otherwise)
+)
+data class Note(
+    // ...title, body, done, createdAt...
+    val categoryId: Long,                  // foreign key -> categories.id
+)
+
+// a read object: one category + the notes that point at it
+data class CategoryWithNotes(
+    @Embedded val category: Category,
+    @Relation(parentColumn = "id", entityColumn = "categoryId")
+    val notes: List<Note>,
+)` },
+    { title:"5 · Type converters (richer types)", tag:"@TypeConverter",
+      topic:"SQLite only stores text, numbers, and blobs. To store a <code>List</code> or an <code>enum</code>, give Room a <code>@TypeConverter</code>: a pair of functions that turn your type into text and back. Register them on the <code>@Database</code>.",
+      code:`class Converters {
+    // List<String>  <->  JSON text
+    @TypeConverter fun fromTags(tags: List<String>): String =
+        Json.encodeToString(tags)
+    @TypeConverter fun toTags(json: String): List<String> =
+        if (json.isBlank()) emptyList() else Json.decodeFromString(json)
+
+    // enum  <->  its NAME (store the name, never the number)
+    @TypeConverter fun fromPriority(p: Priority): String = p.name
+    @TypeConverter fun toPriority(v: String): Priority = Priority.valueOf(v)
+}` },
+    { title:"6 · Migrations (changing the schema)", tag:"Migration",
+      topic:"Once the app ships you cannot just change an <code>@Entity</code> — phones already hold the old table. Bump the version and give Room a <code>Migration</code> with SQL to upgrade the old data. Skip it and the app crashes on launch for upgraders.",
+      code:`// version 1 had no "tags" column; version 2 adds it.
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
+    }
+}
+
+// wire it into the builder (see block 3):
+Room.databaseBuilder(context, StorageDatabase::class.java, "storage.db")
+    .addMigrations(MIGRATION_1_2)
+    .build()` },
+  ];
+  (function renderRoomBlocks(){
+    var host = $('roomBlocks'); if(!host) return;
+    ROOM_BLOCKS.forEach(function(b){
+      var card = document.createElement('div'); card.className = 'rcard';
+      card.innerHTML =
+        '<div class="rhead"><h4>' + esc(b.title) + ' &nbsp;<code>' + esc(b.tag) + '</code></h4><p>' + b.topic + '</p></div>' +
+        '<pre class="rcode"><code>' + hlKotlin(esc(b.code)) + '</code></pre>';
+      host.appendChild(card);
+    });
+  })();
+
+  // === 7 · INTERACTIVE schema/database builder (Step 1) ===
+  var TYPES = ['String','Long','Int','Boolean','Double','ByteArray'];
+  var AFFINITY = { String:'TEXT', Long:'INTEGER', Int:'INTEGER', Boolean:'INTEGER', Double:'REAL', ByteArray:'BLOB' };
+  var schema = {
+    dbName:'notes.db', version:1, exportSchema:false, className:'Note', tableName:'notes',
+    cols:[
+      { name:'id', type:'Long', pk:true, autoGen:true },
+      { name:'title', type:'String', nullable:false, index:false },
+      { name:'body', type:'String', nullable:true, index:false },
+      { name:'done', type:'Boolean', nullable:false, index:false },
+    ],
+  };
+  function bel(t,c){ var e=document.createElement(t); if(c) e.className=c; return e; }
+  function bSpan(t){ var s=bel('span','mini'); s.textContent=t; return s; }
+  function bText(val,cls,on){ var i=bel('input',cls); i.type='text'; i.value=val; i.addEventListener('input',on); return i; }
+  function bNum(val,cls,on){ var i=bel('input',cls); i.type='number'; i.min='1'; i.value=val; i.addEventListener('input',on); return i; }
+  function bChk(checked,label,on){ var l=bel('label'); var i=bel('input'); i.type='checkbox'; i.checked=checked; i.addEventListener('change',on); l.appendChild(i); l.appendChild(document.createTextNode(' '+label)); return l; }
+  function bSel(opts,val,on){ var s=bel('select'); opts.forEach(function(o){ var op=bel('option'); op.value=o; op.textContent=o; if(o===val) op.selected=true; s.appendChild(op); }); s.addEventListener('change',on); return s; }
+
+  function genEntity(){
+    var idx = schema.cols.filter(function(c){ return c.index && !c.pk; }).map(function(c){ return 'Index(value = ["'+c.name+'"])'; });
+    var ann = ['tableName = "'+schema.tableName+'"']; if(idx.length) ann.push('indices = ['+idx.join(', ')+']');
+    var out = '@Entity('+ann.join(', ')+')\ndata class '+schema.className+'(\n';
+    schema.cols.forEach(function(c){
+      var pre = c.pk ? '@PrimaryKey('+(c.autoGen?'autoGenerate = true':'')+') ' : '';
+      var def = (c.pk && c.autoGen) ? ' = 0' : (c.type==='Boolean' && !c.pk ? ' = false' : '');
+      out += '    '+pre+'val '+c.name+': '+c.type+((c.nullable && !c.pk)?'?':'')+def+',\n';
+    });
+    return out + ')';
+  }
+  function genCreate(){
+    var lines = schema.cols.map(function(c){
+      var s = '`'+c.name+'` '+(AFFINITY[c.type]||'TEXT');
+      if(c.pk){ s += ' PRIMARY KEY'+(c.autoGen?' AUTOINCREMENT':'')+' NOT NULL'; }
+      else if(!c.nullable){ s += ' NOT NULL'; }
+      return '  '+s;
+    });
+    var out = 'CREATE TABLE IF NOT EXISTS `'+schema.tableName+'` (\n'+lines.join(',\n')+'\n);';
+    schema.cols.filter(function(c){ return c.index && !c.pk; }).forEach(function(c){
+      out += '\nCREATE INDEX IF NOT EXISTS `index_'+schema.tableName+'_'+c.name+'`\n  ON `'+schema.tableName+'` (`'+c.name+'`);';
+    });
+    return out + '\n-- affinity: String→TEXT · Int/Long/Boolean→INTEGER · Double→REAL · ByteArray→BLOB';
+  }
+  function genDb(){
+    var dao = schema.className+'Dao';
+    var accessor = schema.className.charAt(0).toLowerCase()+schema.className.slice(1)+'Dao';
+    return '@Database(entities = ['+schema.className+'::class], version = '+schema.version+', exportSchema = '+schema.exportSchema+')\n'
+      + 'abstract class AppDatabase : RoomDatabase() {\n'
+      + '    abstract fun '+accessor+'(): '+dao+'\n'
+      + '}\n\n'
+      + 'val db = Room.databaseBuilder(context, AppDatabase::class.java, "'+schema.dbName+'")\n'
+      + '    .build()   // a singleton in real code';
+  }
+  function hlDdl(code){
+    return esc(code)
+      .replace(/(--[^\n]*)/g,'<span class="c">$1</span>')
+      .replace(/`([^`]*)`/g,'`<span class="id">$1</span>`')
+      .replace(/\b(CREATE|TABLE|INDEX|IF|NOT|EXISTS|PRIMARY|KEY|AUTOINCREMENT|NULL|INTEGER|TEXT|REAL|BLOB|DEFAULT|ON|UNIQUE)\b/g,'<span class="kw">$1</span>');
+  }
+  function regen(){
+    $('genEntity').firstChild.innerHTML = hlKotlin(esc(genEntity()));
+    $('genCreate').firstChild.innerHTML = hlDdl(genCreate());
+    $('genDb').firstChild.innerHTML = hlKotlin(esc(genDb()));
+    $('bflow').innerHTML = '<b>How Room builds it:</b> ① describe the table as an <code>@Entity</code> → ② list it in <code>@Database(entities = […])</code> → ③ <code>Room.databaseBuilder(…, "'+esc(schema.dbName)+'").build()</code> → ④ the first time the file is opened, Room runs the <code>CREATE TABLE</code> into <code>'+esc(schema.dbName)+'</code> (its own private file). Editing a column re-shapes all three.';
+  }
+  function renderControls(){
+    var host = $('bcontrols'); host.innerHTML='';
+    var db = bel('div','bcard'); var h=bel('div','bch'); h.textContent='Database'; db.appendChild(h);
+    var r1 = bel('div','brow'); r1.appendChild(bSpan('file')); r1.appendChild(bText(schema.dbName,'dbname',function(){ schema.dbName=this.value||'app.db'; regen(); }));
+    r1.appendChild(bSpan('version')); r1.appendChild(bNum(schema.version,'ver',function(){ schema.version=parseInt(this.value,10)||1; regen(); })); db.appendChild(r1);
+    var r2 = bel('div','brow'); r2.appendChild(bChk(schema.exportSchema,'exportSchema',function(){ schema.exportSchema=this.checked; regen(); })); db.appendChild(r2);
+    var r3 = bel('div','brow'); r3.appendChild(bSpan('class')); r3.appendChild(bText(schema.className,'cname',function(){ schema.className=this.value||'Note'; regen(); }));
+    r3.appendChild(bSpan('table')); r3.appendChild(bText(schema.tableName,'cname',function(){ schema.tableName=this.value||'notes'; regen(); })); db.appendChild(r3);
+    host.appendChild(db);
+
+    var cc = bel('div','bcard'); var h2=bel('div','bch'); h2.textContent='Columns — each becomes a table column'; cc.appendChild(h2);
+    schema.cols.forEach(function(c,i){
+      var row = bel('div','brow'+(c.pk?' pkrow':''));
+      if(c.pk) row.appendChild(bSpan('🔑 PK'));
+      row.appendChild(bText(c.name,'cname',function(){ c.name=this.value; regen(); }));
+      row.appendChild(bSel(c.pk?['Long','Int']:TYPES, c.type, function(){ c.type=this.value; regen(); }));
+      if(c.pk){
+        row.appendChild(bChk(c.autoGen,'autoGenerate',function(){ c.autoGen=this.checked; regen(); }));
+      } else {
+        row.appendChild(bChk(c.nullable,'nullable',function(){ c.nullable=this.checked; regen(); }));
+        row.appendChild(bChk(c.index,'@Index',function(){ c.index=this.checked; regen(); }));
+        var rm = bel('button','rm'); rm.type='button'; rm.textContent='×'; rm.title='remove column';
+        rm.addEventListener('click',function(){ schema.cols.splice(i,1); renderControls(); regen(); });
+        row.appendChild(rm);
+      }
+      cc.appendChild(row);
+    });
+    var add = bel('button','baddcol'); add.type='button'; add.textContent='+ Add column';
+    add.addEventListener('click',function(){ schema.cols.push({ name:'column'+schema.cols.length, type:'String', nullable:false, index:false }); renderControls(); regen(); });
+    cc.appendChild(add);
+    host.appendChild(cc);
+  }
+  renderControls(); regen();
 
   // start
   loadScenario('Three notes');

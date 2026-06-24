@@ -2222,15 +2222,22 @@ fun NotesScreen(vm: SupabaseSyncViewModel = viewModel()) {
         </table>
 
         <!-- Step 4 -->
-        <h3>4 · Paste the values into <code>data/CloudApi.kt</code></h3>
+        <h3>4 · Add the values to <code>local.properties</code></h3>
         <p class="dense">
-          Open <code>data/CloudApi.kt</code> and replace the two placeholder constants near the top of the file:
+          Open (or create) <code>local.properties</code> in the project root — this file is git-ignored,
+          so your credentials never enter committed source. Add the two lines below:
         </p>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">data/CloudApi.kt · replace these two constants</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin"><span class="c-kw">private const val</span> SUPABASE_URL     = <span class="c-str">"https://YOUR-PROJECT-ref.supabase.co"</span>  <span class="c-cmt">// ← paste your Project URL</span>
-<span class="c-kw">private const val</span> SUPABASE_ANON_KEY = <span class="c-str">"YOUR-PUBLIC-ANON-KEY"</span>                  <span class="c-cmt">// ← paste your anon key</span></pre>
+          <div class="code-head"><span class="code-file">local.properties · add these two lines (git-ignored)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="properties">supabase.url=https://YOUR-PROJECT-ref.supabase.co
+supabase.anonKey=YOUR-PUBLIC-ANON-KEY</pre>
         </div>
+        <p class="dense">
+          <code>build.gradle.kts</code> reads these via a <code>secret()</code> helper and writes them
+          into <code>BuildConfig.SUPABASE_URL</code> and <code>BuildConfig.SUPABASE_ANON_KEY</code>
+          (using <code>buildConfigField</code> + <code>buildConfig = true</code>).
+          <code>CloudApi.kt</code> constructs <code>SupabaseCloudApi(url = BuildConfig.SUPABASE_URL, key = BuildConfig.SUPABASE_ANON_KEY)</code>.
+        </p>
         <div class="callout">
           <span class="callout-label">Supabase has no offline cache</span>
           Unlike Firestore, Supabase is a plain Postgres REST API — it has no client-side cache.
@@ -2239,17 +2246,21 @@ fun NotesScreen(vm: SupabaseSyncViewModel = viewModel()) {
         </div>
 
         <!-- Step 5 -->
-        <h3>5 · Flip the switch to the real cloud</h3>
+        <h3>5 · Run — the switch is automatic</h3>
         <p class="dense">
-          In <code>SupabaseSyncViewModel.kt</code>, change the repository call from the default
-          <code>NoteRepository.get(app)</code> to <code>NoteRepository.get(app, useFakeCloud = false)</code>.
-          That one argument change routes every <code>push()</code> and <code>pullSince()</code> call to
-          <code>SupabaseCloudApi</code> instead of <code>FakeCloudApi</code>.
+          There is no flag to flip and nothing to edit in source.
+          <code>provideCloudApi</code> checks <code>BuildConfig.SUPABASE_URL</code> and
+          <code>BuildConfig.SUPABASE_ANON_KEY</code> at startup: when both are non-blank it returns
+          <code>SupabaseCloudApi</code>; when either is blank it returns the offline <code>FakeCloudApi</code>.
+          Cloning the project without <code>local.properties</code> keys gives you the Fake automatically —
+          no source change needed.
         </p>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">SupabaseSyncViewModel.kt · the single switch</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin"><span class="c-cmt">// Change useFakeCloud = true (default) → false to use the real Supabase backend.</span>
-<span class="c-kw">val</span> repository = NoteRepository.get(app, useFakeCloud = <span class="c-kw">false</span>)</pre>
+          <div class="code-head"><span class="code-file">data/CloudApi.kt · how auto-detection works</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin"><span class="c-cmt">// provideCloudApi picks the real or fake impl automatically — no flag to flip.</span>
+<span class="c-kw">fun</span> provideCloudApi(): CloudApi =
+    <span class="c-kw">if</span> (BuildConfig.SUPABASE_URL.isBlank() || BuildConfig.SUPABASE_ANON_KEY.isBlank()) FakeCloudApi()
+    <span class="c-kw">else</span> SupabaseCloudApi(url = BuildConfig.SUPABASE_URL, key = BuildConfig.SUPABASE_ANON_KEY)</pre>
         </div>
         <p class="dense">
           Now run the app on a networked device, add a note, and open the Supabase <strong>Table Editor</strong>

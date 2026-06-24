@@ -1430,13 +1430,13 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
         <p class="eyebrow">Key idea · one-line offline switch</p>
         <h2>Real vs Fake — the same interface, two clouds</h2>
         <p class="dense">
-          Both implement <code>CloudApi</code>, so the repository can't tell them apart. <code>provideCloudApi(context, useFake = …)</code>
-          picks one in a single place — which is why the app and its unit tests run with no network and no Firebase project. The real impl is <code>FirestoreCloudApi</code>, which talks to Google Cloud Firestore. Flip it:
+          Both implement <code>CloudApi</code>, so the repository can't tell them apart. <code>provideCloudApi(context)</code>
+          picks one AUTOMATICALLY — the real <code>FirestoreCloudApi</code> (Google Cloud Firestore) when your Firebase keys are present in <code>local.properties</code> (surfaced via <code>BuildConfig</code>), the in-memory <code>FakeCloudApi</code> when they're blank — which is why the app and its unit tests run with no network and no Firebase project. Toggle to compare:
         </p>
         <div class="controls">
           <span class="seg" id="rfSeg">
-            <button data-rf="fake" class="on" type="button">useFake = true</button>
-            <button data-rf="real" type="button">useFake = false</button>
+            <button data-rf="fake" class="on" type="button">keys blank → Fake</button>
+            <button data-rf="real" type="button">keys set → Real</button>
           </span>
         </div>
         <div class="arch-detail" id="rfDetail"></div>
@@ -2283,11 +2283,11 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
 
   // ======================= REAL vs FAKE =======================
   var RF = {
-    fake: { name: "FakeCloudApi — offline (the default)", path: "provideCloudApi(useFake = true)",
+    fake: { name: "FakeCloudApi — offline (the default)", path: "no Firebase keys in local.properties → Fake",
       what: "An in-memory 'server' that imitates a real backend: network waiting via delay(), server-side last-write-wins on push, and a simulateRemoteEdit() hook so a pull has something new. No network — so the app and unit tests run anywhere.",
       points: ["Works in airplane mode and automated tests", "delay() imitates network waiting; pushes use last-write-wins", "One shared fake store persists between syncs while the app process is running"] },
-    real: { name: "FirestoreCloudApi — real Google Cloud Firestore", path: "provideCloudApi(context, useFake = false)",
-      what: "Talks to a real Google Cloud Firestore database. It is a hosted NoSQL document database; each note is a document in a 'notes' collection. push() writes one document with set(), and pull() is a whereGreaterThan range query. Needs the INTERNET permission and a Firebase project, configured from 3 constants in CloudApi.kt.",
+    real: { name: "FirestoreCloudApi — real Google Cloud Firestore", path: "Firebase keys in local.properties → real Firestore",
+      what: "Talks to a real Google Cloud Firestore database. It is a hosted NoSQL document database; each note is a document in a 'notes' collection. push() writes one document with set(), and pull() is a whereGreaterThan range query. Needs the INTERNET permission and a Firebase project, configured from 3 values in local.properties (fed in via BuildConfig).",
       points: ["push(note) = collection(\"notes\").document(id).set(note) — create or overwrite the document", "pullSince = whereGreaterThan(\"updatedAt\") query, mapped via toObject(NoteDto::class.java)", "set() always overwrites — the client's last-write-wins on pull settles conflicts"] },
   };
   function renderRf(which) {
@@ -2356,7 +2356,7 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     ["Result.success()", "The worker's way to say: this job finished successfully."],
     ["Result.retry()", "The worker's way to say: this failed, please try again later."],
     ["CloudApi", "The cloud doorway. It has one function to upload a note (push) and one function to download newer notes (pullSince). Behind the interface is either the real FirestoreCloudApi or the offline FakeCloudApi."],
-    ["Real / Fake switch", "One setting (provideCloudApi(context, useFake)) chooses the pretend in-memory cloud for local runs and tests, or the real Google Cloud Firestore backend."],
+    ["Real / Fake switch", "Automatic: provideCloudApi(context) uses the real Google Cloud Firestore when your keys are present in local.properties (BuildConfig non-blank), and the pretend in-memory cloud otherwise — there is no flag to flip."],
   ];
   (function () {
     var acc = $("#acc");

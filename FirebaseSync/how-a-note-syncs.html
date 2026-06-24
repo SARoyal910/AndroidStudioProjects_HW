@@ -1698,7 +1698,7 @@ fun provideCloudApi(context: Context, useFake: Boolean = true): CloudApi =
 // Firebase is initialised in code from 3 constants (no google-services.json needed to build).
 class FirestoreCloudApi(context: Context) : CloudApi {
 
-    // Get-or-create the FirebaseApp from the constants, then get the Firestore instance.
+    // Get-or-create the FirebaseApp from the BuildConfig values (fed from local.properties), then get the Firestore instance.
     private val db: FirebaseFirestore = run {
         val app = FirebaseApp.getApps(context).firstOrNull()
             ?: FirebaseApp.initializeApp(context, FirebaseOptions.Builder()
@@ -2133,16 +2133,18 @@ fun NotesScreen(vm: FirebaseSyncViewModel = viewModel()) {
         <p class="dense">
           The app runs offline against the in-memory <code>FakeCloudApi</code> by default — no account needed. When you
           are ready to talk to a real Firestore database, follow one of the two routes below. Both routes end with the
-          same three values pasted into three constants at the top of <code>data/CloudApi.kt</code> and one flag flipped
-          in the ViewModel.
+          same three values added to <code>local.properties</code>. No source file changes, no flag to flip.
         </p>
 
         <div class="callout">
-          <span class="callout-label">Why three constants instead of google-services.json?</span>
-          This project initialises Firebase <strong>in code</strong> from <code>FIREBASE_PROJECT_ID</code>,
-          <code>FIREBASE_APP_ID</code>, and <code>FIREBASE_API_KEY</code> — the same three values a
-          <code>google-services.json</code> holds. This means the project compiles and runs with zero extra files;
-          students can paste their own values and go live with a single edit.
+          <span class="callout-label">How the keys flow: local.properties → BuildConfig → auto-detect</span>
+          <code>local.properties</code> is git-ignored, so your credentials never land in committed source.
+          <code>build.gradle.kts</code> reads the three keys via a <code>secret()</code> helper and writes
+          them as <code>buildConfigField</code> entries, generating <code>BuildConfig.FIREBASE_PROJECT_ID</code>,
+          <code>BuildConfig.FIREBASE_APP_ID</code>, and <code>BuildConfig.FIREBASE_API_KEY</code>.
+          <code>CloudApi.kt</code> reads those values and <code>provideCloudApi</code> auto-detects the mode:
+          <code>useFake = BuildConfig.FIREBASE_API_KEY.isBlank()</code> — real Firestore when the keys are
+          present, offline Fake when they are blank (or absent on a fresh clone).
           <br><br>
           The production-standard alternative is to download <code>google-services.json</code> into the module
           directory and apply the <code>com.google.gms.google-services</code> Gradle plugin in
@@ -2189,29 +2191,27 @@ service cloud.firestore {
           </li>
           <li>
             Go to <strong>Project settings</strong> (gear icon) ▸ <strong>Your apps</strong>. Under the Android app
-            entry, find and copy three values into the matching constants at the top of
-            <code>data/CloudApi.kt</code>:
+            entry, find and copy three values into <code>local.properties</code> at the root of the project
+            (this file is git-ignored — your credentials will never be committed):
             <table class="tbl" style="margin-top:10px;">
-              <thead><tr><th>Console label</th><th>JSON key (for reference)</th><th>Constant in CloudApi.kt</th></tr></thead>
+              <thead><tr><th>Console label</th><th>JSON key (for reference)</th><th>local.properties key</th></tr></thead>
               <tbody>
-                <tr><td>Project ID</td><td><code>project_id</code></td><td><code>FIREBASE_PROJECT_ID</code></td></tr>
-                <tr><td>App ID</td><td><code>mobilesdk_app_id</code> (looks like <code>1:NNN:android:XXXX</code>)</td><td><code>FIREBASE_APP_ID</code></td></tr>
-                <tr><td>Web API key</td><td><code>current_key</code></td><td><code>FIREBASE_API_KEY</code></td></tr>
+                <tr><td>Project ID</td><td><code>project_id</code></td><td><code>firebase.projectId=...</code></td></tr>
+                <tr><td>App ID</td><td><code>mobilesdk_app_id</code> (looks like <code>1:NNN:android:XXXX</code>)</td><td><code>firebase.appId=1:NNN:android:HEX</code></td></tr>
+                <tr><td>Web API key</td><td><code>current_key</code></td><td><code>firebase.apiKey=AIza...</code></td></tr>
               </tbody>
             </table>
-          </li>
-          <li>
-            In <code>FirebaseSyncViewModel.kt</code>, find the <code>NoteRepository.get(app)</code> call and change it
-            to <code>NoteRepository.get(app, useFakeCloud = false)</code>. That single flag is the switch — it flows
-            through <code>NoteRepository.get()</code> into <code>provideCloudApi(context, useFake = false)</code>,
-            which returns a <code>FirestoreCloudApi</code> instead of a <code>FakeCloudApi</code>.
+            <code>build.gradle.kts</code> reads these via <code>secret()</code> and generates
+            <code>BuildConfig.FIREBASE_PROJECT_ID</code> / <code>_APP_ID</code> / <code>_API_KEY</code>.
+            <code>CloudApi.kt</code> reads those values; <code>provideCloudApi</code> switches to the real
+            Firestore automatically when the API key is non-blank. No source edit, no flag.
           </li>
         </ol>
 
-        <h3>Route B — Firebase CLI (what powers this repo's demo)</h3>
+        <h3>Route B — Firebase CLI (terminal)</h3>
         <p class="dense">
-          If you prefer the terminal, the Firebase CLI can do all of the above in four commands. Install it first with
-          <code>npm install -g firebase-tools</code>, then run:
+          If you prefer the terminal, the Firebase CLI can do all of the above in a handful of commands. Install it
+          first with <code>npm install -g firebase-tools</code>, then run:
         </p>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">terminal · Firebase CLI setup</span><button class="copy-btn" type="button">Copy</button></div>
@@ -2227,7 +2227,7 @@ firebase apps:create android \
   --package-name com.example.firebasesync \
   --display-name "FirebaseSync Android"
 
-# 4. Read the SDK config — copy projectId, appId, and apiKey into CloudApi.kt
+# 4. Read the SDK config — copy projectId, appId, and apiKey into local.properties
 firebase apps:sdkconfig android \
   --project my-firebasesync-demo \
   $(firebase apps:list --project my-firebasesync-demo --json \
@@ -2241,13 +2241,23 @@ firebase firestore:databases:create "(default)" \
 # 6. Deploy security rules (create firestore.rules with the content above first)
 firebase deploy --only firestore:rules --project my-firebasesync-demo</pre>
         </div>
+        <p class="dense">
+          After step 4, add the three values to <code>local.properties</code>:
+        </p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">local.properties (git-ignored — never committed)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="properties">firebase.projectId=my-firebasesync-demo
+firebase.appId=1:NNN:android:HEX
+firebase.apiKey=AIza...</pre>
+        </div>
 
         <div class="callout good">
-          <span class="callout-label">Verified</span>
-          The demo project in this repo (<code>your-project-id</code>) was created with exactly these CLI commands
-          and the constants in <code>data/CloudApi.kt</code> are already set to its values. The ViewModel is already
-          flipped to <code>useFakeCloud = false</code>. You can run the app on a networked device and watch notes
-          appear in the Firestore console in real time.
+          <span class="callout-label">Going live is just adding three lines</span>
+          Once those three keys are in <code>local.properties</code>, run the app on a networked device.
+          <code>build.gradle.kts</code> picks them up and writes them into <code>BuildConfig</code>;
+          <code>provideCloudApi</code> sees a non-blank API key and returns a <code>FirestoreCloudApi</code>
+          automatically. Watch notes appear in the Firestore console in real time. Remove the keys (or clone
+          the repo without them) and the app falls back to the offline Fake with no code change.
         </div>
       </div>
     </section>

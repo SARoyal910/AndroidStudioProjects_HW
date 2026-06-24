@@ -13,11 +13,13 @@
 //     even another device's edits, with NO network — so the app and tests run offline.
 //
 // provideCloudApi(useFake = ...) is THE SWITCH (the same pattern CloudSync / NetworkParsing
-// use). Default FAKE, so the project builds, runs, and unit-tests with NO Firebase setup.
+// use). It AUTO-DETECTS: real Firestore when keys are configured in local.properties, else the
+// offline FAKE — so the project builds, runs, and unit-tests with NO Firebase setup.
 // =============================================================================
 package com.example.firebasesync.data
 
 import android.content.Context
+import com.example.firebasesync.BuildConfig
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.firestore.FirebaseFirestore
@@ -52,26 +54,31 @@ interface CloudApi {
 // ===========================================================================
 
 // ┌────────────────────────────────────────────────────────────────────────────────────┐
-// │  STUDENTS: paste YOUR Firebase project's three values here to go live.               │
-// │  Find them in the Firebase console ▸ Project settings ▸ "Your apps" (or in the       │
-// │  google-services.json you download): the project id, the Android app's App ID, and   │
-// │  the Web API key. Until then, leave useFakeCloud = true (the default) and the app     │
-// │  runs fully offline against the FakeCloudApi below.                                  │
+// │  STUDENTS: to go live, put YOUR Firebase project's three values in local.properties   │
+// │  (git-ignored — they never land in committed source):                                 │
+// │      firebase.projectId=your-project-id                                                │
+// │      firebase.appId=1:NNN:android:HEX                                                  │
+// │      firebase.apiKey=AIza...                                                            │
+// │  build.gradle.kts reads them and generates BuildConfig.FIREBASE_PROJECT_ID / _APP_ID / │
+// │  _API_KEY (see the buildConfigField lines there). With NO keys configured, those       │
+// │  constants are "" and the app runs fully offline against the FakeCloudApi below —       │
+// │  automatically (provideCloudApi picks the Fake when the API key is blank).             │
+// │  Find the values in the Firebase console ▸ Project settings ▸ "Your apps" (or the      │
+// │  google-services.json you download): the project id, the Android app's App ID, and     │
+// │  the Web API key.                                                                       │
 // └────────────────────────────────────────────────────────────────────────────────────┘
-private const val FIREBASE_PROJECT_ID = "your-project-id"
-private const val FIREBASE_APP_ID = "1:000000000000:android:0000000000000000000000"
-private const val FIREBASE_API_KEY = "AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY"
 
 /**
  * FirestoreCloudApi — talks to a real Firestore database. We initialise Firebase IN CODE from
- * the constants above (so the project needs no google-services.json / Gradle plugin to build),
- * then read/write the "notes" collection. Requires the INTERNET permission (already declared).
+ * the generated BuildConfig credentials (fed in from local.properties, so the project needs no
+ * google-services.json / Gradle plugin to build), then read/write the "notes" collection.
+ * Requires the INTERNET permission (already declared).
  *
  * Design choice — in-code initialisation:
  *   Rather than dropping a google-services.json into the module and applying the
  *   com.google.gms.google-services Gradle plugin, we hand the three credentials directly to
  *   FirebaseOptions.Builder(). This means the project compiles and runs with zero extra files;
- *   students can paste their own values and go live with a single edit.
+ *   students drop their own values into local.properties and go live with no source edit.
  *   The production-standard approach (google-services.json + plugin) is equivalent — both write
  *   the same three values into FirebaseOptions under the hood.
  *
@@ -83,7 +90,8 @@ private const val FIREBASE_API_KEY = "AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY"
 class FirestoreCloudApi(context: Context) : CloudApi {
 
     // -------------------------------------------------------------------------
-    // Step 1: build the in-process FirebaseApp from the three credential constants.
+    // Step 1: build the in-process FirebaseApp from the three BuildConfig credentials
+    // (generated from local.properties by build.gradle.kts).
     //
     // FirebaseOptions.Builder() is the programmatic equivalent of google-services.json.
     // It tells the Firebase SDK which project to connect to:
@@ -112,9 +120,9 @@ class FirestoreCloudApi(context: Context) : CloudApi {
             ?: FirebaseApp.initializeApp(
                 context,
                 FirebaseOptions.Builder()
-                    .setProjectId(FIREBASE_PROJECT_ID)   // which Cloud project to use
-                    .setApplicationId(FIREBASE_APP_ID)   // which Android app within that project
-                    .setApiKey(FIREBASE_API_KEY)          // API key for SDK authentication
+                    .setProjectId(BuildConfig.FIREBASE_PROJECT_ID)   // which Cloud project to use
+                    .setApplicationId(BuildConfig.FIREBASE_APP_ID)   // which Android app within that project
+                    .setApiKey(BuildConfig.FIREBASE_API_KEY)          // API key for SDK authentication
                     .build(),                             // produces the immutable FirebaseOptions
             )
         FirebaseFirestore.getInstance(app)               // the Firestore client handle for this app
@@ -274,7 +282,7 @@ class FakeCloudApi : CloudApi {
 }
 
 // ===========================================================================
-// THE SWITCH  —  pick REAL (Firestore) or FAKE (offline) — fake is a process singleton
+// THE SWITCH  —  AUTO-PICK REAL (Firestore) or FAKE (offline) — fake is a process singleton
 // ===========================================================================
 
 // The fake's in-memory server must OUTLIVE individual sync runs, so we hand out ONE shared
@@ -282,15 +290,18 @@ class FakeCloudApi : CloudApi {
 private val fakeCloud: FakeCloudApi by lazy { FakeCloudApi() }
 
 /**
- * Factory that returns the cloud the app should use.
+ * Factory that returns the cloud the app should use — chosen AUTOMATICALLY.
  *
  * @param context used only by the real impl to initialise Firebase.
- * @param useFake when TRUE (the default), returns the offline [FakeCloudApi] so the project
- *   builds, runs, and tests with NO network. Flip to FALSE to talk to a real [FirestoreCloudApi].
+ * @param useFake defaults to whether the Firebase API key is BLANK. With no keys in
+ *   local.properties, BuildConfig.FIREBASE_API_KEY is "" → useFake is true → the offline
+ *   [FakeCloudApi] (so the project builds, runs, and tests with NO network). Drop real keys
+ *   into local.properties and it flips to the real [FirestoreCloudApi] with no source edit.
  *
  *   ┌──────────────────────────────────────────────────────────────────────────┐
- *   │  STUDENTS: change this single argument to toggle between offline and live. │
+ *   │  No manual switch: real Firestore when keys are configured in              │
+ *   │  local.properties, otherwise the offline Fake — picked for you.            │
  *   └──────────────────────────────────────────────────────────────────────────┘
  */
-fun provideCloudApi(context: Context, useFake: Boolean = true): CloudApi =
+fun provideCloudApi(context: Context, useFake: Boolean = BuildConfig.FIREBASE_API_KEY.isBlank()): CloudApi =
     if (useFake) fakeCloud else FirestoreCloudApi(context)

@@ -117,11 +117,11 @@ class NoteRepository private constructor(
         @Volatile private var INSTANCE: NoteRepository? = null
 
         /** One shared repository (so the UI and the SyncWorker use the same Room + cloud). */
-        fun get(context: Context, useFakeCloud: Boolean = true): NoteRepository =
+        fun get(context: Context): NoteRepository =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: NoteRepository(
                     dao = FirebaseSyncDatabase.getInstance(context).noteDao(),
-                    cloud = provideCloudApi(context, useFakeCloud),   // Firestore needs a Context to init Firebase
+                    cloud = provideCloudApi(context),   // auto-picks real Firestore (keys present) or the Fake; needs a Context to init Firebase
                 ).also { INSTANCE = it }
             }
     }

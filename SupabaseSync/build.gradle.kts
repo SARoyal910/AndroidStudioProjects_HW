@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -8,6 +10,14 @@ plugins {
     // that supabase-kt sends to the Supabase (PostgREST) API.
     alias(libs.plugins.kotlin.serialization)
 }
+
+// Credentials live in local.properties (git-ignored) — never in committed source.
+// Absent keys default to "" so provideCloudApi() falls back to the offline Fake cloud.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun secret(key: String): String = localProps.getProperty(key) ?: ""
 
 android {
     namespace = "com.example.supabasesync"
@@ -21,6 +31,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_URL", "\"${secret("supabase.url")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${secret("supabase.anonKey")}\"")
     }
 
     buildTypes {
@@ -34,6 +47,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

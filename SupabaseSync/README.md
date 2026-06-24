@@ -46,8 +46,10 @@ Learn how an Android app combines a **local database (Room)** with a **real clou
 - **Conflict resolution** — `shouldAcceptRemote(...)` is a pure **last-write-wins** rule (compare
   `updatedAt`; a pending local edit wins until it's pushed).
 - **Real vs Fake switch** — a `CloudApi` interface with a **Supabase-backed** `Real` impl and an
-  in-memory `Fake` cloud (latency + LWW + a "another device edited" hook), swapped by one flag so
-  the app and tests run offline.
+  in-memory `Fake` cloud (latency + LWW + a "another device edited" hook). The switch is
+  **automatic**: `provideCloudApi` uses the real backend when `BuildConfig.SUPABASE_URL` and
+  `BuildConfig.SUPABASE_ANON_KEY` are non-blank, and the offline Fake otherwise. There is no flag
+  to flip — cloning the project without credentials gives you the Fake automatically.
 
 ## The cloud: Supabase (Postgres)
 
@@ -97,15 +99,18 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
    create policy "demo anon delete" on public.notes for delete using (true);
    ```
 
-3. From **Project Settings ▸ Data API** copy two values into the constants at the top of
-   **`data/CloudApi.kt`**:
-   - `SUPABASE_URL`      → the **Project URL** (`https://<ref>.supabase.co`)
-   - `SUPABASE_ANON_KEY` → the public **anon** key
-4. Flip the switch to the real cloud: in `SupabaseSyncViewModel.kt` change the repository call from
-   `NoteRepository.get(app)` to `NoteRepository.get(app, useFakeCloud = false)` (or change the
-   `useFakeCloud` default in `NoteRepository.get(...)` itself — that is the single lever, since
-   `get(...)` is what passes the flag on to `provideCloudApi`).
-5. Run on a networked device. Add a note and watch the row appear in the Supabase **Table Editor**
+3. From **Project Settings ▸ Data API** copy two values into **`local.properties`** (git-ignored —
+   the keys never enter committed source; Gradle reads them and exposes them as
+   `BuildConfig.SUPABASE_URL` / `BuildConfig.SUPABASE_ANON_KEY`):
+
+   ```properties
+   supabase.url=https://<ref>.supabase.co
+   supabase.anonKey=<the public anon key>
+   ```
+
+   The switch is **automatic**: when both keys are present the app uses the real
+   `SupabaseCloudApi`; with no keys it falls back to the offline `FakeCloudApi` (no flag to flip).
+4. Run on a networked device. Add a note and watch the row appear in the Supabase **Table Editor**
    (and on a second device). Toggle airplane mode to see notes queue as **Pending** and flip to
    **Synced** when you reconnect.
 

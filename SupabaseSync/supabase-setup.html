@@ -1210,7 +1210,7 @@ p { overflow-wrap: anywhere; }
         <p class="lead">By default the app runs fully offline against an in-memory
         <code>FakeCloudApi</code>, so it builds and tests with no account. This guide takes you the
         rest of the way: create a Supabase project, create the <code>notes</code> table with
-        Row-Level Security, copy two credentials, flip one flag, and watch a note you add on the
+        Row-Level Security, add two credentials to <code>local.properties</code> (git-ignored; the app uses them automatically), and watch a note you add on the
         phone appear as a <strong>row</strong> in your Supabase table.</p>
 
         <div class="callout">
@@ -1396,19 +1396,47 @@ curl -X POST "https://api.supabase.com/v1/projects/&lt;ref&gt;/database/query" \
           </tbody>
         </table>
 
-        <p>Paste both into the constants at the top of <code>data/CloudApi.kt</code> (the sample values
-        already there point at a throwaway demo project — replace them with yours):</p>
+        <p>Put both into <code>local.properties</code> (the file is <strong>git-ignored</strong>, so the
+        keys never enter committed source). Add these two lines next to the existing
+        <code>sdk.dir</code>:</p>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">data/CloudApi.kt — paste your two values here</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">private const val SUPABASE_URL = "https://&lt;your-ref&gt;.supabase.co"
-private const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...your-anon-key..."</pre>
+          <div class="code-head"><span class="code-file">local.properties — git-ignored, your two values here</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="properties">supabase.url=https://&lt;your-ref&gt;.supabase.co
+supabase.anonKey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...your-anon-key...</pre>
+        </div>
+
+        <p>Gradle reads <code>local.properties</code> at build time and surfaces the two values as
+        generated <code>BuildConfig</code> fields — so committed Kotlin reads
+        <code>BuildConfig.SUPABASE_URL</code> / <code>BuildConfig.SUPABASE_ANON_KEY</code>, never a
+        hard-coded literal. The wiring lives in <code>build.gradle.kts</code>: a tiny
+        <code>secret()</code> helper loads the file, and two <code>buildConfigField</code> lines (plus
+        <code>buildConfig = true</code>) emit the fields. Absent keys default to <code>""</code>.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.gradle.kts — read local.properties → BuildConfig</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">import java.util.Properties        // at the VERY TOP of the file
+
+// after the plugins { } block — credentials live in local.properties (git-ignored).
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun secret(key: String): String = localProps.getProperty(key) ?: ""
+
+android {
+    buildFeatures { compose = true; buildConfig = true }   // buildConfig = true emits BuildConfig
+    defaultConfig {
+        buildConfigField("String", "SUPABASE_URL", "\"${'$'}{secret("supabase.url")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${'$'}{secret("supabase.anonKey")}\"")
+    }
+}</pre>
         </div>
         <div class="callout good">
           <span class="callout-label">Why shipping the anon key is fine</span>
           <p>Unlike a service-role key, the anon key is <em>publishable</em>. The only thing it can do
           is what your <strong>RLS policies</strong> permit for the anonymous role. The demo policies
           above are wide open so the app works immediately; tighten them (e.g. scope to authenticated
-          users) before storing anything real.</p>
+          users) before storing anything real. Keeping it in <code>local.properties</code> is about
+          not committing project-specific secrets to source control, not about RLS.</p>
         </div>
       </div>
     </section>
@@ -1492,12 +1520,23 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
         <p class="eyebrow">Wire up the app</p>
         <h2>Initialise the client — line by line</h2>
         <p>The entire connection is one expression in <code>SupabaseCloudApi</code>: build a single
-        shared client and install the Postgrest plugin onto it.</p>
+        shared client and install the Postgrest plugin onto it. The two credentials arrive as
+        constructor parameters that <strong>default to the generated <code>BuildConfig</code>
+        fields</strong> (which Gradle filled from <code>local.properties</code>) — so the class reads
+        no hard-coded literal:</p>
 
         <div class="code-panel">
           <div class="code-head"><span class="code-file">data/CloudApi.kt — SupabaseCloudApi (the init)</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">private val client = createSupabaseClient(supabaseUrl, supabaseKey) {
-    install(Postgrest)                                  // enable table CRUD (the PostgREST API)
+<pre data-lang="kotlin">import com.example.supabasesync.BuildConfig            // generated from local.properties
+
+class SupabaseCloudApi(
+    supabaseUrl: String = BuildConfig.SUPABASE_URL,    // Project URL — from local.properties
+    supabaseKey: String = BuildConfig.SUPABASE_ANON_KEY, // anon key  — from local.properties
+) : CloudApi {
+    private val client = createSupabaseClient(supabaseUrl, supabaseKey) {
+        install(Postgrest)                              // enable table CRUD (the PostgREST API)
+    }
+    // … pullSince() / push() …
 }</pre>
         </div>
 
@@ -1507,6 +1546,10 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
         </div>
 
         <ol class="kicker-list">
+          <li><code>BuildConfig.SUPABASE_URL</code> / <code>BuildConfig.SUPABASE_ANON_KEY</code> — the two
+          generated fields Gradle populated from <code>local.properties</code>. They are the constructor
+          defaults, so building <code>SupabaseCloudApi()</code> with no arguments uses your configured
+          keys without any literal in committed source.</li>
           <li><code>createSupabaseClient(supabaseUrl, supabaseKey) { … }</code> — the factory that builds
           the one shared client. <code>supabaseUrl</code> is your Project URL (every HTTP call goes
           there); <code>supabaseKey</code> is the anon key (identifies the app — RLS is the real gate).
@@ -1533,44 +1576,50 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
     <section class="band anchor" id="switch">
       <div class="band-inner">
         <p class="eyebrow">Wire up the app</p>
-        <h2>Flip the switch: Fake → real Supabase</h2>
-        <p>One factory decides which cloud the app uses. The <code>useFake</code> flag flows from the
-        ViewModel → the repository → <code>provideCloudApi</code>.</p>
+        <h2>The switch is automatic: keys present → real Supabase</h2>
+        <p>One factory decides which cloud the app uses — and it <strong>auto-detects</strong>. There is
+        no flag to flip: <code>provideCloudApi</code> defaults <code>useFake</code> to "are the
+        <code>BuildConfig</code> keys blank?". Configure the keys in <code>local.properties</code> and
+        you get the real <code>SupabaseCloudApi</code>; leave them out and you get the offline
+        <code>FakeCloudApi</code>.</p>
 
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">data/CloudApi.kt — provideCloudApi (the factory)</span><button class="copy-btn" type="button">Copy</button></div>
+          <div class="code-head"><span class="code-file">data/CloudApi.kt — provideCloudApi (auto-detecting factory)</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">private val fakeCloud: FakeCloudApi by lazy { FakeCloudApi() }
 
-fun provideCloudApi(useFake: Boolean = true): CloudApi =
+// useFake defaults to "are the keys missing?" — keys present → real Supabase, else offline Fake.
+fun provideCloudApi(
+    useFake: Boolean = BuildConfig.SUPABASE_URL.isBlank() || BuildConfig.SUPABASE_ANON_KEY.isBlank(),
+): CloudApi =
     if (useFake) fakeCloud else SupabaseCloudApi()</pre>
         </div>
 
-        <p>In this project the lever is already pulled to the real cloud in the ViewModel:</p>
+        <p>The ViewModel and repository carry <strong>no</strong> switch — they just build the repository,
+        and the factory above decides:</p>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">SupabaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">// useFakeCloud = false → talk to the REAL Supabase Postgres configured in data/CloudApi.kt.
-// Flip back to NoteRepository.get(app) (default true) to demo fully offline against the Fake.
-private val repo = NoteRepository.get(app, useFakeCloud = false)</pre>
+<pre data-lang="kotlin">// No flag here: provideCloudApi() auto-detects real vs Fake from the BuildConfig keys.
+private val repo = NoteRepository.get(app)</pre>
         </div>
 
-        <p>The flag is forwarded through the repository's singleton getter into the factory:</p>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">NoteRepository.kt — get(...) passes the flag to provideCloudApi</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">fun get(context: Context, useFakeCloud: Boolean = true): NoteRepository =
+          <div class="code-head"><span class="code-file">NoteRepository.kt — get(...) just calls the auto-detecting factory</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun get(context: Context): NoteRepository =
     INSTANCE ?: synchronized(this) {
         INSTANCE ?: NoteRepository(
             dao = SupabaseSyncDatabase.getInstance(context).noteDao(),
-            cloud = provideCloudApi(useFakeCloud),       // ← the switch
+            cloud = provideCloudApi(),                   // ← auto: real if keys configured, else Fake
         ).also { INSTANCE = it }
     }</pre>
         </div>
 
         <div class="callout warn">
           <span class="callout-label">It is a process singleton</span>
-          <p><code>NoteRepository.get(...)</code> caches the first instance it builds. If you change the
-          flag, do a clean reinstall (or kill the process) so the new cloud is actually constructed —
-          the cached instance will otherwise keep the old one. The <code>SyncWorker</code> calls
-          <code>get(applicationContext)</code> with the default, so it reuses whatever the UI built.</p>
+          <p><code>NoteRepository.get(...)</code> caches the first instance it builds. If you add or remove
+          the keys in <code>local.properties</code>, rebuild (so <code>BuildConfig</code> regenerates) and
+          do a clean reinstall (or kill the process) so the new cloud is actually constructed — the cached
+          instance will otherwise keep the old one. The <code>SyncWorker</code> calls
+          <code>get(applicationContext)</code>, so it reuses whatever the UI built.</p>
         </div>
       </div>
     </section>
@@ -2042,7 +2091,8 @@ fun observeVisibleNotes(): Flow&lt;List&lt;Note&gt;&gt;</pre>
               <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>createSupabaseClient(url, key){ … }</code></span>
             </div>
             <p class="dense"><strong>Called when you…</strong> first construct <code>SupabaseCloudApi()</code>
-            (i.e. when the repository is built with <code>useFakeCloud = false</code>). Once, not per request.</p>
+            (i.e. when the Supabase keys are configured in <code>local.properties</code>, so
+            <code>provideCloudApi()</code> picks the real cloud). Once, not per request.</p>
           </div>
         </div>
 
@@ -2420,9 +2470,9 @@ curl -X POST "https://&lt;your-ref&gt;.supabase.co/rest/v1/notes" \
               <td>Fix the underlying cause above (RLS, URL/key, engine). The local data is safe in Room the whole time; once a push succeeds the row flips to Synced.</td>
             </tr>
             <tr>
-              <td>Switching <code>useFakeCloud</code> seems to have no effect</td>
-              <td><code>NoteRepository.get(...)</code> is a <strong>process singleton</strong> — the first cloud built is cached.</td>
-              <td>Do a clean reinstall (or kill the process) after changing the flag so the new <code>SupabaseCloudApi</code> is constructed.</td>
+              <td>Adding/removing keys in <code>local.properties</code> seems to have no effect</td>
+              <td><code>NoteRepository.get(...)</code> is a <strong>process singleton</strong> — the first cloud built is cached. (Also: stale <code>BuildConfig</code> if you didn't rebuild.)</td>
+              <td>Rebuild so <code>BuildConfig</code> regenerates, then do a clean reinstall (or kill the process) so the new cloud is constructed.</td>
             </tr>
           </tbody>
         </table>

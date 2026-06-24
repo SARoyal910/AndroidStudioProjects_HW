@@ -17,6 +17,7 @@
 // =============================================================================
 package com.example.supabasesync.data
 
+import com.example.supabasesync.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
@@ -49,13 +50,16 @@ interface CloudApi {
 // ===========================================================================
 
 // ┌────────────────────────────────────────────────────────────────────────────────────┐
-// │  STUDENTS: paste YOUR Supabase project's two values here to go live.                 │
-// │  Find them in the Supabase dashboard ▸ Project Settings ▸ Data API (or "API"):       │
-// │  the Project URL and the public "anon" key. You also need a `notes` table — the SQL  │
-// │  to create it is in the README. Until then, leave useFakeCloud = true (the default). │
+// │  STUDENTS: to go live, put YOUR Supabase project's two values in local.properties     │
+// │  (git-ignored — they never enter committed source). Add these two lines:              │
+// │      supabase.url=https://<ref>.supabase.co                                            │
+// │      supabase.anonKey=<the public "anon" key>                                          │
+// │  Find both in the Supabase dashboard ▸ Project Settings ▸ Data API (or "API"). Gradle  │
+// │  reads local.properties and exposes them as BuildConfig.SUPABASE_URL / ANON_KEY (see   │
+// │  the secret()/buildConfigField wiring in build.gradle.kts). You also need a `notes`    │
+// │  table — the SQL to create it is in the README. With NO keys configured, the app falls │
+// │  back to the offline Fake cloud automatically (provideCloudApi auto-detects blanks).   │
 // └────────────────────────────────────────────────────────────────────────────────────┘
-private const val SUPABASE_URL = "https://YOUR-PROJECT-ref.supabase.co"
-private const val SUPABASE_ANON_KEY = "YOUR-PUBLIC-ANON-KEY"
 
 /**
  * SupabaseCloudApi — talks to a real Supabase `notes` table. We build ONE SupabaseClient with the
@@ -67,8 +71,8 @@ private const val SUPABASE_ANON_KEY = "YOUR-PUBLIC-ANON-KEY"
  * Ktor engine is discovered automatically from the classpath; you don't wire it up manually.
  */
 class SupabaseCloudApi(
-    supabaseUrl: String = SUPABASE_URL,
-    supabaseKey: String = SUPABASE_ANON_KEY,
+    supabaseUrl: String = BuildConfig.SUPABASE_URL,
+    supabaseKey: String = BuildConfig.SUPABASE_ANON_KEY,
 ) : CloudApi {
 
     // createSupabaseClient(url, key) { … } — factory that builds the single shared client.
@@ -196,14 +200,15 @@ class FakeCloudApi : CloudApi {
 private val fakeCloud: FakeCloudApi by lazy { FakeCloudApi() }
 
 /**
- * Factory that returns the cloud the app should use.
+ * Factory that returns the cloud the app should use — it AUTO-DETECTS which one.
  *
- * @param useFake when TRUE (the default), returns the offline [FakeCloudApi] so the project
- *   builds, runs, and tests with NO network. Flip to FALSE to talk to a real [SupabaseCloudApi].
- *
- *   ┌──────────────────────────────────────────────────────────────────────────┐
- *   │  STUDENTS: change this single argument to toggle between offline and live. │
- *   └──────────────────────────────────────────────────────────────────────────┘
+ * @param useFake defaults to "are the Supabase keys missing?". When the keys ARE configured in
+ *   local.properties (surfaced via BuildConfig.SUPABASE_URL / SUPABASE_ANON_KEY), this is FALSE
+ *   and you talk to the real [SupabaseCloudApi]. With NO keys, it is TRUE and you get the offline
+ *   [FakeCloudApi] so the project still builds, runs, and tests with NO network. There is no flag
+ *   to flip — add your keys to local.properties to go live, remove them to go back offline.
  */
-fun provideCloudApi(useFake: Boolean = true): CloudApi =
+fun provideCloudApi(
+    useFake: Boolean = BuildConfig.SUPABASE_URL.isBlank() || BuildConfig.SUPABASE_ANON_KEY.isBlank(),
+): CloudApi =
     if (useFake) fakeCloud else SupabaseCloudApi()

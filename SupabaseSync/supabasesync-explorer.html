@@ -1351,8 +1351,13 @@ class SupabaseCloudApi(url: String, key: String) : CloudApi {
             .decodeSingle&lt;NoteDto&gt;()                          // RETURNING the stored row
 }
 
-fun provideCloudApi(useFake: Boolean = true): CloudApi =      // THE SWITCH
-    if (useFake) fakeCloud else SupabaseCloudApi(SUPABASE_URL, SUPABASE_ANON_KEY)</pre></div>
+fun provideCloudApi(): CloudApi =                             // AUTO-DETECT (no flag needed)
+    if (BuildConfig.SUPABASE_URL.isBlank() || BuildConfig.SUPABASE_ANON_KEY.isBlank())
+        FakeCloudApi()                                        // ← keys absent: offline Fake
+    else SupabaseCloudApi(                                    // ← keys present: real Supabase
+        url = BuildConfig.SUPABASE_URL,
+        key = BuildConfig.SUPABASE_ANON_KEY
+    )</pre></div>
           <div class="tag-row"><span class="tag teal">CloudApi</span><span class="tag">Supabase Postgrest</span><span class="tag">in-memory Fake</span></div>
         </div>
 
@@ -1420,17 +1425,21 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     <!-- ============ 6. REAL/FAKE ============ -->
     <section class="band anchor" id="realfake">
       <div class="band-inner">
-        <p class="eyebrow">Key idea · one-line offline switch</p>
+        <p class="eyebrow">Key idea · automatic offline detection</p>
         <h2>Real vs Fake — the same interface, two clouds</h2>
         <p class="dense">
-          Both implement <code>CloudApi</code>, so the repository can't tell them apart. <code>provideCloudApi(useFake = …)</code>
-          picks one in a single place — the real impl is <code>SupabaseCloudApi</code> (a hosted Postgres database via supabase-kt),
-          and the fake is an offline in-memory server. That is why the app and its unit tests run with no network and no Supabase project. Flip it:
+          Both implement <code>CloudApi</code>, so the repository can't tell them apart.
+          <code>provideCloudApi</code> picks one automatically — no flag to flip and no source edit needed.
+          When <code>BuildConfig.SUPABASE_URL</code> and <code>BuildConfig.SUPABASE_ANON_KEY</code> are
+          both non-blank (set via <code>local.properties</code>), it returns <code>SupabaseCloudApi</code>
+          (a hosted Postgres database via supabase-kt). When either is blank it returns the offline
+          in-memory <code>FakeCloudApi</code>. That is why the app and its unit tests run with no network
+          and no Supabase project — just clone and build. Explore each:
         </p>
         <div class="controls">
           <span class="seg" id="rfSeg">
-            <button data-rf="fake" class="on" type="button">useFake = true</button>
-            <button data-rf="real" type="button">useFake = false</button>
+            <button data-rf="fake" class="on" type="button">keys blank → Fake (default)</button>
+            <button data-rf="real" type="button">keys set → Real Supabase</button>
           </span>
         </div>
         <div class="arch-detail" id="rfDetail"></div>
@@ -2191,7 +2200,7 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
       points: ["add/edit/delete — save to Room first as PENDING", "delete — hide the row first, upload the delete later", "sync() upload step — send pending rows to the cloud", "sync() download step — pull newer cloud rows into Room", "shouldAcceptRemote() — pick the newer copy when two copies disagree"] },
     cloud:  { name: "⑤ CloudApi", file: "data/CloudApi.kt", tab: "t-cloud",
       what: "CloudApi is the cloud doorway. The Repository does not care if the cloud is real or fake. It only calls two actions: push one note up, or pull newer notes down.",
-      points: ["push(note) — save this note in the cloud", "pullSince(time) — give me cloud notes newer than this time", "FakeCloudApi — pretend cloud for local runs and tests", "SupabaseCloudApi — real Supabase Postgres: push = upsert, pull = a filtered select", "provideCloudApi(useFake) — choose fake or real in one place"] },
+      points: ["push(note) — save this note in the cloud", "pullSince(time) — give me cloud notes newer than this time", "FakeCloudApi — pretend cloud for local runs and tests (automatic when no local.properties keys)", "SupabaseCloudApi — real Supabase Postgres: push = upsert, pull = a filtered select", "provideCloudApi() — auto-detects: real when BuildConfig keys are set, Fake otherwise"] },
     worker: { name: "⑥ SyncWorker", file: "sync/SyncWorker.kt", tab: "t-worker",
       what: "SyncWorker is the background runner. It does not decide the sync rules. It simply asks the Repository to sync. WorkManager makes sure the job waits for network and can try again after failure.",
       points: ["doWork() — get the Repository and call sync()", "NetworkType.CONNECTED — run only when online", "Result.success() — upload and download finished", "Result.retry() — try again later", "enqueueUniqueWork — avoid duplicate sync jobs"] },
@@ -2277,12 +2286,12 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
 
   // ======================= REAL vs FAKE =======================
   var RF = {
-    fake: { name: "FakeCloudApi — offline (the default)", path: "provideCloudApi(useFake = true)",
-      what: "An in-memory 'server' that imitates a real backend: network waiting via delay(), server-side last-write-wins on push, and a simulateRemoteEdit() hook so a pull has something new. No network — so the app and unit tests run anywhere.",
-      points: ["Works in airplane mode and automated tests", "delay() imitates network waiting; pushes use last-write-wins", "One shared fake store persists between syncs while the app process is running"] },
-    real: { name: "SupabaseCloudApi — real Supabase (Postgres)", path: "provideCloudApi(useFake = false)",
-      what: "Talks to a hosted Postgres database via supabase-kt (PostgREST). push() upserts the note into the 'notes' table (INSERT ON CONFLICT DO UPDATE), pull() does a filtered/ordered SELECT on updated_at. Needs a Supabase project URL, the public anon key, and a 'notes' table with RLS policies — all described in CloudApi.kt and the README.",
-      points: ["push(note) = from(\"notes\").upsert(note){ select() } — insert or update, returns the stored row", "pullSince = select { filter { gt(\"updated_at\", since) } } — only rows newer than the cursor", "Row Level Security policies must allow the anon key to read and write the notes table"] },
+    fake: { name: "FakeCloudApi — offline (automatic when no keys)", path: "keys blank in local.properties → provideCloudApi() returns FakeCloudApi",
+      what: "An in-memory 'server' that imitates a real backend: network waiting via delay(), server-side last-write-wins on push, and a simulateRemoteEdit() hook so a pull has something new. No network — so the app and unit tests run anywhere. This is the default: clone the project without local.properties keys and you get the Fake automatically.",
+      points: ["Works in airplane mode and automated tests", "delay() imitates network waiting; pushes use last-write-wins", "One shared fake store persists between syncs while the app process is running", "Selected automatically when BuildConfig.SUPABASE_URL or SUPABASE_ANON_KEY is blank"] },
+    real: { name: "SupabaseCloudApi — real Supabase (Postgres)", path: "both keys set in local.properties → provideCloudApi() returns SupabaseCloudApi",
+      what: "Talks to a hosted Postgres database via supabase-kt (PostgREST). push() upserts the note into the 'notes' table (INSERT ON CONFLICT DO UPDATE), pull() does a filtered/ordered SELECT on updated_at. Enabled by adding supabase.url and supabase.anonKey to local.properties (git-ignored); build.gradle.kts reads them via secret() and writes BuildConfig.SUPABASE_URL / SUPABASE_ANON_KEY. No source file needs to be edited.",
+      points: ["push(note) = from(\"notes\").upsert(note){ select() } — insert or update, returns the stored row", "pullSince = select { filter { gt(\"updated_at\", since) } } — only rows newer than the cursor", "Row Level Security policies must allow the anon key to read and write the notes table", "Selected automatically when both BuildConfig fields are non-blank"] },
   };
   function renderRf(which) {
     $$("#rfSeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.rf === which); });
@@ -2351,7 +2360,7 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     ["Result.success()", "The worker's way to say: this job finished successfully."],
     ["Result.retry()", "The worker's way to say: this failed, please try again later."],
     ["CloudApi", "The cloud doorway. It has one function to upload a note (push) and one function to download newer notes (pullSince). Behind it sits either the real Supabase Postgres client or the offline in-memory Fake."],
-    ["Real / Fake switch", "One flag — provideCloudApi(useFake) — chooses the pretend in-memory cloud for local runs and tests, or the real Supabase Postgres client that needs a project URL + anon key."],
+    ["Real / Fake switch", "Automatic selection inside provideCloudApi(): when BuildConfig.SUPABASE_URL and BuildConfig.SUPABASE_ANON_KEY are both non-blank (set via local.properties, which is git-ignored) the app uses the real SupabaseCloudApi; when either is blank it uses the in-memory FakeCloudApi. No flag to flip, no source file to edit."],
   ];
   (function () {
     var acc = $("#acc");

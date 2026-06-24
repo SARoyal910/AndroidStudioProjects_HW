@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -7,6 +9,14 @@ plugins {
     // NOTE: unlike CloudSync there is NO kotlinx.serialization plugin here — Firestore maps
     // Kotlin objects to/from documents with its OWN reflection, so NoteDto is a plain data class.
 }
+
+// Credentials live in local.properties (git-ignored) — never in committed source.
+// Absent keys default to "" so provideCloudApi() falls back to the offline Fake cloud.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun secret(key: String): String = localProps.getProperty(key) ?: ""
 
 android {
     namespace = "com.example.firebasesync"
@@ -20,6 +30,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Firebase credentials flow in from local.properties (git-ignored) → BuildConfig.
+        // Absent keys compile to "" so the app auto-falls-back to the offline Fake cloud.
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${secret("firebase.projectId")}\"")
+        buildConfigField("String", "FIREBASE_APP_ID", "\"${secret("firebase.appId")}\"")
+        buildConfigField("String", "FIREBASE_API_KEY", "\"${secret("firebase.apiKey")}\"")
     }
 
     buildTypes {
@@ -33,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

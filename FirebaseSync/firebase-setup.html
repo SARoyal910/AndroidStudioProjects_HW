@@ -1138,7 +1138,7 @@ p { overflow-wrap: anywhere; }
       <div class="nav-title">Wire it into the app</div>
       <a class="nav-link" href="#deps"><span class="nav-num">6</span><span>Gradle dependencies</span></a>
       <a class="nav-link" href="#init"><span class="nav-num">7</span><span>The init code, line by line</span></a>
-      <a class="nav-link" href="#switch"><span class="nav-num">8</span><span>Flip the Real/Fake switch</span></a>
+      <a class="nav-link" href="#switch"><span class="nav-num">8</span><span>The Real/Fake switch (automatic)</span></a>
       <div class="nav-title">The Firestore APIs</div>
       <a class="nav-link" href="#operations"><span class="nav-num">9</span><span>What fires on each action</span></a>
       <a class="nav-link" href="#api-app"><span class="nav-num">10</span><span>APIs this app uses</span></a>
@@ -1169,7 +1169,7 @@ p { overflow-wrap: anywhere; }
         <option value="#config">5 · The three values</option>
         <option value="#deps">6 · Gradle dependencies</option>
         <option value="#init">7 · The init code, line by line</option>
-        <option value="#switch">8 · Flip the Real/Fake switch</option>
+        <option value="#switch">8 · The Real/Fake switch (automatic)</option>
         <option value="#operations">9 · What fires on each action</option>
         <option value="#api-app">10 · APIs this app uses</option>
         <option value="#api-more">11 · The rest of the toolbox</option>
@@ -1269,8 +1269,8 @@ p { overflow-wrap: anywhere; }
             </tr>
             <tr>
               <td>About 10 minutes</td>
-              <td>Create project + app (≈4 min), enable Firestore + rules (≈3 min), paste the three
-                values and flip the switch (≈3 min).</td>
+              <td>Create project + app (≈4 min), enable Firestore + rules (≈3 min), add the three
+                values to <code>local.properties</code> and run (≈3 min).</td>
             </tr>
             <tr>
               <td>(Optional) the Firebase CLI</td>
@@ -1283,10 +1283,10 @@ p { overflow-wrap: anywhere; }
 
         <div class="callout">
           <span class="callout-label">Already wired to a demo</span>
-          The project ships with a working demo project baked into the constants at the top of
-          <code>data/CloudApi.kt</code>, so you can flip to real mode and see it work immediately.
-          The rest of this page is about creating and wiring <em>your own</em> project so the data
-          lives in <em>your</em> Firebase account.
+          The project ships ready to run — just add your three values to <code>local.properties</code>
+          and the app automatically switches to real Firestore. The rest of this page is about
+          creating and wiring <em>your own</em> project so the data lives in <em>your</em> Firebase
+          account.
         </div>
       </div>
     </section>
@@ -1322,7 +1322,7 @@ p { overflow-wrap: anywhere; }
 
         <h3>Route B — the Firebase CLI (terminal)</h3>
         <p>If you have <code>firebase-tools</code> installed, the same setup is a handful of
-        commands. The last one prints the three values you will paste into the app.</p>
+        commands. The last one prints the three values you will add to <code>local.properties</code>.</p>
         <div class="code-panel">
           <div class="code-head">
             <span class="code-file">terminal — create project &amp; register the Android app</span>
@@ -1428,41 +1428,47 @@ firebase deploy --only firestore:rules --project my-firebasesync-id</pre>
         <p class="eyebrow">Step 3</p>
         <h2>The three values you need (and where each comes from)</h2>
         <p>Because this project initialises Firebase <strong>in code</strong> (Step 7), you do not
-        drop in a <code>google-services.json</code> file. Instead you copy exactly
-        <strong>three</strong> values into the constants at the top of
-        <code>data/CloudApi.kt</code>. Here is what each is and where to find it.</p>
+        drop in a <code>google-services.json</code> file. Instead you put exactly
+        <strong>three</strong> values in <code>local.properties</code> (which is
+        <strong>git-ignored</strong>, so the keys never land in committed source).
+        <code>build.gradle.kts</code> reads them and generates matching
+        <code>BuildConfig</code> constants that <code>data/CloudApi.kt</code> reads. Here is what
+        each is and where to find it.</p>
 
         <table class="tbl">
           <thead>
             <tr>
-              <th style="width:26%">Constant in CloudApi.kt</th>
+              <th style="width:26%">Key in local.properties</th>
               <th style="width:22%">Firebase name</th>
               <th>Where to find it</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><code>FIREBASE_PROJECT_ID</code></td>
+              <td><code>firebase.projectId</code></td>
               <td><code>project_id</code></td>
               <td>The Cloud project id (e.g. <code>your-project-id</code>). Project settings ▸
                 General, or the <code>project_info.project_id</code> field of
-                <code>google-services.json</code>. Routes API calls to the right Firestore.</td>
+                <code>google-services.json</code>. Routes API calls to the right Firestore.
+                Surfaces as <code>BuildConfig.FIREBASE_PROJECT_ID</code>.</td>
             </tr>
             <tr>
-              <td><code>FIREBASE_APP_ID</code></td>
+              <td><code>firebase.appId</code></td>
               <td><code>mobilesdk_app_id</code></td>
               <td>The <strong>Android App ID</strong>, shaped
                 <code>1:NNN:android:HEX</code> (e.g.
                 <code>1:000000000000:android:0000000000000000000000</code>). Project settings ▸ Your
                 apps ▸ (the Android app), or <code>client[].client_info.mobilesdk_app_id</code> in
-                <code>google-services.json</code>. Identifies which registered app is calling.</td>
+                <code>google-services.json</code>. Identifies which registered app is calling.
+                Surfaces as <code>BuildConfig.FIREBASE_APP_ID</code>.</td>
             </tr>
             <tr>
-              <td><code>FIREBASE_API_KEY</code></td>
+              <td><code>firebase.apiKey</code></td>
               <td><code>current_key</code></td>
               <td>The <strong>Web API key</strong> (e.g. <code>AIzaSy…</code>). Project settings ▸
                 Your apps, or <code>client[].api_key[].current_key</code> in
-                <code>google-services.json</code>. Authenticates SDK calls to Google's backend.</td>
+                <code>google-services.json</code>. Authenticates SDK calls to Google's backend.
+                Surfaces as <code>BuildConfig.FIREBASE_API_KEY</code>.</td>
             </tr>
           </tbody>
         </table>
@@ -1473,6 +1479,48 @@ firebase deploy --only firestore:rules --project my-firebasesync-id</pre>
           select the Android app — the App ID and Web API key are listed there. From the
           <strong>CLI</strong>: <code>firebase apps:sdkconfig android</code> prints all three. Either
           way, download <code>google-services.json</code> if you prefer reading them out of a file.
+        </div>
+
+        <h3>Put them in local.properties (git-ignored)</h3>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">local.properties</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="properties"><span class="c-cmt"># Git-ignored — never committed. Absent keys → the app runs offline against the Fake.</span>
+firebase.projectId=your-project-id
+firebase.appId=1:000000000000:android:0000000000000000000000
+firebase.apiKey=AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY</pre>
+        </div>
+
+        <h3>How they reach your code: build.gradle.kts → BuildConfig</h3>
+        <p>A tiny helper in <code>build.gradle.kts</code> loads <code>local.properties</code> and
+        emits each value as a <code>buildConfigField</code>, so the generated
+        <code>BuildConfig</code> class carries the three constants. Missing keys default to
+        <code>""</code>, which is what lets the app fall back to the offline Fake automatically.</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">build.gradle.kts</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kts"><span class="c-kw">import</span> java.util.Properties
+
+<span class="c-cmt">// Credentials live in local.properties (git-ignored) — never in committed source.</span>
+<span class="c-cmt">// Absent keys default to "" so provideCloudApi() falls back to the offline Fake cloud.</span>
+<span class="c-kw">val</span> localProps = Properties().apply {
+    <span class="c-kw">val</span> f = rootProject.file(<span class="c-str">"local.properties"</span>)
+    <span class="c-kw">if</span> (f.exists()) f.inputStream().use { load(it) }
+}
+<span class="c-kw">fun</span> secret(key: String): String = localProps.getProperty(key) ?: <span class="c-str">""</span>
+
+android {
+    buildFeatures { buildConfig = <span class="c-kw">true</span> }   <span class="c-cmt">// generate the BuildConfig class</span>
+    defaultConfig {
+        buildConfigField(<span class="c-str">"String"</span>, <span class="c-str">"FIREBASE_PROJECT_ID"</span>, <span class="c-str">"\"${secret("firebase.projectId")}\""</span>)
+        buildConfigField(<span class="c-str">"String"</span>, <span class="c-str">"FIREBASE_APP_ID"</span>, <span class="c-str">"\"${secret("firebase.appId")}\""</span>)
+        buildConfigField(<span class="c-str">"String"</span>, <span class="c-str">"FIREBASE_API_KEY"</span>, <span class="c-str">"\"${secret("firebase.apiKey")}\""</span>)
+    }
+}</pre>
         </div>
 
         <div class="callout warn">
@@ -1560,23 +1608,30 @@ kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "ko
       <div class="band-inner">
         <p class="eyebrow">Step 5</p>
         <h2>The initialisation code, line by line</h2>
-        <p>This is the heart of the connection: the few lines that turn three constants into a live
-        Firestore client. It lives at the top of <code>FirestoreCloudApi</code> in
-        <code>data/CloudApi.kt</code> and runs once, lazily, the first time the real cloud is used.</p>
+        <p>This is the heart of the connection: the few lines that turn the three
+        <code>BuildConfig</code> credentials into a live Firestore client. It lives at the top of
+        <code>FirestoreCloudApi</code> in <code>data/CloudApi.kt</code> and runs once, lazily, the
+        first time the real cloud is used.</p>
 
-        <h3>The three credential constants</h3>
+        <h3>The three credentials come from BuildConfig</h3>
+        <p>There are <em>no</em> credential constants in <code>CloudApi.kt</code> any more. The values
+        live in <code>local.properties</code> (git-ignored) and flow in through the generated
+        <code>BuildConfig</code> class — wired up by the <code>buildConfigField</code> lines in
+        <code>build.gradle.kts</code> shown in Step 3.</p>
         <div class="code-panel">
           <div class="code-head">
-            <span class="code-file">data/CloudApi.kt — paste YOUR values here</span>
+            <span class="code-file">generated — BuildConfig (from local.properties)</span>
             <button class="copy-btn" type="button">Copy</button>
           </div>
-<pre data-lang="kotlin">private const val FIREBASE_PROJECT_ID = "your-project-id"
-private const val FIREBASE_APP_ID = "1:000000000000:android:0000000000000000000000"
-private const val FIREBASE_API_KEY = "AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY"</pre>
+<pre data-lang="kotlin"><span class="c-cmt">// Generated at build time from local.properties via buildConfigField (build.gradle.kts).</span>
+<span class="c-cmt">// No keys configured → each is "" → the app auto-uses the offline Fake cloud.</span>
+BuildConfig.FIREBASE_PROJECT_ID   <span class="c-cmt">// = secret("firebase.projectId")</span>
+BuildConfig.FIREBASE_APP_ID       <span class="c-cmt">// = secret("firebase.appId")</span>
+BuildConfig.FIREBASE_API_KEY      <span class="c-cmt">// = secret("firebase.apiKey")</span></pre>
         </div>
-        <p class="dense">These are the demo project's values. Replace them with <em>your</em>
-        <code>project_id</code>, Android App ID, and Web API key from Step 5 to point the app at your
-        own Firestore.</p>
+        <p class="dense">To point the app at your own Firestore, set <code>firebase.projectId</code>,
+        <code>firebase.appId</code>, and <code>firebase.apiKey</code> in <code>local.properties</code>
+        (Step 3) — no source edit, and the keys stay out of git.</p>
 
         <h3>Building the Firestore client</h3>
         <div class="code-panel">
@@ -1589,9 +1644,9 @@ private const val FIREBASE_API_KEY = "AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY"</pre
         ?: FirebaseApp.initializeApp(
             context,
             FirebaseOptions.Builder()
-                .setProjectId(FIREBASE_PROJECT_ID)   // which Cloud project to use
-                .setApplicationId(FIREBASE_APP_ID)   // which Android app within that project
-                .setApiKey(FIREBASE_API_KEY)         // API key for SDK authentication
+                .setProjectId(BuildConfig.FIREBASE_PROJECT_ID)   // which Cloud project to use
+                .setApplicationId(BuildConfig.FIREBASE_APP_ID)   // which Android app within that project
+                .setApiKey(BuildConfig.FIREBASE_API_KEY)         // API key for SDK authentication
                 .build(),                            // produces the immutable FirebaseOptions
         )
     FirebaseFirestore.getInstance(app)               // the Firestore client handle for this app
@@ -1606,7 +1661,8 @@ private const val FIREBASE_API_KEY = "AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY"</pre
         <p>Read it as four moves:</p>
         <ol class="kicker-list">
           <li><strong><code>FirebaseOptions.Builder() … .build()</code></strong> — the programmatic
-            equivalent of <code>google-services.json</code>. Three setters carry the three values:
+            equivalent of <code>google-services.json</code>. Three setters carry the three
+            <code>BuildConfig</code> values:
             <code>setProjectId()</code> tells the SDK which Cloud project to route to,
             <code>setApplicationId()</code> says which registered Android app is calling, and
             <code>setApiKey()</code> authenticates SDK calls to Google's backend. <code>.build()</code>
@@ -1638,8 +1694,8 @@ private const val FIREBASE_API_KEY = "AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY"</pre
           On a fresh install you may see <em>"FirebaseApp initialization unsuccessful"</em> in Logcat.
           That comes from Firebase's own auto-init <code>ContentProvider</code>, which fires
           <em>before</em> our code runs and finds no <code>google-services.json</code>. It is
-          harmless: we initialise Firebase ourselves from the constants above, and real-mode sync
-          works fine. (In Fake mode Firebase is never touched at all.)
+          harmless: we initialise Firebase ourselves from the <code>BuildConfig</code> values, and
+          real-mode sync works fine. (In Fake mode Firebase is never touched at all.)
         </div>
       </div>
     </section>
@@ -1648,61 +1704,65 @@ private const val FIREBASE_API_KEY = "AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY"</pre
     <section class="band anchor" id="switch">
       <div class="band-inner">
         <p class="eyebrow">Step 6</p>
-        <h2>Flip the Real/Fake switch</h2>
+        <h2>The Real/Fake switch is automatic</h2>
         <p>The whole app talks to a tiny <code>CloudApi</code> interface with two methods,
         <code>push</code> and <code>pullSince</code>. Behind it sits either the real
-        <code>FirestoreCloudApi</code> or an in-memory <code>FakeCloudApi</code>. One boolean chooses
-        which. Set <code>useFakeCloud = false</code> to go live.</p>
+        <code>FirestoreCloudApi</code> or an in-memory <code>FakeCloudApi</code>. <strong>You no
+        longer flip a flag</strong>: the factory picks the real cloud when your keys are present in
+        <code>local.properties</code>, and the offline Fake when they're absent.</p>
 
+        <p>The ViewModel just asks for the shared repository — no mode argument:</p>
         <div class="code-panel">
           <div class="code-head">
-            <span class="code-file">FirebaseSyncViewModel.kt — the single lever</span>
+            <span class="code-file">FirebaseSyncViewModel.kt</span>
             <button class="copy-btn" type="button">Copy</button>
           </div>
-<pre data-lang="kotlin">// useFakeCloud = false → talk to the REAL Cloud Firestore configured in data/CloudApi.kt.
-// Flip back to NoteRepository.get(app) (default true) to demo fully offline against the Fake.
-private val repo = NoteRepository.get(app, useFakeCloud = false)</pre>
+<pre data-lang="kotlin">private val repo = NoteRepository.get(app)   // cloud is chosen automatically (keys present? real : Fake)</pre>
         </div>
 
-        <p>That flag flows straight through to the factory at the bottom of
-        <code>CloudApi.kt</code>, which is where the choice is actually made:</p>
+        <p>The decision happens in the factory at the bottom of <code>CloudApi.kt</code>. Its
+        <code>useFake</code> default is computed from the generated <code>BuildConfig</code>: a blank
+        API key (no keys configured in <code>local.properties</code>) means use the Fake.</p>
         <div class="code-panel">
           <div class="code-head">
-            <span class="code-file">data/CloudApi.kt — the factory</span>
+            <span class="code-file">data/CloudApi.kt — the factory (auto-detect)</span>
             <button class="copy-btn" type="button">Copy</button>
           </div>
-<pre data-lang="kotlin">fun provideCloudApi(context: Context, useFake: Boolean = true): CloudApi =
+<pre data-lang="kotlin">fun provideCloudApi(context: Context, useFake: Boolean = BuildConfig.FIREBASE_API_KEY.isBlank()): CloudApi =
     if (useFake) fakeCloud else FirestoreCloudApi(context)</pre>
         </div>
 
         <table class="tbl">
           <thead>
-            <tr><th style="width:18%">Mode</th><th>What it does</th><th style="width:24%">Use it for</th></tr>
+            <tr><th style="width:18%">Mode</th><th>What it does</th><th style="width:24%">Picked when…</th></tr>
           </thead>
           <tbody>
             <tr>
-              <td><span class="tag green">Fake (default)</span></td>
+              <td><span class="tag green">Fake</span></td>
               <td>An in-memory "server" that imitates latency, last-write-wins, and even another
                 device's edits — with <strong>no network</strong>. Seeds a Welcome note on first
                 sync. The whole sync engine runs offline.</td>
-              <td>Building, demos with no setup, unit tests.</td>
+              <td>No keys in <code>local.properties</code> (<code>BuildConfig.FIREBASE_API_KEY</code>
+                is <code>""</code>). Building, demos with no setup, unit tests.</td>
             </tr>
             <tr>
               <td><span class="tag teal">Real</span></td>
               <td><code>FirestoreCloudApi</code> talks to your live Cloud Firestore using the three
-                constants. Requires the <code>INTERNET</code> permission (already declared) and a
-                networked device.</td>
-              <td>Seeing data appear in the Firestore console and sync across devices.</td>
+                <code>BuildConfig</code> values. Requires the <code>INTERNET</code> permission
+                (already declared) and a networked device.</td>
+              <td>Keys present in <code>local.properties</code>. Seeing data appear in the Firestore
+                console and sync across devices.</td>
             </tr>
           </tbody>
         </table>
 
         <div class="callout good">
-          <span class="callout-label">Default Fake keeps the app testable</span>
-          Because the default is <code>useFakeCloud = true</code>, the project compiles, runs, and
-          passes its unit tests with no Firebase project and no connection. Flipping to
-          <code>false</code> is the only change required to go live once your three values are in
-          place.
+          <span class="callout-label">Zero-config Fake keeps the app testable</span>
+          With no keys configured, <code>BuildConfig.FIREBASE_API_KEY</code> is <code>""</code> and
+          the factory defaults to the Fake — so the project compiles, runs, and passes its unit
+          tests with no Firebase project and no connection. Adding your three values to
+          <code>local.properties</code> is the only change required to go live; no source edit and no
+          flag to flip.
         </div>
       </div>
     </section>
@@ -2669,8 +2729,8 @@ db.firestoreSettings = settings
       <div class="band-inner">
         <p class="eyebrow">Step 7</p>
         <h2>Run &amp; verify</h2>
-        <p>With your three values pasted in and <code>useFakeCloud = false</code>, build and install
-        on a networked device or emulator.</p>
+        <p>With your three values in <code>local.properties</code> (so the app auto-uses the real
+        cloud), build and install on a networked device or emulator.</p>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">terminal — build &amp; install</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="bash"># JBR-21 toolchain (matches Android Studio's bundled JDK)
@@ -2966,7 +3026,7 @@ db.useEmulator("10.0.2.2", 8080)</pre>
               <td>Logcat: <em>"FirebaseApp initialization unsuccessful"</em></td>
               <td><strong>Benign.</strong> Firebase's auto-init <code>ContentProvider</code> runs
                 before our code and finds no <code>google-services.json</code>. We initialise Firebase
-                manually from the constants; ignore this warning. (It never appears in Fake mode.)</td>
+                from the <code>BuildConfig</code> values (fed from <code>local.properties</code>); ignore this warning. (It never appears in Fake mode.)</td>
             </tr>
             <tr>
               <td><code>PERMISSION_DENIED</code> on read or write</td>
@@ -3005,9 +3065,10 @@ db.useEmulator("10.0.2.2", 8080)</pre>
 
         <div class="callout good">
           <span class="callout-label">Still stuck? Fall back to Fake</span>
-          Flip <code>useFakeCloud = true</code> to rule out Firebase entirely. If the app works fully
-          against the Fake cloud, the problem is in your Firebase project / rules / three values, not
-          in the app's sync engine.
+          Temporarily remove the three <code>firebase.*</code> keys from <code>local.properties</code>
+          (so <code>BuildConfig.FIREBASE_API_KEY</code> is blank) to rule out Firebase entirely. If
+          the app works fully against the Fake cloud, the problem is in your Firebase project / rules
+          / three values, not in the app's sync engine.
         </div>
 
         <div class="rail-foot" style="margin-top:24px;">

@@ -45,9 +45,10 @@ Learn how an Android app combines a **local database (Room)** with a **real clou
   can still be pushed while offline).
 - **Conflict resolution** — `shouldAcceptRemote(...)` is a pure **last-write-wins** rule (compare
   `updatedAt`; a pending local edit wins until it's pushed).
-- **Real vs Fake switch** — a `CloudApi` interface with a **Firestore-backed** `Real` impl and an
-  in-memory `Fake` cloud (latency + LWW + a "another device edited" hook), swapped by one flag so
-  the app and tests run offline.
+- **Real vs Fake switch (automatic)** — a `CloudApi` interface with a **Firestore-backed** `Real`
+  impl and an in-memory `Fake` cloud (latency + LWW + a "another device edited" hook). The factory
+  auto-detects: keys present in `local.properties` → real Firestore; keys absent → offline Fake.
+  No flag to flip, no code to change.
 
 ## The cloud: Cloud Firestore
 
@@ -80,27 +81,29 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
    package name `com.example.firebasesync`.
 2. Open **Build ▸ Firestore Database ▸ Create database**. For the demo, start in **test mode** (or
    add a rule allowing read/write on the `notes` collection).
-3. From **Project settings ▸ Your apps** (or the `google-services.json` you can download) copy three
-   values into the constants at the top of **`data/CloudApi.kt`**:
-   - `FIREBASE_PROJECT_ID` → `project_id`
-   - `FIREBASE_APP_ID`     → the Android app's **App ID** (`mobilesdk_app_id`, looks like `1:…:android:…`)
-   - `FIREBASE_API_KEY`    → the **Web API key** (`current_key`)
-4. Flip the switch to the real cloud: in `FirebaseSyncViewModel.kt` change the repository call from
-   `NoteRepository.get(app)` to `NoteRepository.get(app, useFakeCloud = false)` (or change the
-   `useFakeCloud` default in `NoteRepository.get(...)` itself — that is the single lever, since
-   `get(...)` is what passes the flag on to `provideCloudApi`).
-5. Run on a networked device. Add a note and watch it appear in the Firestore console (and on a
+3. From **Project settings ▸ Your apps** (or the `google-services.json` you can download) add three
+   values to **`local.properties`** (git-ignored, so the keys never land in committed source):
+   - `firebase.projectId` → `project_id`
+   - `firebase.appId`     → the Android app's **App ID** (`mobilesdk_app_id`, looks like `1:…:android:…`)
+   - `firebase.apiKey`    → the **Web API key** (`current_key`)
+
+   `build.gradle.kts` reads these and generates `BuildConfig.FIREBASE_PROJECT_ID` / `_APP_ID` /
+   `_API_KEY`. The app **auto-detects**: with keys present it uses the real Firestore; with none it
+   runs offline against the Fake — no code change, no switch to flip.
+4. Run on a networked device. Add a note and watch it appear in the Firestore console (and on a
    second device). Toggle airplane mode to see notes queue as **Pending** and flip to **Synced**
    when you reconnect.
 
-> **Why no `google-services.json` / Gradle plugin?** To keep the project building with zero secrets,
-> we initialise Firebase **in code** from the three constants above (`FirebaseApp.initializeApp`).
+> **Why no `google-services.json` / Gradle plugin?** To keep the project building with zero secrets
+> in source, we initialise Firebase **in code** from the three `BuildConfig` values above
+> (fed in from `local.properties` → `FirebaseApp.initializeApp`).
 > The production-standard alternative is to drop your `google-services.json` into the module and
 > apply the `com.google.gms.google-services` plugin, which wires those values automatically.
 >
 > On a brand-new install you may see a benign Logcat warning — *"FirebaseApp initialization
 > unsuccessful"* — from Firebase's auto-init provider. It is harmless: in Fake mode we never use
-> Firebase, and in real mode we initialise it ourselves from the constants.
+> Firebase, and in real mode we initialise it ourselves from the `BuildConfig` values (fed from
+> `local.properties` → `build.gradle.kts` → `buildConfigField`).
 
 ## Key files
 

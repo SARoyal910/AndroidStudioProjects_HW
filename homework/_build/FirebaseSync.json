@@ -1,0 +1,97 @@
+{
+  "name": "FirebaseSync",
+  "tagline": "The CloudSync offline-first app with a REAL cloud database: Google Cloud Firestore. Same Room-backed architecture; only the CloudApi implementation changed.",
+  "whatItDoes": "The same single-screen notes app as CloudSync — add/edit/delete with per-row sync badges and an online/offline + pending banner, all driven by the local Room database — but the real cloud is now Google Cloud Firestore. Push writes one document per note (set() at notes/{id}); pull is a range query on the updatedAt field. By default it still runs offline against the in-memory FakeCloudApi, so it builds, runs, and unit-tests with no Firebase project; paste three values from your Firebase console into CloudApi.kt and flip one flag to sync against real Firestore.",
+  "mentalModel": "Keep CloudSync's mental model exactly — the UI reads only local Room, a background worker reconciles with the cloud — and notice that swapping the cloud is a ONE-CLASS change: the repository, the sync engine, the UI, and the tests are untouched. The 'cloud' is just whatever implements pullSince + push, and here that is Firestore.",
+  "domain": "notes",
+  "estTime": "15-20 min",
+  "screens": [
+    { "name": "FirebaseSyncApp", "role": "The whole screen (identical to CloudSync): add/edit form, Sync now + Simulate remote edit, the online/offline + pending banner, and the notes list. Reads Room-backed StateFlows only." },
+    { "name": "SyncStatusBar", "role": "Green (Online) / amber (Offline — changes queued) banner with the not-yet-synced count." },
+    { "name": "NoteCard", "role": "One note row with a colour-coded sync badge; tap to edit, button to delete." },
+    { "name": "SyncBadge", "role": "Per-row ✓ Synced / ⏳ Pending / ⚠ Failed, from the row's SyncState." }
+  ],
+  "concepts": [
+    { "term": "Cloud Firestore", "plain": "A hosted NoSQL document database. This app keeps all notes in one collection, 'notes'; each note is a document whose id is our client-generated note id — so push is a single set() on a known path and pull is a query." },
+    { "term": "push = document set()", "plain": "push(note) does notes.document(note.id).set(note).await(). set() creates-or-overwrites that one document. Unlike the Fake's last-write-wins, Firestore's set() always wins; the client's pull-side last-write-wins rule keeps the merge sane for this demo." },
+    { "term": "pull = a range query", "plain": "pullSince(since) runs whereGreaterThan(\"updatedAt\", since).orderBy(\"updatedAt\").get().await() and maps each document back to a NoteDto — only rows changed after our cursor, oldest first." },
+    { "term": "Task<T>.await()", "plain": "Firestore returns a Play-services Task<T>, not a coroutine. kotlinx-coroutines-play-services adds an await() that suspends until the Task completes (or throws), letting pullSince/push stay ordinary suspend functions." },
+    { "term": "NoteDto needs default values", "plain": "Firestore deserialises a document by calling the no-argument constructor and then setting fields, and a Kotlin data class only gets a no-arg constructor when every parameter has a default — so NoteDto's properties all default. (No @Serializable: Firestore does its own object mapping.)" },
+    { "term": "Initialising Firebase in code", "plain": "To keep the project building with zero secrets there is no google-services.json or Gradle plugin: FirestoreCloudApi calls FirebaseApp.initializeApp(context, FirebaseOptions(...)) from three constants you paste in. The production-standard alternative is the google-services plugin." },
+    { "term": "One-class swap from CloudSync", "plain": "Compared to CloudSync, only CloudApi.kt's real implementation (and its build dependencies) changed. The entity, DAO, repository, SyncWorker, SyncScheduler, ViewModel, UI, and unit tests are identical — the payoff of hiding the backend behind an interface." }
+  ],
+  "files": [
+    { "path": "FirebaseSync/src/main/java/com/example/firebasesync/data/CloudApi.kt", "role": "The CloudApi interface + FirestoreCloudApi (the REAL cloud) + the offline FakeCloudApi + provideCloudApi(context, useFake)." },
+    { "path": "FirebaseSync/src/main/java/com/example/firebasesync/data/Note.kt", "role": "@Entity Note + the plain (Firestore-mapped) NoteDto with default values + mappers + SyncState." },
+    { "path": "FirebaseSync/src/main/java/com/example/firebasesync/data/NoteRepository.kt", "role": "Optimistic writes, sync() push→pull, and the pure shouldAcceptRemote last-write-wins rule (unchanged from CloudSync)." },
+    { "path": "FirebaseSync/src/main/java/com/example/firebasesync/sync/SyncScheduler.kt", "role": "Enqueues the SyncWorker with a NetworkType.CONNECTED constraint + backoff (unchanged)." },
+    { "path": "FirebaseSync/build.gradle.kts", "role": "Adds the Firebase BoM + firebase-firestore + kotlinx-coroutines-play-services; drops Retrofit and the serialization plugin." }
+  ],
+  "highlights": [
+    {
+      "title": "Sync bookkeeping: the entity + a Firestore-mapped DTO",
+      "file": "FirebaseSync/src/main/java/com/example/firebasesync/data/Note.kt",
+      "start": 41,
+      "end": 67,
+      "explain": "The @Entity Note is unchanged from CloudSync (client id, updatedAt clock, syncState, deleted tombstone). The only difference is NoteDto: every property has a DEFAULT and there is no @Serializable, because Firestore maps documents with its own reflection — it builds the object via the no-arg constructor (which a data class only has when all params default), then fills the fields."
+    },
+    {
+      "title": "The same tiny cloud interface CloudSync used",
+      "file": "FirebaseSync/src/main/java/com/example/firebasesync/data/CloudApi.kt",
+      "start": 28,
+      "end": 39,
+      "explain": "Identical to CloudSync: pullSince(cursor) + push(note). Everything above the data layer depends only on this, which is exactly why moving from a Retrofit stub to real Firestore changes nothing else in the app."
+    },
+    {
+      "title": "The REAL cloud — Google Cloud Firestore",
+      "file": "FirebaseSync/src/main/java/com/example/firebasesync/data/CloudApi.kt",
+      "start": 83,
+      "end": 226,
+      "explain": "This is the whole 'cloud is now defined' change. We get-or-create the FirebaseApp from three pasted constants and grab FirebaseFirestore. push() is one document set() at notes/{id}; pullSince() is a whereGreaterThan(\"updatedAt\", since) range query, ordered, mapped back to NoteDto with toObject(). Both .await() the Play-services Task so they read as plain suspend functions. The repository, worker, and UI never see any of this."
+    },
+    {
+      "title": "Optimistic local writes (Room first, marked PENDING)",
+      "file": "FirebaseSync/src/main/java/com/example/firebasesync/data/NoteRepository.kt",
+      "start": 38,
+      "end": 52,
+      "explain": "Unchanged from CloudSync: addNote writes to Room immediately with a fresh UUID and PENDING — no network here. The Firestore push happens later in the background worker, so a new note shows instantly whether or not Firebase is reachable."
+    },
+    {
+      "title": "sync(): push the outbox, then pull remote changes",
+      "file": "FirebaseSync/src/main/java/com/example/firebasesync/data/NoteRepository.kt",
+      "start": 84,
+      "end": 109,
+      "explain": "Identical engine: push every PENDING row to Firestore (FAILED + rethrow on error so the worker retries), then pull documents newer than MAX(updatedAt) and merge each through shouldAcceptRemote. The only thing that changed since CloudSync is what cloud.push / cloud.pullSince actually do under the hood."
+    },
+    {
+      "title": "Last-write-wins, as a pure function",
+      "file": "FirebaseSync/src/main/java/com/example/firebasesync/data/NoteRepository.kt",
+      "start": 18,
+      "end": 27,
+      "explain": "The same pure conflict rule, unit-tested with no Firebase: accept a remote row only if we have no local copy or ours is SYNCED and not newer; a still-PENDING local edit wins until it is pushed."
+    },
+    {
+      "title": "Why offline 'just queues': the network constraint",
+      "file": "FirebaseSync/src/main/java/com/example/firebasesync/sync/SyncScheduler.kt",
+      "start": 22,
+      "end": 40,
+      "explain": "Unchanged: the NetworkType.CONNECTED constraint defers the sync until there is a connection, APPEND_OR_REPLACE keeps a write made mid-sync, and backoff handles transient Firestore errors. Offline-first behaviour is identical regardless of which real backend is plugged in."
+    }
+  ],
+  "newVsPrev": "CloudSync taught the offline-first pattern but left the cloud undefined (a Retrofit stub pointed at example.com). FirebaseSync keeps that architecture byte-for-byte and replaces ONLY the real CloudApi implementation with Google Cloud Firestore: push = document set(), pull = a whereGreaterThan range query, with Task.await() bridging Firestore to coroutines and a default-valued NoteDto for Firestore's object mapping. The build swaps Retrofit/serialization for the Firebase BoM + firestore + coroutines-play-services. The lesson is the payoff of the CloudApi seam: a real cloud is a one-class change.",
+  "tryThis": [
+    "Run it as-is (offline): identical to CloudSync — notes go Pending then Synced against the in-memory fake, with no Firebase setup at all.",
+    "Create a Firebase project, enable Firestore (test mode), and paste FIREBASE_PROJECT_ID / FIREBASE_APP_ID / FIREBASE_API_KEY into CloudApi.kt. Flip useFakeCloud = false and run on a networked device.",
+    "With real Firestore, add a note and watch the document appear under the 'notes' collection in the Firebase console (id == the note's UUID).",
+    "Open the Firestore console on a second device or browser, add a document with a larger updatedAt, and watch the app PULL it in on the next sync.",
+    "Diff CloudApi.kt against CloudSync's: confirm the interface, the Fake, and the switch are the same shape — only the real implementation differs."
+  ],
+  "gotchas": [
+    "Runs OFFLINE by default (useFakeCloud = true). Nothing touches Firebase until you paste your three values AND flip the flag.",
+    "On a real install you may see a benign Logcat warning 'FirebaseApp initialization unsuccessful' from Firebase's auto-init provider; it is harmless because we initialise Firebase ourselves from the constants.",
+    "Firestore's set() always overwrites — it does NOT compare timestamps. The demo relies on the client's pull-side last-write-wins; a production app would use a transaction or security rules for server-side conflicts.",
+    "Real Firestore needs security rules that permit access to the 'notes' collection (test mode, or an explicit rule). With locked-down rules the push throws and the row shows ⚠ Failed (and is retried).",
+    "We init Firebase in code (no google-services.json) to keep the build secret-free; the production-standard path is the com.google.gms.google-services Gradle plugin + google-services.json."
+  ],
+  "runTest": "Offline by default, so it builds and unit-tests with no Firebase project: ./gradlew :compileDebugKotlin, then ./gradlew :testDebugUnitTest (the last-write-wins rule, the SyncState converter, and the fake-cloud round trip — none need a network), then ./gradlew installDebug. To go live, paste your Firebase values into CloudApi.kt, set useFakeCloud = false, and run on a networked device against your Firestore."
+}

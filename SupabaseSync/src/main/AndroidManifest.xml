@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===========================================================================
+     AndroidManifest.xml — the app's "declaration of intent" to the OS.
+     CONCEPT FOCUS (offline-first cloud sync): the INTERNET + network-state
+     permissions the sync layer needs, plus the launcher Activity.
+     ======================================================================== -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- INTERNET: required for the REAL cloud transport (Supabase Postgres) to reach your project.
+         Declared ACTIVE so switching off the offline Fake works immediately.
+         It is a NORMAL (install-time) permission — no runtime request — and harmless in
+         the default offline Fake mode. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- ACCESS_NETWORK_STATE: lets WorkManager's NetworkType.CONNECTED constraint and the
+         in-app "online/offline" banner read connectivity. Also a normal permission. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- <application> holds app-wide settings and declares every component. -->
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SupabaseSync">
+
+        <!-- MainActivity: the app's entry-point screen. exported="true" is REQUIRED
+             because it is launched from outside the app (the launcher). -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.SupabaseSync"
+            android:windowSoftInputMode="adjustResize">
+
+            <!-- MAIN / LAUNCHER marks this as the app's launch screen and shows its
+                 icon in the app drawer. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

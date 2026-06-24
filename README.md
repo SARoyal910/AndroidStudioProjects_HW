@@ -112,6 +112,26 @@ Same Kotlin / Compose / Material 3 / Gradle-KTS stack; each has its own README.
 
 ---
 
+## Cloud sync — local ⇄ a real cloud database
+
+Three **siblings** that teach the **offline-first** pattern: **Room** is the on-device single
+source of truth the UI always reads; a WorkManager `SyncWorker` pushes a local outbox then pulls
+remote changes; client-generated UUIDs, an `updatedAt` clock, soft-delete tombstones, and a pure
+**last-write-wins** rule keep the two sides consistent. They share **one architecture** and differ
+only in the *real* `CloudApi` implementation — so you can diff them to see exactly what each backend
+changes.
+
+| Project | The cloud |
+|---|---|
+| [`CloudSync`](./CloudSync) | The pattern itself, against an in-memory **Fake** cloud (plus a generic Retrofit/REST stub). **Start here.** |
+| [`FirebaseSync`](./FirebaseSync) | A real **Google Cloud Firestore** backend — `document().set()` to push, a `whereGreaterThan` range query to pull. Initialised in code, so it builds with no `google-services.json`. |
+| [`SupabaseSync`](./SupabaseSync) | A real **Supabase (Postgres)** backend via `supabase-kt` — `upsert` to push, a filtered `select` to pull. Ships the `create table` SQL. |
+
+All three default to the offline **Fake** cloud, so they build, run, and unit-test with **no backend
+and no secrets**; each README shows the single switch to flip for a live backend.
+
+---
+
 ## Running a project
 
 Each folder is an independent Android project.

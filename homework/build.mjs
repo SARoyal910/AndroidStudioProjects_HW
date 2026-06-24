@@ -49,6 +49,11 @@ const GROUPS = [
     blurb: 'One small app that ties it all together: bottom-tab navigation, a list → detail drill-down, a form, and hoisted Compose state — the navigation and Compose tracks combined.',
     projects: ['ExampleProject'],
   },
+  {
+    id: 'cloud-sync', label: '7 · Cloud sync', short: 'Cloud sync', track: 'notes',
+    blurb: 'Offline-first sync between a local Room database and a REAL cloud: the same app three times — first against an in-memory Fake cloud, then Google Cloud Firestore, then Supabase Postgres. Same architecture; only the CloudApi implementation changes.',
+    projects: ['CloudSync', 'FirebaseSync', 'SupabaseSync'],
+  },
 ]
 
 // Flat linear order used by Prev/Next + arrow keys.
@@ -369,7 +374,7 @@ function overviewPanel() {
       </div>
       <div class="trackcol notes">
         <div class="trackhead">🗒️ Android-concepts track <span>standalone concept demos</span></div>
-        ${stepCards(['ComposeModernUI','ComposeCatalog','ComposeModifiers','ComposeLists','NetworkParsing','WebSocketLive','LocationServices','MvvmState','RoomAndPreferences','AppReleaseBasics','MatchMania'])}
+        ${stepCards(['ComposeModernUI','ComposeCatalog','ComposeModifiers','ComposeLists','NetworkParsing','WebSocketLive','LocationServices','MvvmState','RoomAndPreferences','AppReleaseBasics','MatchMania','CloudSync','FirebaseSync','SupabaseSync'])}
       </div>
     </div>
 

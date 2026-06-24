@@ -246,7 +246,7 @@ fun TaskListScreen(
 ) {
     // =====================================================================
     // ★ TODO 5 — build the task list + an "add" button ★
-    // (builds on RoomAndPreferences' notes list; the OPTIONAL FAB builds on hw5's Box/align)
+    // (builds on RoomAndPreferences' Barnes notes list; the OPTIONAL FAB builds on hw5's Box/align)
     //
     // Replace this placeholder so the screen shows:
     //   • a way to ADD a task whose onClick calls onAddTask(). SIMPLEST: a plain

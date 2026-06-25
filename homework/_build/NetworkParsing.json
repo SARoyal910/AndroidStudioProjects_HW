@@ -1,26 +1,26 @@
 {
   "name": "NetworkParsing",
-  "tagline": "Fetch JSON from a real API with Retrofit, parse it, and render explicit Loading / Success / Error states.",
-  "whatItDoes": "The app opens on a single screen that immediately starts fetching a list of notes. While the request runs you see a centered spinner with 'Loading notes...'. On success the notes appear in a scrolling list, each showing a bold title and a body paragraph separated by dividers. If the load fails you instead see a 'Couldn't load notes' message, the error reason, and a Retry button that re-runs the fetch. By default the app runs offline against a fake repository, so it always succeeds after a ~600ms delay.",
-  "mentalModel": "A network screen is never just 'the data' - at every instant it is in exactly one of Loading, Success, or Error, so model those states as a sealed type, expose the current one as a StateFlow, and make the UI a pure function of that state.",
-  "domain": "notes",
+  "tagline": "Fetch real, live weather from a free public API (Open-Meteo) with Retrofit, parse the JSON, and render explicit Loading / Success / Error states.",
+  "whatItDoes": "The app opens on a single screen with a row of city chips and immediately starts fetching the current weather for the first city. While the request runs you see a centered spinner with 'Loading weather...'. On success a card appears with the city, a big temperature, a weather emoji, a plain-English condition, and a row of details (feels-like, humidity, wind). If the load fails you instead see a 'Couldn't load the weather' message, the error reason, and a Retry button. Tapping a different city chip loads that city. The data is REAL and LIVE from https://api.open-meteo.com, which is free and needs no API key.",
+  "mentalModel": "A network screen is never just 'the data' - at every instant it is in exactly one of Loading, Success, or Error, so model those states as a sealed type, expose the current one as a StateFlow, and make the UI a pure function of that state. Keep the nested JSON wire shape (DTOs) separate from the flat shape the UI wants (the domain model), and convert in one mapper.",
+  "domain": "weather",
   "estTime": "20-30 min",
   "screens": [
     {
-      "name": "NotesScreen",
-      "role": "Stateful entry composable: grabs the NotesViewModel, collects its uiState StateFlow lifecycle-awarely, and hands the state plus a retry callback to NotesContent."
+      "name": "WeatherScreen",
+      "role": "Stateful entry composable: grabs the WeatherViewModel, collects its uiState StateFlow lifecycle-awarely, shows the city chips, and hands the state plus a retry callback to WeatherContent."
     },
     {
-      "name": "NotesContent",
-      "role": "Stateless renderer with one exhaustive 'when' over NotesUiState that draws the spinner, the list, or the error+Retry screen."
+      "name": "CityChips",
+      "role": "A horizontally scrolling Row of FilterChips, one per preset city; tapping one reports the chosen City upward so the ViewModel loads it."
     },
     {
-      "name": "LoadingState",
-      "role": "Centers a CircularProgressIndicator with a 'Loading notes...' label while the request is in flight."
+      "name": "WeatherContent",
+      "role": "Stateless renderer with one exhaustive 'when' over WeatherUiState that draws the spinner, the weather card, or the error+Retry screen."
     },
     {
-      "name": "NotesList",
-      "role": "Renders the Success state as a LazyColumn of notes, each row showing title and body with a HorizontalDivider between them."
+      "name": "WeatherCard",
+      "role": "Renders the Success state: the city/country, a weather emoji, a big temperature, the condition text, and a details row (feels-like, humidity, wind)."
     },
     {
       "name": "ErrorState",
@@ -30,23 +30,27 @@
   "concepts": [
     {
       "term": "DTO vs domain model",
-      "plain": "NoteDto is the exact JSON wire shape (it has 'userId') and carries the @Serializable annotation; Note is the clean shape the app actually uses and deliberately drops 'userId'. Keeping them separate means the UI never depends on the API's exact format."
+      "plain": "ForecastResponseDto/CurrentDto are the exact NESTED JSON wire shape (they carry @Serializable); Weather is the clean, FLAT shape the app actually uses. Keeping them separate means the UI never depends on the API's exact nested format - if Open-Meteo restructured its JSON, only the DTOs and the mapper would change."
     },
     {
-      "term": "JSON parsing with @Serializable",
-      "plain": "@Serializable on NoteDto tells the kotlinx.serialization compiler plugin to generate a decoder, so raw JSON text like {'userId':1,'id':1,'title':...} can be turned into a NoteDto automatically - the field names match the JSON keys by name."
+      "term": "JSON parsing with @Serializable + @SerialName",
+      "plain": "@Serializable on the DTOs tells the kotlinx.serialization compiler plugin to generate a decoder. The JSON keys are snake_case ('temperature_2m'), but Kotlin properties are camelCase ('temperature'), so each property uses @SerialName('temperature_2m') to bridge the wire key to the Kotlin name."
     },
     {
-      "term": "Retrofit interface",
-      "plain": "NoteApi is just an interface where @GET('posts') and 'suspend fun fetchNotes(): List<NoteDto>' describe an HTTP call; provideNoteApi() builds the real implementation at runtime from a baseUrl plus the kotlinx.serialization converter. You never write socket or URL code."
+      "term": "Retrofit interface with @Query",
+      "plain": "WeatherApi is just an interface where @GET('v1/forecast') and 'suspend fun fetchForecast(@Query(\"latitude\") ..., @Query(\"longitude\") ..., @Query(\"current\") ...)' describe an HTTP call; each @Query becomes one ?name=value in the URL. provideWeatherApi() builds the real implementation at runtime from a baseUrl plus the kotlinx.serialization converter. You never write socket or URL code."
+    },
+    {
+      "term": "Nested DTO -> flat domain mapper",
+      "plain": "ForecastResponseDto.toWeather(city) is the single boundary that flattens the nested 'current' object, rounds the Double temperatures and wind, and turns the numeric weather_code into a human-readable description via wmoDescription(). It also stitches in the city name we already knew (Open-Meteo's response is coordinate-based, with no city name)."
     },
     {
       "term": "Repository (Real vs Fake)",
-      "plain": "NoteRepository is an interface with one method getNotes(). RealNoteRepository hits the network; FakeNoteRepository parses a hardcoded JSON string offline after a delay. provideNoteRepository(useFake) is the single switch between them."
+      "plain": "WeatherRepository is an interface with one method getWeather(city). RealWeatherRepository hits the network with the city's coordinates; FakeWeatherRepository parses a hardcoded JSON string offline after a delay. provideWeatherRepository(useFake) is the single switch - it defaults to REAL because Open-Meteo is free and keyless."
     },
     {
       "term": "UiState sealed interface",
-      "plain": "NotesUiState is a sealed interface with exactly three subtypes - the Loading data object, Success(notes), and Error(message). Because it is sealed the compiler can verify a 'when' handles every case with no 'else'."
+      "plain": "WeatherUiState is a sealed interface with exactly three subtypes - the Loading data object, Success(weather), and Error(message). Because it is sealed the compiler can verify a 'when' handles every case with no 'else'."
     },
     {
       "term": "StateFlow exposure pattern",
@@ -54,7 +58,7 @@
     },
     {
       "term": "try/catch as the error boundary",
-      "plain": "loadNotes() sets Loading, then inside a try calls repository.getNotes() and publishes Success; any thrown exception is caught and turned into Error(message). This single try/catch is the one place a network failure becomes a visible state instead of a crash."
+      "plain": "loadWeather() sets Loading, then inside a try calls repository.getWeather(city) and publishes Success; any thrown exception (no network, timeout, bad JSON) is caught and turned into Error(message). This single try/catch is the one place a network failure becomes a visible state instead of a crash."
     },
     {
       "term": "Lifecycle-aware collection",
@@ -64,100 +68,105 @@
   "files": [
     {
       "path": "NetworkParsing/src/main/java/com/example/networkparsing/MainActivity.kt",
-      "role": "The Compose UI layer: MainActivity entry point, the stateful NotesScreen, the stateless NotesContent and its child composables, plus @Preview functions for each state."
+      "role": "The Compose UI layer: MainActivity entry point, the stateful WeatherScreen, the CityChips selector, the stateless WeatherContent and its child composables, plus @Preview functions for each state."
     },
     {
-      "path": "NetworkParsing/src/main/java/com/example/networkparsing/Note.kt",
-      "role": "The parsing boundary: the @Serializable NoteDto (JSON shape), the plain Note domain model, and the NoteDto.toNote() mapper."
+      "path": "NetworkParsing/src/main/java/com/example/networkparsing/Weather.kt",
+      "role": "The parsing boundary: the City list (with coordinates), the @Serializable nested DTOs (ForecastResponseDto/CurrentDto), the flat Weather domain model, the toWeather() mapper, and wmoDescription()."
     },
     {
-      "path": "NetworkParsing/src/main/java/com/example/networkparsing/NoteApi.kt",
-      "role": "The Retrofit NoteApi interface (@GET('posts')) and provideNoteApi() which assembles Retrofit from a baseUrl plus the kotlinx.serialization JSON converter."
+      "path": "NetworkParsing/src/main/java/com/example/networkparsing/WeatherApi.kt",
+      "role": "The Retrofit WeatherApi interface (@GET('v1/forecast') with @Query params) and provideWeatherApi() which assembles Retrofit from a baseUrl plus the kotlinx.serialization JSON converter."
     },
     {
-      "path": "NetworkParsing/src/main/java/com/example/networkparsing/NoteRepository.kt",
-      "role": "The NoteRepository interface plus RealNoteRepository (network), FakeNoteRepository (offline hardcoded JSON), and provideNoteRepository(useFake) - the online/offline switch."
+      "path": "NetworkParsing/src/main/java/com/example/networkparsing/WeatherRepository.kt",
+      "role": "The WeatherRepository interface plus RealWeatherRepository (network), FakeWeatherRepository (offline hardcoded JSON), and provideWeatherRepository(useFake) - the online/offline switch (defaults to live)."
     },
     {
-      "path": "NetworkParsing/src/main/java/com/example/networkparsing/NotesViewModel.kt",
-      "role": "The NotesUiState sealed interface and the NotesViewModel that owns the StateFlow and the loadNotes() logic."
+      "path": "NetworkParsing/src/main/java/com/example/networkparsing/WeatherViewModel.kt",
+      "role": "The WeatherUiState sealed interface and the WeatherViewModel that owns the StateFlow and the loadWeather() logic."
+    },
+    {
+      "path": "NetworkParsing/using-the-weather-api.html",
+      "role": "An interactive, plain-English guide to the Open-Meteo API: build a request, fire it live from the browser, and see how the JSON maps to the Kotlin DTO and the on-screen card."
     },
     {
       "path": "NetworkParsing/README.md",
-      "role": "Project overview explaining the DTO-vs-domain, Retrofit, UiState, error handling, and Real-vs-Fake concepts plus how to run it online or offline."
+      "role": "Project overview explaining the DTO-vs-domain, @SerialName, Retrofit/@Query, UiState, error handling, and Real-vs-Fake concepts plus how to run it live or offline."
     }
   ],
   "highlights": [
     {
-      "title": "The @Serializable DTO mirrors the JSON keys exactly",
-      "file": "NetworkParsing/src/main/java/com/example/networkparsing/Note.kt",
-      "start": 46,
-      "end": 52,
-      "explain": "@Serializable is the one annotation that makes JSON decoding possible - it triggers the kotlinx.serialization compiler plugin to generate a serializer for NoteDto. Each property (userId, id, title, body) matches a JSON key by name and type, so a JSON object decodes straight into a NoteDto. If a key ever differed from the property name you would add @SerialName, but here the names already line up."
+      "title": "The @Serializable DTO mirrors the JSON - and @SerialName bridges snake_case",
+      "file": "NetworkParsing/src/main/java/com/example/networkparsing/Weather.kt",
+      "start": 99,
+      "end": 106,
+      "explain": "CurrentDto models the nested 'current' object the API returns. @Serializable triggers the kotlinx.serialization compiler plugin to generate a decoder. The wire keys are snake_case (temperature_2m, relative_humidity_2m, weather_code, wind_speed_10m), so each property carries @SerialName('...') to map the JSON key onto a clean camelCase Kotlin name. Without that bridge, decoding would not find the values."
     },
     {
-      "title": "The mapper: the single network-shape to app-shape boundary",
-      "file": "NetworkParsing/src/main/java/com/example/networkparsing/Note.kt",
-      "start": 88,
-      "end": 94,
-      "explain": "NoteDto.toNote() is an extension function so it reads like dto.toNote(). It copies id, title, and body across but intentionally drops userId, which the UI never needs. Centralizing the conversion here means if the API adds or renames fields, only NoteDto and this one mapper change - never the screens or ViewModel."
+      "title": "The mapper: nested wire shape becomes a flat, UI-ready object",
+      "file": "NetworkParsing/src/main/java/com/example/networkparsing/Weather.kt",
+      "start": 142,
+      "end": 152,
+      "explain": "ForecastResponseDto.toWeather(city) is the single network-shape to app-shape boundary. It reaches into the nested 'current' object, rounds the Double temperatures and wind speed to whole numbers, decodes the numeric weather_code into text via wmoDescription(), and stitches in the city name/country we already knew (the API response is coordinate-based and has no city name). Centralizing it here means an API change touches only the DTOs and this one function."
     },
     {
-      "title": "Retrofit describes the endpoint as a suspend interface method",
-      "file": "NetworkParsing/src/main/java/com/example/networkparsing/NoteApi.kt",
-      "start": 41,
-      "end": 51,
-      "explain": "You only declare the contract: @GET('posts') marks fetchNotes() as an HTTP GET of the relative path appended to baseUrl, and the return type List<NoteDto> tells Retrofit plus the converter to decode the JSON array for you. 'suspend' means the call is a coroutine - Retrofit runs the network I/O off the main thread and resumes you with the parsed list, no callbacks or manual threading."
+      "title": "Retrofit describes the endpoint as a suspend interface method with @Query params",
+      "file": "NetworkParsing/src/main/java/com/example/networkparsing/WeatherApi.kt",
+      "start": 63,
+      "end": 69,
+      "explain": "You only declare the contract: @GET('v1/forecast') marks the call as an HTTP GET of the relative path appended to baseUrl, and each @Query('name') parameter becomes one ?name=value in the URL (latitude, longitude, and the comma-separated 'current' list of readings). The return type ForecastResponseDto tells Retrofit plus the converter to decode the JSON for you. 'suspend' means the call is a coroutine - Retrofit runs the network I/O off the main thread and resumes you with the parsed object, no callbacks."
     },
     {
       "title": "Assembling Retrofit with the kotlinx.serialization converter",
-      "file": "NetworkParsing/src/main/java/com/example/networkparsing/NoteApi.kt",
-      "start": 71,
-      "end": 78,
-      "explain": "provideNoteApi() wires three things: a baseUrl that must end in '/', addConverterFactory which plugs the json engine in as the (de)serializer, and create(NoteApi::class.java) which makes Retrofit generate the concrete implementation. The shared 'json = Json { ignoreUnknownKeys = true }' on line 60 means new server fields will not break parsing - the single most important real-world robustness setting."
+      "file": "NetworkParsing/src/main/java/com/example/networkparsing/WeatherApi.kt",
+      "start": 91,
+      "end": 98,
+      "explain": "provideWeatherApi() wires three things: a baseUrl that must end in '/', addConverterFactory which plugs the json engine in as the (de)serializer, and create(WeatherApi::class.java) which makes Retrofit generate the concrete implementation. The shared 'json = Json { ignoreUnknownKeys = true }' just above means the MANY fields Open-Meteo returns that we don't model (latitude, timezone, current_units, elevation, ...) will not break parsing - the single most important real-world robustness setting."
     },
     {
-      "title": "The Real-vs-Fake switch in one line",
-      "file": "NetworkParsing/src/main/java/com/example/networkparsing/NoteRepository.kt",
-      "start": 119,
-      "end": 121,
-      "explain": "provideNoteRepository(useFake) is the one place that decides whether the app is online or offline. With useFake = true (the default) it returns FakeNoteRepository, which parses a hardcoded JSON string after a delay so the app and unit tests run with no internet; flip it to false to get RealNoteRepository hitting the live API. The ViewModel depends only on the NoteRepository interface, so neither it nor the UI changes."
+      "title": "The Real-vs-Fake switch in one line (defaults to live)",
+      "file": "NetworkParsing/src/main/java/com/example/networkparsing/WeatherRepository.kt",
+      "start": 136,
+      "end": 138,
+      "explain": "provideWeatherRepository(useFake) is the one place that decides whether the app is online or offline. Because Open-Meteo is free and needs no API key, the default is useFake = false - the app fetches REAL weather out of the box via RealWeatherRepository. Pass useFake = true to get FakeWeatherRepository, which parses a hardcoded JSON string after a delay so the app and unit tests run with no internet. The ViewModel depends only on the WeatherRepository interface, so neither it nor the UI changes."
     },
     {
       "title": "The sealed UiState: three states the screen can be in",
-      "file": "NetworkParsing/src/main/java/com/example/networkparsing/NotesViewModel.kt",
+      "file": "NetworkParsing/src/main/java/com/example/networkparsing/WeatherViewModel.kt",
       "start": 44,
       "end": 59,
-      "explain": "NotesUiState is a sealed interface with exactly three cases: Loading (a data object singleton with no data), Success(notes), and Error(message). Because the set of subtypes is closed, a 'when' over a NotesUiState can be exhaustive with no 'else' - the compiler forces you to handle every state, so you physically cannot forget one."
+      "explain": "WeatherUiState is a sealed interface with exactly three cases: Loading (a data object singleton with no data), Success(weather), and Error(message). Because the set of subtypes is closed, a 'when' over a WeatherUiState can be exhaustive with no 'else' - the compiler forces you to handle every state, so you physically cannot forget one."
     },
     {
       "title": "StateFlow plus the try/catch loading logic",
-      "file": "NetworkParsing/src/main/java/com/example/networkparsing/NotesViewModel.kt",
-      "start": 98,
-      "end": 114,
-      "explain": "loadNotes() launches in viewModelScope (auto-cancelled when the VM clears, never blocking the main thread), sets _uiState to Loading, then in a try calls the suspending repository.getNotes() and publishes Success. Any exception - no network, bad JSON, timeout - is caught and becomes Error(message). The private _uiState (line 80) is written only here while the public uiState (line 84) is exposed read-only via asStateFlow()."
+      "file": "NetworkParsing/src/main/java/com/example/networkparsing/WeatherViewModel.kt",
+      "start": 104,
+      "end": 121,
+      "explain": "loadWeather() launches in viewModelScope (auto-cancelled when the VM clears, never blocking the main thread), sets _uiState to Loading, then in a try calls the suspending repository.getWeather(city) and publishes Success. Any exception - no network, bad JSON, timeout - is caught and becomes Error(message). The private _uiState is written only here, while the public uiState is exposed read-only via asStateFlow()."
     },
     {
       "title": "Stateless rendering: one exhaustive when over the state",
       "file": "NetworkParsing/src/main/java/com/example/networkparsing/MainActivity.kt",
-      "start": 137,
-      "end": 160,
-      "explain": "NotesContent holds no state and creates no ViewModel - it just takes a NotesUiState and an onRetry lambda and maps each case to a composable: Loading to a spinner, Success to NotesList, Error to ErrorState with the Retry wired to onRetry. Because the input is the sealed NotesUiState, this is exactly why the @Previews can drive it directly with hand-made states, and why the UI is a pure function of state."
+      "start": 164,
+      "end": 186,
+      "explain": "WeatherContent holds no state and creates no ViewModel - it just takes a WeatherUiState and an onRetry lambda and maps each case to a composable: Loading to a spinner, Success to the WeatherCard, Error to ErrorState with Retry wired to onRetry. Because the input is the sealed WeatherUiState, this is exactly why the @Previews can drive it directly with hand-made states, and why the UI is a pure function of state."
     }
   ],
-  "newVsPrev": "ComposeLists taught you to render an in-memory list with LazyColumn and items. NetworkParsing keeps that list UI but adds the whole data-fetching stack underneath it: a real HTTP call via Retrofit (@GET, suspend fetchNotes), JSON parsing with kotlinx.serialization (@Serializable NoteDto), a DTO-to-domain mapper, a NoteRepository abstraction with swappable Real/Fake implementations, and a NotesViewModel that exposes a sealed NotesUiState (Loading/Success/Error) as a StateFlow collected with collectAsStateWithLifecycle(). In short: the list is no longer hardcoded - it now arrives asynchronously, can fail, and the UI handles all three outcomes.",
+  "newVsPrev": "ComposeLists taught you to render an in-memory list with LazyColumn. NetworkParsing adds the whole data-fetching stack underneath the UI, now against a REAL, FREE, keyless API (Open-Meteo): a live HTTPS call via Retrofit (@GET, @Query, suspend fetchForecast), JSON parsing with kotlinx.serialization (@Serializable + @SerialName on nested DTOs), a DTO-to-domain mapper that flattens the nested 'current' object, a WeatherRepository abstraction with swappable Real/Fake implementations, and a WeatherViewModel that exposes a sealed WeatherUiState (Loading/Success/Error) as a StateFlow collected with collectAsStateWithLifecycle(). In short: the data is no longer hardcoded - it arrives asynchronously from a real weather service, can fail, and the UI handles all three outcomes.",
   "tryThis": [
-    "In NoteRepository.kt change provideNoteRepository's default to useFake = false, run on a device WITH internet, and watch the real https://jsonplaceholder.typicode.com/posts data load (100 posts instead of the 3 offline ones).",
-    "Still with useFake = false, turn on airplane mode and relaunch: the try/catch in loadNotes() should produce the Error state - tap Retry after re-enabling the network to see it recover.",
-    "In FakeNoteRepository increase the delay(600) to delay(3000) so the Loading spinner stays visible for three seconds, confirming the Loading state is real and not instant.",
-    "Add a new field to NoteDto, for example 'val fakeExtra: Int = 0', then add a matching key in the hardcoded FAKE_NOTES_JSON and surface it in the list row, to practice extending the parse boundary.",
-    "Edit FAKE_NOTES_JSON to be malformed (delete a closing brace) and observe that the decode throws and the ViewModel turns it into the Error state rather than crashing."
+    "Run the app on a networked device/emulator and tap each city chip - the temperature, condition, and details are REAL current weather from Open-Meteo (no key, no setup).",
+    "Open the interactive guide using-the-weather-api.html, build a request for any city, and press 'Fetch live weather' to see the exact JSON the app receives and how it maps to the on-screen card.",
+    "Turn on airplane mode and tap a city: the try/catch in loadWeather() should produce the Error state - tap Retry after re-enabling the network to see it recover.",
+    "Add a city to PRESET_CITIES in Weather.kt (e.g. City(\"Paris\", \"FR\", 48.8566, 2.3522)) and watch a new chip appear and load - no other code changes needed.",
+    "In WeatherRepository.kt force provideWeatherRepository(useFake = true) and relaunch to run fully offline against the hardcoded sample; or edit FAKE_FORECAST_JSON's weather_code (e.g. to 95) and watch the emoji and description change."
   ],
   "gotchas": [
-    "The app runs OFFLINE by default (useFake = true), so what you see comes from the hardcoded FAKE_NOTES_JSON string, not the network - the fake still parses real JSON and adds a delay so the flow is identical, but you must flip the switch to actually exercise Retrofit.",
-    "The README says the INTERNET permission is commented out and needs uncommenting for live mode, but the real AndroidManifest.xml declares <uses-permission android:name='android.permission.INTERNET' /> ACTIVE on line 11 - so going live only requires flipping useFake to false, no manifest edit.",
-    "NoteDto.userId is parsed (so decoding the JSON does not fail) but is deliberately NOT carried into the Note domain model - that omission is the entire point of having a separate domain model, not an oversight.",
-    "The @Preview functions never construct a real NotesViewModel; they drive the stateless NotesContent with hand-made NotesUiState values, because a ViewModel would try to run a coroutine / hit the repository that the design pane cannot execute."
+    "Open-Meteo is COORDINATE-based, not city-name based, so each preset city carries its own latitude/longitude. To support a typed city name you would first call Open-Meteo's separate (also free) Geocoding API to turn the name into coordinates - see the 'try this' in using-the-weather-api.html.",
+    "weather_code is a NUMBER (a WMO code), not text. wmoDescription() decodes it (0 = clear sky, 3 = overcast, 95 = thunderstorm, ...) - the UI never shows the raw number.",
+    "The JSON keys are snake_case (temperature_2m, wind_speed_10m) but the Kotlin properties are camelCase, so each DTO property needs @SerialName. Forgetting one means that field silently fails to decode.",
+    "The app runs LIVE by default (useFake = false) because the API needs no key - so it requires a network connection to show data. With no network you get the Error state by design; flip useFake = true to run offline.",
+    "The @Preview functions never construct a real WeatherViewModel; they drive the stateless WeatherContent with hand-made WeatherUiState values, because a ViewModel would try to run a coroutine / hit the network the design pane cannot execute."
   ],
-  "runTest": "Build and run from the project root with ./gradlew installDebug (or ./gradlew assembleDebug --console=plain --stacktrace to just compile). Launch the app: by default it runs offline, so you should briefly see the 'Loading notes...' spinner (~600ms) then a list of three 'Offline note' rows. To exercise the live path, set provideNoteRepository(useFake = false) in NoteRepository.kt and run on a networked device to load the real /posts data; toggle airplane mode to see the Error state and Retry button. Run the unit tests (mapper + offline fake) with ./gradlew testDebugUnitTest - they need no internet."
+  "runTest": "Build and run from the project root with ./gradlew installDebug (or ./gradlew assembleDebug --console=plain --stacktrace to just compile). Launch the app on a device/emulator WITH internet: you briefly see the 'Loading weather...' spinner, then a card with real current weather for the first city; tap other chips to switch cities, and toggle airplane mode to see the Error state and Retry. To run fully offline, set provideWeatherRepository(useFake = true) in WeatherRepository.kt. Run the unit tests (mapper, WMO decoder, snake_case decoding, offline fake, and ViewModel) with ./gradlew testDebugUnitTest - they need no internet."
 }

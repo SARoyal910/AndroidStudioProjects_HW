@@ -80,6 +80,9 @@ jobs:
             "ExampleProject|ExampleProject|ExampleProject"
             "StorageShowcase|StorageShowcase|StorageShowcase"
             "StorageJourney|StorageJourney|StorageJourney"
+            "CloudSync|CloudSync|CloudSync"
+            "FirebaseSync|FirebaseSync|FirebaseSync"
+            "SupabaseSync|SupabaseSync|SupabaseSync"
           )
 
           all=false

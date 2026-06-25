@@ -1,0 +1,3775 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase Setup &amp; API Guide — FirebaseSync</title>
+<meta name="description" content="A complete, beginner-friendly guide to setting up Cloud Firestore for the FirebaseSync Android app: create a Firebase project, register the com.example.firebasesync app, enable Firestore and write rules, the three credential values, the Gradle dependencies, the in-code Firebase initialisation explained line by line, the Real/Fake switch, every Firestore API this app uses (with the real code), a tour of the rest of the Firestore toolbox, and how to run, verify, and troubleshoot.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+/* ---------------- effect/api pills (badge system) ----------------
+   Two pill kinds, built from the SAME tokens .tag uses (var(--*-soft) fills,
+   var(--ink/--muted) text, var(--line) borders) so they stay legible in BOTH
+   light and dark mode — no hardcoded hex that would break the dark theme. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 11px;
+  font-size: 0.745rem;
+  font-weight: 800;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  white-space: normal;
+  line-height: 1.35;
+}
+.pill code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 0.92em;
+  font-weight: 800;
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+.pill .pill-kind {
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+/* CLOUD-EFFECT pill — what changes in the user's actual cloud project.
+   Tinted per verbs via the same -soft/-strong color tokens as .tag/.callout. */
+.pill.cloud { background: var(--surface-strong); color: var(--ink); border-color: var(--line-strong); }
+.pill.cloud.add { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.pill.cloud.write { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.pill.cloud.tomb { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.pill.cloud.read { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.pill.cloud.none { background: var(--surface-alt); color: var(--muted); border-color: var(--line); }
+/* API-CALL pill — the exact SDK call that runs. Neutral teal, same family as .tag.teal. */
+.pill.api { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 2px; align-items: stretch; }
+
+/* legend chip (mini static samples of each pill kind) */
+.pill-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-alt);
+  padding: 10px 13px;
+  margin: 14px 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+.band:nth-child(odd) .pill-legend { background: var(--surface); }
+.pill-legend .legend-label { font-weight: 850; color: var(--ink); }
+.pill-legend .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+/* ---------------- lesson helpers ---------------- */
+.lesson-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+.lesson-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 13px 14px;
+}
+.band:nth-child(odd) .lesson-card { background: var(--bg); }
+.lesson-card h3 { margin: 4px 0 8px; font-size: 1rem; }
+.lesson-card ol { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.9rem; }
+.lesson-card li { margin-bottom: 5px; }
+.lesson-time {
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.term-code-table .term-col { width: 20%; }
+.term-code-table .code-col { width: 56%; }
+.term-code-table .where-col { width: 24%; }
+.mini-code {
+  margin: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.band:nth-child(odd) .mini-code { background: var(--surface); }
+
+/* ---------------- active learning helpers ---------------- */
+.tip {
+  position: relative;
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+  font-weight: 750;
+}
+.tip:focus { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.tip:hover::after,
+.tip:focus::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  width: min(320px, 80vw);
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+}
+.predict-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--violet);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 14px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .predict-card { background: var(--bg); }
+.predict-card summary {
+  cursor: pointer;
+  padding: 11px 14px;
+  font-weight: 850;
+  color: var(--ink);
+  background: var(--violet-soft);
+}
+.predict-card .answer { padding: 12px 14px; color: var(--muted); font-size: 0.93rem; }
+.sync-timeline {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .sync-timeline { background: var(--bg); }
+.timeline-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.timeline-title { font-weight: 850; }
+.timeline-ctrl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.timeline-ctrl button,
+.concept-btn,
+.break-btn,
+.scenario-btn,
+.worksheet-btn {
+  min-height: 32px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 11px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.timeline-ctrl button:hover,
+.concept-btn:hover,
+.break-btn:hover,
+.scenario-btn:hover,
+.worksheet-btn:hover { background: var(--surface-alt); }
+.timeline-ctrl button:disabled { opacity: 0.45; cursor: not-allowed; }
+.timeline-track {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+.timeline-step {
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--muted);
+  border-radius: 9px;
+  padding: 9px 10px;
+  min-height: 118px;
+  opacity: 0.55;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.timeline-step.active {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(45,100,200,0.22);
+}
+.timeline-step.done { opacity: 0.85; }
+.timeline-step.room { border-top-color: var(--green); }
+.timeline-step.ui { border-top-color: var(--blue); }
+.timeline-step.repo { border-top-color: var(--teal); }
+.timeline-step.worker { border-top-color: var(--amber); }
+.timeline-step.cloud { border-top-color: var(--violet); }
+.timeline-step strong { display: block; margin-bottom: 4px; font-size: 0.88rem; }
+.timeline-step span { display: block; color: var(--muted); font-size: 0.8rem; }
+.timeline-explain {
+  border-top: 1px solid var(--line);
+  padding: 11px 14px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.break-lab,
+.debug-lab,
+.mastery-tracker,
+.code-tools,
+.worksheet {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .break-lab,
+.band:nth-child(odd) .debug-lab,
+.band:nth-child(odd) .mastery-tracker,
+.band:nth-child(odd) .code-tools,
+.band:nth-child(odd) .worksheet { background: var(--bg); }
+.lab-head {
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+  font-weight: 850;
+}
+.lab-body { padding: 12px 14px; }
+.lab-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.break-btn.active,
+.scenario-btn.active,
+.concept-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.lab-output {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 13px;
+  color: var(--ink);
+  min-height: 52px;
+}
+.worksheet-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.worksheet-item {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px;
+  background: var(--surface-alt);
+}
+.worksheet-item label { display: block; font-weight: 850; margin-bottom: 6px; }
+.solution-item {
+  border-left: 4px solid var(--green);
+  cursor: pointer;
+}
+.solution-item strong {
+  display: block;
+  margin-bottom: 6px;
+}
+.solution-item summary {
+  cursor: pointer;
+  font-weight: 850;
+}
+.solution-item summary::-webkit-details-marker {
+  color: var(--green);
+}
+.solution-item[open] {
+  background: var(--green-soft);
+}
+.solution-item p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.worksheet-item textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 9px 10px;
+}
+.code-line { display: inline; border-radius: 4px; }
+.code-line.concept-hit {
+  background: rgba(224, 175, 104, 0.24);
+  box-shadow: 0 0 0 2px rgba(224, 175, 104, 0.18);
+}
+.concept-note { color: var(--muted); font-size: 0.88rem; margin-top: 8px; }
+.mastery-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.mastery-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.mastery-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--green);
+  transition: width 0.2s;
+}
+.mastery-count { color: var(--muted); font-weight: 850; font-size: 0.84rem; }
+.mastery-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mastery-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-alt);
+  padding: 9px 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.mastery-item input { margin-top: 4px; }
+.term-search {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.term-search input {
+  flex: 1;
+  min-width: 220px;
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0 11px;
+}
+.term-count,
+.status-note { color: var(--muted); font-size: 0.85rem; font-weight: 750; }
+
+/* ---------------- Flow lab ---------------- */
+.flow-lab {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+  margin: 16px 0;
+}
+.band:nth-child(odd) .flow-lab { background: var(--bg); }
+.flow-lab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.flow-lab-title { font-weight: 850; }
+.flow-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.flow-btn {
+  min-height: 34px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 11px;
+  font-size: 0.84rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.flow-btn:hover { background: var(--surface-alt); }
+.flow-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.flow-brief {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 12px 0;
+}
+.flow-brief-card {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 9px 10px;
+  min-width: 0;
+}
+.band:nth-child(odd) .flow-brief-card { background: var(--bg); }
+.flow-brief-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.flow-brief-card strong,
+.flow-brief-card code {
+  overflow-wrap: anywhere;
+}
+.flow-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; padding: 12px; }
+.flow-stage {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--muted);
+  border-radius: 9px;
+  padding: 10px 12px;
+  min-width: 0;
+  background: var(--surface);
+}
+.band:nth-child(odd) .flow-stage { background: var(--bg); }
+.flow-stage.active { box-shadow: 0 0 0 2px rgba(45,100,200,0.28); }
+.flow-stage.room { border-left-color: var(--green); }
+.flow-stage.flow { border-left-color: var(--teal); }
+.flow-stage.state { border-left-color: var(--violet); }
+.flow-stage.ui { border-left-color: var(--blue); }
+.flow-stage h3 { margin: 0 0 7px; font-size: 0.92rem; }
+.flow-stage p { margin-bottom: 7px; }
+.flow-list { display: grid; gap: 6px; }
+.flow-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 8px;
+  background: var(--surface-alt);
+  font-size: 0.86rem;
+}
+.flow-row strong { display: block; }
+.flow-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+}
+.flow-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.flow-pill.pending { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.flow-pill.synced { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.flow-pill.deleted { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.flow-empty { color: var(--muted); font-size: 0.84rem; }
+.flow-emission {
+  display: grid;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.flow-burst {
+  border: 1px dashed var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-weight: 800;
+}
+.flow-code {
+  display: block;
+  white-space: pre-wrap;
+  color: var(--muted);
+}
+.flow-stage-note {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.flow-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+.flow-explain {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 9px;
+  padding: 11px 13px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  background: var(--blue-soft);
+}
+.flow-steps {
+  margin: 9px 0 0;
+  padding-left: 19px;
+  color: var(--muted);
+}
+.flow-steps li { margin-bottom: 5px; }
+.flow-log {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 11px 13px;
+}
+.band:nth-child(odd) .flow-log { background: var(--bg); }
+.flow-log-title {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 850;
+}
+.flow-log-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.flow-log-list li {
+  border-left: 3px solid var(--teal);
+  padding-left: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 980px) {
+  .flow-brief { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .flow-grid { grid-template-columns: 1fr; }
+  .flow-detail { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .flow-brief { grid-template-columns: 1fr; }
+}
+
+/* ---------------- operation traces ---------------- */
+.trace {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+  margin: 16px 0;
+}
+.band:nth-child(odd) .trace { background: var(--bg); }
+.trace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.trace.add .trace-head { background: var(--green-soft); }
+.trace.edit .trace-head { background: var(--blue-soft); }
+.trace.delete .trace-head { background: var(--red-soft); }
+.trace.sync .trace-head { background: var(--violet-soft); }
+.trace.read .trace-head { background: var(--amber-soft); }
+.trace-title { font-weight: 850; font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.trace-body { padding: 12px 14px; }
+.trace-action {
+  border-left: 4px solid var(--ink);
+  background: var(--surface-alt);
+  border-radius: 0 8px 8px 0;
+  padding: 9px 12px;
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+.band:nth-child(odd) .trace-action { background: var(--surface); }
+.hops { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 0; }
+.hop { display: grid; grid-template-columns: 30px 1fr; gap: 11px; align-items: start; }
+.hop-rail { display: grid; justify-items: center; gap: 2px; }
+.hop-dot {
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line-strong);
+  font-weight: 800; font-size: 0.78rem; color: var(--muted);
+}
+.hop-line { width: 2px; flex: 1; min-height: 14px; background: var(--line-strong); align-self: stretch; }
+.hop:last-child .hop-line { display: none; }
+.hop-body { padding-bottom: 14px; min-width: 0; }
+.hop:last-child .hop-body { padding-bottom: 0; }
+.hop-where {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.hop-what { font-size: 0.92rem; }
+.hop-what code { font-size: 0.82rem; }
+.fires {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  border-left: 4px solid var(--teal);
+  background: var(--teal-soft);
+  color: var(--ink);
+}
+.fires.create { border-left-color: var(--green); background: var(--green-soft); }
+.fires.overwrite { border-left-color: var(--blue); background: var(--blue-soft); }
+.fires.readremote { border-left-color: var(--violet); background: var(--violet-soft); }
+.fires.none { border-left-color: var(--amber); background: var(--amber-soft); }
+.fires-badge {
+  display: grid; place-items: center;
+  min-width: 30px; height: 30px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid var(--line);
+  font-size: 1rem;
+}
+.fires-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 2px; }
+.fires code { font-weight: 700; }
+.op-table .op-col { width: 11%; }
+.op-table .tap-col { width: 16%; }
+.op-table .path-col { width: 30%; }
+.op-table .api-col { width: 25%; }
+.op-table .effect-col { width: 18%; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid, .lesson-grid, .worksheet-grid, .mastery-list { grid-template-columns: 1fr; }
+}
+
+@media print {
+  html { scroll-behavior: auto; }
+  body { background: #fff; color: #111; }
+  .app { display: block; }
+  .rail, .topbar, .copy-btn, .theme-toggle, .stepper-ctrl, .flow-controls, .timeline-ctrl, .lab-controls, .worksheet-btn { display: none !important; }
+  .band { padding: 18px 0; border-bottom: 1px solid #ddd; }
+  .band-inner { max-width: none; }
+  .card, .lesson-card, .callout, .tree, .tbl, .code-panel, .stepper { break-inside: avoid; }
+  a { color: #111; text-decoration: underline; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">FS</div>
+      <div>
+        <div class="brand-title">FirebaseSync</div>
+        <div class="brand-subtitle">Firebase setup &amp; API guide</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">Get oriented</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>Overview</span></a>
+      <a class="nav-link" href="#prerequisites"><span class="nav-num">2</span><span>Prerequisites</span></a>
+      <div class="nav-title">Set up the backend</div>
+      <a class="nav-link" href="#create"><span class="nav-num">3</span><span>Create project + app</span></a>
+      <a class="nav-link" href="#firestore"><span class="nav-num">4</span><span>Enable Firestore + rules</span></a>
+      <a class="nav-link" href="#config"><span class="nav-num">5</span><span>The three values</span></a>
+      <div class="nav-title">Wire it into the app</div>
+      <a class="nav-link" href="#deps"><span class="nav-num">6</span><span>Gradle dependencies</span></a>
+      <a class="nav-link" href="#init"><span class="nav-num">7</span><span>The init code, line by line</span></a>
+      <a class="nav-link" href="#switch"><span class="nav-num">8</span><span>The Real/Fake switch (automatic)</span></a>
+      <div class="nav-title">The Firestore APIs</div>
+      <a class="nav-link" href="#operations"><span class="nav-num">9</span><span>What fires on each action</span></a>
+      <a class="nav-link" href="#api-app"><span class="nav-num">10</span><span>APIs this app uses</span></a>
+      <a class="nav-link" href="#api-more"><span class="nav-num">11</span><span>The rest of the toolbox</span></a>
+      <div class="nav-title">Ship it</div>
+      <a class="nav-link" href="#run"><span class="nav-num">12</span><span>Run &amp; verify</span></a>
+      <a class="nav-link" href="#testing"><span class="nav-num">13</span><span>Testing</span></a>
+      <a class="nav-link" href="#troubleshooting"><span class="nav-num">14</span><span>Troubleshooting</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      Want the architecture story?
+      <a href="how-a-note-syncs.html">How a note syncs →</a>
+      <a href="firebasesync-explorer.html">Interactive explainer →</a>
+      <a href="../STORAGE_GUIDE.md">Storage decision guide →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">FS</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · Overview</option>
+        <option value="#prerequisites">2 · Prerequisites</option>
+        <option value="#create">3 · Create project + app</option>
+        <option value="#firestore">4 · Enable Firestore + rules</option>
+        <option value="#config">5 · The three values</option>
+        <option value="#deps">6 · Gradle dependencies</option>
+        <option value="#init">7 · The init code, line by line</option>
+        <option value="#switch">8 · The Real/Fake switch (automatic)</option>
+        <option value="#operations">9 · What fires on each action</option>
+        <option value="#api-app">10 · APIs this app uses</option>
+        <option value="#api-more">11 · The rest of the toolbox</option>
+        <option value="#run">12 · Run &amp; verify</option>
+        <option value="#testing">13 · Testing</option>
+        <option value="#troubleshooting">14 · Troubleshooting</option>
+      </select>
+      <button id="themeToggleTop" type="button">🌙</button>
+    </div>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Connect FirebaseSync to a real cloud database</p>
+        <h1>Firebase setup &amp; API guide</h1>
+        <p class="lead">
+          FirebaseSync is an <strong>offline-first</strong> notes app. The on-device
+          <strong>Room</strong> database is the single source of truth the UI always reads;
+          <strong>Cloud Firestore</strong> is the remote it syncs to. This page walks you, end to
+          end, through standing up Firestore for <em>this exact project</em> — creating the
+          backend, wiring the credentials, the Firebase initialisation code (read line by line),
+          and every Firestore API the app actually calls — plus a tour of the rest of the Firestore
+          toolbox so you know what else is in the box.
+        </p>
+        <div class="tag-row">
+          <span class="tag teal">Cloud Firestore</span>
+          <span class="tag blue">Firebase BoM 34.15.0</span>
+          <span class="tag green">Offline-first</span>
+          <span class="tag violet">Room + sync</span>
+          <span class="tag amber">~10 minutes</span>
+        </div>
+
+        <div class="grid3">
+          <div class="card">
+            <div class="card-head"><span class="card-title">What you build</span></div>
+            <div class="card-body">
+              <p class="dense">A Firebase project with one Android app registered to package
+              <code>com.example.firebasesync</code>, a Cloud Firestore database with a
+              <code>notes</code> collection, and the app flipped from its offline
+              <em>Fake</em> cloud to the real Firestore.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">How the app uses it</span></div>
+            <div class="card-body">
+              <p class="dense">Every note is one Firestore <strong>document</strong> in the
+              <code>notes</code> collection, keyed by the note's own client-generated id.
+              <strong>push</strong> = <code>set()</code> that document; <strong>pull</strong> =
+              a range query on <code>updatedAt</code>.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Zero-setup default</span></div>
+            <div class="card-body">
+              <p class="dense">Out of the box the app ships wired to a <em>demo</em> project and
+              also has an in-memory <strong>Fake</strong> cloud, so it builds, runs, and unit-tests
+              with no network at all. This guide shows how to point it at <em>your own</em>
+              Firestore.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout good">
+          <span class="callout-label">The mental model</span>
+          Room is local and instant; Firestore is the shared remote. The sync engine moves rows
+          between them. Firestore <em>also</em> keeps its own on-device cache, but this project
+          deliberately ignores that and treats Room as the source of truth, so the offline-first
+          mechanics stay explicit. You are configuring the <em>remote</em>, not replacing Room.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. PREREQUISITES ============ -->
+    <section class="band anchor" id="prerequisites">
+      <div class="band-inner">
+        <p class="eyebrow">Before you start</p>
+        <h2>Prerequisites</h2>
+        <p>You need very little. Most of this is clicking through a console (or running a few CLI
+        commands) and pasting three values into one Kotlin file.</p>
+
+        <table class="tbl">
+          <thead>
+            <tr><th style="width:34%">You need</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A Google / Firebase account</td>
+              <td>Firebase projects live under your Google account. Sign in at
+                <a href="https://console.firebase.google.com">console.firebase.google.com</a>.
+                The free <em>Spark</em> plan is plenty for this app.</td>
+            </tr>
+            <tr>
+              <td>The app's package name<br><code>com.example.firebasesync</code></td>
+              <td>Firebase identifies an Android app by its package name. It must match the
+                <code>applicationId</code> in <code>build.gradle.kts</code> exactly — for this
+                project that is <code>com.example.firebasesync</code>.</td>
+            </tr>
+            <tr>
+              <td>About 10 minutes</td>
+              <td>Create project + app (≈4 min), enable Firestore + rules (≈3 min), add the three
+                values to <code>local.properties</code> and run (≈3 min).</td>
+            </tr>
+            <tr>
+              <td>(Optional) the Firebase CLI</td>
+              <td>Everything here can be done in the web console. If you prefer a terminal, install
+                <code>firebase-tools</code> (<code>npm i -g firebase-tools</code>) and use the CLI
+                routes shown below.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <span class="callout-label">Already wired to a demo</span>
+          The project ships ready to run — just add your three values to <code>local.properties</code>
+          and the app automatically switches to real Firestore. The rest of this page is about
+          creating and wiring <em>your own</em> project so the data lives in <em>your</em> Firebase
+          account.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. CREATE PROJECT + APP ============ -->
+    <section class="band anchor" id="create">
+      <div class="band-inner">
+        <p class="eyebrow">Step 1</p>
+        <h2>Create a Firebase project + register the Android app</h2>
+        <p>A Firebase <strong>project</strong> is the top-level container; inside it you register
+        one Android <strong>app</strong> for each app that talks to it. We register an Android app
+        whose package name is <code>com.example.firebasesync</code>. Pick whichever route you like —
+        the two produce the same thing.</p>
+
+        <h3>Route A — the Firebase console (point &amp; click)</h3>
+        <ol class="kicker-list">
+          <li>Go to <a href="https://console.firebase.google.com">console.firebase.google.com</a>
+            and click <strong>Add project</strong>. Give it any name (e.g. <em>FirebaseSync</em>);
+            Firebase derives a globally-unique <strong>project id</strong> from it. You can disable
+            Google Analytics — this app does not use it.</li>
+          <li>On the project dashboard click the <strong>Android</strong> icon
+            (<em>Add app ▸ Android</em>).</li>
+          <li>For <strong>Android package name</strong> enter
+            <code>com.example.firebasesync</code> (this MUST match the app's
+            <code>applicationId</code>). Nickname and SHA-1 are optional for Firestore in this
+            demo — leave them blank.</li>
+          <li>Firebase offers a <code>google-services.json</code> download. <strong>You do not need
+            it for this project</strong> — we initialise Firebase in code (see Step 6/7). It is,
+            however, the easiest place to read the three values you do need (Step 5).</li>
+          <li>Skip the "add the SDK" Gradle steps in the wizard — the dependencies are already in
+            this project (Step 6).</li>
+        </ol>
+
+        <h3>Route B — the Firebase CLI (terminal)</h3>
+        <p>If you have <code>firebase-tools</code> installed, the same setup is a handful of
+        commands. The last one prints the three values you will add to <code>local.properties</code>.</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">terminal — create project &amp; register the Android app</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="bash"># Sign in (opens a browser to authorise the CLI)
+firebase login
+
+# Create a NEW Firebase project. Pick a globally-unique id; the display name is optional.
+firebase projects:create my-firebasesync-id --display-name "FirebaseSync"
+
+# Register an Android app inside that project for our exact package name.
+# (Run inside the project, or pass --project my-firebasesync-id.)
+firebase apps:create android "FirebaseSync" \
+  --package-name com.example.firebasesync \
+  --project my-firebasesync-id
+
+# Print the SDK config for the Android app. This is where the THREE values come from:
+#   project_id, the Android App ID (mobilesdk_app_id), and the Web API key (current_key).
+firebase apps:sdkconfig android --project my-firebasesync-id</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-label">Package name must match</span>
+          If the registered package name does not equal the app's <code>applicationId</code>
+          (<code>com.example.firebasesync</code>), Firebase rejects the App ID at runtime. Double-check
+          it now — it is the single most common setup mistake.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. ENABLE FIRESTORE + RULES ============ -->
+    <section class="band anchor" id="firestore">
+      <div class="band-inner">
+        <p class="eyebrow">Step 2</p>
+        <h2>Enable Cloud Firestore + set security rules</h2>
+        <p>A registered app cannot read or write until the project has a Firestore
+        <strong>database</strong> and <strong>security rules</strong> that permit it. Rules are a
+        server-side gatekeeper evaluated on every request — they default to denying everything, so
+        you must open up the <code>notes</code> collection.</p>
+
+        <h3>Route A — the console</h3>
+        <ol class="kicker-list">
+          <li>In the left nav open <strong>Build ▸ Firestore Database</strong> and click
+            <strong>Create database</strong>.</li>
+          <li>Choose a <strong>location</strong> (a multi-region such as <code>nam5</code> is fine).
+            This is permanent for the database, so pick one near your users.</li>
+          <li>Start in <strong>test mode</strong> for the demo (open read/write for ~30 days), or
+            choose production mode and paste the rules below. Either way, the goal is: the
+            <code>notes</code> collection is readable and writable.</li>
+        </ol>
+
+        <h3>The demo rules</h3>
+        <p>Open the <strong>Rules</strong> tab and use these. They allow anyone to read and write
+        any document in <code>notes</code> — perfect for a learning demo, <strong>never</strong> for
+        a real app with private data.</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">firestore.rules — DEMO ONLY</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="js">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /notes/{noteId} { allow read, write: if true; }   // DEMO ONLY — tighten before real use
+  }
+}</pre>
+        </div>
+        <p class="dense">Read it top-down: rules version 2; for the Firestore service; for any
+        document under this database; for any document in the <code>notes</code> collection
+        (<code>{noteId}</code> is a wildcard binding the document id), allow both reads and writes
+        unconditionally (<code>if true</code>). In a real app you would replace
+        <code>if true</code> with something like
+        <code>if request.auth != null &amp;&amp; request.auth.uid == resource.data.ownerId</code>.</p>
+
+        <h3>Route B — the CLI</h3>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">terminal — create the database &amp; deploy rules</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="bash"># Create the single default Firestore database in a chosen location.
+firebase firestore:databases:create "(default)" --location nam5 \
+  --project my-firebasesync-id
+
+# Put the rules above in a file named firestore.rules, point firebase.json at it, then:
+firebase deploy --only firestore:rules --project my-firebasesync-id</pre>
+        </div>
+
+        <div class="callout danger">
+          <span class="callout-label">Do not ship open rules</span>
+          <code>allow read, write: if true</code> means <em>anyone on the internet</em> who knows
+          your project id can read and overwrite every note. It is fine for this teaching demo on a
+          throwaway project. Before any real use, lock it down with Firebase Authentication and
+          per-user ownership checks.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. THE THREE VALUES ============ -->
+    <section class="band anchor" id="config">
+      <div class="band-inner">
+        <p class="eyebrow">Step 3</p>
+        <h2>The three values you need (and where each comes from)</h2>
+        <p>Because this project initialises Firebase <strong>in code</strong> (Step 7), you do not
+        drop in a <code>google-services.json</code> file. Instead you put exactly
+        <strong>three</strong> values in <code>local.properties</code> (which is
+        <strong>git-ignored</strong>, so the keys never land in committed source).
+        <code>build.gradle.kts</code> reads them and generates matching
+        <code>BuildConfig</code> constants that <code>data/CloudApi.kt</code> reads. Here is what
+        each is and where to find it.</p>
+
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:26%">Key in local.properties</th>
+              <th style="width:22%">Firebase name</th>
+              <th>Where to find it</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>firebase.projectId</code></td>
+              <td><code>project_id</code></td>
+              <td>The Cloud project id (e.g. <code>your-project-id</code>). Project settings ▸
+                General, or the <code>project_info.project_id</code> field of
+                <code>google-services.json</code>. Routes API calls to the right Firestore.
+                Surfaces as <code>BuildConfig.FIREBASE_PROJECT_ID</code>.</td>
+            </tr>
+            <tr>
+              <td><code>firebase.appId</code></td>
+              <td><code>mobilesdk_app_id</code></td>
+              <td>The <strong>Android App ID</strong>, shaped
+                <code>1:NNN:android:HEX</code> (e.g.
+                <code>1:000000000000:android:0000000000000000000000</code>). Project settings ▸ Your
+                apps ▸ (the Android app), or <code>client[].client_info.mobilesdk_app_id</code> in
+                <code>google-services.json</code>. Identifies which registered app is calling.
+                Surfaces as <code>BuildConfig.FIREBASE_APP_ID</code>.</td>
+            </tr>
+            <tr>
+              <td><code>firebase.apiKey</code></td>
+              <td><code>current_key</code></td>
+              <td>The <strong>Web API key</strong> (e.g. <code>AIzaSy…</code>). Project settings ▸
+                Your apps, or <code>client[].api_key[].current_key</code> in
+                <code>google-services.json</code>. Authenticates SDK calls to Google's backend.
+                Surfaces as <code>BuildConfig.FIREBASE_API_KEY</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <span class="callout-label">Two ways to read them</span>
+          From the <strong>console</strong>: Project settings (gear icon) ▸ <em>Your apps</em> ▸
+          select the Android app — the App ID and Web API key are listed there. From the
+          <strong>CLI</strong>: <code>firebase apps:sdkconfig android</code> prints all three. Either
+          way, download <code>google-services.json</code> if you prefer reading them out of a file.
+        </div>
+
+        <h3>Put them in local.properties (git-ignored)</h3>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">local.properties</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="properties"><span class="c-cmt"># Git-ignored — never committed. Absent keys → the app runs offline against the Fake.</span>
+firebase.projectId=your-project-id
+firebase.appId=1:000000000000:android:0000000000000000000000
+firebase.apiKey=AIzaSy-REPLACE-WITH-YOUR-WEB-API-KEY</pre>
+        </div>
+
+        <h3>How they reach your code: build.gradle.kts → BuildConfig</h3>
+        <p>A tiny helper in <code>build.gradle.kts</code> loads <code>local.properties</code> and
+        emits each value as a <code>buildConfigField</code>, so the generated
+        <code>BuildConfig</code> class carries the three constants. Missing keys default to
+        <code>""</code>, which is what lets the app fall back to the offline Fake automatically.</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">build.gradle.kts</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kts"><span class="c-kw">import</span> java.util.Properties
+
+<span class="c-cmt">// Credentials live in local.properties (git-ignored) — never in committed source.</span>
+<span class="c-cmt">// Absent keys default to "" so provideCloudApi() falls back to the offline Fake cloud.</span>
+<span class="c-kw">val</span> localProps = Properties().apply {
+    <span class="c-kw">val</span> f = rootProject.file(<span class="c-str">"local.properties"</span>)
+    <span class="c-kw">if</span> (f.exists()) f.inputStream().use { load(it) }
+}
+<span class="c-kw">fun</span> secret(key: String): String = localProps.getProperty(key) ?: <span class="c-str">""</span>
+
+android {
+    buildFeatures { buildConfig = <span class="c-kw">true</span> }   <span class="c-cmt">// generate the BuildConfig class</span>
+    defaultConfig {
+        buildConfigField(<span class="c-str">"String"</span>, <span class="c-str">"FIREBASE_PROJECT_ID"</span>, <span class="c-str">"\"${secret("firebase.projectId")}\""</span>)
+        buildConfigField(<span class="c-str">"String"</span>, <span class="c-str">"FIREBASE_APP_ID"</span>, <span class="c-str">"\"${secret("firebase.appId")}\""</span>)
+        buildConfigField(<span class="c-str">"String"</span>, <span class="c-str">"FIREBASE_API_KEY"</span>, <span class="c-str">"\"${secret("firebase.apiKey")}\""</span>)
+    }
+}</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-label">Are these secrets?</span>
+          The Web API key and App ID are <em>not</em> secrets in the password sense — they ship
+          inside every Android app and are safe to embed. What actually protects your data is your
+          <strong>Firestore security rules</strong> (Step 2). That is why open demo rules are
+          dangerous and real rules matter.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. GRADLE DEPENDENCIES ============ -->
+    <section class="band anchor" id="deps">
+      <div class="band-inner">
+        <p class="eyebrow">Step 4</p>
+        <h2>The Gradle dependencies</h2>
+        <p>The Firestore libraries are <strong>already declared</strong> in this project, so there is
+        nothing to add — but it is worth understanding what each line does. The dependencies live in
+        two files: the version catalog (<code>gradle/libs.versions.toml</code>) and the module build
+        script (<code>build.gradle.kts</code>).</p>
+
+        <h3>The version catalog</h3>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">gradle/libs.versions.toml</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="toml">[versions]
+# Firebase BoM = ONE version number that aligns every Firebase library (here: Cloud Firestore).
+# The individual firebase-* deps below are then declared WITHOUT a version — the BoM picks it.
+firebaseBom = "34.15.0"
+coroutines = "1.10.2"
+
+[libraries]
+# --- Cloud transport: Google Cloud Firestore (the REAL cloud database) ---
+# firebase-bom is a "platform" dependency; firebase-firestore takes its version from it.
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+# Bridges Firebase's Play-services Task&lt;T&gt; to Kotlin coroutines: lets us write `task.await()`.
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }</pre>
+        </div>
+
+        <h3>The module build script</h3>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">build.gradle.kts</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kts">dependencies {
+    // Cloud transport: Google Cloud Firestore is the REAL cloud database.
+    implementation(platform(libs.firebase.bom))           // one aligned set of Firebase versions
+    implementation(libs.firebase.firestore)               // the Firestore client (Kotlin extensions bundled in)
+    implementation(libs.kotlinx.coroutines.play.services) // lets us `await()` a Firestore Task in a suspend fun
+}</pre>
+        </div>
+
+        <h3>Why the BoM?</h3>
+        <p>A <strong>BoM</strong> (Bill of Materials) is a "platform" dependency: you pin <em>one</em>
+        version (<code>34.15.0</code>) and every individual <code>firebase-*</code> library you add is
+        declared <em>without</em> a version — the BoM chooses a set that is guaranteed to work
+        together. That is why <code>firebase-firestore</code> has no version of its own. Add more
+        Firebase products later (Auth, Storage, Functions) and they all inherit aligned versions from
+        the same BoM.</p>
+
+        <h3>The design choice: initialise Firebase in code, no plugin file</h3>
+        <p>Notice what is <em>not</em> here: there is no <code>com.google.gms.google-services</code>
+        Gradle plugin and no <code>google-services.json</code> in the module. This project hands the
+        three credentials directly to <code>FirebaseOptions.Builder()</code> in Kotlin (Step 7), so
+        it compiles and runs with <strong>zero extra files</strong>. That makes it trivial to clone,
+        build, and unit-test, and it means a student goes live with a single one-line edit.</p>
+        <div class="callout">
+          <span class="callout-label">The production-standard alternative is equivalent</span>
+          The usual approach is to drop your <code>google-services.json</code> into the module and
+          apply the <code>com.google.gms.google-services</code> plugin, which reads that file at
+          build time and wires the same three values into <code>FirebaseOptions</code> automatically.
+          Both routes produce the identical configuration — they just differ in <em>where</em> the
+          values come from (a JSON file vs three Kotlin constants).
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. THE INIT CODE ============ -->
+    <section class="band anchor" id="init">
+      <div class="band-inner">
+        <p class="eyebrow">Step 5</p>
+        <h2>The initialisation code, line by line</h2>
+        <p>This is the heart of the connection: the few lines that turn the three
+        <code>BuildConfig</code> credentials into a live Firestore client. It lives at the top of
+        <code>FirestoreCloudApi</code> in <code>data/CloudApi.kt</code> and runs once, lazily, the
+        first time the real cloud is used.</p>
+
+        <h3>The three credentials come from BuildConfig</h3>
+        <p>There are <em>no</em> credential constants in <code>CloudApi.kt</code> any more. The values
+        live in <code>local.properties</code> (git-ignored) and flow in through the generated
+        <code>BuildConfig</code> class — wired up by the <code>buildConfigField</code> lines in
+        <code>build.gradle.kts</code> shown in Step 3.</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">generated — BuildConfig (from local.properties)</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kotlin"><span class="c-cmt">// Generated at build time from local.properties via buildConfigField (build.gradle.kts).</span>
+<span class="c-cmt">// No keys configured → each is "" → the app auto-uses the offline Fake cloud.</span>
+BuildConfig.FIREBASE_PROJECT_ID   <span class="c-cmt">// = secret("firebase.projectId")</span>
+BuildConfig.FIREBASE_APP_ID       <span class="c-cmt">// = secret("firebase.appId")</span>
+BuildConfig.FIREBASE_API_KEY      <span class="c-cmt">// = secret("firebase.apiKey")</span></pre>
+        </div>
+        <p class="dense">To point the app at your own Firestore, set <code>firebase.projectId</code>,
+        <code>firebase.appId</code>, and <code>firebase.apiKey</code> in <code>local.properties</code>
+        (Step 3) — no source edit, and the keys stay out of git.</p>
+
+        <h3>Building the Firestore client</h3>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">data/CloudApi.kt — class FirestoreCloudApi(context: Context)</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kotlin">private val db: FirebaseFirestore = run {
+    val app: FirebaseApp = FirebaseApp.getApps(context).firstOrNull()
+        ?: FirebaseApp.initializeApp(
+            context,
+            FirebaseOptions.Builder()
+                .setProjectId(BuildConfig.FIREBASE_PROJECT_ID)   // which Cloud project to use
+                .setApplicationId(BuildConfig.FIREBASE_APP_ID)   // which Android app within that project
+                .setApiKey(BuildConfig.FIREBASE_API_KEY)         // API key for SDK authentication
+                .build(),                            // produces the immutable FirebaseOptions
+        )
+    FirebaseFirestore.getInstance(app)               // the Firestore client handle for this app
+}</pre>
+        </div>
+        <div class="pill-row">
+          <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>FirebaseApp.initializeApp()</code></span>
+          <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>FirebaseFirestore.getInstance()</code></span>
+          <span class="pill cloud none"><span class="pill-kind">Firebase</span>🔌 Connecting to Firebase · no data written yet <em>(no socket opens until the first read/write)</em></span>
+        </div>
+
+        <p>Read it as four moves:</p>
+        <ol class="kicker-list">
+          <li><strong><code>FirebaseOptions.Builder() … .build()</code></strong> — the programmatic
+            equivalent of <code>google-services.json</code>. Three setters carry the three
+            <code>BuildConfig</code> values:
+            <code>setProjectId()</code> tells the SDK which Cloud project to route to,
+            <code>setApplicationId()</code> says which registered Android app is calling, and
+            <code>setApiKey()</code> authenticates SDK calls to Google's backend. <code>.build()</code>
+            freezes them into an immutable <code>FirebaseOptions</code> value object.</li>
+          <li><strong><code>FirebaseApp.getApps(context).firstOrNull()</code></strong> — a
+            <code>FirebaseApp</code> is a <em>process-wide singleton</em>. <code>getApps()</code>
+            returns every app already registered in this process; we take the first if one exists.
+            This guards against initialising twice.</li>
+          <li><strong><code>?: FirebaseApp.initializeApp(context, options)</code></strong> — only if
+            no app exists yet do we register one. Calling <code>initializeApp()</code> a second time
+            with the same default name would <em>throw</em>, which is exactly why the
+            <code>getApps().firstOrNull() ?:</code> guard is there: initialise once, reuse forever.</li>
+          <li><strong><code>FirebaseFirestore.getInstance(app)</code></strong> — returns the Firestore
+            client bound to that app. It is lazy: no network socket opens here. The connection is
+            established only on the first real read or write.</li>
+        </ol>
+
+        <div class="callout violet">
+          <span class="callout-label">Why <code>run { … }</code>?</span>
+          <code>run { … }</code> is a Kotlin scope function that runs a block and returns its last
+          expression. It lets us declare a few local helpers (<code>app</code>) and still assign a
+          single value (the Firestore client) to <code>db</code> in one initialiser. Because
+          <code>db</code> is a property of the class, the whole block runs the first time
+          <code>FirestoreCloudApi</code> is constructed.
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-label">A benign Logcat warning</span>
+          On a fresh install you may see <em>"FirebaseApp initialization unsuccessful"</em> in Logcat.
+          That comes from Firebase's own auto-init <code>ContentProvider</code>, which fires
+          <em>before</em> our code runs and finds no <code>google-services.json</code>. It is
+          harmless: we initialise Firebase ourselves from the <code>BuildConfig</code> values, and
+          real-mode sync works fine. (In Fake mode Firebase is never touched at all.)
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8. THE SWITCH ============ -->
+    <section class="band anchor" id="switch">
+      <div class="band-inner">
+        <p class="eyebrow">Step 6</p>
+        <h2>The Real/Fake switch is automatic</h2>
+        <p>The whole app talks to a tiny <code>CloudApi</code> interface with two methods,
+        <code>push</code> and <code>pullSince</code>. Behind it sits either the real
+        <code>FirestoreCloudApi</code> or an in-memory <code>FakeCloudApi</code>. <strong>You no
+        longer flip a flag</strong>: the factory picks the real cloud when your keys are present in
+        <code>local.properties</code>, and the offline Fake when they're absent.</p>
+
+        <p>The ViewModel just asks for the shared repository — no mode argument:</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">FirebaseSyncViewModel.kt</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kotlin">private val repo = NoteRepository.get(app)   // cloud is chosen automatically (keys present? real : Fake)</pre>
+        </div>
+
+        <p>The decision happens in the factory at the bottom of <code>CloudApi.kt</code>. Its
+        <code>useFake</code> default is computed from the generated <code>BuildConfig</code>: a blank
+        API key (no keys configured in <code>local.properties</code>) means use the Fake.</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">data/CloudApi.kt — the factory (auto-detect)</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kotlin">fun provideCloudApi(context: Context, useFake: Boolean = BuildConfig.FIREBASE_API_KEY.isBlank()): CloudApi =
+    if (useFake) fakeCloud else FirestoreCloudApi(context)</pre>
+        </div>
+
+        <table class="tbl">
+          <thead>
+            <tr><th style="width:18%">Mode</th><th>What it does</th><th style="width:24%">Picked when…</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag green">Fake</span></td>
+              <td>An in-memory "server" that imitates latency, last-write-wins, and even another
+                device's edits — with <strong>no network</strong>. Seeds a Welcome note on first
+                sync. The whole sync engine runs offline.</td>
+              <td>No keys in <code>local.properties</code> (<code>BuildConfig.FIREBASE_API_KEY</code>
+                is <code>""</code>). Building, demos with no setup, unit tests.</td>
+            </tr>
+            <tr>
+              <td><span class="tag teal">Real</span></td>
+              <td><code>FirestoreCloudApi</code> talks to your live Cloud Firestore using the three
+                <code>BuildConfig</code> values. Requires the <code>INTERNET</code> permission
+                (already declared) and a networked device.</td>
+              <td>Keys present in <code>local.properties</code>. Seeing data appear in the Firestore
+                console and sync across devices.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout good">
+          <span class="callout-label">Zero-config Fake keeps the app testable</span>
+          With no keys configured, <code>BuildConfig.FIREBASE_API_KEY</code> is <code>""</code> and
+          the factory defaults to the Fake — so the project compiles, runs, and passes its unit
+          tests with no Firebase project and no connection. Adding your three values to
+          <code>local.properties</code> is the only change required to go live; no source edit and no
+          flag to flip.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 9. OPERATION-BY-OPERATION TRACE ============ -->
+    <section class="band anchor" id="operations">
+      <div class="band-inner">
+        <p class="eyebrow">Action → code → Firestore call</p>
+        <h2>What fires when you add, edit, delete, or sync — and the exact Firestore call</h2>
+        <p class="lead">
+          This section follows a single user tap all the way down: from the button in
+          <code>MainActivity.kt</code>, through the <code>ViewModel</code> and the
+          <code>Repository</code>, into Room, and — only during sync — to the precise Cloud Firestore
+          API that fires. The headline to keep in mind: <strong>tapping Add / Edit / Delete writes to
+          Room first and shows instantly; Firestore is touched only by the push/pull inside
+          <code>sync()</code>; and drawing the list touches no Firestore at all.</strong>
+        </p>
+
+        <!-- summary table -->
+        <table class="tbl op-table">
+          <thead>
+            <tr>
+              <th class="op-col">Operation</th>
+              <th class="tap-col">You tap…</th>
+              <th class="path-col">Code path (ViewModel → Repository)</th>
+              <th class="api-col">Firestore API called</th>
+              <th class="effect-col">Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag green">Add</span></td>
+              <td>"Add note"</td>
+              <td><code>addNote()</code> → <code>writeThenSync { repo.addNote() }</code> →
+                <code>dao.upsert(PENDING)</code> → later <code>sync()</code> →
+                <code>cloud.push(dto)</code></td>
+              <td><code>notes.document(id).set(note).await()</code></td>
+              <td><strong>Creates</strong> the document at <code>notes/{id}</code></td>
+            </tr>
+            <tr>
+              <td><span class="tag blue">Edit / Update</span></td>
+              <td>"Save edit"</td>
+              <td><code>editNote(id, …)</code> → <code>writeThenSync { repo.editNote() }</code> →
+                <code>dao.upsert(PENDING)</code> → <code>sync()</code> → <code>cloud.push(dto)</code></td>
+              <td><code>notes.document(id).set(note).await()</code> <em>(same call)</em></td>
+              <td><strong>Overwrites</strong> the document = update</td>
+            </tr>
+            <tr>
+              <td><span class="tag red">Delete</span></td>
+              <td>"Delete"</td>
+              <td><code>deleteNote(id)</code> → <code>writeThenSync { repo.deleteNote() }</code> →
+                <code>dao.upsert(deleted=true, PENDING)</code> → <code>sync()</code> →
+                <code>cloud.push(dto)</code> → <code>dao.hardDelete(id)</code></td>
+              <td><code>notes.document(id).set(note).await()</code> <em>(writes <code>deleted=true</code>)</em></td>
+              <td><strong>Overwrites</strong> with a tombstone (soft delete)</td>
+            </tr>
+            <tr>
+              <td><span class="tag violet">Sync / Pull</span></td>
+              <td>"Sync now"</td>
+              <td><code>syncNow()</code> → <code>requestSync()</code> → <code>sync()</code> →
+                <code>cloud.pullSince(maxUpdatedAt)</code></td>
+              <td><code>whereGreaterThan</code> + <code>orderBy</code> + <code>get</code> +
+                <code>toObject</code></td>
+              <td><strong>Reads</strong> remote changes into Room</td>
+            </tr>
+            <tr>
+              <td><span class="tag amber">Read / Display</span></td>
+              <td>nothing — automatic</td>
+              <td><code>repo.notes</code> ← <code>dao.observeVisibleNotes()</code> →
+                <code>StateFlow</code> → Compose</td>
+              <td><strong>none — reads Room</strong></td>
+              <td>Draws the list locally, offline, instantly</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <span class="callout-label">How to read each trace below</span>
+          Each card starts with the <strong>user action</strong>, then walks the
+          <strong>code hops</strong> (file · function with a real snippet), and ends with a
+          highlighted <strong>"Firestore API called"</strong> line stating exactly which API fires and
+          whether it <em>creates</em>, <em>overwrites (updates)</em>, or <em>reads</em>. The shared
+          glue is the same every time: <code>writeThenSync { … }</code> in the ViewModel does the Room
+          write, then <code>requestSync()</code> kicks <code>repo.sync()</code> (immediately when
+          online, plus a durable <code>SyncWorker</code>), and the actual Firestore call lives inside
+          <code>sync()</code>'s push loop or pull step.
+        </div>
+
+        <!-- =============== PILL LEGEND =============== -->
+        <div class="pill-legend">
+          <span class="legend-label">Two badges read alongside each trace &amp; API:</span>
+          <span class="legend-item">
+            <span class="pill cloud add"><span class="pill-kind">Firebase</span>➕ Adding to Firebase</span>
+            what happens in <strong>your Firebase project</strong> — Adding / Updating / Deleting / Reading (the document data on Google's servers).
+          </span>
+          <span class="legend-item">
+            <span class="pill api"><span class="pill-kind">API</span>📞 call</span>
+            the exact <strong>Firebase SDK call</strong> the app runs to make it happen.
+          </span>
+        </div>
+
+        <!-- =============== TRACE 1: ADD =============== -->
+        <div class="trace add">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag green">Add</span> Adding a note</span>
+            <span class="tag teal">Firestore: set() — CREATE</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: tap the <strong>"Add note"</strong> button with a title typed in.</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt · Button onClick</span>
+                  <div class="hop-what">The "Add note" button (shown when <code>editingId == null</code>) calls the ViewModel.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">MainActivity.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val id = editingId
+if (id == null) vm.addNote(title, body) else vm.editNote(id, title, body)
+clearForm()</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">FirebaseSyncViewModel.kt · addNote()</span>
+                  <div class="hop-what"><code>addNote</code> wraps the write in <code>writeThenSync { … }</code> — write to Room, then request a sync.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">FirebaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun addNote(title: String, body: String) = writeThenSync { repo.addNote(title, body) }
+
+private fun writeThenSync(block: suspend () -&gt; Unit) {
+    viewModelScope.launch {
+        block()          // 1) optimistic local write (Room updates the UI)
+        requestSync()    // 2) durable retry + immediate foreground sync when online
+    }
+}</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · addNote() → ROOM ONLY</span>
+                  <div class="hop-what">A brand-new <code>Note</code> with a client-generated UUID, <code>updatedAt = now</code>, and <code>syncState = PENDING</code> is written to Room. <strong>The UI updates instantly. No Firestore yet.</strong>
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">dao.upsert(
+    Note(
+        id = UUID.randomUUID().toString(),   // identity before the server ever sees it
+        title = clean,
+        body = body.trim(),
+        updatedAt = System.currentTimeMillis(),
+        syncState = SyncState.PENDING,
+    )
+)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">4</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">requestSync() → SyncWorker.kt · doWork() → NoteRepository.kt · sync()</span>
+                  <div class="hop-what"><code>requestSync()</code> enqueues the <code>SyncWorker</code> (durable, network-constrained) and, when already online, also runs <code>repo.sync()</code> right now. Either path lands in the push loop.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">SyncWorker.kt · doWork()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val repo = NoteRepository.get(applicationContext)
+return try {
+    repo.sync()                 // push the outbox, then pull remote changes
+    Result.success()
+} catch (e: Exception) { Result.retry() }</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">5</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · sync() — the PUSH loop</span>
+                  <div class="hop-what">For every row still <code>PENDING</code>, the repository hands the DTO to the cloud. On success the row is re-saved as <code>SYNCED</code>.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt · sync()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">for (local in dao.notesToPush()) {
+    val serverCopy = cloud.push(local.toDto())   // may throw -&gt; bubble up to retry
+    if (local.deleted) dao.hardDelete(local.id)
+    else dao.upsert(serverCopy.toEntity(SyncState.SYNCED))
+}</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">6</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">CloudApi.kt · FirestoreCloudApi.push()</span>
+                  <div class="hop-what">The DTO reaches Firestore. <code>document(note.id)</code> is a path handle; <code>set()</code> is the write.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">CloudApi.kt · push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">notes.document(note.id)  // DocumentReference at notes/{id}
+    .set(note)           // create-or-overwrite the document; returns Task&lt;Void&gt;
+    .await()             // suspend until the server confirms; throws on network/permission error
+return note</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="fires create">
+              <span class="fires-badge">✚</span>
+              <div>
+                <span class="fires-label">Firestore API called</span>
+                <code>notes.document(id).set(note).await()</code> — the document did not exist yet, so
+                <code>set()</code> <strong>CREATES</strong> a new document at <code>notes/{id}</code>.
+                <div class="pill-row">
+                  <span class="pill cloud add"><span class="pill-kind">Firebase</span>➕ Adding to Firebase · writes the <code>notes/{id}</code> document</span>
+                  <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>DocumentReference.set(note)</code></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============== TRACE 2: EDIT =============== -->
+        <div class="trace edit">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag blue">Edit / Update</span> Editing a note</span>
+            <span class="tag teal">Firestore: set() — OVERWRITE = update</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: tap a note card (the form pre-fills and <code>editingId</code> is set), change the text, then tap <strong>"Save edit"</strong>.</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt · NoteCard onEdit, then "Save edit"</span>
+                  <div class="hop-what">Tapping a card sets the form's <code>editingId</code>; the same button now routes to <code>vm.editNote(id, …)</code> instead of <code>addNote</code>.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">MainActivity.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">onEdit = { title = note.title; body = note.body; editingId = note.id },
+// …then in the button:
+if (id == null) vm.addNote(title, body) else vm.editNote(id, title, body)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">FirebaseSyncViewModel.kt · editNote()</span>
+                  <div class="hop-what">Same shape as add: write to Room, then request a sync.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">FirebaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun editNote(id: String, title: String, body: String) = writeThenSync { repo.editNote(id, title, body) }</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · editNote() → ROOM ONLY</span>
+                  <div class="hop-what">The existing row is copied with new text, a bumped <code>updatedAt</code>, and <code>syncState = PENDING</code> — keeping the <em>same id</em> so it maps to the same Firestore document.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val existing = dao.findById(id) ?: return
+dao.upsert(
+    existing.copy(
+        title = title.trim(),
+        body = body.trim(),
+        updatedAt = System.currentTimeMillis(),
+        syncState = SyncState.PENDING,
+    )
+)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">4</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · sync() push loop → CloudApi.kt · push()</span>
+                  <div class="hop-what">Exactly the same push path as Add — <code>cloud.push(local.toDto())</code> → <code>FirestoreCloudApi.push()</code>. There is no separate "edit" call.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">CloudApi.kt · push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">notes.document(note.id)
+    .set(note)           // SAME set() — this time the document already exists
+    .await()</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="fires overwrite">
+              <span class="fires-badge">↻</span>
+              <div>
+                <span class="fires-label">Firestore API called</span>
+                <code>notes.document(id).set(note).await()</code> — the <strong>same call as Add</strong>.
+                Because the document already exists, <code>set()</code> <strong>OVERWRITES</strong> it,
+                so this single API does double duty as the update. Firestore's <code>set()</code> is
+                both create <em>and</em> update.
+                <div class="pill-row">
+                  <span class="pill cloud write"><span class="pill-kind">Firebase</span>✏️ Updating Firebase · overwrites the <code>notes/{id}</code> document</span>
+                  <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>DocumentReference.set(note)</code></span>
+                </div>
+              </div>
+            </div>
+            <div class="callout violet">
+              <span class="callout-label">The unused alternative: a partial-field update</span>
+              For a true <em>partial</em> update — change only some fields, leave the rest untouched —
+              Firestore offers <code>update(map)</code>:
+              <code>notes.document(id).update(mapOf("title" to "Renamed"))</code>. This app does
+              <strong>not</strong> use it: a note is small, so it always rewrites the whole document
+              with <code>set()</code> and lets last-write-wins decide. See section 11 for the
+              <code>update()</code> snippet.
+            </div>
+          </div>
+        </div>
+
+        <!-- =============== TRACE 3: DELETE =============== -->
+        <div class="trace delete">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag red">Delete</span> Deleting a note</span>
+            <span class="tag teal">Firestore: set() — tombstone (soft delete)</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: tap the <strong>"Delete"</strong> button on a note card.</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt · NoteCard onDelete</span>
+                  <div class="hop-what">The Delete button on the row calls the ViewModel with that note's id.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">MainActivity.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">onDelete = { vm.deleteNote(note.id) },</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">FirebaseSyncViewModel.kt · deleteNote()</span>
+                  <div class="hop-what">Same write-then-sync shape.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">FirebaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun deleteNote(id: String) = writeThenSync { repo.deleteNote(id) }</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · deleteNote() → TOMBSTONE in ROOM</span>
+                  <div class="hop-what">A delete is a <strong>soft delete</strong>: the row stays in Room with <code>deleted = true</code> and <code>syncState = PENDING</code>. <code>observeVisibleNotes()</code> filters <code>deleted = 0</code>, so it vanishes from the UI immediately — but the row survives so the delete is still pushable, even offline.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val existing = dao.findById(id) ?: return
+dao.upsert(
+    existing.copy(
+        deleted = true,
+        updatedAt = System.currentTimeMillis(),
+        syncState = SyncState.PENDING,
+    )
+)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">4</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · sync() push loop</span>
+                  <div class="hop-what">The push loop pushes the tombstone DTO (with <code>deleted = true</code>) like any other pending row — then, <em>only after the cloud confirms</em>, hard-deletes the local row.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt · sync()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val serverCopy = cloud.push(local.toDto())   // pushes deleted = true
+if (local.deleted) {
+    dao.hardDelete(local.id)                 // tombstone confirmed -&gt; remove locally
+} else {
+    dao.upsert(serverCopy.toEntity(SyncState.SYNCED))
+}</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">5</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">CloudApi.kt · FirestoreCloudApi.push()</span>
+                  <div class="hop-what">Still the same <code>set()</code> — it just happens to write a document whose <code>deleted</code> field is <code>true</code>.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">CloudApi.kt · push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">notes.document(note.id)
+    .set(note)           // note.deleted == true → replicates the "deleted" flag to other devices
+    .await()</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="fires overwrite">
+              <span class="fires-badge">⚑</span>
+              <div>
+                <span class="fires-label">Firestore API called</span>
+                <code>notes.document(id).set(note).await()</code> — still <code>set()</code>, writing
+                <code>deleted = true</code>. It <strong>OVERWRITES</strong> the document with a
+                <strong>tombstone</strong> (a soft delete) so other devices learn the note is gone, then
+                Room hard-deletes the local row.
+                <div class="pill-row">
+                  <span class="pill cloud tomb"><span class="pill-kind">Firebase</span>🗑️ Deleting from Firebase · marks <code>notes/{id}</code> deleted (tombstone — soft delete)</span>
+                  <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>DocumentReference.set(note)</code> <em>(deleted=true)</em></span>
+                </div>
+              </div>
+            </div>
+            <div class="callout danger">
+              <span class="callout-label">The unused alternative: a hard remote delete</span>
+              Firestore <em>does</em> have a real remove — <code>notes.document(id).delete().await()</code> —
+              which vanishes the document server-side. This app deliberately does <strong>not</strong>
+              call it. Why a tombstone instead? Because a hard delete leaves <em>nothing to push</em>: an
+              offline delete would have no row to upload, and other devices would never hear about it. A
+              <code>deleted = true</code> tombstone is a normal pushable row, so an offline delete still
+              syncs and propagates. See section 11 for the <code>delete()</code> snippet.
+            </div>
+          </div>
+        </div>
+
+        <!-- =============== TRACE 4: SYNC / PULL =============== -->
+        <div class="trace sync">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag violet">Sync / Pull</span> Receiving remote changes</span>
+            <span class="tag teal">Firestore: query + get + toObject — READ</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: tap <strong>"Sync now"</strong> (this also runs automatically after every write and on the <code>SyncWorker</code> schedule).</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt · "Sync now" button</span>
+                  <div class="hop-what">
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">MainActivity.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">OutlinedButton(onClick = { vm.syncNow() }) { Text("Sync now") }</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">FirebaseSyncViewModel.kt · syncNow() → requestSync()</span>
+                  <div class="hop-what"><code>syncNow()</code> just calls <code>requestSync()</code>, which enqueues the durable worker and, when online, runs <code>repo.sync()</code> on the spot.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">FirebaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun syncNow() = requestSync()
+
+private fun requestSync() {
+    SyncScheduler.requestSync(getApplication())     // durable background retry path
+    if (connectivity.currentlyOnline()) {
+        viewModelScope.launch { runCatching { repo.sync() } }
+    }
+}</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · sync() — the PULL step</span>
+                  <div class="hop-what">After the push loop, sync computes the cursor (<code>maxUpdatedAt()</code>) and asks the cloud for everything newer, merging each via last-write-wins.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt · sync()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val since = dao.maxUpdatedAt() ?: 0L
+for (remote in cloud.pullSince(since)) {
+    val local = dao.findById(remote.id)
+    if (shouldAcceptRemote(local, remote)) {        // last-write-wins
+        if (remote.deleted) dao.hardDelete(remote.id)
+        else dao.upsert(remote.toEntity(SyncState.SYNCED))
+    }
+}</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">4</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">CloudApi.kt · FirestoreCloudApi.pullSince()</span>
+                  <div class="hop-what">This is where the read fires: a range-filtered, ordered query is executed with <code>get()</code>, then each document is reflectively mapped to a <code>NoteDto</code>.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">CloudApi.kt · pullSince()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val snapshot = notes
+    .whereGreaterThan("updatedAt", since)            // range filter: only newer documents
+    .orderBy("updatedAt", Query.Direction.ASCENDING) // oldest-first; same field → no composite index
+    .get()                                           // returns Task&lt;QuerySnapshot&gt;
+    .await()                                          // suspend until the Task completes
+return snapshot.documents.mapNotNull { it.toObject(NoteDto::class.java) }</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="fires readremote">
+              <span class="fires-badge">⇣</span>
+              <div>
+                <span class="fires-label">Firestore API called</span>
+                <code>notes.whereGreaterThan("updatedAt", since).orderBy("updatedAt", ASCENDING).get().await()</code>
+                then <code>it.toObject(NoteDto::class.java)</code> — a query + one-shot <code>get()</code> +
+                reflective deserialise. This is the only <strong>READ</strong> of remote data; each
+                result is merged into Room via <code>shouldAcceptRemote()</code>
+                (<code>dao.upsert</code> / <code>dao.hardDelete</code> for remote tombstones).
+                <div class="pill-row">
+                  <span class="pill cloud read"><span class="pill-kind">Firebase</span>⬇️ Reading from Firebase · fetches the <code>notes</code> documents (newer than the cursor)</span>
+                  <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>CollectionReference.whereGreaterThan().orderBy().get()</code> · <code>Task.await()</code> · <code>DocumentSnapshot.toObject()</code></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============== TRACE 5: READ / DISPLAY (NO FIRESTORE) =============== -->
+        <div class="trace read">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag amber">Read / Display</span> Showing the notes list</span>
+            <span class="tag amber">No Firestore call — Room only</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: none — the list draws (and re-draws) automatically from local state. This is the key offline-first point.</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteDao.kt · observeVisibleNotes()</span>
+                  <div class="hop-what">A Room <code>Flow</code> query — visible rows only (tombstones hidden), newest first. Room re-emits on every local change.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteDao.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Query("SELECT * FROM notes WHERE deleted = 0 ORDER BY updatedAt DESC")
+fun observeVisibleNotes(): Flow&lt;List&lt;Note&gt;&gt;</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt → FirebaseSyncViewModel.kt · StateFlow</span>
+                  <div class="hop-what">The repository exposes that Flow unchanged; the ViewModel turns it into a <code>StateFlow</code> the UI can read.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt / FirebaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val notes: Flow&lt;List&lt;Note&gt;&gt; = dao.observeVisibleNotes()                  // Repository
+val notes: StateFlow&lt;List&lt;Note&gt;&gt; = repo.notes.stateIn(viewModelScope, started, emptyList())  // ViewModel</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt · Compose collects + draws</span>
+                  <div class="hop-what">Compose collects the StateFlow and renders the list. There is no cloud call anywhere on this path.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">MainActivity.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val notes by vm.notes.collectAsStateWithLifecycle()
+// …
+LazyColumn(/* … */) {
+    items(notes, key = { it.id }) { note -&gt; NoteCard(note = note, /* … */) }
+}</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="fires none">
+              <span class="fires-badge">∅</span>
+              <div>
+                <span class="fires-label">Firestore API called</span>
+                <strong>NONE.</strong> Drawing the list reads <em>only Room</em>
+                (<code>observeVisibleNotes()</code> → <code>StateFlow</code> → Compose). Firestore is
+                touched <em>exclusively</em> during sync (the push/pull above). That is why reads are
+                always local, instant, and work offline — the cloud is never on the screen's path.
+                <div class="pill-row">
+                  <span class="pill cloud none"><span class="pill-kind">Firebase</span>∅ Not sent to Firebase · the list is read from Room, nothing leaves the device</span>
+                  <span class="pill api" style="background:var(--surface-alt);color:var(--muted);border-color:var(--line);"><span class="pill-kind">API</span>📞 no Firebase API — reads Room (<code>NoteDao.observeVisibleNotes()</code>)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. APIs THIS APP USES ============ -->
+    <section class="band anchor" id="api-app">
+      <div class="band-inner">
+        <p class="eyebrow">The real code</p>
+        <h2>The Firestore APIs this app uses</h2>
+        <p>The whole Firestore surface this app touches fits in two methods of
+        <code>FirestoreCloudApi</code>. The frame to keep in your head:</p>
+        <div class="callout">
+          <span class="callout-label">The two operations</span>
+          <strong>push()</strong> = <code>set()</code> one document. &nbsp;·&nbsp;
+          <strong>pull()</strong> = <code>whereGreaterThan</code> + <code>orderBy</code> +
+          <code>get</code> + <code>toObject</code>.
+        </div>
+        <p>Below is one block per API: the real snippet from <code>CloudApi.kt</code>, a plain
+        explanation, and which method it lives in.</p>
+
+        <!-- collection -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">db.collection("notes") → CollectionReference</span>
+            <span class="tag blue">push &amp; pull (shared)</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">private val notes get() = db.collection("notes")</pre>
+            </div>
+            <p>Returns a <strong>CollectionReference</strong> — a lightweight <em>path handle</em> to
+            the top-level <code>notes</code> collection. <strong>No network call happens here</strong>;
+            it is just a descriptor that the document and query calls hang off of. It is a
+            <code>get</code> property, so each access yields a fresh (cheap) reference.</p>
+            <p class="dense"><strong>Called when you…</strong> add, edit, delete, <em>or</em> sync —
+            every <code>push()</code> and <code>pullSince()</code> starts from this reference (it is
+            the root both operations hang off). See the traces in section 9.</p>
+            <div class="pill-row">
+              <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>FirebaseFirestore.collection("notes")</code></span>
+              <span class="pill cloud none"><span class="pill-kind">Firebase</span>∅ Not sent to Firebase · local only <em>(path handle, no request)</em></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- document -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">notes.document(note.id) → DocumentReference</span>
+            <span class="tag teal">push()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">notes.document(note.id)  // DocumentReference at notes/{id}</pre>
+            </div>
+            <p>Returns a <strong>DocumentReference</strong> at the path <code>notes/{id}</code> —
+            again just a path handle, no network. Using the note's <em>own</em> client-generated id
+            as the document id means we never ask Firestore to auto-generate one: the same UUID the
+            phone created offline is the key everywhere.</p>
+            <p class="dense"><strong>Called when you…</strong> add, edit, or delete — it is the first
+            half of every <code>push()</code>, naming the exact document that <code>set()</code> is
+            about to write.</p>
+            <div class="pill-row">
+              <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>CollectionReference.document(id)</code></span>
+              <span class="pill cloud none"><span class="pill-kind">Firebase</span>∅ Not sent to Firebase · local only <em>(path handle, no request)</em></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- set -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">.set(note) → Task&lt;Void&gt;</span>
+            <span class="tag teal">push()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">notes.document(note.id)  // DocumentReference at notes/{id}
+    .set(note)           // create-or-overwrite the document; returns Task&lt;Void&gt;
+    .await()             // suspend until the server confirms; throws on network/permission error
+return note              // return our copy as the "server's authoritative copy"</pre>
+            </div>
+            <p><code>set()</code> <strong>creates</strong> the document if it does not exist or
+            <strong>completely overwrites</strong> it if it does. It does not compare timestamps or
+            versions — it always wins. It returns a <code>Task&lt;Void&gt;</code> that resolves when
+            the server confirms the write (or rejects on a network / permission error). This is the
+            entire <strong>push</strong>.</p>
+            <p class="dense"><strong>Called when you…</strong> add (creates), edit (overwrites =
+            update), <em>or</em> delete (overwrites with a <code>deleted=true</code> tombstone). All
+            three user actions push through this one <code>set()</code> — see traces 1, 2, and 3 in
+            section 9.</p>
+            <div class="pill-row">
+              <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>DocumentReference.set(note)</code></span>
+              <span class="pill cloud add"><span class="pill-kind">Firebase</span>➕ Adding to Firebase · writes the <code>notes/{id}</code> document (new id)</span>
+              <span class="pill cloud write"><span class="pill-kind">Firebase</span>✏️ Updating Firebase · overwrites the <code>notes/{id}</code> document</span>
+              <span class="pill cloud tomb"><span class="pill-kind">Firebase</span>🗑️ Deleting from Firebase · marks <code>notes/{id}</code> deleted (tombstone — soft delete)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- whereGreaterThan -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">.whereGreaterThan("updatedAt", since) → Query</span>
+            <span class="tag violet">pullSince()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — pullSince()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">.whereGreaterThan("updatedAt", since)          // range filter: only newer documents</pre>
+            </div>
+            <p>Adds a <strong>range filter</strong>: return only documents whose
+            <code>updatedAt</code> is strictly greater than <code>since</code> (our local pull cursor
+            — the epoch-millis of the newest note already in Room). Field names are strings and must
+            match <code>NoteDto</code>'s property names exactly. The result is a <strong>Query</strong>
+            (still no network yet).</p>
+            <p class="dense"><strong>Called when you…</strong> sync/pull — it builds the read query in
+            <code>pullSince()</code> (trace 4 in section 9). Never on add/edit/delete.</p>
+            <div class="pill-row">
+              <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>CollectionReference.whereGreaterThan("updatedAt", since)</code></span>
+              <span class="pill cloud none"><span class="pill-kind">Firebase</span>∅ Not sent to Firebase · local only <em>(builds a Query, no request yet)</em></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- orderBy -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">.orderBy("updatedAt", Query.Direction.ASCENDING) → Query</span>
+            <span class="tag violet">pullSince()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — pullSince()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">.orderBy("updatedAt", Query.Direction.ASCENDING) // oldest-first; same field → no composite index needed</pre>
+            </div>
+            <p>Sorts results oldest-first so we merge them in chronological order. Firestore
+            <em>requires</em> an <code>orderBy()</code> on the same field used in a range filter.
+            Because the range filter and the <code>orderBy</code> target the <strong>same</strong>
+            field (<code>updatedAt</code>), Firestore satisfies it with an auto-created single-field
+            index — <strong>no composite index is needed</strong>. (Range + order on
+            <em>different</em> fields would require you to create a composite index.)</p>
+            <p class="dense"><strong>Called when you…</strong> sync/pull — chained onto the same query
+            in <code>pullSince()</code> (trace 4 in section 9).</p>
+            <div class="pill-row">
+              <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>Query.orderBy("updatedAt", ASCENDING)</code></span>
+              <span class="pill cloud none"><span class="pill-kind">Firebase</span>∅ Not sent to Firebase · local only <em>(still building the Query)</em></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- get -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">.get() → Task&lt;QuerySnapshot&gt;</span>
+            <span class="tag violet">pullSince()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — pullSince()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val snapshot = notes
+    .whereGreaterThan("updatedAt", since)
+    .orderBy("updatedAt", Query.Direction.ASCENDING)
+    .get()                                         // returns Task&lt;QuerySnapshot&gt; (async, not a coroutine)
+    .await()</pre>
+            </div>
+            <p><code>get()</code> finally <strong>executes</strong> the query against the Firestore
+            backend and returns a <code>Task&lt;QuerySnapshot&gt;</code>. A <code>Task</code> is the
+            Play-services async type — a callback-based future, <em>not</em> a Kotlin coroutine. This
+            is the one-shot read; for live updates you would use a listener instead (see the next
+            section).</p>
+            <p class="dense"><strong>Called when you…</strong> sync/pull — this is the moment the read
+            actually hits the network, inside <code>pullSince()</code> (trace 4 in section 9).</p>
+            <div class="pill-row">
+              <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>Query.get()</code></span>
+              <span class="pill cloud read"><span class="pill-kind">Firebase</span>⬇️ Reading from Firebase · fetches the <code>notes</code> documents (matching the query)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- await -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">kotlinx.coroutines.tasks.await()</span>
+            <span class="tag amber">push() &amp; pullSince()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — import</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">import kotlinx.coroutines.tasks.await   // turns a Firebase Task&lt;T&gt; into a suspend-friendly await()</pre>
+            </div>
+            <p>From the <code>kotlinx-coroutines-play-services</code> bridge library (Step 6).
+            <code>.await()</code> <strong>suspends</strong> the current coroutine until the
+            <code>Task</code> completes — or throws if the network fails or Firestore returns an
+            error. It is what lets us write straight-line sequential code inside a
+            <code>suspend fun</code> instead of nesting callbacks. The exception path is how a failed
+            push/pull bubbles up to the repository and triggers a WorkManager retry.</p>
+            <p class="dense"><strong>Called when you…</strong> add, edit, delete, <em>or</em> sync —
+            it waits on both the <code>set()</code> in <code>push()</code> and the <code>get()</code>
+            in <code>pullSince()</code>, so every operation except Read passes through an
+            <code>await()</code>.</p>
+            <div class="pill-row">
+              <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>Task.await()</code></span>
+              <span class="pill cloud none"><span class="pill-kind">Firebase</span>∅ Not sent to Firebase · local only <em>(suspends; the wrapped call already did the work)</em></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- toObject -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">snapshot.documents.mapNotNull { it.toObject(NoteDto::class.java) }</span>
+            <span class="tag violet">pullSince()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — pullSince()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">return snapshot.documents.mapNotNull { it.toObject(NoteDto::class.java) }</pre>
+            </div>
+            <p><code>snapshot.documents</code> is a <code>List&lt;DocumentSnapshot&gt;</code>, one per
+            matched document. <code>it.toObject(NoteDto::class.java)</code> is Firestore's
+            <strong>reflective deserialiser</strong>: it calls <code>NoteDto</code>'s no-arg
+            constructor and then sets each field by matching document field names to property names.
+            <code>mapNotNull</code> drops any document that fails to map, yielding a plain
+            <code>List&lt;NoteDto&gt;</code> the repository merges into Room.</p>
+            <p class="dense"><strong>Called when you…</strong> sync/pull — it deserialises the
+            documents the <code>get()</code> returned, the last step of <code>pullSince()</code>
+            (trace 4 in section 9).</p>
+            <div class="pill-row">
+              <span class="pill api"><span class="pill-kind">API</span>📞 Firebase API · <code>DocumentSnapshot.toObject(NoteDto::class.java)</code></span>
+              <span class="pill cloud none"><span class="pill-kind">Firebase</span>∅ Not sent to Firebase · local only <em>(maps the already-fetched documents)</em></span>
+            </div>
+            <div class="callout violet">
+              <span class="callout-label">Why NoteDto needs all-default properties</span>
+              Firestore's <code>toObject()</code> needs a <strong>no-argument constructor</strong>,
+              and a Kotlin data class only generates one when <em>every</em> parameter has a default.
+              That is exactly why <code>NoteDto</code> is written this way:
+              <div class="code-panel">
+                <div class="code-head"><span class="code-file">data/Note.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">data class NoteDto(
+    val id: String = "",
+    val title: String = "",
+    val body: String = "",
+    val updatedAt: Long = 0L,
+    val deleted: Boolean = false,
+)</pre>
+              </div>
+              Drop the defaults and <code>toObject()</code> throws at runtime. (No annotation is
+              needed — Firestore does its own object mapping by reflection.)
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11. THE REST OF THE TOOLBOX ============ -->
+    <section class="band anchor" id="api-more">
+      <div class="band-inner">
+        <p class="eyebrow">Good to know</p>
+        <h2>The rest of the Firestore toolbox</h2>
+        <div class="callout warn">
+          <span class="callout-label">None of these are used in this app</span>
+          The snippets below are illustrative — they are <em>not</em> in FirebaseSync. They are a
+          quick tour of what else Firestore offers and how each would change this app if you reached
+          for it.
+        </div>
+
+        <h3>Real-time listeners (vs our polling pull)</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">illustrative — NOT in this app</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// Push-based: Firestore calls you back whenever any matching document changes.
+val registration = notes.addSnapshotListener { snap, e -&gt;
+    if (e != null) return@addSnapshotListener
+    val dtos = snap?.documents?.mapNotNull { it.toObject(NoteDto::class.java) }.orEmpty()
+    // …upsert dtos into Room as they arrive…
+}
+// registration.remove()  // stop listening</pre>
+        </div>
+        <p class="dense">A listener turns sync from <em>pull-when-asked</em> into
+        <em>pushed-as-it-happens</em>. It would replace our manual <code>pullSince().get()</code>
+        with a stream that fires on every remote change — at the cost of an always-open connection
+        and lifecycle management (you must <code>remove()</code> it).</p>
+
+        <h3>Delete a document</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">illustrative — NOT in this app</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">notes.document(id).delete().await()   // hard-delete the document on the server</pre>
+        </div>
+        <p class="dense">This app never hard-deletes remotely — it pushes a <code>deleted = true</code>
+        tombstone via <code>set()</code> so the delete replicates to other devices. A real
+        <code>delete()</code> would vanish the row server-side with no tombstone to propagate.</p>
+
+        <h3>Update specific fields</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">illustrative — NOT in this app</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">notes.document(id).update(mapOf("title" to "Renamed")).await()  // patch only these fields</pre>
+        </div>
+        <p class="dense"><code>update()</code> patches the named fields and leaves the rest untouched,
+        unlike <code>set()</code> which overwrites the whole document. The app uses whole-document
+        <code>set()</code> because a note is small and last-write-wins is simpler that way.</p>
+
+        <h3>Batched writes</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">illustrative — NOT in this app</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val batch = db.batch()
+batch.set(notes.document(a.id), a)
+batch.set(notes.document(b.id), b)
+batch.commit().await()   // all-or-nothing: every write applies, or none does</pre>
+        </div>
+        <p class="dense">A <code>WriteBatch</code> commits many writes atomically in one round trip.
+        Our app pushes one pending row at a time; a batch would let it flush the whole outbox in a
+        single atomic call.</p>
+
+        <h3>Transactions</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">illustrative — NOT in this app</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">db.runTransaction { tx -&gt;
+    val current = tx.get(notes.document(id))           // read inside the transaction
+    val n = (current.getLong("version") ?: 0L) + 1
+    tx.update(notes.document(id), mapOf("version" to n)) // conditional write
+}.await()</pre>
+        </div>
+        <p class="dense">A transaction reads-then-writes atomically and retries on contention — the
+        server-side way to resolve conflicts. The app instead uses a client-side last-write-wins rule
+        (<code>shouldAcceptRemote()</code>), which is enough for a single-user demo.</p>
+
+        <h3>Pagination</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">illustrative — NOT in this app</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val first = notes.orderBy("updatedAt").limit(20).get().await()
+val last = first.documents.last()
+val nextPage = notes.orderBy("updatedAt").startAfter(last).limit(20).get().await()</pre>
+        </div>
+        <p class="dense"><code>limit(n)</code> caps the page size; <code>startAfter(doc)</code>
+        resumes after the last document of the previous page (cursor pagination). Our pull is bounded
+        by the <code>updatedAt</code> cursor instead, so a single pull is naturally small.</p>
+
+        <h3>Server timestamps</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">illustrative — NOT in this app</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">notes.document(id).update(mapOf("updatedAt" to FieldValue.serverTimestamp())).await()</pre>
+        </div>
+        <p class="dense"><code>FieldValue.serverTimestamp()</code> stamps the field with the
+        <em>server's</em> clock, not the device's. The app uses the device clock for
+        <code>updatedAt</code> so it can stamp rows while completely offline; a server timestamp would
+        give one authoritative clock but only after the write reaches the server.</p>
+
+        <h3>Firestore's own offline persistence</h3>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">illustrative — NOT in this app</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// Firestore can cache locally and queue writes by itself (enabled by default on Android).
+val settings = firestoreSettings {
+    setLocalCacheSettings(persistentCacheSettings { })   // on-disk cache + offline write queue
+}
+db.firestoreSettings = settings
+// snapshot.metadata.isFromCache  // tells you a read came from the local cache, not the server</pre>
+        </div>
+        <p class="dense">Firestore has its <em>own</em> offline cache and write queue. This project
+        deliberately ignores it and makes <strong>Room</strong> the single source of truth, so the
+        offline-first mechanics (outbox, tombstones, last-write-wins) stay explicit and identical to
+        CloudSync. If you leaned on Firestore's cache instead, much of the sync engine would
+        disappear — at the cost of giving up that explicit control.</p>
+      </div>
+    </section>
+
+    <!-- ============ 12. RUN & VERIFY ============ -->
+    <section class="band anchor" id="run">
+      <div class="band-inner">
+        <p class="eyebrow">Step 7</p>
+        <h2>Run &amp; verify</h2>
+        <p>With your three values in <code>local.properties</code> (so the app auto-uses the real
+        cloud), build and install on a networked device or emulator.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal — build &amp; install</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash"># JBR-21 toolchain (matches Android Studio's bundled JDK)
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+  ./gradlew installDebug</pre>
+        </div>
+
+        <h3>What to watch for</h3>
+        <ol class="kicker-list">
+          <li>On first sync the app <strong>pulls the Welcome note</strong> from the cloud (the demo
+            project seeds one), so it appears in the list.</li>
+          <li><strong>Add a note</strong> — it shows immediately with a <span class="tag amber">PENDING</span>
+            badge (optimistic local write), then flips to <span class="tag green">SYNCED</span> once
+            the push confirms.</li>
+          <li>Open the <strong>Firestore console ▸ Data</strong> tab and watch the document appear
+            under the <code>notes</code> collection, keyed by the note's UUID.</li>
+          <li>Toggle airplane mode, add a note (it stays <span class="tag amber">PENDING</span>), then
+            reconnect and watch it drain to <span class="tag green">SYNCED</span>.</li>
+        </ol>
+
+        <h3>Optional: a REST sanity check</h3>
+        <p>Firestore exposes a REST API. With open demo rules you can confirm the database answers,
+        independent of the app, by listing the <code>notes</code> collection:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal — REST read of the notes collection</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash"># Replace PROJECT with your FIREBASE_PROJECT_ID.
+curl "https://firestore.googleapis.com/v1/projects/PROJECT/databases/(default)/documents/notes"</pre>
+        </div>
+        <p class="dense">A JSON list of documents (or an empty object) means the database is reachable
+        and the rules allow the read. A <code>403</code> means the rules denied it; a <code>404</code>
+        usually means a wrong project id or no default database yet.</p>
+      </div>
+    </section>
+
+    <!-- ============ 13. TESTING ============ -->
+    <section class="band anchor" id="testing">
+      <div class="band-inner">
+        <p class="eyebrow">Write and run tests</p>
+        <h2>Testing</h2>
+        <p class="lead">This project keeps its logic small and pure so most of the interesting
+        behaviour can be verified with <strong>plain JVM unit tests</strong> — no device, no emulator,
+        no Firebase account needed.</p>
+
+        <!-- ---- 13-A: What's already tested --------------------------------- -->
+        <h3>What's already tested — and why it needs no Firebase</h3>
+        <p>Open <code>src/test/java/com/example/firebasesync/FirebaseSyncUnitTest.kt</code>. Every
+        test in it runs on the <strong>plain JVM</strong> (the host machine). Firebase is never
+        touched because the app's sync logic is tested through two seams:</p>
+        <ul class="kicker-list">
+          <li><strong><code>shouldAcceptRemote(...)</code></strong> in <code>NoteRepository.kt</code>
+          — a pure Kotlin function with no dependencies. Five test cases cover all four branches of
+          the last-write-wins rule: no local copy (always accept), local SYNCED + remote newer
+          (accept), local SYNCED + same timestamp (accept — idempotent re-pull), local SYNCED but
+          newer (reject), and local PENDING (reject — the unpushed edit wins on the client side).</li>
+          <li><strong><code>Converters</code> round-trip</strong> — Room's <code>@TypeConverter</code>
+          serialises the <code>SyncState</code> enum to a <code>String</code> and back. The test
+          checks every enum entry round-trips without data loss and that an unknown string falls back
+          to the safe default (<code>SYNCED</code>).</li>
+          <li><strong><code>FakeCloudApi</code> push → pull round-trip</strong> — the in-memory "server"
+          that imitates Firestore. Tests push a note, then pull it back; push a stale version and
+          confirm last-write-wins keeps the newer one; and use a future cursor to confirm only newer
+          rows are returned.</li>
+        </ul>
+
+        <div class="callout good">
+          <span class="callout-label">&#8709; Not sent to Firebase — these run fully offline</span>
+          <code>FakeCloudApi</code> lives in memory. No credentials, no network request, no device.
+          <code>shouldAcceptRemote</code> is a pure function: it just takes two Kotlin values and
+          returns a Boolean. These tests run on CI, on a plane, and inside <code>testDebugUnitTest</code>
+          in under a second each.
+        </div>
+
+        <!-- ---- 13-B: Run the tests ------------------------------------------ -->
+        <h3>Run the tests</h3>
+        <p><strong>From the terminal</strong> — the JVM unit tests run on the host machine (no emulator):</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">terminal — run unit tests</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="bash"># Run every JVM unit test in the debug variant (no device needed).
+./gradlew :testDebugUnitTest
+
+# Gradle writes an HTML report you can open in a browser:
+#   build/reports/tests/testDebugUnitTest/index.html
+open build/reports/tests/testDebugUnitTest/index.html   # macOS shortcut</pre>
+        </div>
+
+        <p><strong>From Android Studio</strong> — open
+        <code>FirebaseSyncUnitTest.kt</code>, then either:</p>
+        <ul class="kicker-list">
+          <li>Click the green <strong>&#9654;</strong> run gutter icon next to the class declaration
+          or any individual <code>@Test</code> function, or</li>
+          <li>Right-click anywhere in the file and choose <strong>Run 'FirebaseSyncUnitTest'</strong>.</li>
+        </ul>
+        <p>Results appear in the <em>Run</em> tab; each test shows a green tick (pass) or a red bar
+        with the failure message.</p>
+
+        <p><strong>Instrumented tests</strong> (on a device or emulator) use a different task:</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">terminal — run instrumented tests (needs running emulator or device)</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="bash"># Requires an emulator or physical device to be connected.
+./gradlew :connectedDebugAndroidTest</pre>
+        </div>
+
+        <!-- ---- 13-C: Write a new unit test ---------------------------------- -->
+        <h3>Write a new unit test</h3>
+        <p>New tests go in the same file (or a new <code>.kt</code> file next to it in
+        <code>src/test/</code>). The pattern used throughout <code>FirebaseSyncUnitTest.kt</code> is:</p>
+
+        <p><strong>Pure, no-coroutine test</strong> — for <code>shouldAcceptRemote</code> and anything
+        else that is a plain function:</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">FirebaseSyncUnitTest.kt — pure @Test (no coroutines)</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kotlin">// @Test marks the method as a test case JUnit 4 should discover and run.
+// No parameters, no return value — just assertions.
+@Test fun rejectRemote_whenLocalHasUnpushedEdit() {
+    // shouldAcceptRemote is a pure top-level function in NoteRepository.kt.
+    // No Room, no network — just two Kotlin values in, one Boolean out.
+    assertFalse(shouldAcceptRemote(
+        local  = Note(id = "a", title = "t", body = "b",
+                      updatedAt = 100, syncState = SyncState.PENDING),
+        remote = NoteDto(id = "a", title = "t", body = "b", updatedAt = 999)
+    ))
+    // assertFalse(value) fails the test if value is true.
+    // assertEquals(expected, actual) checks two values are equal — same family.
+}</pre>
+        </div>
+
+        <p><strong>Coroutine test</strong> — for <code>FakeCloudApi</code> and any <code>suspend</code>
+        function. <code>runTest { }</code> from <code>kotlinx-coroutines-test</code> provides a test
+        coroutine scope that runs the whole body synchronously (it advances virtual time so
+        <code>delay()</code> inside the fake doesn't make the test slow):</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">FirebaseSyncUnitTest.kt — coroutine test with runTest { }</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kotlin">// runTest { } is provided by kotlinx-coroutines-test (already in testImplementation).
+// It gives you a coroutine scope so you can call suspend functions in a test.
+// Virtual time is used, so delay() inside FakeCloudApi returns immediately.
+@Test fun fakeCloud_pushThenPull_returnsTheRow() = runTest {
+    val cloud = FakeCloudApi()                        // create a fresh in-memory "server"
+    cloud.push(NoteDto(id = "x", title = "hi",        // push one note
+                       body = "there", updatedAt = 1_000))
+    val pulled = cloud.pullSince(0)                   // pull everything since epoch 0
+    // assertTrue(message, condition) — fails with the message if condition is false.
+    assertTrue("pushed row should come back on pull", pulled.any { it.id == "x" })
+}</pre>
+        </div>
+
+        <p>The two test dependencies that make this work are already declared in
+        <code>build.gradle.kts</code>:</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">build.gradle.kts — test dependencies (already present)</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kts">// JUnit 4 — the @Test, assertTrue, assertEquals, assertFalse annotations and methods.
+testImplementation(libs.junit)
+// kotlinx-coroutines-test — provides runTest { } for testing suspend functions.
+testImplementation(libs.kotlinx.coroutines.test)</pre>
+        </div>
+
+        <!-- ---- 13-D: Instrumented tests (Room on a device) ----------------- -->
+        <h3>Instrumented tests — Room on a device</h3>
+        <p>Tests that exercise the <strong>Room DAO</strong> (actual SQL queries, reactive
+        <code>Flow</code> emissions) need an Android runtime. They live in
+        <code>src/androidTest/</code> and use an in-memory database so they never touch your real
+        on-device file:</p>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">src/androidTest/ — Room DAO test skeleton</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kotlin">// Room.inMemoryDatabaseBuilder creates a fresh empty database for each test —
+// no leftover data between runs, and nothing written to the device's storage.
+@RunWith(AndroidJUnit4::class)
+class NoteDaoTest {
+    private lateinit var db: FirebaseSyncDatabase
+    private lateinit var dao: NoteDao
+
+    @Before fun setUp() {
+        val ctx = ApplicationProvider.getApplicationContext&lt;Context&gt;()
+        db = Room.inMemoryDatabaseBuilder(ctx, FirebaseSyncDatabase::class.java)
+            .allowMainThreadQueries()   // only in tests — never in production code
+            .build()
+        dao = db.noteDao()
+    }
+
+    @After fun tearDown() { db.close() }
+
+    @Test fun upsertAndRead_returnsNote() = runTest {
+        dao.upsert(Note(id = "1", title = "hi", body = "", updatedAt = 1L,
+                        syncState = SyncState.PENDING))
+        val found = dao.findById("1")
+        assertEquals("hi", found?.title)
+    }
+}</pre>
+        </div>
+        <p>The instrumented-test dependencies (<code>room-testing</code>, <code>androidx-junit</code>,
+        <code>espresso-core</code>, <code>compose-ui-test-junit4</code>) are all already declared in
+        the <code>androidTestImplementation</code> block of <code>build.gradle.kts</code>.</p>
+
+        <!-- ---- 13-E: Emulator testing against real Firestore --------------- -->
+        <h3>Integration-testing against real Firestore — use the Emulator, not prod</h3>
+        <p>When you want to test code that calls <code>FirestoreCloudApi</code> directly (i.e., actual
+        Firestore SDK calls, not <code>FakeCloudApi</code>), <strong>do not run against your live
+        project</strong>. Use the <strong>Firebase Local Emulator Suite</strong> instead: it is free,
+        runs locally, resets between runs, and lets you seed data or inspect writes without touching
+        production.</p>
+
+        <div class="callout">
+          <span class="callout-label">Step 1 — install &amp; start the Firestore emulator</span>
+          <p>You need <code>firebase-tools</code> installed (<code>npm i -g firebase-tools</code>).</p>
+        </div>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">terminal — install and start the Firestore emulator</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="bash"># One-time project setup — creates firebase.json + .firebaserc in the project root.
+firebase init emulators
+
+# Start only the Firestore emulator (listens on port 8080 by default).
+firebase emulators:start --only firestore
+
+# The Emulator UI is served at http://localhost:4000 — you can browse documents there.</pre>
+        </div>
+
+        <div class="callout">
+          <span class="callout-label">Step 2 — point the app at the emulator in test/debug builds</span>
+          <p>The Android emulator's loopback address for the host machine is
+          <strong><code>10.0.2.2</code></strong> (not <code>localhost</code>, because the Android
+          emulator is its own VM). Port <code>8080</code> is the Firestore emulator's default.</p>
+        </div>
+        <div class="code-panel">
+          <div class="code-head">
+            <span class="code-file">data/CloudApi.kt — redirect Firestore to the emulator (test/debug only)</span>
+            <button class="copy-btn" type="button">Copy</button>
+          </div>
+<pre data-lang="kotlin">// Call this ONCE after FirebaseFirestore.getInstance(app) to redirect all SDK
+// calls to the local emulator instead of the real Firestore backend.
+// 10.0.2.2 = the host machine's loopback address as seen from inside the Android emulator.
+// 8080     = the default Firestore emulator port (set by firebase init emulators).
+// IMPORTANT: only call this in test or debug builds — never in a release build.
+val db: FirebaseFirestore = FirebaseFirestore.getInstance(app)
+db.useEmulator("10.0.2.2", 8080)</pre>
+        </div>
+
+        <p>With the emulator running and the client pointing at it you can:</p>
+        <ul class="kicker-list">
+          <li>Run the app normally against a fresh, isolated Firestore — all reads and writes go to
+          the local process, not the cloud.</li>
+          <li><strong>Seed data</strong> by writing documents directly in the Emulator UI at
+          <code>http://localhost:4000</code>, or by calling <code>cloud.push(...)</code> in a test
+          setup block.</li>
+          <li>Run <code>./gradlew :connectedDebugAndroidTest</code> (with the emulator running) for
+          fully integrated DAO + Firestore SDK tests.</li>
+          <li>Each <code>firebase emulators:start</code> run begins with a blank database, so tests
+          never interfere with each other or with production data.</li>
+        </ul>
+
+        <div class="callout warn">
+          <span class="callout-label">This is separate from FakeCloudApi</span>
+          <code>FakeCloudApi</code> replaces the Firestore SDK entirely (pure Kotlin, runs on the JVM,
+          no emulator needed). The Firebase Local Emulator Suite lets you test the <em>real</em>
+          <code>FirestoreCloudApi</code> code — the same <code>set()</code>, <code>whereGreaterThan()</code>,
+          and <code>.await()</code> calls that ship in production — against a safe, local Firestore
+          process. Use the Fake for fast, offline unit tests; use the emulator when you specifically
+          need to exercise the Firestore SDK itself.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 14. TROUBLESHOOTING ============ -->
+    <section class="band anchor" id="troubleshooting">
+      <div class="band-inner">
+        <p class="eyebrow">When it doesn't work</p>
+        <h2>Troubleshooting</h2>
+        <table class="tbl">
+          <thead>
+            <tr><th style="width:30%">Symptom</th><th>Cause &amp; fix</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Logcat: <em>"FirebaseApp initialization unsuccessful"</em></td>
+              <td><strong>Benign.</strong> Firebase's auto-init <code>ContentProvider</code> runs
+                before our code and finds no <code>google-services.json</code>. We initialise Firebase
+                from the <code>BuildConfig</code> values (fed from <code>local.properties</code>); ignore this warning. (It never appears in Fake mode.)</td>
+            </tr>
+            <tr>
+              <td><code>PERMISSION_DENIED</code> on read or write</td>
+              <td>Your <strong>security rules</strong> deny the operation. For the demo, set the
+                <code>notes</code> rule to <code>allow read, write: if true</code> (Step 2). For real
+                apps, make sure the request satisfies your auth/ownership conditions.</td>
+            </tr>
+            <tr>
+              <td><code>UNAVAILABLE</code> / "Unable to resolve host"</td>
+              <td>A <strong>network</strong> problem or a <strong>wrong project id</strong>. Confirm
+                the device is online, that <code>FIREBASE_PROJECT_ID</code> matches your project, and
+                that a <code>(default)</code> Firestore database actually exists.</td>
+            </tr>
+            <tr>
+              <td><code>toObject()</code> returns objects full of nulls / zeros</td>
+              <td>Either the Firestore field names don't match <code>NoteDto</code>'s property names,
+                or <code>NoteDto</code> lost its <strong>default values</strong>. Every property must
+                have a default so Kotlin generates the no-arg constructor Firestore needs.</td>
+            </tr>
+            <tr>
+              <td>Crash: <em>FirebaseApp name [DEFAULT] already exists</em></td>
+              <td>You called <code>initializeApp()</code> <strong>twice</strong>. The
+                <code>FirebaseApp.getApps(context).firstOrNull() ?:</code> guard in
+                <code>CloudApi.kt</code> exists precisely to call <code>initializeApp()</code> once —
+                make sure you didn't also add the <code>google-services</code> plugin (which auto-inits
+                too) on top of the in-code init.</td>
+            </tr>
+            <tr>
+              <td>Query needs an index</td>
+              <td>Range filter and <code>orderBy</code> on the <em>same</em> field (our case) need no
+                composite index. If you add a range on one field and <code>orderBy</code> on another,
+                Firestore returns an error with a one-click link to create the composite index.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout good">
+          <span class="callout-label">Still stuck? Fall back to Fake</span>
+          Temporarily remove the three <code>firebase.*</code> keys from <code>local.properties</code>
+          (so <code>BuildConfig.FIREBASE_API_KEY</code> is blank) to rule out Firebase entirely. If
+          the app works fully against the Fake cloud, the problem is in your Firebase project / rules
+          / three values, not in the app's sync engine.
+        </div>
+
+        <div class="rail-foot" style="margin-top:24px;">
+          <p class="foot">Keep going:
+            <a href="how-a-note-syncs.html">How a note syncs (the architecture, line by line)</a> ·
+            <a href="firebasesync-explorer.html">Interactive explainer</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- Flow lab ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-flow-lab]"));
+    if (!labs.length) return;
+
+    function visibleNotes(notes) {
+      return notes.filter(function (n) { return !n.deleted; });
+    }
+    function clear(el) {
+      while (el && el.firstChild) el.removeChild(el.firstChild);
+    }
+    function addNoteRow(target, note, compact) {
+      var row = document.createElement("div");
+      row.className = "flow-row";
+      var title = document.createElement("strong");
+      title.textContent = note.title;
+      row.appendChild(title);
+      if (!compact) {
+        var id = document.createElement("code");
+        id.textContent = note.id;
+        row.appendChild(id);
+      }
+      var pill = document.createElement("span");
+      pill.className = "flow-pill " + (note.deleted ? "deleted" : note.syncState.toLowerCase());
+      pill.textContent = note.deleted ? "DELETED / PENDING" : note.syncState;
+      row.appendChild(pill);
+      var meta = document.createElement("div");
+      meta.className = "flow-meta";
+      var visibility = note.deleted ? "hidden from UI" : "visible to UI";
+      var source = note.source ? "source=" + note.source : "source=local";
+      meta.appendChild(document.createTextNode(visibility + " | " + source));
+      row.appendChild(meta);
+      target.appendChild(row);
+    }
+    function addEmpty(target, text) {
+      var empty = document.createElement("div");
+      empty.className = "flow-empty";
+      empty.textContent = text;
+      target.appendChild(empty);
+    }
+    function addStageNote(target, text) {
+      if (!text) return;
+      var note = document.createElement("div");
+      note.className = "flow-stage-note";
+      note.textContent = text;
+      target.appendChild(note);
+    }
+    function addBriefCard(target, label, value, codeLike) {
+      var card = document.createElement("div");
+      card.className = "flow-brief-card";
+      var labelEl = document.createElement("span");
+      labelEl.className = "flow-brief-label";
+      labelEl.textContent = label;
+      card.appendChild(labelEl);
+      var valueEl = document.createElement(codeLike ? "code" : "strong");
+      valueEl.textContent = value;
+      card.appendChild(valueEl);
+      target.appendChild(card);
+    }
+    function payloadFor(notes) {
+      return notes.map(function (n) {
+        return { id: n.id, title: n.title, syncState: n.syncState };
+      });
+    }
+    function renderLab(lab, state, event) {
+      var visible = visibleNotes(state.notes);
+      var summary = lab.querySelector("[data-flow-summary]");
+      var room = lab.querySelector("[data-flow-room]");
+      var emission = lab.querySelector("[data-flow-emission]");
+      var stateBox = lab.querySelector("[data-flow-state]");
+      var ui = lab.querySelector("[data-flow-ui]");
+      var explain = lab.querySelector("[data-flow-explain]");
+      var explainTitle = lab.querySelector("[data-flow-explain-title]");
+      var steps = lab.querySelector("[data-flow-steps]");
+      var log = lab.querySelector("[data-flow-log]");
+
+      clear(summary);
+      addBriefCard(summary, "Trigger", event.trigger, false);
+      addBriefCard(summary, "DAO / source", event.dao, true);
+      addBriefCard(summary, "Flow payload", visible.length + " visible row(s)", false);
+      addBriefCard(summary, "UI result", event.ui, false);
+
+      clear(room);
+      state.notes.forEach(function (note) { addNoteRow(room, note, false); });
+      if (!state.notes.length) addEmpty(room, "Room has no rows.");
+      addStageNote(room, event.roomNote);
+
+      clear(emission);
+      var burst = document.createElement("div");
+      burst.className = "flow-burst";
+      burst.textContent = "Emission #" + state.emission;
+      emission.appendChild(burst);
+      var query = document.createElement("code");
+      query.className = "flow-code";
+      query.textContent = "Query: SELECT * FROM notes WHERE deleted = 0 ORDER BY updatedAt DESC";
+      emission.appendChild(query);
+      var emitted = document.createElement("code");
+      emitted.className = "flow-code";
+      emitted.textContent = "Flow<List<Note>> emits: " + JSON.stringify(payloadFor(visible));
+      emission.appendChild(emitted);
+      addStageNote(emission, event.flowNote);
+
+      clear(stateBox);
+      var current = document.createElement("code");
+      current.className = "flow-code";
+      current.textContent = "StateFlow.value = " + JSON.stringify(payloadFor(visible));
+      stateBox.appendChild(current);
+      addStageNote(stateBox, event.stateNote || "StateFlow caches the latest emitted list so Compose can read a current value immediately.");
+
+      clear(ui);
+      if (!visible.length) addEmpty(ui, "No visible notes.");
+      visible.forEach(function (note) { addNoteRow(ui, note, true); });
+      addStageNote(ui, event.uiNote);
+
+      if (explainTitle) explainTitle.textContent = event.title || "What just happened";
+      clear(steps);
+      (event.steps || []).forEach(function (step) {
+        var li = document.createElement("li");
+        li.textContent = step;
+        steps.appendChild(li);
+      });
+      explain.textContent = event.reason;
+      clear(log);
+      state.log.slice(0, 5).forEach(function (item) {
+        var li = document.createElement("li");
+        li.textContent = item;
+        log.appendChild(li);
+      });
+      Array.prototype.slice.call(lab.querySelectorAll("[data-flow-stage]")).forEach(function (stage) {
+        stage.classList.add("active");
+      });
+    }
+    function initLab(lab) {
+      var state = { seq: 1, emission: 0, notes: [], log: [] };
+      function event(title, trigger, dao, ui, reason, steps, roomNote, flowNote, stateNote, uiNote) {
+        return {
+          title: title,
+          trigger: trigger,
+          dao: dao,
+          ui: ui,
+          reason: reason,
+          steps: steps,
+          roomNote: roomNote,
+          flowNote: flowNote,
+          stateNote: stateNote,
+          uiNote: uiNote
+        };
+      }
+      function reset(detail) {
+        state.seq = 1;
+        state.emission = 0;
+        state.log = [];
+        state.notes = [{ id: "seed-welcome", title: "Welcome note", syncState: "SYNCED", deleted: false, source: "seed" }];
+        emit(detail || event(
+          "Initial collection",
+          "Screen opens",
+          "observeVisibleNotes()",
+          "Welcome note is drawn",
+          "The screen starts collecting the Flow. Room runs the DAO query once and sends the current visible notes list.",
+          [
+            "Compose reaches the screen and the ViewModel starts collecting repo.notes.",
+            "Room runs observeVisibleNotes() against the local notes table.",
+            "The Flow emits the visible rows. Deleted rows would be filtered out here.",
+            "stateIn(...) stores that emission as StateFlow.value.",
+            "Compose reads the StateFlow value and draws the list."
+          ],
+          "Room already has one synced seed row.",
+          "The first emission happens because collection started.",
+          "StateFlow now holds the latest visible Room rows.",
+          "Compose draws exactly what StateFlow holds."
+        ));
+      }
+      function emit(detail, changed) {
+        var didChange = changed !== false;
+        if (didChange) state.emission += 1;
+        state.log.unshift((didChange ? "Emission #" + state.emission + ": " : "No new emission: ") + detail.title);
+        renderLab(lab, state, detail);
+      }
+      lab.querySelector("[data-flow-action='add']").addEventListener("click", function () {
+        state.seq += 1;
+        state.notes.unshift({ id: "local-" + state.seq, title: "Local note " + state.seq, syncState: "PENDING", deleted: false, source: "local" });
+        emit(event(
+          "Local insert",
+          "Add local note",
+          "dao.upsert(Note(... PENDING))",
+          "New note appears with PENDING badge",
+          "A local write changes Room first. The Flow reacts to the database change, so the screen updates before any cloud upload happens.",
+          [
+            "The ViewModel calls repo.addNote(...).",
+            "The Repository creates a Note with syncState = PENDING.",
+            "dao.upsert(note) writes the row into Room.",
+            "Room invalidates the observeVisibleNotes() query and emits the new visible list.",
+            "StateFlow stores that list and Compose redraws the note row with a Pending badge."
+          ],
+          "A new visible PENDING row was inserted at the top of the table.",
+          "The emitted list includes the new local row because deleted = false.",
+          "StateFlow.value is replaced with the newest emitted list.",
+          "The UI does not wait for the cloud. It draws the local row immediately."
+        ));
+      });
+      lab.querySelector("[data-flow-action='cloud']").addEventListener("click", function () {
+        state.seq += 1;
+        state.notes.unshift({ id: "cloud-" + state.seq, title: "Cloud note " + state.seq, syncState: "SYNCED", deleted: false, source: "cloud" });
+        emit(event(
+          "Cloud pull saved locally",
+          "Pull cloud note",
+          "dao.upsert(remote.toEntity(SYNCED))",
+          "Cloud note appears",
+          "The UI still does not read the cloud. Sync saves the cloud row into Room first, then the Room Flow emits and the screen redraws from local data.",
+          [
+            "Sync calls cloud.pullSince(cursor) and receives a NoteDto.",
+            "The Repository converts the DTO into a local Note with syncState = SYNCED.",
+            "dao.upsert(remoteNote) writes that cloud change into Room.",
+            "Room reruns observeVisibleNotes() and emits the new visible list.",
+            "StateFlow receives the list, then Compose redraws with the cloud note included."
+          ],
+          "A synced row from the cloud was inserted into the local Room table.",
+          "The Flow emits because Room changed, not because Compose asked the cloud directly.",
+          "StateFlow now holds the local list after the cloud row was saved.",
+          "Compose draws the cloud note only after it exists in Room."
+        ));
+      });
+      lab.querySelector("[data-flow-action='sync']").addEventListener("click", function () {
+        var pending = state.notes.filter(function (n) { return !n.deleted && n.syncState === "PENDING"; })[0];
+        if (!pending) {
+          emit(event(
+            "No pending note to mark synced",
+            "Mark pending Synced",
+            "notesToPush() finds nothing visible",
+            "Screen stays the same",
+            "No visible PENDING row was changed, so Room would not need to emit a new list. The lab keeps showing the latest StateFlow value.",
+            [
+              "The button looks for a visible row whose syncState is PENDING.",
+              "There is no matching row.",
+              "No dao.upsert(...) runs.",
+              "Because Room did not change, a real Flow would not emit a fresh value for this action.",
+              "The screen keeps drawing the current StateFlow.value."
+            ],
+            "No row changed in Room.",
+            "No new database invalidation happened.",
+            "StateFlow.value stays the same.",
+            "The UI stays stable because its state did not change."
+          ), false);
+          return;
+        }
+        pending.syncState = "SYNCED";
+        pending.source = "local uploaded";
+        emit(event(
+          "Pending row confirmed",
+          "Mark pending Synced",
+          "dao.upsert(serverCopy.toEntity(SYNCED))",
+          "Badge changes from PENDING to SYNCED",
+          "After upload succeeds, the Repository saves the server copy back into Room as SYNCED. That row update triggers a new Flow emission and the badge redraws.",
+          [
+            "sync() gets a pending row from notesToPush().",
+            "cloud.push(local.toDto()) succeeds.",
+            "The Repository saves the returned server copy as syncState = SYNCED.",
+            "Room notices the row changed and emits the visible list again.",
+            "Compose redraws the same note with a Synced badge."
+          ],
+          "One visible row changed from PENDING to SYNCED.",
+          "The emitted list still contains the same note, but its syncState changed.",
+          "StateFlow.value updates because one object in the list changed.",
+          "The visible row remains, but its badge changes to SYNCED."
+        ));
+      });
+      lab.querySelector("[data-flow-action='delete']").addEventListener("click", function () {
+        var first = visibleNotes(state.notes)[0];
+        if (!first) {
+          emit(event(
+            "No visible note to delete",
+            "Delete first note",
+            "observeVisibleNotes() has no visible rows",
+            "Screen stays empty",
+            "There is no visible row to update, so no delete tombstone is written. The current StateFlow value stays empty.",
+            [
+              "The button asks for the first note that is not deleted.",
+              "The visible list is empty.",
+              "No tombstone is created because there is no target row.",
+              "Room does not change, so the Flow does not emit for this action.",
+              "Compose keeps drawing the empty list."
+            ],
+            "No row changed in Room.",
+            "No new query result was produced.",
+            "StateFlow.value stays as the empty visible list.",
+            "The UI remains empty."
+          ), false);
+          return;
+        }
+        first.deleted = true;
+        first.syncState = "PENDING";
+        first.source = "local delete";
+        emit(event(
+          "Soft delete tombstone",
+          "Delete first note",
+          "dao.upsert(existing.copy(deleted = true, PENDING))",
+          "Deleted note disappears",
+          "Delete is not a hard delete yet. The row stays in Room as a hidden tombstone so sync can push the delete later, while observeVisibleNotes() filters it out of the UI list.",
+          [
+            "The Repository finds the visible row in Room.",
+            "It saves the same row with deleted = true and syncState = PENDING.",
+            "Room reruns observeVisibleNotes().",
+            "The query filters out deleted rows, so the emitted visible list no longer includes that note.",
+            "StateFlow updates and Compose redraws without the deleted note."
+          ],
+          "The row is still in Room, but deleted = true makes it a tombstone.",
+          "The emitted payload excludes the tombstone because the DAO query has WHERE deleted = 0.",
+          "StateFlow.value now holds the visible list after filtering.",
+          "The note disappears from the UI while the tombstone remains available for sync."
+        ));
+      });
+      lab.querySelector("[data-flow-action='reset']").addEventListener("click", function () {
+        reset(event(
+          "Reset and collect again",
+          "Reset",
+          "observeVisibleNotes()",
+          "Welcome note is drawn",
+          "Reset returns the lab to one local Room row and starts the collection story again.",
+          [
+            "The lab clears its simulated Room table.",
+            "It inserts the synced seed row again.",
+            "The screen collects observeVisibleNotes().",
+            "Room emits the visible rows.",
+            "StateFlow stores the emitted list and Compose draws it."
+          ],
+          "Room contains one synced seed row after reset.",
+          "The first visible list after reset is emitted.",
+          "StateFlow.value is the reset list.",
+          "Compose redraws the seed note."
+        ));
+      });
+      reset();
+    }
+    labs.forEach(initLab);
+  })();
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var reset = document.getElementById("stepReset");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    if (reset) reset.addEventListener("click", function () { i = 0; render(); });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  function lineConcepts(line) {
+    var concepts = [];
+    if (/dao\.upsert|@Insert|Room|Note\(|toEntity|syncState\s*=/.test(line)) concepts.push("room-write");
+    if (/cloud\.|CloudApi|FirestoreCloudApi|Firestore|pullSince|push\(|NoteDto|\.await\(\)/.test(line)) concepts.push("cloud-call");
+    if (/Result\.retry|BackoffPolicy|WorkManager|NetworkType|enqueueUniqueWork|OneTimeWorkRequestBuilder|Constraints/.test(line)) concepts.push("retry");
+    if (/StateFlow|stateIn|collectAsStateWithLifecycle|viewModelScope|Flow<|observeVisibleNotes|observePendingCount|pendingCount|isOnline/.test(line)) concepts.push("ui-state");
+    if (/deleted|hardDelete|tombstone|DELETE FROM|SOFT delete|soft-delete/.test(line)) concepts.push("delete");
+    return concepts.join(" ");
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = code.split("\n").map(function (line) {
+        return '<span class="code-line" data-concepts="' + lineConcepts(line) + '">' + highlight(line, lang) + "</span>";
+      }).join("\n");
+    } catch (e) { /* leave plain text on any error */ }
+  });
+
+  // ---------------- concept highlighter ----------------
+  (function () {
+    var buttons = Array.prototype.slice.call(document.querySelectorAll("[data-code-concept]"));
+    if (!buttons.length) return;
+    var note = document.querySelector("[data-code-note]");
+    var labels = {
+      "room-write": "Highlighted Room writes and local row saves.",
+      "cloud-call": "Highlighted cloud interface calls, DTOs, pushes, and pulls.",
+      "retry": "Highlighted WorkManager retry, constraints, and queueing logic.",
+      "ui-state": "Highlighted Flow, StateFlow, and ViewModel state lines.",
+      "delete": "Highlighted tombstones, hidden deletes, and final hard deletes."
+    };
+    function apply(concept) {
+      document.querySelectorAll(".code-line").forEach(function (line) {
+        var has = (" " + (line.getAttribute("data-concepts") || "") + " ").indexOf(" " + concept + " ") >= 0;
+        line.classList.toggle("concept-hit", concept !== "clear" && has);
+      });
+      buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-code-concept") === concept && concept !== "clear"); });
+      if (note) note.textContent = concept === "clear" ? "Pick a concept to highlight matching lines across the code blocks." : labels[concept];
+    }
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () { apply(button.getAttribute("data-code-concept")); });
+    });
+  })();
+
+  // ---------------- timeline ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-sync-timeline]"));
+    labs.forEach(function (lab) {
+      var steps = Array.prototype.slice.call(lab.querySelectorAll("[data-timeline-step]"));
+      var prev = lab.querySelector("[data-timeline-prev]");
+      var next = lab.querySelector("[data-timeline-next]");
+      var reset = lab.querySelector("[data-timeline-reset]");
+      var count = lab.querySelector("[data-timeline-count]");
+      var explain = lab.querySelector("[data-timeline-explain]");
+      var i = 0;
+      function render() {
+        steps.forEach(function (step, idx) {
+          step.classList.toggle("active", idx === i);
+          step.classList.toggle("done", idx < i);
+        });
+        if (count) count.textContent = (i + 1) + " / " + steps.length;
+        if (explain) explain.textContent = steps[i].getAttribute("data-explain") || "";
+        if (prev) prev.disabled = i === 0;
+        if (next) next.disabled = i === steps.length - 1;
+      }
+      if (prev) prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+      if (next) next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+      if (reset) reset.addEventListener("click", function () { i = 0; render(); });
+      steps.forEach(function (step, idx) { step.addEventListener("click", function () { i = idx; render(); }); });
+      render();
+    });
+  })();
+
+  // ---------------- what breaks lab ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-break-lab]"));
+    var answers = {
+      "cloud-ui": "The UI would fail or stall when offline, because the screen would be waiting on the network instead of reading Room. The fix is: UI reads Room only.",
+      "hard-delete": "The app would forget that a delete happened while offline. There would be no row left to upload as a delete request. The fix is: save a tombstone until the cloud confirms it.",
+      "server-id": "An offline-created note would have no stable id yet. The user could not safely edit, delete, or upload the exact row later. The fix is: create a UUID on the device.",
+      "pull-first": "A cloud copy could arrive before local pending work is uploaded. That raises the chance of replacing local offline work. The fix is: push waiting local rows first, then pull newer cloud rows."
+    };
+    labs.forEach(function (lab) {
+      var out = lab.querySelector("[data-break-output]");
+      var buttons = Array.prototype.slice.call(lab.querySelectorAll("[data-break-case]"));
+      function show(key) {
+        buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-break-case") === key); });
+        if (out) out.textContent = answers[key] || "";
+      }
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () { show(button.getAttribute("data-break-case")); });
+      });
+      if (buttons[0]) show(buttons[0].getAttribute("data-break-case"));
+    });
+  })();
+
+  // ---------------- symptom debugger ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-debug-lab]"));
+    var answers = {
+      "pending-stuck": "Likely layer: SyncWorker, WorkManager constraint, or CloudApi. Check whether the job is allowed to run online, whether cloud.push() fails, and whether the Repository writes the server copy back as SYNCED.",
+      "remote-missing": "Likely layer: pull path. Check dao.maxUpdatedAt(), cloud.pullSince(...), shouldAcceptRemote(...), and whether pulled rows are upserted into Room.",
+      "delete-returns": "Likely layer: tombstone handling. Check that delete sets deleted = true and PENDING, pushes that tombstone, then hard-deletes only after cloud confirmation.",
+      "duplicate-sync": "Likely layer: SyncScheduler. Check enqueueUniqueWork(...) and the existing-work policy so repeated button taps do not create many independent sync jobs.",
+      "ui-stale": "Likely layer: Flow to StateFlow to Compose. Check observeVisibleNotes(), stateIn(...), and collectAsStateWithLifecycle() so Room changes reach the screen."
+    };
+    labs.forEach(function (lab) {
+      var out = lab.querySelector("[data-debug-output]");
+      var buttons = Array.prototype.slice.call(lab.querySelectorAll("[data-debug-case]"));
+      function show(key) {
+        buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-debug-case") === key); });
+        if (out) out.textContent = answers[key] || "";
+      }
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () { show(button.getAttribute("data-debug-case")); });
+      });
+      if (buttons[0]) show(buttons[0].getAttribute("data-debug-case"));
+    });
+  })();
+
+  // ---------------- mastery checklist ----------------
+  (function () {
+    var trackers = Array.prototype.slice.call(document.querySelectorAll("[data-mastery-tracker]"));
+    trackers.forEach(function (tracker) {
+      var key = tracker.getAttribute("data-mastery-key") || "firebasesync-mastery";
+      var checks = Array.prototype.slice.call(tracker.querySelectorAll("[data-mastery-item]"));
+      var fill = tracker.querySelector("[data-mastery-fill]");
+      var count = tracker.querySelector("[data-mastery-count]");
+      var reset = tracker.querySelector("[data-mastery-reset]");
+      function read() {
+        try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; }
+      }
+      function write(values) {
+        try { localStorage.setItem(key, JSON.stringify(values)); } catch (e) {}
+      }
+      function render() {
+        var done = checks.filter(function (c) { return c.checked; }).length;
+        var total = checks.length || 1;
+        if (fill) fill.style.width = Math.round(done / total * 100) + "%";
+        if (count) count.textContent = done + " / " + checks.length;
+        write(checks.map(function (c) { return c.checked; }));
+      }
+      read().forEach(function (value, idx) { if (checks[idx]) checks[idx].checked = !!value; });
+      checks.forEach(function (check) { check.addEventListener("change", render); });
+      if (reset) reset.addEventListener("click", function () { checks.forEach(function (c) { c.checked = false; }); render(); });
+      render();
+    });
+  })();
+
+  // ---------------- worksheet clear ----------------
+  document.querySelectorAll("[data-worksheet-clear]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var box = button.closest(".worksheet");
+      if (!box) return;
+      box.querySelectorAll("textarea").forEach(function (area) { area.value = ""; });
+    });
+  });
+
+  // ---------------- worksheet copy ----------------
+  document.querySelectorAll("[data-worksheet-copy]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var box = button.closest(".worksheet");
+      if (!box) return;
+      var lines = Array.prototype.slice.call(box.querySelectorAll(".worksheet-item")).map(function (item) {
+        var label = item.querySelector("label");
+        var area = item.querySelector("textarea");
+        return (label ? label.textContent.trim() : "Prompt") + "\n" + ((area && area.value.trim()) || "[blank]");
+      });
+      var text = "FirebaseSync worksheet answers\n\n" + lines.join("\n\n");
+      var status = box.querySelector("[data-worksheet-status]");
+      function done(ok) {
+        if (status) status.textContent = ok ? "Answers copied." : "Copy unavailable; select and copy the text manually.";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      } else {
+        done(false);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

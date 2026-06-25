@@ -1,0 +1,98 @@
+{
+  "name": "CloudSync",
+  "tagline": "Offline-first: a local Room database is the single source of truth, reconciled with a cloud backend by a background SyncWorker — so every write works offline and syncs later.",
+  "whatItDoes": "A single-screen notes app. You add, edit, and delete notes; each row shows a sync badge — Pending (amber), Synced (green), or Failed (red) — and a banner shows Online/Offline plus how many local changes haven't reached the cloud yet. Everything is driven entirely by the LOCAL Room database, so it stays fully usable with no connection: a write appears instantly (optimistic), is marked Pending, and a background SyncWorker pushes it to the cloud and pulls remote changes when the network allows. A 'Simulate remote edit' button mimics another device adding a note so you can watch it arrive on the next pull. By default the cloud is an in-memory Fake (latency + last-write-wins), so the app runs and tests with no backend.",
+  "mentalModel": "The UI reads ONLY the local database; the cloud is a sync target, never a UI source. Writes go to Room first (optimistic, marked PENDING); a background worker later pushes them when the network allows, then pulls remote changes — so the app is fully usable offline and converges once reconnected.",
+  "domain": "notes",
+  "estTime": "25-35 min",
+  "screens": [
+    { "name": "CloudSyncApp", "role": "The whole screen: an add/edit form, a Sync now + Simulate remote edit row, the online/offline + pending banner, and the notes list. Reads three Room-backed StateFlows; never touches the network." },
+    { "name": "SyncStatusBar", "role": "A banner that turns green (Online) or amber (Offline — changes are queued) and shows the count of not-yet-synced rows." },
+    { "name": "NoteCard", "role": "One note row: title, body, a colour-coded sync badge; tap to edit, button to delete." },
+    { "name": "SyncBadge", "role": "The per-row status — ✓ Synced / ⏳ Pending / ⚠ Failed — mapped from the row's SyncState." }
+  ],
+  "concepts": [
+    { "term": "Single source of truth", "plain": "The UI observes Room (observeVisibleNotes(): Flow) and nothing else. Because reads are local they are instant and work offline; the cloud only feeds Room through the sync engine." },
+    { "term": "Optimistic write + an outbox", "plain": "A create/edit/delete writes to Room immediately and marks the row PENDING. The user sees the change at once; the set of PENDING rows IS the outbox the sync engine still has to push." },
+    { "term": "Soft-delete tombstones", "plain": "A delete doesn't remove the row — it sets deleted = true and PENDING. You can't upload a row you've already erased, so the tombstone is what gets pushed; only after the cloud confirms it is the row hard-deleted locally." },
+    { "term": "Background sync with WorkManager", "plain": "Pushing to the cloud outlives the screen, so it runs in a CoroutineWorker. A NetworkType.CONNECTED constraint means it runs now if online and just DEFERS (without losing the work) if offline; failures return Result.retry() for exponential backoff." },
+    { "term": "Last-write-wins", "plain": "shouldAcceptRemote(local, remote) is a pure function: accept a remote row if we have no local copy, or our local copy is already SYNCED and not newer. A still-PENDING local edit always wins until it is pushed." },
+    { "term": "Real vs Fake cloud switch", "plain": "A CloudApi interface (pullSince + push) has a real implementation and an in-memory FakeCloudApi (latency, last-write-wins, a 'another device edited' hook). provideCloudApi(useFake) picks one; the default Fake keeps the app and tests offline." },
+    { "term": "The cloud is not (yet) defined", "plain": "CloudSync's REAL implementation is only a Retrofit stub pointed at https://example.com/api/ — a placeholder. Its siblings FirebaseSync and SupabaseSync replace exactly that one class with a real Firestore / Supabase backend." }
+  ],
+  "files": [
+    { "path": "CloudSync/src/main/java/com/example/cloudsync/data/Note.kt", "role": "@Entity Note (id, title, body, updatedAt, syncState, deleted) + @Serializable NoteDto + mappers + the SyncState enum." },
+    { "path": "CloudSync/src/main/java/com/example/cloudsync/data/NoteDao.kt", "role": "Reactive reads (visible notes, pending count) plus the sync-engine queries (the outbox, the pull cursor, upsert, hard-delete)." },
+    { "path": "CloudSync/src/main/java/com/example/cloudsync/data/CloudApi.kt", "role": "The CloudApi interface + the Retrofit stub (RealCloudApi) + the in-memory FakeCloudApi + provideCloudApi(useFake)." },
+    { "path": "CloudSync/src/main/java/com/example/cloudsync/data/NoteRepository.kt", "role": "Optimistic writes, the sync() push→pull engine, and the pure shouldAcceptRemote last-write-wins rule." },
+    { "path": "CloudSync/src/main/java/com/example/cloudsync/sync/SyncWorker.kt", "role": "A CoroutineWorker that calls repository.sync(); Result.retry() on failure." },
+    { "path": "CloudSync/src/main/java/com/example/cloudsync/sync/SyncScheduler.kt", "role": "Enqueues the worker with a NetworkType.CONNECTED constraint + exponential backoff." },
+    { "path": "CloudSync/src/main/java/com/example/cloudsync/MainActivity.kt", "role": "The Compose UI: the form, the banner, the notes list with sync badges." }
+  ],
+  "highlights": [
+    {
+      "title": "Sync bookkeeping: the local entity + the cloud DTO",
+      "file": "CloudSync/src/main/java/com/example/cloudsync/data/Note.kt",
+      "start": 42,
+      "end": 64,
+      "explain": "Offline-first storage is a normal Room @Entity PLUS a little bookkeeping: a client-generated id (so an offline row has an identity before the server sees it), an updatedAt clock (the comparator for last-write-wins), a syncState (the outbox marker), and a deleted tombstone. The @Serializable NoteDto is the cloud's wire shape — it drops syncState (local-only) but keeps deleted so a tombstone replicates."
+    },
+    {
+      "title": "One tiny cloud interface: pull + push",
+      "file": "CloudSync/src/main/java/com/example/cloudsync/data/CloudApi.kt",
+      "start": 29,
+      "end": 40,
+      "explain": "The whole sync engine depends only on this two-method interface: pullSince(cursor) returns remote rows newer than a cursor, and push(note) uploads one row and returns the server's copy. Hiding the backend behind this is what lets a real cloud and the offline fake be swapped with no change to the repository — and it is exactly the class FirebaseSync and SupabaseSync re-implement."
+    },
+    {
+      "title": "The offline Fake cloud: latency + last-write-wins",
+      "file": "CloudSync/src/main/java/com/example/cloudsync/data/CloudApi.kt",
+      "start": 83,
+      "end": 116,
+      "explain": "FakeCloudApi is an in-memory 'server' keyed by id. It seeds a welcome note, adds delay() to imitate the network, and on push only accepts a write at least as new as what it holds (server-side last-write-wins). simulateRemoteEdit() injects a note as if another device wrote it, so the next pull has something to merge. Because it behaves like a real backend, the app and unit tests run fully offline — and CloudSync's 'real' impl is still only a Retrofit stub (example.com), which is why the Firebase/Supabase siblings exist."
+    },
+    {
+      "title": "Optimistic local writes (Room first, marked PENDING)",
+      "file": "CloudSync/src/main/java/com/example/cloudsync/data/NoteRepository.kt",
+      "start": 38,
+      "end": 52,
+      "explain": "addNote writes straight to Room with a fresh UUID and syncState = PENDING. There is no network call here at all — the row shows in the UI immediately (Room is reactive) and joins the outbox. editNote and deleteNote work the same way (delete sets the tombstone). The push happens later, in the background."
+    },
+    {
+      "title": "sync(): push the outbox, then pull remote changes",
+      "file": "CloudSync/src/main/java/com/example/cloudsync/data/NoteRepository.kt",
+      "start": 84,
+      "end": 109,
+      "explain": "The engine first PUSHES every not-yet-synced row: on success a tombstone is hard-deleted and a normal row is re-stored as SYNCED; on failure it is marked FAILED and the exception is rethrown so the worker retries. Then it PULLS rows newer than MAX(updatedAt) and merges each through shouldAcceptRemote. A network error anywhere throws — safe, because the local data is untouched in Room."
+    },
+    {
+      "title": "Last-write-wins, as a pure function",
+      "file": "CloudSync/src/main/java/com/example/cloudsync/data/NoteRepository.kt",
+      "start": 18,
+      "end": 27,
+      "explain": "Conflict resolution is pulled out as a pure function with no Room and no coroutines, so it is trivially unit-testable. Accept the remote row only if we have no local copy, or our copy is already SYNCED and not newer. A still-PENDING local edit always wins here — it carries an unpushed change that the next push will send, where the server settles it."
+    },
+    {
+      "title": "Why offline 'just queues': the network constraint",
+      "file": "CloudSync/src/main/java/com/example/cloudsync/sync/SyncScheduler.kt",
+      "start": 22,
+      "end": 40,
+      "explain": "Each write asks for a sync, but the request carries a NetworkType.CONNECTED constraint — so WorkManager runs it immediately when online and DEFERS it (without losing it) when offline, firing the moment connectivity returns. APPEND_OR_REPLACE means a write made mid-sync is never dropped, and exponential backoff handles transient server failures. This one constraint is the whole reason offline 'just works'."
+    }
+  ],
+  "newVsPrev": "The earlier demos taught the pieces in isolation: RoomAndPreferences / StorageShowcase covered the LOCAL database, and NetworkParsing covered talking to a backend. CloudSync combines them into the offline-first pattern: Room as the single source of truth, optimistic writes into an outbox, a WorkManager SyncWorker that pushes then pulls, soft-delete tombstones, and a pure last-write-wins rule. The genuinely new idea is that the UI never touches the network — it only ever reads local state, and a background engine reconciles that with the cloud. Its one gap: the 'real' cloud is just a stub, which the next two projects fill in.",
+  "tryThis": [
+    "Run it and add a few notes. Each appears instantly as ⏳ Pending, then flips to ✓ Synced a moment later as the (fake) cloud confirms the push.",
+    "Tap 'Simulate remote edit', then watch the next sync PULL a 'Note from another device' into the list — the merge path in action.",
+    "On a device/emulator, turn on airplane mode, add or edit notes (they stay Pending), then turn it back off and watch them drain to Synced when connectivity returns.",
+    "Open CloudApi.kt and read RetrofitCloudApi: notice baseUrl is https://example.com/api/ — the cloud is not really defined. Then open FirebaseSync or SupabaseSync to see that one class replaced with a real backend.",
+    "In CloudSyncUnitTest.kt, add a case where a PENDING local row is newer than the remote and assert shouldAcceptRemote returns false (the local edit wins)."
+  ],
+  "gotchas": [
+    "The app runs OFFLINE by default (provideCloudApi(useFake = true)). The welcome note and 'remote' edits come from the in-memory FakeCloudApi, not a network — there is no real backend wired in this project.",
+    "CloudSync's REAL implementation is only a Retrofit stub pointed at example.com; it will not sync to anything. For a real, defined cloud use the siblings FirebaseSync (Firestore) or SupabaseSync (Postgres).",
+    "Deletes are soft (a tombstone) until the cloud confirms the push, then hard-deleted locally. A row you 'deleted' is hidden from the UI but still present (deleted = true) until then.",
+    "The pull cursor is MAX(updatedAt) in the local table — a teaching simplification. A production backend usually hands back its own opaque cursor, and clocks across devices can drift."
+  ],
+  "runTest": "By default the app runs offline against the FakeCloudApi, so it builds and unit-tests with no backend. Compile + generate Room code with ./gradlew :compileDebugKotlin, run the logic tests (last-write-wins rule, the SyncState converter, the fake-cloud round trip) with ./gradlew :testDebugUnitTest, and install on a device/emulator with ./gradlew installDebug. To watch offline behaviour, toggle airplane mode and see rows queue as Pending then flip to Synced when you reconnect."
+}

@@ -1,0 +1,3185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supabase Setup &amp; API Guide — SupabaseSync</title>
+<meta name="description" content="A complete, beginner-friendly guide to connecting Supabase (hosted Postgres) to the SupabaseSync Android app: create a Supabase project, create the notes table and Row-Level Security policies (dashboard SQL Editor and the Supabase CLI / Management API), the two credential values (Project URL + anon key from Project Settings, Data API), the supabase-kt / Ktor / kotlinx.serialization Gradle dependencies and the BoM, the in-code createSupabaseClient + install(Postgrest) initialisation explained line by line, the Real/Fake switch, every Supabase API this app uses with the real code, a tour of the rest of the Supabase toolbox, and how to run, verify with curl, and troubleshoot.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-alt: #eef3f7;
+  --surface-strong: #e4edf3;
+  --ink: #17202a;
+  --muted: #5c6a78;
+  --line: #d9e1e8;
+  --line-strong: #b9c7d2;
+  --green: #1b8a5a;
+  --green-soft: #e6f5ee;
+  --teal: #0a8f9a;
+  --teal-soft: #e1f6f8;
+  --blue: #2d64c8;
+  --blue-soft: #e9f0ff;
+  --amber: #b56c00;
+  --amber-soft: #fff3dd;
+  --red: #c33d3d;
+  --red-soft: #fdeced;
+  --violet: #6d58b8;
+  --violet-soft: #eeeafb;
+  --code-bg: #111827;
+  --code-ink: #e9eef7;
+  --code-dim: #93a4ba;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11151b;
+  --surface: #171d24;
+  --surface-alt: #1e2630;
+  --surface-strong: #26313c;
+  --ink: #edf2f7;
+  --muted: #a8b4c0;
+  --line: #33404c;
+  --line-strong: #4c5c68;
+  --green-soft: #112b22;
+  --teal-soft: #102c31;
+  --blue-soft: #14233f;
+  --amber-soft: #30230f;
+  --red-soft: #351819;
+  --violet-soft: #241f3c;
+  --code-bg: #0b1018;
+  --code-ink: #eef4ff;
+  --code-dim: #8fa0b4;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.58;
+  overflow-x: hidden;
+}
+button, input, select, textarea { font: inherit; }
+a { color: var(--blue); }
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------------- sidebar rail ---------------- */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px 28px;
+}
+.brand {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(27, 138, 90, 0.95), rgba(45, 100, 200, 0.92)),
+    radial-gradient(circle at 74% 18%, rgba(255, 243, 221, 0.85), transparent 34%);
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.brand-title { font-size: 0.98rem; font-weight: 800; line-height: 1.15; }
+.brand-subtitle { color: var(--muted); font-size: 0.76rem; }
+.nav-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 16px 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.nav-link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: center;
+  min-height: 33px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.nav-link.active { box-shadow: inset 2px 0 0 var(--blue); }
+.nav-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.nav-link.active .nav-num { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.theme-toggle {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.rail-foot { margin: 16px 8px 0; color: var(--muted); font-size: 0.78rem; }
+.rail-foot a { display: block; margin-top: 4px; }
+
+/* ---------------- content ---------------- */
+.content { min-width: 0; }
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  gap: 8px;
+  align-items: center;
+}
+.topbar .brand-title { font-size: 0.9rem; }
+.topbar select {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.topbar button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.band {
+  padding: 38px min(5vw, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.band:nth-child(odd) { background: var(--surface); }
+.band-inner { max-width: 1120px; margin: 0 auto; min-width: 0; }
+
+.eyebrow {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+h1, h2, h3, h4, p { margin-top: 0; }
+h1 { font-size: 2.8rem; line-height: 1.06; margin-bottom: 14px; }
+h2 { font-size: 1.85rem; line-height: 1.16; margin-bottom: 10px; }
+h3 { font-size: 1.16rem; line-height: 1.28; margin: 22px 0 8px; }
+h4 { font-size: 0.95rem; margin: 0 0 6px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 74ch; overflow-wrap: anywhere; }
+p { overflow-wrap: anywhere; }
+.dense { color: var(--muted); font-size: 0.95rem; }
+.section-head { margin-bottom: 16px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tag.green { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.tag.blue { background: var(--blue-soft); color: var(--blue); border-color: rgba(45,100,200,0.35); }
+.tag.amber { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.tag.red { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.tag.violet { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.35); }
+.tag.teal { background: var(--teal-soft); color: var(--teal); border-color: rgba(10,143,154,0.35); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+
+.card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+}
+.band:nth-child(odd) .card { background: var(--bg); }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.card-title { font-weight: 850; font-size: 0.95rem; }
+.card-body { padding: 14px 16px; min-width: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-body p { margin-bottom: 10px; }
+
+/* ---------------- code ---------------- */
+.code-panel {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 9px;
+  overflow: hidden;
+  min-width: 0;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  color: var(--code-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.code-file { font-family: var(--mono); letter-spacing: 0.01em; }
+.code-panel pre {
+  margin: 0;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+.copy-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--code-ink);
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 2px 9px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.16); }
+.c-cmt { color: var(--code-dim); font-style: italic; }
+.c-str { color: #9ece6a; }
+.c-kw  { color: #7aa2f7; font-weight: 600; }
+.c-ann { color: #e0af68; }
+.c-num { color: #ff9e64; }
+.c-tag { color: #7dcfff; }
+
+/* ---------------- callouts ---------------- */
+.callout {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.callout :last-child { margin-bottom: 0; }
+.callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+.callout.good { border-left-color: var(--green); background: var(--green-soft); }
+.callout.violet { border-left-color: var(--violet); background: var(--violet-soft); }
+.callout-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+/* ---------------- tables ---------------- */
+.tbl {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .tbl { background: var(--bg); }
+.tbl th, .tbl td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td:last-child, .tbl th:last-child { border-right: 0; }
+.tbl code { background: transparent; border: 0; padding: 0; }
+.dot { display: inline-grid; place-items: center; min-width: 24px; height: 22px; border-radius: 999px; font-weight: 900; font-size: 0.74rem; }
+.dot.yes { color: var(--green); background: var(--green-soft); }
+.dot.no { color: var(--red); background: var(--red-soft); }
+.dot.maybe { color: var(--amber); background: var(--amber-soft); }
+
+/* ---------------- file tree ---------------- */
+.tree {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.85;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.band:nth-child(odd) .tree { background: var(--bg); }
+.tree .dir { color: var(--blue); font-weight: 700; }
+.tree .f { color: var(--ink); }
+.tree .note { color: var(--muted); font-style: italic; }
+
+/* ---------------- layer diagram ---------------- */
+.layers { display: grid; gap: 10px; margin: 14px 0; }
+.layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  position: relative;
+}
+.band:nth-child(odd) .layer { background: var(--bg); }
+.layer .l-name { font-weight: 850; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.layer .l-desc { color: var(--muted); font-size: 0.88rem; margin-top: 3px; }
+.layer .l-files { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .l-files code { font-size: 0.76rem; }
+.layer.ui { border-left: 4px solid var(--blue); }
+.layer.vm { border-left: 4px solid var(--violet); }
+.layer.repo { border-left: 4px solid var(--teal); }
+.layer.engine { border-left: 4px solid var(--amber); }
+.layer.disk { border-left: 4px solid var(--green); }
+.arrow { text-align: center; color: var(--muted); font-size: 1.1rem; line-height: 0.6; }
+
+/* ---------------- stepper ---------------- */
+.stepper { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin: 14px 0; }
+.band:nth-child(odd) .stepper { background: var(--bg); }
+.stepper-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--surface-alt); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.stepper-head .s-title { font-weight: 850; font-size: 0.92rem; }
+.stepper-ctrl { display: flex; gap: 8px; align-items: center; }
+.stepper-ctrl button { min-height: 32px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 0 12px; font-weight: 750; cursor: pointer; }
+.stepper-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.s-count { color: var(--muted); font-size: 0.82rem; font-weight: 700; min-width: 42px; text-align: center; }
+.steps { list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 9px 10px; border-radius: 8px; align-items: start; opacity: 0.5; transition: opacity 0.2s, background 0.2s; }
+.step.done { opacity: 0.85; }
+.step.active { opacity: 1; background: var(--blue-soft); box-shadow: inset 0 0 0 1px rgba(45,100,200,0.25); }
+.step .s-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--line); font-weight: 800; font-size: 0.8rem; color: var(--muted); }
+.step.active .s-num { background: var(--blue); color: white; border-color: var(--blue); }
+.step.done .s-num { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.4); }
+.step .s-body { font-size: 0.9rem; }
+.step .s-body code { font-size: 0.8rem; }
+.step .s-where { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; font-family: var(--mono); }
+
+/* ---------------- misc ---------------- */
+.kicker-list { padding-left: 18px; }
+.kicker-list li { margin-bottom: 6px; }
+.pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.band:nth-child(odd) .stat { background: var(--bg); }
+.stat .s-num2 { font-size: 1.6rem; font-weight: 850; line-height: 1; }
+.stat .s-lab { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+.foot { color: var(--muted); font-size: 0.86rem; }
+.foot a { font-weight: 600; }
+.anchor { scroll-margin-top: 12px; }
+
+/* ---------------- lesson helpers ---------------- */
+.lesson-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+.lesson-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 13px 14px;
+}
+.band:nth-child(odd) .lesson-card { background: var(--bg); }
+.lesson-card h3 { margin: 4px 0 8px; font-size: 1rem; }
+.lesson-card ol { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.9rem; }
+.lesson-card li { margin-bottom: 5px; }
+.lesson-time {
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.term-code-table .term-col { width: 20%; }
+.term-code-table .code-col { width: 56%; }
+.term-code-table .where-col { width: 24%; }
+.mini-code {
+  margin: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.band:nth-child(odd) .mini-code { background: var(--surface); }
+
+/* ---------------- active learning helpers ---------------- */
+.tip {
+  position: relative;
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+  font-weight: 750;
+}
+.tip:focus { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.tip:hover::after,
+.tip:focus::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  width: min(320px, 80vw);
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+}
+.predict-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--violet);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 14px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .predict-card { background: var(--bg); }
+.predict-card summary {
+  cursor: pointer;
+  padding: 11px 14px;
+  font-weight: 850;
+  color: var(--ink);
+  background: var(--violet-soft);
+}
+.predict-card .answer { padding: 12px 14px; color: var(--muted); font-size: 0.93rem; }
+.sync-timeline {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .sync-timeline { background: var(--bg); }
+.timeline-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.timeline-title { font-weight: 850; }
+.timeline-ctrl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.timeline-ctrl button,
+.concept-btn,
+.break-btn,
+.scenario-btn,
+.worksheet-btn {
+  min-height: 32px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 11px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.timeline-ctrl button:hover,
+.concept-btn:hover,
+.break-btn:hover,
+.scenario-btn:hover,
+.worksheet-btn:hover { background: var(--surface-alt); }
+.timeline-ctrl button:disabled { opacity: 0.45; cursor: not-allowed; }
+.timeline-track {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+.timeline-step {
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--muted);
+  border-radius: 9px;
+  padding: 9px 10px;
+  min-height: 118px;
+  opacity: 0.55;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.timeline-step.active {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(45,100,200,0.22);
+}
+.timeline-step.done { opacity: 0.85; }
+.timeline-step.room { border-top-color: var(--green); }
+.timeline-step.ui { border-top-color: var(--blue); }
+.timeline-step.repo { border-top-color: var(--teal); }
+.timeline-step.worker { border-top-color: var(--amber); }
+.timeline-step.cloud { border-top-color: var(--violet); }
+.timeline-step strong { display: block; margin-bottom: 4px; font-size: 0.88rem; }
+.timeline-step span { display: block; color: var(--muted); font-size: 0.8rem; }
+.timeline-explain {
+  border-top: 1px solid var(--line);
+  padding: 11px 14px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.break-lab,
+.debug-lab,
+.mastery-tracker,
+.code-tools,
+.worksheet {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .break-lab,
+.band:nth-child(odd) .debug-lab,
+.band:nth-child(odd) .mastery-tracker,
+.band:nth-child(odd) .code-tools,
+.band:nth-child(odd) .worksheet { background: var(--bg); }
+.lab-head {
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+  font-weight: 850;
+}
+.lab-body { padding: 12px 14px; }
+.lab-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.break-btn.active,
+.scenario-btn.active,
+.concept-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.lab-output {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 13px;
+  color: var(--ink);
+  min-height: 52px;
+}
+.worksheet-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.worksheet-item {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px;
+  background: var(--surface-alt);
+}
+.worksheet-item label { display: block; font-weight: 850; margin-bottom: 6px; }
+.solution-item {
+  border-left: 4px solid var(--green);
+  cursor: pointer;
+}
+.solution-item strong {
+  display: block;
+  margin-bottom: 6px;
+}
+.solution-item summary {
+  cursor: pointer;
+  font-weight: 850;
+}
+.solution-item summary::-webkit-details-marker {
+  color: var(--green);
+}
+.solution-item[open] {
+  background: var(--green-soft);
+}
+.solution-item p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.worksheet-item textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 9px 10px;
+}
+.code-line { display: inline; border-radius: 4px; }
+.code-line.concept-hit {
+  background: rgba(224, 175, 104, 0.24);
+  box-shadow: 0 0 0 2px rgba(224, 175, 104, 0.18);
+}
+.concept-note { color: var(--muted); font-size: 0.88rem; margin-top: 8px; }
+.mastery-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.mastery-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.mastery-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--green);
+  transition: width 0.2s;
+}
+.mastery-count { color: var(--muted); font-weight: 850; font-size: 0.84rem; }
+.mastery-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mastery-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-alt);
+  padding: 9px 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.mastery-item input { margin-top: 4px; }
+.term-search {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.term-search input {
+  flex: 1;
+  min-width: 220px;
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0 11px;
+}
+.term-count,
+.status-note { color: var(--muted); font-size: 0.85rem; font-weight: 750; }
+
+/* ---------------- Flow lab ---------------- */
+.flow-lab {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+  margin: 16px 0;
+}
+.band:nth-child(odd) .flow-lab { background: var(--bg); }
+.flow-lab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.flow-lab-title { font-weight: 850; }
+.flow-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.flow-btn {
+  min-height: 34px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 11px;
+  font-size: 0.84rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.flow-btn:hover { background: var(--surface-alt); }
+.flow-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.flow-brief {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 12px 0;
+}
+.flow-brief-card {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 9px 10px;
+  min-width: 0;
+}
+.band:nth-child(odd) .flow-brief-card { background: var(--bg); }
+.flow-brief-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.flow-brief-card strong,
+.flow-brief-card code {
+  overflow-wrap: anywhere;
+}
+.flow-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; padding: 12px; }
+.flow-stage {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--muted);
+  border-radius: 9px;
+  padding: 10px 12px;
+  min-width: 0;
+  background: var(--surface);
+}
+.band:nth-child(odd) .flow-stage { background: var(--bg); }
+.flow-stage.active { box-shadow: 0 0 0 2px rgba(45,100,200,0.28); }
+.flow-stage.room { border-left-color: var(--green); }
+.flow-stage.flow { border-left-color: var(--teal); }
+.flow-stage.state { border-left-color: var(--violet); }
+.flow-stage.ui { border-left-color: var(--blue); }
+.flow-stage h3 { margin: 0 0 7px; font-size: 0.92rem; }
+.flow-stage p { margin-bottom: 7px; }
+.flow-list { display: grid; gap: 6px; }
+.flow-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 8px;
+  background: var(--surface-alt);
+  font-size: 0.86rem;
+}
+.flow-row strong { display: block; }
+.flow-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+}
+.flow-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.flow-pill.pending { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.flow-pill.synced { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.flow-pill.deleted { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.flow-empty { color: var(--muted); font-size: 0.84rem; }
+.flow-emission {
+  display: grid;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.flow-burst {
+  border: 1px dashed var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-weight: 800;
+}
+.flow-code {
+  display: block;
+  white-space: pre-wrap;
+  color: var(--muted);
+}
+.flow-stage-note {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.flow-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+.flow-explain {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 9px;
+  padding: 11px 13px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  background: var(--blue-soft);
+}
+.flow-steps {
+  margin: 9px 0 0;
+  padding-left: 19px;
+  color: var(--muted);
+}
+.flow-steps li { margin-bottom: 5px; }
+.flow-log {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 11px 13px;
+}
+.band:nth-child(odd) .flow-log { background: var(--bg); }
+.flow-log-title {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 850;
+}
+.flow-log-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.flow-log-list li {
+  border-left: 3px solid var(--teal);
+  padding-left: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 980px) {
+  .flow-brief { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .flow-grid { grid-template-columns: 1fr; }
+  .flow-detail { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .flow-brief { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .topbar { display: flex; }
+  .band { padding: 26px 18px; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; }
+  .grid2, .grid3, .statgrid, .lesson-grid, .worksheet-grid, .mastery-list { grid-template-columns: 1fr; }
+}
+
+@media print {
+  html { scroll-behavior: auto; }
+  body { background: #fff; color: #111; }
+  .app { display: block; }
+  .rail, .topbar, .copy-btn, .theme-toggle, .stepper-ctrl, .flow-controls, .timeline-ctrl, .lab-controls, .worksheet-btn { display: none !important; }
+  .band { padding: 18px 0; border-bottom: 1px solid #ddd; }
+  .band-inner { max-width: none; }
+  .card, .lesson-card, .callout, .tree, .tbl, .code-panel, .stepper { break-inside: avoid; }
+  a { color: #111; text-decoration: underline; }
+}
+</style>
+<style>
+/* =================================================================
+   SUPPLEMENTAL STYLES for supabase-setup.html
+   Every color below is derived from the page's EXISTING design tokens
+   (--green / --blue / --amber / --violet / --teal + their *-soft pairs,
+   already redefined under [data-theme="dark"]). Nothing is hard-coded,
+   so the badge system stays legible in BOTH light and dark mode.
+   ================================================================= */
+
+/* ---------------- the two-pill BADGE SYSTEM ---------------- */
+/* A row that groups the pills together. */
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 2px; }
+
+/* Shared pill chrome — same shape language as .tag / .flow-pill. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.35;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.pill code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 0.92em;
+  color: inherit;
+}
+.pill .pill-kind {
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+/* CLOUD-EFFECT pill — "what happens in your Supabase project". The
+   variant colours map to the kind of write: add=green, update=blue,
+   delete/tombstone=red, read=violet, no-change=muted amber. */
+.pill.fx { border-style: solid; }
+.pill.fx.add    { background: var(--green-soft);  color: var(--green);  border-color: rgba(27,138,90,0.4); }
+.pill.fx.update { background: var(--blue-soft);   color: var(--blue);   border-color: rgba(45,100,200,0.4); }
+.pill.fx.delete { background: var(--red-soft);    color: var(--red);    border-color: rgba(195,61,61,0.4); }
+.pill.fx.read   { background: var(--violet-soft); color: var(--violet); border-color: rgba(109,88,184,0.4); }
+.pill.fx.none   { background: var(--surface-alt); color: var(--muted);  border-color: var(--line); }
+
+/* API-CALL pill — the exact SDK call. One consistent teal treatment so
+   it always reads as "this is the literal Supabase call". */
+.pill.call {
+  background: var(--teal-soft);
+  color: var(--teal);
+  border-color: rgba(10,143,154,0.4);
+}
+
+/* The little legend that explains the two pill types. */
+.pill-legend {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--teal);
+  background: var(--surface);
+  border-radius: 0 9px 9px 0;
+  padding: 11px 13px;
+  margin: 14px 0;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .pill-legend { background: var(--bg); }
+.pill-legend .legend-row { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; }
+
+/* ---------------- the "Supabase API called" verdict box ---------------- */
+.verdict {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  align-items: start;
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 11px 13px;
+  border-left: 4px solid var(--teal);
+  background: var(--teal-soft);
+  color: var(--ink);
+}
+.verdict.add    { border-left-color: var(--green);  background: var(--green-soft); }
+.verdict.update { border-left-color: var(--blue);   background: var(--blue-soft); }
+.verdict.delete { border-left-color: var(--red);    background: var(--red-soft); }
+.verdict.read   { border-left-color: var(--violet); background: var(--violet-soft); }
+.verdict.none   { border-left-color: var(--amber);  background: var(--amber-soft); }
+.verdict-badge {
+  display: grid; place-items: center;
+  min-width: 30px; height: 30px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 1rem;
+}
+.verdict-label { font-weight: 850; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+.verdict code { font-weight: 700; }
+.verdict .pills { margin: 9px 0 0; }
+
+/* ---------------- operation traces + call-chain hops ---------------- */
+.trace {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  overflow: hidden;
+  background: var(--surface);
+  margin: 16px 0;
+}
+.band:nth-child(odd) .trace { background: var(--bg); }
+.trace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 11px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.trace.add .trace-head    { background: var(--green-soft); }
+.trace.edit .trace-head   { background: var(--blue-soft); }
+.trace.delete .trace-head { background: var(--red-soft); }
+.trace.sync .trace-head   { background: var(--violet-soft); }
+.trace.read .trace-head   { background: var(--amber-soft); }
+.trace-title { font-weight: 850; font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.trace-body { padding: 12px 14px; }
+.trace-action {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-alt);
+  padding: 9px 11px;
+  font-size: 0.9rem;
+}
+.band:nth-child(odd) .trace-action { background: var(--surface); }
+.hops { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 0; }
+.hop { display: grid; grid-template-columns: 30px 1fr; gap: 11px; align-items: start; }
+.hop-rail { display: grid; justify-items: center; gap: 2px; }
+.hop-dot {
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line-strong);
+  font-weight: 850; font-size: 0.8rem; color: var(--muted);
+}
+.hop-line { width: 2px; flex: 1; min-height: 14px; background: var(--line-strong); align-self: stretch; }
+.hop:last-child .hop-line { display: none; }
+.hop-body { padding-bottom: 14px; min-width: 0; }
+.hop:last-child .hop-body { padding-bottom: 0; }
+.hop-where {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.hop-what { font-size: 0.92rem; }
+.hop-what code { font-size: 0.82rem; }
+
+/* ---------------- api reference cards: tables ---------------- */
+.api-col { width: 30%; }
+.op-table .op-col { width: 11%; }
+.op-table .tap-col { width: 16%; }
+.op-table .path-col { width: 26%; }
+.op-table .api-col2 { width: 28%; }
+.op-table .effect-col { width: 19%; }
+
+/* ---------------- escaped SQL block reuse ---------------- */
+.sql-note { color: var(--muted); font-size: 0.86rem; margin-top: 6px; }
+
+@media (max-width: 980px) {
+  .pill-legend .legend-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="rail" aria-label="Section navigation">
+    <div class="brand">
+      <div class="brand-mark">SS</div>
+      <div>
+        <div class="brand-title">SupabaseSync</div>
+        <div class="brand-subtitle">Supabase setup &amp; API guide</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-title">Get oriented</div>
+      <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>Overview</span></a>
+      <a class="nav-link" href="#prerequisites"><span class="nav-num">2</span><span>Prerequisites</span></a>
+      <div class="nav-title">Set up the backend</div>
+      <a class="nav-link" href="#create"><span class="nav-num">3</span><span>Create project + table + RLS</span></a>
+      <a class="nav-link" href="#config"><span class="nav-num">4</span><span>Project URL + anon key</span></a>
+      <div class="nav-title">Wire up the app</div>
+      <a class="nav-link" href="#deps"><span class="nav-num">5</span><span>Gradle dependencies</span></a>
+      <a class="nav-link" href="#init"><span class="nav-num">6</span><span>Initialise the client</span></a>
+      <a class="nav-link" href="#switch"><span class="nav-num">7</span><span>The Real/Fake switch</span></a>
+      <div class="nav-title">What each call does</div>
+      <a class="nav-link" href="#operations"><span class="nav-num">8</span><span>The 5 operation traces</span></a>
+      <a class="nav-link" href="#api-app"><span class="nav-num">9</span><span>APIs this app uses</span></a>
+      <a class="nav-link" href="#api-more"><span class="nav-num">10</span><span>The rest of the toolbox</span></a>
+      <div class="nav-title">Run &amp; fix</div>
+      <a class="nav-link" href="#run"><span class="nav-num">11</span><span>Run &amp; verify</span></a>
+      <a class="nav-link" href="#troubleshooting"><span class="nav-num">12</span><span>Troubleshooting</span></a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <div class="rail-foot">
+      Prefer the data-flow story?
+      <a href="how-a-note-syncs.html">How a note syncs →</a>
+      <a href="supabasesync-explorer.html">Interactive explainer →</a>
+      <a href="README.md">Project README →</a>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="topbar">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">SS</div>
+      <select id="jump" aria-label="Jump to section">
+        <option value="#overview">1 · Overview</option>
+        <option value="#prerequisites">2 · Prerequisites</option>
+        <option value="#create">3 · Create project + table + RLS</option>
+        <option value="#config">4 · Project URL + anon key</option>
+        <option value="#deps">5 · Gradle dependencies</option>
+        <option value="#init">6 · Initialise the client</option>
+        <option value="#switch">7 · The Real/Fake switch</option>
+        <option value="#operations">8 · The 5 operation traces</option>
+        <option value="#api-app">9 · APIs this app uses</option>
+        <option value="#api-more">10 · The rest of the toolbox</option>
+        <option value="#run">11 · Run &amp; verify</option>
+        <option value="#troubleshooting">12 · Troubleshooting</option>
+      </select>
+      <button id="themeToggleTop" type="button" aria-label="Toggle dark mode">🌙</button>
+    </div>
+
+    <!-- =============== 1 · OVERVIEW =============== -->
+    <section class="band anchor" id="overview">
+      <div class="band-inner">
+        <p class="eyebrow">Supabase setup &amp; API guide</p>
+        <h1>Connect SupabaseSync to a real Supabase Postgres.</h1>
+        <p class="lead">By default the app runs fully offline against an in-memory
+        <code>FakeCloudApi</code>, so it builds and tests with no account. This guide takes you the
+        rest of the way: create a Supabase project, create the <code>notes</code> table with
+        Row-Level Security, add two credentials to <code>local.properties</code> (git-ignored; the app uses them automatically), and watch a note you add on the
+        phone appear as a <strong>row</strong> in your Supabase table.</p>
+
+        <div class="callout">
+          <span class="callout-label">The shape of the whole thing</span>
+          <p>The cloud here is a hosted <strong>Postgres</strong> database with an auto-generated
+          REST API (PostgREST). Your data lives as <strong>rows in the <code>notes</code> table</strong>.
+          The app talks to it through exactly two calls: <code>from("notes").upsert(...)</code> to
+          push and <code>from("notes").select { … }</code> to pull. Everything else is the same
+          offline-first machinery (Room is the single source of truth) covered in
+          <a href="how-a-note-syncs.html">How a note syncs</a>.</p>
+        </div>
+
+        <!-- the LEGEND for the two pill types -->
+        <div class="pill-legend" aria-label="Badge legend">
+          <strong>Two badges you will see throughout this guide</strong>
+          <div class="legend-row">
+            <span class="pill fx add"><span class="pill-kind">Supabase</span> ➕ Adding to Supabase · inserts a row into <code>notes</code></span>
+            <span>What actually happens in your Supabase project — Adding / Updating / Deleting / Reading from the <code>notes</code> table, or (muted) nothing leaves the device.</span>
+          </div>
+          <div class="legend-row">
+            <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>from("notes").upsert(note)</code></span>
+            <span>The exact <strong>supabase-kt SDK call</strong> that fires — the literal Kotlin you would find in <code>data/CloudApi.kt</code>.</span>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><div class="card-body">
+            <h4>The cloud</h4>
+            <p class="dense">Supabase = hosted Postgres + PostgREST. No built-in offline cache — which
+            is <em>why</em> we pair it with Room.</p>
+          </div></div>
+          <div class="card"><div class="card-body">
+            <h4>Your data</h4>
+            <p class="dense">Five columns in one table: <code>id</code>, <code>title</code>,
+            <code>body</code>, <code>updated_at</code>, <code>deleted</code>.</p>
+          </div></div>
+          <div class="card"><div class="card-body">
+            <h4>The gate</h4>
+            <p class="dense">The public <strong>anon key</strong> identifies the app; <strong>RLS
+            policies</strong> are what actually allow or deny each row operation.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== 2 · PREREQUISITES =============== -->
+    <section class="band anchor" id="prerequisites">
+      <div class="band-inner">
+        <p class="eyebrow">Before you start</p>
+        <h2>Prerequisites</h2>
+        <p>You can do everything here from a browser; the CLI route is optional.</p>
+        <ul class="kicker-list">
+          <li>A free <strong>Supabase account</strong> (<a href="https://supabase.com/dashboard">supabase.com/dashboard</a>). One free project is plenty.</li>
+          <li>This project opening and building in <strong>Android Studio</strong> (it already builds offline against the Fake).</li>
+          <li>A device/emulator with <strong>internet</strong> — the <code>INTERNET</code> permission is already declared in the manifest.</li>
+          <li><em>Optional:</em> the <strong>Supabase CLI</strong> (<code>npm i -g supabase</code> or <code>brew install supabase/tap/supabase</code>) if you prefer creating the table from your terminal instead of the dashboard.</li>
+          <li><em>Optional:</em> <strong>curl</strong> (pre-installed on macOS/Linux) for the REST sanity check in section 11.</li>
+        </ul>
+        <div class="callout warn">
+          <span class="callout-label">No setup? Still works.</span>
+          <p>If you skip this entire guide, the app still runs — <code>provideCloudApi(useFake = true)</code>
+          hands back the in-memory fake cloud. This guide is only needed to go <em>live</em>.</p>
+        </div>
+      </div>
+    </section>
+    <!-- =============== 3 · CREATE PROJECT + TABLE + RLS =============== -->
+    <section class="band anchor" id="create">
+      <div class="band-inner">
+        <p class="eyebrow">Set up the backend</p>
+        <h2>Create the project, the <code>notes</code> table, and its RLS policies</h2>
+        <p>There are two routes to the same result. Pick one. The <strong>dashboard</strong> route is
+        all clicks + one SQL paste; the <strong>CLI / Management</strong> route is reproducible from a
+        terminal. Either way you end up with: a project, a <code>notes</code> table whose columns
+        match <code>NoteDto</code>, and RLS policies that let the anon key read and write it.</p>
+
+        <h3>Route A — the dashboard</h3>
+        <ol class="kicker-list">
+          <li>Go to <a href="https://supabase.com/dashboard">supabase.com/dashboard</a> and click
+          <strong>New project</strong>. Give it a name, a database password (you will not need it for
+          this app), and a region close to you. Wait ~1 minute for it to provision.</li>
+          <li>Open the <strong>SQL Editor</strong> (left rail) and paste the SQL block below, then
+          <strong>Run</strong>. It creates the table and the four RLS policies in one shot.</li>
+          <li>Confirm in the <strong>Table Editor</strong> that a <code>notes</code> table now exists
+          with five columns.</li>
+        </ol>
+
+        <div class="callout">
+          <span class="callout-label">Why these exact column names?</span>
+          <p>The column names <strong>are the contract</strong> with the app. Four of them
+          (<code>id</code>, <code>title</code>, <code>body</code>, <code>deleted</code>) spell the same
+          in Kotlin and Postgres. The timestamp is the one mismatch: Postgres uses snake_case
+          <code>updated_at</code>, the Kotlin property is <code>updatedAt</code>. The
+          <code>@SerialName("updated_at")</code> annotation in <code>data/Note.kt</code> bridges that
+          one boundary — so the column <em>must</em> be named <code>updated_at</code> for the
+          <code>gt("updated_at", since)</code> filter and JSON decode to line up end-to-end.</p>
+        </div>
+
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">Supabase SQL Editor — create table + RLS (verbatim from the README)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="sql">create table public.notes (
+  id         text primary key,
+  title      text not null,
+  body       text not null default '',
+  updated_at bigint not null,
+  deleted    boolean not null default false
+);
+
+-- For a quick teaching demo, allow the public anon key to read/write this one table.
+-- (In production you would scope these policies to authenticated users.)
+alter table public.notes enable row level security;
+create policy "demo anon read"  on public.notes for select using (true);
+create policy "demo anon write" on public.notes for insert with check (true);
+create policy "demo anon update" on public.notes for update using (true) with check (true);
+create policy "demo anon delete" on public.notes for delete using (true);</pre>
+        </div>
+        <p class="sql-note">Note <code>updated_at</code> is a <code>bigint</code> — the app stores
+        epoch <em>milliseconds</em> (a Kotlin <code>Long</code>), not a Postgres
+        <code>timestamptz</code>. That keeps last-write-wins a single integer comparison on both
+        sides.</p>
+
+        <h3>Route B — the Supabase CLI / Management API</h3>
+        <p>Prefer your terminal? The same SQL can be applied through the CLI as a migration, or pushed
+        straight to a project. First log in and link (or create) a project:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal — supabase CLI</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash"># 1) authenticate the CLI against your Supabase account (opens a browser)
+supabase login
+
+# 2) link this folder to your project (grab the ref from the dashboard URL or `supabase projects list`)
+supabase link --project-ref &lt;your-project-ref&gt;
+
+# 3) start a migration that holds the create-table + RLS SQL above
+supabase migration new create_notes_table
+#    -> writes supabase/migrations/&lt;timestamp&gt;_create_notes_table.sql
+#    paste the SQL block from Route A into that file, then push it:
+supabase db push</pre>
+        </div>
+        <p>If you do not want a local migration folder, you can run the SQL directly against the
+        linked database, or hit the <strong>Management API</strong> query endpoint with your personal
+        access token (find tokens under <em>Account ▸ Access Tokens</em>):</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal — run SQL directly</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash"># Option 1: pipe the SQL file straight at the linked Postgres
+supabase db push   # (after `migration new`, as above)
+
+# Option 2: Management API — POST the SQL to the query endpoint
+curl -X POST "https://api.supabase.com/v1/projects/&lt;ref&gt;/database/query" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"create table public.notes ( id text primary key, title text not null, body text not null default '"'"''"'"', updated_at bigint not null, deleted boolean not null default false );"}'</pre>
+        </div>
+        <div class="callout warn">
+          <span class="callout-label">Don't forget the policies</span>
+          <p>Creating the table is not enough. With RLS <em>enabled</em> but <em>no policies</em>, every
+          request is denied (a 401/permission error). You must also run the four
+          <code>create policy …</code> statements (or the app will see "permission denied for table
+          notes"). See <a href="#troubleshooting">Troubleshooting</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== 4 · PROJECT URL + ANON KEY =============== -->
+    <section class="band anchor" id="config">
+      <div class="band-inner">
+        <p class="eyebrow">Set up the backend</p>
+        <h2>The two credentials: Project URL + anon key</h2>
+        <p>supabase-kt needs exactly two strings. Both live in the dashboard under
+        <strong>Project Settings ▸ Data API</strong> (older UIs label it just "API"):</p>
+
+        <table class="tbl">
+          <thead><tr><th style="width:26%">Value</th><th style="width:30%">Where</th><th style="width:44%">What it is / does</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>SUPABASE_URL</code></td>
+              <td>Project Settings ▸ Data API ▸ <strong>Project URL</strong></td>
+              <td>Looks like <code>https://&lt;ref&gt;.supabase.co</code>. Every HTTP call the client makes goes to this host.</td>
+            </tr>
+            <tr>
+              <td><code>SUPABASE_ANON_KEY</code></td>
+              <td>Project Settings ▸ Data API ▸ Project API keys ▸ <strong>anon / public</strong></td>
+              <td>A long JWT. It <em>identifies</em> the app as the anonymous role; it does <strong>not</strong> grant access on its own — RLS does. It is safe to ship in client code.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Put both into <code>local.properties</code> (the file is <strong>git-ignored</strong>, so the
+        keys never enter committed source). Add these two lines next to the existing
+        <code>sdk.dir</code>:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">local.properties — git-ignored, your two values here</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="properties">supabase.url=https://&lt;your-ref&gt;.supabase.co
+supabase.anonKey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...your-anon-key...</pre>
+        </div>
+
+        <p>Gradle reads <code>local.properties</code> at build time and surfaces the two values as
+        generated <code>BuildConfig</code> fields — so committed Kotlin reads
+        <code>BuildConfig.SUPABASE_URL</code> / <code>BuildConfig.SUPABASE_ANON_KEY</code>, never a
+        hard-coded literal. The wiring lives in <code>build.gradle.kts</code>: a tiny
+        <code>secret()</code> helper loads the file, and two <code>buildConfigField</code> lines (plus
+        <code>buildConfig = true</code>) emit the fields. Absent keys default to <code>""</code>.</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.gradle.kts — read local.properties → BuildConfig</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">import java.util.Properties        // at the VERY TOP of the file
+
+// after the plugins { } block — credentials live in local.properties (git-ignored).
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun secret(key: String): String = localProps.getProperty(key) ?: ""
+
+android {
+    buildFeatures { compose = true; buildConfig = true }   // buildConfig = true emits BuildConfig
+    defaultConfig {
+        buildConfigField("String", "SUPABASE_URL", "\"${'$'}{secret("supabase.url")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${'$'}{secret("supabase.anonKey")}\"")
+    }
+}</pre>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">Why shipping the anon key is fine</span>
+          <p>Unlike a service-role key, the anon key is <em>publishable</em>. The only thing it can do
+          is what your <strong>RLS policies</strong> permit for the anonymous role. The demo policies
+          above are wide open so the app works immediately; tighten them (e.g. scope to authenticated
+          users) before storing anything real. Keeping it in <code>local.properties</code> is about
+          not committing project-specific secrets to source control, not about RLS.</p>
+        </div>
+      </div>
+    </section>
+    <!-- =============== 5 · GRADLE DEPENDENCIES =============== -->
+    <section class="band anchor" id="deps">
+      <div class="band-inner">
+        <p class="eyebrow">Wire up the app</p>
+        <h2>The Gradle dependencies</h2>
+        <p>These are already in the project — this section explains <em>what each line buys you</em> so
+        nothing is magic. The cloud transport is three coordinated pieces: the <strong>supabase-kt</strong>
+        client, a <strong>Ktor</strong> HTTP engine it routes through, and
+        <strong>kotlinx.serialization</strong> for the JSON DTOs.</p>
+
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.gradle.kts — plugins</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)                 // Room's annotation processor
+    // kotlinx.serialization compiler plugin — lets @Serializable NoteDto encode to/from the JSON
+    // that supabase-kt sends to the Supabase (PostgREST) API.
+    alias(libs.plugins.kotlin.serialization)
+}</pre>
+        </div>
+
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">build.gradle.kts — the cloud transport dependencies</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// Cloud transport: Supabase (hosted Postgres) reached over Ktor + kotlinx.serialization.
+implementation(platform(libs.supabase.bom))         // one aligned set of supabase-* versions
+implementation(libs.supabase.postgrest)             // the Postgrest (table CRUD) module
+implementation(libs.ktor.client.okhttp)             // the HTTP engine supabase-kt routes through
+implementation(libs.kotlinx.serialization.json)     // (de)serialize NoteDto to/from JSON</pre>
+        </div>
+
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">gradle/libs.versions.toml — the versions + coordinates</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="toml"># supabase-kt = the Kotlin client for Supabase (our REAL cloud: a hosted Postgres database).
+# Pinned to the 3.2.x line because it is built against Kotlin 2.2 (matching `kotlin`).
+supabaseBom = "3.2.2"
+# Ktor is the HTTP engine supabase-kt talks through. 3.2.2 is the version supabase-kt 3.2.2 uses.
+ktor = "3.2.2"
+# kotlinx.serialization = JSON encode/decode for the cloud DTOs (@Serializable NoteDto).
+kotlinxSerialization = "1.9.0"
+
+# supabase-bom is a "platform" dependency; the supabase-* modules take their version from it.
+supabase-bom = { group = "io.github.jan-tennert.supabase", name = "bom", version.ref = "supabaseBom" }
+supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgrest-kt" }
+# A Ktor client ENGINE supabase-kt routes its HTTP through (OkHttp under the hood).
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }</pre>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><div class="card-head"><span class="card-title">The BoM</span></div><div class="card-body">
+            <p class="dense"><code>platform(libs.supabase.bom)</code> is a <strong>bill of materials</strong>:
+            a "platform" dependency that pins one aligned set of versions for every
+            <code>supabase-*</code> module. That is why <code>supabase.postgrest</code> below it needs
+            <em>no</em> version — it inherits <code>3.2.2</code> from the BoM, so the modules can never
+            drift out of sync.</p>
+          </div></div>
+          <div class="card"><div class="card-head"><span class="card-title">Why a Ktor engine?</span></div><div class="card-body">
+            <p class="dense">supabase-kt does <strong>not</strong> bundle its own HTTP engine — you
+            supply one. <code>ktor-client-okhttp</code> provides OkHttp under the hood. The engine is
+            <strong>discovered from the classpath automatically</strong>; you never wire it up in code.
+            Omit it and the client throws at runtime with "no engine found" (see Troubleshooting).</p>
+          </div></div>
+          <div class="card"><div class="card-head"><span class="card-title">serialization</span></div><div class="card-body">
+            <p class="dense">The compiler <em>plugin</em> generates encode/decode logic for
+            <code>@Serializable</code> classes at build time; the
+            <code>kotlinx-serialization-json</code> <em>runtime</em> is what supabase-kt's
+            <code>decodeList</code>/<code>decodeSingle</code> use to turn PostgREST's JSON into
+            <code>NoteDto</code>.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== 6 · INITIALISE THE CLIENT =============== -->
+    <section class="band anchor" id="init">
+      <div class="band-inner">
+        <p class="eyebrow">Wire up the app</p>
+        <h2>Initialise the client — line by line</h2>
+        <p>The entire connection is one expression in <code>SupabaseCloudApi</code>: build a single
+        shared client and install the Postgrest plugin onto it. The two credentials arrive as
+        constructor parameters that <strong>default to the generated <code>BuildConfig</code>
+        fields</strong> (which Gradle filled from <code>local.properties</code>) — so the class reads
+        no hard-coded literal:</p>
+
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/CloudApi.kt — SupabaseCloudApi (the init)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">import com.example.supabasesync.BuildConfig            // generated from local.properties
+
+class SupabaseCloudApi(
+    supabaseUrl: String = BuildConfig.SUPABASE_URL,    // Project URL — from local.properties
+    supabaseKey: String = BuildConfig.SUPABASE_ANON_KEY, // anon key  — from local.properties
+) : CloudApi {
+    private val client = createSupabaseClient(supabaseUrl, supabaseKey) {
+        install(Postgrest)                              // enable table CRUD (the PostgREST API)
+    }
+    // … pullSince() / push() …
+}</pre>
+        </div>
+
+        <div class="pills">
+          <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>createSupabaseClient(url, key) { … }</code></span>
+          <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>install(Postgrest)</code></span>
+        </div>
+
+        <ol class="kicker-list">
+          <li><code>BuildConfig.SUPABASE_URL</code> / <code>BuildConfig.SUPABASE_ANON_KEY</code> — the two
+          generated fields Gradle populated from <code>local.properties</code>. They are the constructor
+          defaults, so building <code>SupabaseCloudApi()</code> with no arguments uses your configured
+          keys without any literal in committed source.</li>
+          <li><code>createSupabaseClient(supabaseUrl, supabaseKey) { … }</code> — the factory that builds
+          the one shared client. <code>supabaseUrl</code> is your Project URL (every HTTP call goes
+          there); <code>supabaseKey</code> is the anon key (identifies the app — RLS is the real gate).
+          The trailing lambda is the config block.</li>
+          <li><code>install(Postgrest)</code> — registers the Postgrest plugin, the module that exposes
+          <code>from("tableName").select{}</code>, <code>.upsert()</code>, etc. <strong>Without this
+          line</strong>, a call like <code>client.from("notes")</code> throws at runtime.</li>
+          <li>The HTTP transport is implicit: supabase-kt finds the <code>ktor-client-okhttp</code>
+          engine on the classpath and sends requests through it. No engine code appears here.</li>
+        </ol>
+
+        <div class="callout">
+          <span class="callout-label">No network yet</span>
+          <p>Building the client and installing the plugin are <strong>local</strong> — no request is
+          sent. The first actual round trip happens when <code>sync()</code> calls
+          <code>from("notes").select{…}</code> or <code>.upsert(…)</code>. That is exactly why these
+          two pills are <em>API-call</em> pills with <strong>no cloud-effect pill</strong>: they touch
+          no rows.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== 7 · THE REAL/FAKE SWITCH =============== -->
+    <section class="band anchor" id="switch">
+      <div class="band-inner">
+        <p class="eyebrow">Wire up the app</p>
+        <h2>The switch is automatic: keys present → real Supabase</h2>
+        <p>One factory decides which cloud the app uses — and it <strong>auto-detects</strong>. There is
+        no flag to flip: <code>provideCloudApi</code> defaults <code>useFake</code> to "are the
+        <code>BuildConfig</code> keys blank?". Configure the keys in <code>local.properties</code> and
+        you get the real <code>SupabaseCloudApi</code>; leave them out and you get the offline
+        <code>FakeCloudApi</code>.</p>
+
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">data/CloudApi.kt — provideCloudApi (auto-detecting factory)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">private val fakeCloud: FakeCloudApi by lazy { FakeCloudApi() }
+
+// useFake defaults to "are the keys missing?" — keys present → real Supabase, else offline Fake.
+fun provideCloudApi(
+    useFake: Boolean = BuildConfig.SUPABASE_URL.isBlank() || BuildConfig.SUPABASE_ANON_KEY.isBlank(),
+): CloudApi =
+    if (useFake) fakeCloud else SupabaseCloudApi()</pre>
+        </div>
+
+        <p>The ViewModel and repository carry <strong>no</strong> switch — they just build the repository,
+        and the factory above decides:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">SupabaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// No flag here: provideCloudApi() auto-detects real vs Fake from the BuildConfig keys.
+private val repo = NoteRepository.get(app)</pre>
+        </div>
+
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">NoteRepository.kt — get(...) just calls the auto-detecting factory</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun get(context: Context): NoteRepository =
+    INSTANCE ?: synchronized(this) {
+        INSTANCE ?: NoteRepository(
+            dao = SupabaseSyncDatabase.getInstance(context).noteDao(),
+            cloud = provideCloudApi(),                   // ← auto: real if keys configured, else Fake
+        ).also { INSTANCE = it }
+    }</pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-label">It is a process singleton</span>
+          <p><code>NoteRepository.get(...)</code> caches the first instance it builds. If you add or remove
+          the keys in <code>local.properties</code>, rebuild (so <code>BuildConfig</code> regenerates) and
+          do a clean reinstall (or kill the process) so the new cloud is actually constructed — the cached
+          instance will otherwise keep the old one. The <code>SyncWorker</code> calls
+          <code>get(applicationContext)</code>, so it reuses whatever the UI built.</p>
+        </div>
+      </div>
+    </section>
+    <!-- =============== 8 · THE 5 OPERATION TRACES =============== -->
+    <section class="band anchor" id="operations">
+      <div class="band-inner">
+        <p class="eyebrow">What each call does</p>
+        <h2>The 5 operations, traced button → ViewModel → Repository → Supabase</h2>
+        <p>Each card below follows one user action all the way down, then ends in a highlighted
+        <strong>verdict</strong> stating exactly which Supabase API fires and what it does to your
+        table. Every verdict carries the two badges from the legend in section 1:</p>
+
+        <div class="pill-legend" aria-label="Badge legend (repeat)">
+          <div class="legend-row">
+            <span class="pill fx add"><span class="pill-kind">Supabase</span> ➕ Adding to Supabase</span>
+            <span>The <strong>row-level</strong> effect on your <code>notes</code> table: Adding / Updating / Deleting from / Reading from Supabase, or ∅ Not sent to Supabase — local only.</span>
+          </div>
+          <div class="legend-row">
+            <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API</span>
+            <span>The exact supabase-kt call from <code>data/CloudApi.kt</code> that produced that effect.</span>
+          </div>
+        </div>
+
+        <table class="tbl op-table">
+          <thead><tr>
+            <th class="op-col">Op</th>
+            <th class="tap-col">You tap</th>
+            <th class="path-col">Local path (Room first)</th>
+            <th class="api-col2">Supabase call</th>
+            <th class="effect-col">Cloud effect</th>
+          </tr></thead>
+          <tbody>
+            <tr><td><span class="tag green">ADD</span></td><td>"Add note"</td><td>dao.upsert(Note(UUID, PENDING))</td><td><code>from("notes").upsert(note){select()}</code></td><td>➕ Adding to Supabase</td></tr>
+            <tr><td><span class="tag blue">EDIT</span></td><td>"Save edit"</td><td>dao.upsert(copy(updatedAt, PENDING))</td><td><code>from("notes").upsert(note){select()}</code></td><td>✏️ Updating Supabase</td></tr>
+            <tr><td><span class="tag red">DELETE</span></td><td>"Delete"</td><td>dao.upsert(copy(deleted=true, PENDING))</td><td><code>from("notes").upsert(note){select()}</code></td><td>🗑️ Deleting from Supabase</td></tr>
+            <tr><td><span class="tag violet">SYNC</span></td><td>"Sync now"</td><td>dao.maxUpdatedAt() → cursor</td><td><code>from("notes").select{filter{gt(...)}}</code></td><td>⬇️ Reading from Supabase</td></tr>
+            <tr><td><span class="tag amber">READ</span></td><td>(just looking)</td><td>dao.observeVisibleNotes()</td><td><em>none</em></td><td>∅ Not sent to Supabase</td></tr>
+          </tbody>
+        </table>
+
+        <!-- =============== TRACE 1: ADD =============== -->
+        <div class="trace add">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag green">Add</span> Adding a note</span>
+            <span class="tag teal">Supabase: upsert() — INSERT</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: type a title/body and tap <strong>"Add note"</strong>.</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt · the "Add note" button</span>
+                  <div class="hop-what">With no <code>editingId</code>, the button routes to <code>vm.addNote(...)</code>.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">MainActivity.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">if (id == null) vm.addNote(title, body) else vm.editNote(id, title, body)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">SupabaseSyncViewModel.kt · addNote()</span>
+                  <div class="hop-what">Write to Room, then request a sync — that is the whole intent.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">SupabaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun addNote(title: String, body: String) = writeThenSync { repo.addNote(title, body) }</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · addNote() → ROOM ONLY</span>
+                  <div class="hop-what">A new <code>Note</code> with a client-generated UUID is written to Room as <code>PENDING</code>. <strong>No Supabase call yet.</strong>
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">dao.upsert(
+    Note(
+        id = UUID.randomUUID().toString(),          // identity before the server ever sees it
+        title = clean,
+        body = body.trim(),
+        updatedAt = System.currentTimeMillis(),
+        syncState = SyncState.PENDING,
+    )
+)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">4</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">SyncWorker.kt / requestSync() → NoteRepository.sync() — the PUSH loop</span>
+                  <div class="hop-what">For every still-<code>PENDING</code> row, the repository hands the DTO to the cloud; on success it re-saves the server copy as <code>SYNCED</code>.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt · sync()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">for (local in dao.notesToPush()) {
+    val serverCopy = cloud.push(local.toDto())  // may throw -&gt; bubble up to retry
+    if (local.deleted) dao.hardDelete(local.id)
+    else dao.upsert(serverCopy.toEntity(SyncState.SYNCED))
+}</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">5</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">CloudApi.kt · SupabaseCloudApi.push()</span>
+                  <div class="hop-what">The DTO reaches Supabase. <code>upsert</code> = <code>INSERT … ON CONFLICT (id) DO UPDATE</code>; this id is new, so it INSERTs.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">CloudApi.kt · push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">override suspend fun push(note: NoteDto): NoteDto =
+    client.from("notes").upsert(note) { select() }.decodeSingle&lt;NoteDto&gt;()</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="verdict add">
+              <span class="verdict-badge">➕</span>
+              <div>
+                <span class="verdict-label">Supabase API called</span>
+                <code>client.from("notes").upsert(note){select()}.decodeSingle&lt;NoteDto&gt;()</code> — the
+                row did not exist, so PostgREST runs <code>INSERT INTO notes …</code> and
+                <strong>creates a new row</strong> in your table. <code>{select()}</code> asks Postgres
+                to return the stored row so we can decode it.
+                <div class="pills">
+                  <span class="pill fx add"><span class="pill-kind">Supabase</span> ➕ Adding to Supabase · inserts a row into <code>notes</code> (new id)</span>
+                  <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>from("notes").upsert(note){select()}</code></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============== TRACE 2: EDIT =============== -->
+        <div class="trace edit">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag blue">Edit / Update</span> Editing a note</span>
+            <span class="tag teal">Supabase: upsert() — ON CONFLICT = UPDATE</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: tap a note card (the form pre-fills, <code>editingId</code> is set), change the text, then tap <strong>"Save edit"</strong>.</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt · NoteCard onEdit, then "Save edit"</span>
+                  <div class="hop-what">Tapping a card sets <code>editingId</code>; the same button now routes to <code>vm.editNote(id, …)</code>.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">MainActivity.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">onEdit = { title = note.title; body = note.body; editingId = note.id },
+// …then in the button:
+if (id == null) vm.addNote(title, body) else vm.editNote(id, title, body)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · editNote() → ROOM ONLY</span>
+                  <div class="hop-what">The existing row is copied with new text, a bumped <code>updatedAt</code>, and <code>PENDING</code> — keeping the <em>same id</em> so it maps to the same Postgres row.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val existing = dao.findById(id) ?: return
+dao.upsert(
+    existing.copy(
+        title = title.trim(),
+        body = body.trim(),
+        updatedAt = System.currentTimeMillis(),
+        syncState = SyncState.PENDING,
+    )
+)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">CloudApi.kt · push() — the SAME upsert as Add</span>
+                  <div class="hop-what">The row already exists with this <code>id</code>, so <code>ON CONFLICT (id) DO UPDATE</code> fires and the row is updated in place.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">CloudApi.kt · push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").upsert(note) { select() }.decodeSingle&lt;NoteDto&gt;()</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="verdict update">
+              <span class="verdict-badge">✏️</span>
+              <div>
+                <span class="verdict-label">Supabase API called</span>
+                <code>client.from("notes").upsert(note){select()}</code> — a row with this <code>id</code>
+                already exists, so <code>ON CONFLICT (id) DO UPDATE</code> <strong>updates the existing
+                row</strong>. (One <code>upsert</code> handles both create and edit.)
+                <div class="pills">
+                  <span class="pill fx update"><span class="pill-kind">Supabase</span> ✏️ Updating Supabase · updates the row in <code>notes</code></span>
+                  <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>from("notes").upsert(note){select()}</code></span>
+                </div>
+                <p class="sql-note">Unused alternative: <code>from("notes").update(mapOf("title" to x)){ filter { eq("id", id) } }</code> would update only some columns — this app does not use it.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- =============== TRACE 3: DELETE =============== -->
+        <div class="trace delete">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag red">Delete</span> Deleting a note</span>
+            <span class="tag teal">Supabase: upsert(deleted=true) — soft delete</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: tap <strong>"Delete"</strong> on a note card.</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt → SupabaseSyncViewModel.kt · deleteNote()</span>
+                  <div class="hop-what">Same write-then-sync shape as add/edit.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">SupabaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun deleteNote(id: String) = writeThenSync { repo.deleteNote(id) }</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · deleteNote() → ROOM ONLY (a tombstone)</span>
+                  <div class="hop-what">A delete is a <strong>soft delete</strong>: the row is copied with <code>deleted = true</code> and <code>PENDING</code>, so it can still be PUSHED while offline. <code>observeVisibleNotes()</code> hides it from the UI immediately.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val existing = dao.findById(id) ?: return
+dao.upsert(
+    existing.copy(
+        deleted = true,
+        updatedAt = System.currentTimeMillis(),
+        syncState = SyncState.PENDING,
+    )
+)</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">CloudApi.kt · push() — upsert with deleted=true</span>
+                  <div class="hop-what">The push loop sends the tombstone DTO through the <em>same</em> <code>upsert</code>; the row's <code>deleted</code> column is set to <code>true</code>. This does <strong>not</strong> call a Supabase delete.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">CloudApi.kt · push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").upsert(note) { select() }.decodeSingle&lt;NoteDto&gt;()
+//   note.deleted == true → the row's deleted column becomes true</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">4</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · sync() — THEN hard-delete locally</span>
+                  <div class="hop-what">Only after the cloud confirms the tombstone push does the local row get <code>hardDelete</code>d from Room.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt · sync()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">if (local.deleted) dao.hardDelete(local.id)   // tombstone confirmed -> remove locally</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="verdict delete">
+              <span class="verdict-badge">🪦</span>
+              <div>
+                <span class="verdict-label">Supabase API called</span>
+                <code>client.from("notes").upsert(note){select()}</code> with <code>note.deleted = true</code>
+                — this <strong>sets <code>deleted = true</code> on the row</strong> (a tombstone), it does
+                NOT remove it. The local row is then <code>hardDelete</code>d in Room.
+                <div class="pills">
+                  <span class="pill fx delete"><span class="pill-kind">Supabase</span> 🗑️ Deleting from Supabase · marks the row deleted (tombstone — soft delete)</span>
+                  <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>from("notes").upsert(note){select()}</code></span>
+                </div>
+                <p class="sql-note">Unused alternative: <code>from("notes").delete{ filter { eq("id", id) } }</code> would hard-delete the remote row — this app deliberately keeps tombstones instead so the delete replicates to other devices.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============== TRACE 4: SYNC =============== -->
+        <div class="trace sync">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag violet">Sync / Pull</span> Pulling remote changes</span>
+            <span class="tag teal">Supabase: select { filter { gt } } — SELECT</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: tap <strong>"Sync now"</strong> (also runs automatically after every write and from the background <code>SyncWorker</code>).</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">SupabaseSyncViewModel.kt · syncNow() → requestSync()</span>
+                  <div class="hop-what">Enqueue the worker, and if online, run <code>repo.sync()</code> now.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">SupabaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">fun syncNow() = requestSync()
+// requestSync(): enqueue SyncScheduler.requestSync(...) + runCatching { repo.sync() } when online</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteRepository.kt · sync() — compute the cursor, then PULL</span>
+                  <div class="hop-what">After pushing the outbox, the repository asks Room for the newest <code>updatedAt</code> it already has, and pulls everything newer.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteRepository.kt · sync()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val since = dao.maxUpdatedAt() ?: 0L
+for (remote in cloud.pullSince(since)) {
+    val local = dao.findById(remote.id)
+    if (shouldAcceptRemote(local, remote)) {        // last-write-wins
+        if (remote.deleted) dao.hardDelete(remote.id)
+        else dao.upsert(remote.toEntity(SyncState.SYNCED))
+    }
+}</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">CloudApi.kt · SupabaseCloudApi.pullSince()</span>
+                  <div class="hop-what">Maps to <code>SELECT * FROM notes WHERE updated_at &gt; since ORDER BY updated_at ASC</code>. The filter uses the snake_case column name <code>"updated_at"</code>.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">CloudApi.kt · pullSince()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">override suspend fun pullSince(since: Long): List&lt;NoteDto&gt; =
+    client.from("notes").select {
+        filter { gt("updated_at", since) }
+        order("updated_at", Order.ASCENDING)
+    }.decodeList&lt;NoteDto&gt;()</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="verdict read">
+              <span class="verdict-badge">⬇️</span>
+              <div>
+                <span class="verdict-label">Supabase API called</span>
+                <code>client.from("notes").select { filter { gt("updated_at", since) }; order(…) }.decodeList&lt;NoteDto&gt;()</code>
+                — a <strong>read</strong>: it <strong>SELECTS rows</strong> changed after the cursor.
+                Those rows are merged into Room via <code>shouldAcceptRemote</code> (last-write-wins).
+                This reads cloud data; it does not change it.
+                <div class="pills">
+                  <span class="pill fx read"><span class="pill-kind">Supabase</span> ⬇️ Reading from Supabase · selects rows newer than the cursor</span>
+                  <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>from("notes").select{filter{gt(…)}}.decodeList&lt;NoteDto&gt;()</code></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============== TRACE 5: READ =============== -->
+        <div class="trace read">
+          <div class="trace-head">
+            <span class="trace-title"><span class="tag amber">Read</span> Showing the list (offline-first)</span>
+            <span class="tag teal">Supabase: NONE — Room only</span>
+          </div>
+          <div class="trace-body">
+            <div class="trace-action">USER ACTION: just looking at the notes list. There is no button — the screen reads local state.</div>
+            <ol class="hops">
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">1</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">NoteDao.kt · observeVisibleNotes()</span>
+                  <div class="hop-what">A reactive Room <code>Flow</code> of visible (non-tombstoned) rows, newest first. This is the <strong>only</strong> source the list ever reads.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">NoteDao.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Query("SELECT * FROM notes WHERE deleted = 0 ORDER BY updatedAt DESC")
+fun observeVisibleNotes(): Flow&lt;List&lt;Note&gt;&gt;</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">2</span><span class="hop-line"></span></div>
+                <div class="hop-body">
+                  <span class="hop-where">SupabaseSyncViewModel.kt · notes StateFlow</span>
+                  <div class="hop-what">The Room Flow is turned into a <code>StateFlow</code> the UI can read synchronously.
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">SupabaseSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val notes: StateFlow&lt;List&lt;Note&gt;&gt; = repo.notes.stateIn(viewModelScope, started, emptyList())</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="hop">
+                <div class="hop-rail"><span class="hop-dot">3</span></div>
+                <div class="hop-body">
+                  <span class="hop-where">MainActivity.kt · Compose collects it</span>
+                  <div class="hop-what"><code>collectAsStateWithLifecycle()</code> draws the list. <strong>No network call anywhere on this path.</strong>
+                    <div class="code-panel">
+                      <div class="code-head"><span class="code-file">MainActivity.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">val notes by vm.notes.collectAsStateWithLifecycle()</pre>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <div class="verdict none">
+              <span class="verdict-badge">∅</span>
+              <div>
+                <span class="verdict-label">Supabase API called</span>
+                <strong>None.</strong> Reads are served entirely from Room (the single source of truth),
+                so the list renders instantly and works offline. New cloud rows only appear after a
+                <em>sync</em> writes them into Room (trace 4) — never by the list reading the cloud
+                directly.
+                <div class="pills">
+                  <span class="pill fx none"><span class="pill-kind">Supabase</span> ∅ Not sent to Supabase · the list is read from Room, nothing leaves the device</span>
+                  <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <em>none — Room Flow only</em></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- =============== 9 · APIS THIS APP USES =============== -->
+    <section class="band anchor" id="api-app">
+      <div class="band-inner">
+        <p class="eyebrow">The real code</p>
+        <h2>Every Supabase API this app uses</h2>
+        <p>The whole Supabase surface this app touches fits in the two methods of
+        <code>SupabaseCloudApi</code> plus the init. The frame to keep in your head:</p>
+        <div class="callout">
+          <span class="callout-label">The two operations</span>
+          <strong>push()</strong> = <code>from("notes").upsert(note){select()}.decodeSingle()</code>. &nbsp;·&nbsp;
+          <strong>pull()</strong> = <code>from("notes").select { filter { gt } ; order }.decodeList()</code>.
+        </div>
+        <p>Below is one block per API: the real snippet from <code>data/CloudApi.kt</code> (or
+        <code>Note.kt</code>), a plain explanation, an <strong>API-call</strong> pill, and — where the
+        call changes cloud data — a <strong>cloud-effect</strong> pill.</p>
+
+        <!-- createSupabaseClient -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">createSupabaseClient(url, key) { … } → SupabaseClient</span>
+            <span class="tag blue">init</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">private val client = createSupabaseClient(supabaseUrl, supabaseKey) {
+    install(Postgrest)
+}</pre>
+            </div>
+            <p>Builds the one shared <strong>SupabaseClient</strong> from your Project URL + anon key. No
+            network happens here — it is just a configured client object. The trailing lambda is where
+            you install plugins.</p>
+            <div class="pills">
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>createSupabaseClient(url, key){ … }</code></span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> first construct <code>SupabaseCloudApi()</code>
+            (i.e. when the Supabase keys are configured in <code>local.properties</code>, so
+            <code>provideCloudApi()</code> picks the real cloud). Once, not per request.</p>
+          </div>
+        </div>
+
+        <!-- install(Postgrest) -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">install(Postgrest)</span>
+            <span class="tag blue">init</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — inside the client config block</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">install(Postgrest)   // enable table CRUD (the PostgREST API)</pre>
+            </div>
+            <p>Registers the <strong>Postgrest plugin</strong> — the module that exposes
+            <code>from("table")</code>, <code>.select{}</code>, <code>.upsert()</code>, etc. Without it,
+            <code>client.from("notes")</code> throws at runtime.</p>
+            <div class="pills">
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>install(Postgrest)</code></span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> build the client (same moment as above). It is
+            what makes <em>every</em> later table call possible.</p>
+          </div>
+        </div>
+
+        <!-- from("notes") -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">client.from("notes") → PostgrestQueryBuilder</span>
+            <span class="tag blue">push &amp; pull (shared)</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes")   // a builder scoped to the "notes" table; no query sent yet</pre>
+            </div>
+            <p>Returns a <strong>PostgrestQueryBuilder</strong> scoped to the <code>notes</code> table.
+            <strong>No network call here</strong> — it is the root that <code>select</code> and
+            <code>upsert</code> hang off of.</p>
+            <div class="pills">
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>client.from("notes")</code></span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> add, edit, delete, <em>or</em> sync — every
+            <code>push()</code> and <code>pullSince()</code> starts from this reference.</p>
+          </div>
+        </div>
+
+        <!-- .select { filter { gt } ; order } -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">.select { filter { gt("updated_at", since) }; order(…) } → query</span>
+            <span class="tag violet">pullSince()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — pullSince()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").select {
+    filter { gt("updated_at", since) }              // WHERE updated_at &gt; :since
+    order("updated_at", Order.ASCENDING)            // ORDER BY updated_at ASC (oldest-first)
+}</pre>
+            </div>
+            <p>Adds a SELECT, then narrows it. <code>filter { gt("updated_at", since) }</code> appends
+            <code>WHERE updated_at &gt; :since</code> — note the snake_case <strong>column</strong> name,
+            not the Kotlin property. <code>order("updated_at", Order.ASCENDING)</code> sorts oldest-first
+            so the pull cursor stays correct even if the network drops mid-batch.</p>
+            <div class="pills">
+              <span class="pill fx read"><span class="pill-kind">Supabase</span> ⬇️ Reading from Supabase · selects matching rows from <code>notes</code></span>
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>from("notes").select{filter{gt(…)};order(…)}</code></span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> sync/pull (trace 4). Never on add/edit/delete.</p>
+          </div>
+        </div>
+
+        <!-- .decodeList<NoteDto>() -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">.decodeList&lt;NoteDto&gt;() → List&lt;NoteDto&gt;</span>
+            <span class="tag violet">pullSince()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — pullSince()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">    …
+    }.decodeList&lt;NoteDto&gt;()   // fire the GET, deserialize the JSON array into List&lt;NoteDto&gt;</pre>
+            </div>
+            <p>This is the moment the read query <strong>actually executes</strong> (fires the HTTP GET).
+            It receives PostgREST's JSON array and deserialises it into a <code>List&lt;NoteDto&gt;</code>
+            via kotlinx.serialization — which works because <code>NoteDto</code> is
+            <code>@Serializable</code> with the <code>@SerialName("updated_at")</code> mapping.</p>
+            <div class="pills">
+              <span class="pill fx read"><span class="pill-kind">Supabase</span> ⬇️ Reading from Supabase · selects matching rows (this is when the GET fires)</span>
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>.decodeList&lt;NoteDto&gt;()</code></span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> sync/pull — the execution step of <code>pullSince()</code>.</p>
+          </div>
+        </div>
+
+        <!-- .upsert(note){select()} -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">.upsert(note) { select() } → query</span>
+            <span class="tag teal">push()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").upsert(note) { select() }</pre>
+            </div>
+            <p>Sends the <code>NoteDto</code> as JSON and runs <code>INSERT INTO notes … ON CONFLICT (id)
+            DO UPDATE</code> — so it <strong>creates a new row OR updates the existing one</strong> with
+            the same <code>id</code>. The <code>{ select() }</code> option appends
+            <code>Prefer: return=representation</code>, telling Postgres to return the stored row in the
+            response body (without it the body would be empty and there would be nothing to decode).</p>
+            <div class="pills">
+              <span class="pill fx add"><span class="pill-kind">Supabase</span> ➕ Adding / ✏️ Updating Supabase · upsert = insert or update; returns the stored row</span>
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>from("notes").upsert(note){select()}</code></span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> add (creates), edit (updates), <em>or</em>
+            delete (upserts with <code>deleted=true</code>). All three push through this one call —
+            traces 1, 2, 3.</p>
+          </div>
+        </div>
+
+        <!-- .decodeSingle<NoteDto>() -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">.decodeSingle&lt;NoteDto&gt;() → NoteDto</span>
+            <span class="tag teal">push()</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/CloudApi.kt — push()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").upsert(note) { select() }.decodeSingle&lt;NoteDto&gt;()</pre>
+            </div>
+            <p>Executes the upsert (fires the write) and deserialises the single returned JSON row into
+            one <code>NoteDto</code> — the server's authoritative copy. This is the value the repository
+            re-saves into Room as <code>SYNCED</code>.</p>
+            <div class="pills">
+              <span class="pill fx update"><span class="pill-kind">Supabase</span> ➕ Adding / ✏️ Updating Supabase · upsert = insert or update; returns the stored row</span>
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>.decodeSingle&lt;NoteDto&gt;()</code></span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> add, edit, or delete — the execution step of <code>push()</code>.</p>
+          </div>
+        </div>
+
+        <!-- @Serializable + @SerialName -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">@Serializable + @SerialName("updated_at") (Note.kt)</span>
+            <span class="tag blue">the DTO contract</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">data/Note.kt</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Serializable
+data class NoteDto(
+    val id: String,
+    val title: String,
+    val body: String,
+    @SerialName("updated_at") val updatedAt: Long,  // bridges snake_case Postgres → camelCase Kotlin
+    val deleted: Boolean = false,
+)</pre>
+            </div>
+            <p><code>@Serializable</code> makes the compiler generate JSON encode/decode for the DTO —
+            without it <code>decodeList</code>/<code>decodeSingle</code> could not work.
+            <code>@SerialName("updated_at")</code> is the <strong>one place</strong> the snake_case
+            Postgres column maps to the camelCase Kotlin property; the Postgres column <em>must</em> be
+            named <code>updated_at</code> for it to line up.</p>
+            <div class="pills">
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · <code>@Serializable</code> / <code>@SerialName("updated_at")</code> (DTO mapping)</span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> push or pull — the (de)serialisation runs on every
+            <code>upsert</code>/<code>select</code> round trip. No cloud-effect pill: this is shaping, not a row change.</p>
+          </div>
+        </div>
+
+        <!-- the Ktor engine -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">The Ktor engine (ktor-client-okhttp)</span>
+            <span class="tag blue">transport</span>
+          </div>
+          <div class="card-body">
+            <div class="code-panel">
+              <div class="code-head"><span class="code-file">build.gradle.kts (no code call — classpath only)</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">implementation(libs.ktor.client.okhttp)   // discovered from the classpath automatically</pre>
+            </div>
+            <p>supabase-kt does not bundle an HTTP engine; it picks one off the classpath. This project
+            supplies <strong>OkHttp via Ktor</strong>. There is no Kotlin call to write — but every
+            <code>upsert</code>/<code>select</code> physically travels through this engine. Remove the
+            dependency and the client throws "no engine" at the first request.</p>
+            <div class="pills">
+              <span class="pill call"><span class="pill-kind">API&nbsp;call</span> 📞 Supabase API · (transport) all HTTP routes through the Ktor/OkHttp engine</span>
+            </div>
+            <p class="dense"><strong>Called when you…</strong> make any real request — it is the wire under push and pull.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- =============== 10 · THE REST OF THE TOOLBOX =============== -->
+    <section class="band anchor" id="api-more">
+      <div class="band-inner">
+        <p class="eyebrow">For context</p>
+        <h2>The rest of the Supabase toolbox</h2>
+        <div class="callout warn">
+          <span class="callout-label">Not used in this app</span>
+          <p>None of the calls below appear in SupabaseSync. They are here so you know what supabase-kt
+          can do <em>beyond</em> this app's two operations — handy when you extend it.</p>
+        </div>
+
+        <div class="grid2">
+          <div class="card"><div class="card-head"><span class="card-title">Realtime (live updates)</span><span class="tag amber">not in this app</span></div><div class="card-body">
+            <div class="code-panel"><div class="code-head"><span class="code-file">illustrative — Realtime</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">install(Realtime)
+val channel = client.channel("notes")
+channel.postgresChangeFlow&lt;PostgresAction&gt;(schema = "public") { table = "notes" }
+    .collect { /* push/insert/update/delete arrives instantly */ }</pre></div>
+            <p class="dense">Instead of our <em>polling</em> <code>pullSince</code>, Realtime streams row
+            changes over a WebSocket the moment they happen. This app deliberately polls so the whole
+            sync loop stays one simple push-then-pull.</p>
+          </div></div>
+
+          <div class="card"><div class="card-head"><span class="card-title">Hard remote delete</span><span class="tag amber">not in this app</span></div><div class="card-body">
+            <div class="code-panel"><div class="code-head"><span class="code-file">illustrative — delete</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").delete { filter { eq("id", id) } }</pre></div>
+            <p class="dense">Physically removes the row. This app keeps a <code>deleted=true</code>
+            tombstone via <code>upsert</code> instead, so the delete replicates to other devices on their
+            next pull.</p>
+          </div></div>
+
+          <div class="card"><div class="card-head"><span class="card-title">Partial update</span><span class="tag amber">not in this app</span></div><div class="card-body">
+            <div class="code-panel"><div class="code-head"><span class="code-file">illustrative — update</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").update(mapOf("title" to "New title")) {
+    filter { eq("id", id) }
+}</pre></div>
+            <p class="dense">Updates only named columns of matching rows. This app always sends the whole
+            row through <code>upsert</code>, which handles create and edit with one call.</p>
+          </div></div>
+
+          <div class="card"><div class="card-head"><span class="card-title">Pagination &amp; limits</span><span class="tag amber">not in this app</span></div><div class="card-body">
+            <div class="code-panel"><div class="code-head"><span class="code-file">illustrative — range / limit</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").select {
+    range(0, 49)     // rows 0..49 (Range header)
+    limit(50)        // or cap the count
+}</pre></div>
+            <p class="dense">For large tables you would page results. This app's notes set is small and
+            cursor-bounded, so it reads all rows newer than <code>since</code> in one go.</p>
+          </div></div>
+
+          <div class="card"><div class="card-head"><span class="card-title">Column projection</span><span class="tag amber">not in this app</span></div><div class="card-body">
+            <div class="code-panel"><div class="code-head"><span class="code-file">illustrative — Columns</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.from("notes").select(Columns.list("id", "title"))</pre></div>
+            <p class="dense">Fetch only some columns. This app needs the whole row to rebuild a
+            <code>NoteDto</code>, so it selects everything (the default <code>select { }</code>).</p>
+          </div></div>
+
+          <div class="card"><div class="card-head"><span class="card-title">RPC (Postgres functions)</span><span class="tag amber">not in this app</span></div><div class="card-body">
+            <div class="code-panel"><div class="code-head"><span class="code-file">illustrative — rpc</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">client.postgrest.rpc("my_function", mapOf("arg" to value))</pre></div>
+            <p class="dense">Calls a database function you defined in SQL. This app does all its logic in
+            Kotlin, so no server-side functions are involved.</p>
+          </div></div>
+
+          <div class="card"><div class="card-head"><span class="card-title">Auth (per-user RLS)</span><span class="tag amber">not in this app</span></div><div class="card-body">
+            <div class="code-panel"><div class="code-head"><span class="code-file">illustrative — Auth</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">install(Auth)
+client.auth.signInWith(Email) { email = "…"; password = "…" }
+// then RLS policies can scope rows to auth.uid()</pre></div>
+            <p class="dense">With Auth you would sign users in and tighten the RLS policies to each user's
+            own rows. This app uses the wide-open anon policies for a zero-login demo.</p>
+          </div></div>
+
+          <div class="card"><div class="card-head"><span class="card-title">Storage (files)</span><span class="tag amber">not in this app</span></div><div class="card-body">
+            <div class="code-panel"><div class="code-head"><span class="code-file">illustrative — Storage</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">install(Storage)
+client.storage.from("bucket").upload("path/file.png", bytes)</pre></div>
+            <p class="dense">For binary files (images, attachments). This app stores only text rows, so it
+            installs Postgrest and nothing else.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== 11 · RUN & VERIFY =============== -->
+    <section class="band anchor" id="run">
+      <div class="band-inner">
+        <p class="eyebrow">Run &amp; fix</p>
+        <h2>Run it, and verify the round trip</h2>
+        <p>With the switch flipped (section 7) and your two credentials in place (section 4), build and
+        install on a networked device:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash">JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+  ./gradlew :compileDebugKotlin     # type-check + Room KSP codegen
+./gradlew installDebug              # build &amp; install on a running device/emulator</pre>
+        </div>
+
+        <h3>What to watch in the app</h3>
+        <ul class="kicker-list">
+          <li>Add a note. Its badge starts <span class="tag amber">⏳ Pending</span>, then flips to
+          <span class="tag green">✓ Synced</span> once the push succeeds.</li>
+          <li>Open the <strong>Supabase Table Editor</strong> — the same row appears (and on a second
+          device after it syncs).</li>
+          <li>Toggle airplane mode: writes queue as <strong>Pending</strong> (the banner turns amber),
+          then drain to <strong>Synced</strong> when you reconnect.</li>
+          <li>Watch <strong>Logcat</strong> for OkHttp/Ktor request lines and any RLS/permission errors
+          if a write is rejected.</li>
+        </ul>
+
+        <h3>A REST sanity check (no app needed)</h3>
+        <p>You can hit the same PostgREST endpoint the app uses, straight from a terminal, to confirm the
+        table and policies are live. Use your Project URL + anon key:</p>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">terminal — curl the REST API</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="bash"># read rows (mirrors the app's pull). The anon key goes in BOTH headers.
+curl "https://&lt;your-ref&gt;.supabase.co/rest/v1/notes?select=*" \
+  -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+
+# insert a row (mirrors the app's push / upsert)
+curl -X POST "https://&lt;your-ref&gt;.supabase.co/rest/v1/notes" \
+  -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d '{"id":"curl-test","title":"hi","body":"from curl","updated_at":1,"deleted":false}'</pre>
+        </div>
+        <div class="callout good">
+          <span class="callout-label">Reading the result</span>
+          <p>A JSON array (even <code>[]</code>) means the URL, key, table, and RLS read policy are all
+          good. A <code>401</code>/permission message means the key or an RLS policy is the problem;
+          <code>relation "notes" does not exist</code> means the table was never created. The
+          <code>Prefer: return=representation</code> header is the curl equivalent of the app's
+          <code>{ select() }</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== 12 · TROUBLESHOOTING =============== -->
+    <section class="band anchor" id="troubleshooting">
+      <div class="band-inner">
+        <p class="eyebrow">Run &amp; fix</p>
+        <h2>Troubleshooting</h2>
+        <table class="tbl">
+          <thead><tr><th style="width:30%">Symptom</th><th style="width:34%">Likely cause</th><th style="width:36%">Fix</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>401</code> / "permission denied for table notes" / "new row violates row-level security policy"</td>
+              <td>RLS is enabled but the needed <strong>policy</strong> is missing (this is the #1 issue). Enabling RLS with no policy denies everything.</td>
+              <td>Run all four <code>create policy …</code> statements from section 3 (read <em>and</em> write/update/delete). Confirm under Authentication ▸ Policies.</td>
+            </tr>
+            <tr>
+              <td>Connection refused / DNS errors / <code>404</code> on every call</td>
+              <td>Wrong <strong>Project URL</strong> or <strong>anon key</strong>, or you used the service-role key.</td>
+              <td>Re-copy both from Project Settings ▸ Data API into the constants in <code>data/CloudApi.kt</code>. The URL is <code>https://&lt;ref&gt;.supabase.co</code>; the key is the <em>anon / public</em> one.</td>
+            </tr>
+            <tr>
+              <td><code>relation "public.notes" does not exist</code> / <code>404</code> for <code>/rest/v1/notes</code></td>
+              <td>The <strong>table was never created</strong> (or created in a different schema).</td>
+              <td>Run the create-table SQL from section 3 in the SQL Editor (or via the CLI migration). Verify it shows in the Table Editor under <code>public</code>.</td>
+            </tr>
+            <tr>
+              <td>Pulls return rows but <code>updatedAt</code> is always 0 / decode fails on the timestamp / writes never match on edit</td>
+              <td><strong>Column-name mismatch</strong>: the column is not named <code>updated_at</code>, or the <code>@SerialName("updated_at")</code> mapping was changed.</td>
+              <td>The Postgres column MUST be <code>updated_at</code> (snake_case) and the DTO MUST keep <code>@SerialName("updated_at")</code> on <code>updatedAt</code>. The <code>gt("updated_at", since)</code> filter uses the column name too.</td>
+            </tr>
+            <tr>
+              <td><code>IllegalStateException</code> "no engine" / "Failed to find HttpClientEngine" at the first request</td>
+              <td>The <strong>Ktor engine is missing</strong> from the classpath.</td>
+              <td>Keep <code>implementation(libs.ktor.client.okhttp)</code> in <code>build.gradle.kts</code>. supabase-kt does not bundle an engine; it discovers OkHttp from the classpath.</td>
+            </tr>
+            <tr>
+              <td>Notes stay <span class="tag amber">⏳ Pending</span> forever / show <span class="tag red">⚠ Failed</span></td>
+              <td>Every push is throwing (offline, RLS denial, or wrong creds), so <code>sync()</code> bubbles up and the <code>SyncWorker</code> keeps retrying.</td>
+              <td>Fix the underlying cause above (RLS, URL/key, engine). The local data is safe in Room the whole time; once a push succeeds the row flips to Synced.</td>
+            </tr>
+            <tr>
+              <td>Adding/removing keys in <code>local.properties</code> seems to have no effect</td>
+              <td><code>NoteRepository.get(...)</code> is a <strong>process singleton</strong> — the first cloud built is cached. (Also: stale <code>BuildConfig</code> if you didn't rebuild.)</td>
+              <td>Rebuild so <code>BuildConfig</code> regenerates, then do a clean reinstall (or kill the process) so the new cloud is constructed.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <span class="callout-label">Still stuck?</span>
+          <p>Run the <code>curl</code> read from section 11 first — it isolates whether the problem is in
+          your Supabase project (URL/key/table/RLS) or in the app. If curl works but the app does not,
+          the issue is on the app side (the switch, the engine dependency, or the
+          <code>@SerialName</code> mapping).</p>
+        </div>
+        <p class="foot">SupabaseSync · the Supabase-backed sibling of
+        <a href="../CloudSync">CloudSync</a> and <a href="../FirebaseSync">FirebaseSync</a>. See also
+        <a href="how-a-note-syncs.html">How a note syncs</a> for the offline-first data-flow story.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- theme toggle (persisted) ----------------
+  var root = document.documentElement;
+  var KEY = "storageshowcase-doc-theme";
+  function applyTheme(t) {
+    root.setAttribute("data-theme", t);
+    var label = t === "dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    var icon = t === "dark" ? "☀️" : "🌙";
+    var b = document.getElementById("themeToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("themeToggleTop"); if (bt) bt.textContent = icon;
+  }
+  var saved;
+  try { saved = localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  function toggle() {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  ["themeToggle", "themeToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggle);
+  });
+
+  // ---------------- mobile jump select ----------------
+  var jump = document.getElementById("jump");
+  if (jump) jump.addEventListener("change", function () {
+    var t = document.querySelector(jump.value);
+    if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- copy buttons ----------------
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var panel = btn.closest(".code-panel");
+      var pre = panel && panel.querySelector("pre");
+      if (!pre) return;
+      var text = pre.textContent;
+      var done = function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1300);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta); done();
+        } catch (e) {}
+      }
+    });
+  });
+
+  // ---------------- scrollspy ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var byId = {};
+  links.forEach(function (l) { byId[l.getAttribute("href").slice(1)] = l; });
+  var sections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove("active"); });
+          var active = byId[en.target.id];
+          if (active) active.classList.add("active");
+          var sel = document.getElementById("jump");
+          if (sel) sel.value = "#" + en.target.id;
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ---------------- Flow lab ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-flow-lab]"));
+    if (!labs.length) return;
+
+    function visibleNotes(notes) {
+      return notes.filter(function (n) { return !n.deleted; });
+    }
+    function clear(el) {
+      while (el && el.firstChild) el.removeChild(el.firstChild);
+    }
+    function addNoteRow(target, note, compact) {
+      var row = document.createElement("div");
+      row.className = "flow-row";
+      var title = document.createElement("strong");
+      title.textContent = note.title;
+      row.appendChild(title);
+      if (!compact) {
+        var id = document.createElement("code");
+        id.textContent = note.id;
+        row.appendChild(id);
+      }
+      var pill = document.createElement("span");
+      pill.className = "flow-pill " + (note.deleted ? "deleted" : note.syncState.toLowerCase());
+      pill.textContent = note.deleted ? "DELETED / PENDING" : note.syncState;
+      row.appendChild(pill);
+      var meta = document.createElement("div");
+      meta.className = "flow-meta";
+      var visibility = note.deleted ? "hidden from UI" : "visible to UI";
+      var source = note.source ? "source=" + note.source : "source=local";
+      meta.appendChild(document.createTextNode(visibility + " | " + source));
+      row.appendChild(meta);
+      target.appendChild(row);
+    }
+    function addEmpty(target, text) {
+      var empty = document.createElement("div");
+      empty.className = "flow-empty";
+      empty.textContent = text;
+      target.appendChild(empty);
+    }
+    function addStageNote(target, text) {
+      if (!text) return;
+      var note = document.createElement("div");
+      note.className = "flow-stage-note";
+      note.textContent = text;
+      target.appendChild(note);
+    }
+    function addBriefCard(target, label, value, codeLike) {
+      var card = document.createElement("div");
+      card.className = "flow-brief-card";
+      var labelEl = document.createElement("span");
+      labelEl.className = "flow-brief-label";
+      labelEl.textContent = label;
+      card.appendChild(labelEl);
+      var valueEl = document.createElement(codeLike ? "code" : "strong");
+      valueEl.textContent = value;
+      card.appendChild(valueEl);
+      target.appendChild(card);
+    }
+    function payloadFor(notes) {
+      return notes.map(function (n) {
+        return { id: n.id, title: n.title, syncState: n.syncState };
+      });
+    }
+    function renderLab(lab, state, event) {
+      var visible = visibleNotes(state.notes);
+      var summary = lab.querySelector("[data-flow-summary]");
+      var room = lab.querySelector("[data-flow-room]");
+      var emission = lab.querySelector("[data-flow-emission]");
+      var stateBox = lab.querySelector("[data-flow-state]");
+      var ui = lab.querySelector("[data-flow-ui]");
+      var explain = lab.querySelector("[data-flow-explain]");
+      var explainTitle = lab.querySelector("[data-flow-explain-title]");
+      var steps = lab.querySelector("[data-flow-steps]");
+      var log = lab.querySelector("[data-flow-log]");
+
+      clear(summary);
+      addBriefCard(summary, "Trigger", event.trigger, false);
+      addBriefCard(summary, "DAO / source", event.dao, true);
+      addBriefCard(summary, "Flow payload", visible.length + " visible row(s)", false);
+      addBriefCard(summary, "UI result", event.ui, false);
+
+      clear(room);
+      state.notes.forEach(function (note) { addNoteRow(room, note, false); });
+      if (!state.notes.length) addEmpty(room, "Room has no rows.");
+      addStageNote(room, event.roomNote);
+
+      clear(emission);
+      var burst = document.createElement("div");
+      burst.className = "flow-burst";
+      burst.textContent = "Emission #" + state.emission;
+      emission.appendChild(burst);
+      var query = document.createElement("code");
+      query.className = "flow-code";
+      query.textContent = "Query: SELECT * FROM notes WHERE deleted = 0 ORDER BY updatedAt DESC";
+      emission.appendChild(query);
+      var emitted = document.createElement("code");
+      emitted.className = "flow-code";
+      emitted.textContent = "Flow<List<Note>> emits: " + JSON.stringify(payloadFor(visible));
+      emission.appendChild(emitted);
+      addStageNote(emission, event.flowNote);
+
+      clear(stateBox);
+      var current = document.createElement("code");
+      current.className = "flow-code";
+      current.textContent = "StateFlow.value = " + JSON.stringify(payloadFor(visible));
+      stateBox.appendChild(current);
+      addStageNote(stateBox, event.stateNote || "StateFlow caches the latest emitted list so Compose can read a current value immediately.");
+
+      clear(ui);
+      if (!visible.length) addEmpty(ui, "No visible notes.");
+      visible.forEach(function (note) { addNoteRow(ui, note, true); });
+      addStageNote(ui, event.uiNote);
+
+      if (explainTitle) explainTitle.textContent = event.title || "What just happened";
+      clear(steps);
+      (event.steps || []).forEach(function (step) {
+        var li = document.createElement("li");
+        li.textContent = step;
+        steps.appendChild(li);
+      });
+      explain.textContent = event.reason;
+      clear(log);
+      state.log.slice(0, 5).forEach(function (item) {
+        var li = document.createElement("li");
+        li.textContent = item;
+        log.appendChild(li);
+      });
+      Array.prototype.slice.call(lab.querySelectorAll("[data-flow-stage]")).forEach(function (stage) {
+        stage.classList.add("active");
+      });
+    }
+    function initLab(lab) {
+      var state = { seq: 1, emission: 0, notes: [], log: [] };
+      function event(title, trigger, dao, ui, reason, steps, roomNote, flowNote, stateNote, uiNote) {
+        return {
+          title: title,
+          trigger: trigger,
+          dao: dao,
+          ui: ui,
+          reason: reason,
+          steps: steps,
+          roomNote: roomNote,
+          flowNote: flowNote,
+          stateNote: stateNote,
+          uiNote: uiNote
+        };
+      }
+      function reset(detail) {
+        state.seq = 1;
+        state.emission = 0;
+        state.log = [];
+        state.notes = [{ id: "seed-welcome", title: "Welcome note", syncState: "SYNCED", deleted: false, source: "seed" }];
+        emit(detail || event(
+          "Initial collection",
+          "Screen opens",
+          "observeVisibleNotes()",
+          "Welcome note is drawn",
+          "The screen starts collecting the Flow. Room runs the DAO query once and sends the current visible notes list.",
+          [
+            "Compose reaches the screen and the ViewModel starts collecting repo.notes.",
+            "Room runs observeVisibleNotes() against the local notes table.",
+            "The Flow emits the visible rows. Deleted rows would be filtered out here.",
+            "stateIn(...) stores that emission as StateFlow.value.",
+            "Compose reads the StateFlow value and draws the list."
+          ],
+          "Room already has one synced seed row.",
+          "The first emission happens because collection started.",
+          "StateFlow now holds the latest visible Room rows.",
+          "Compose draws exactly what StateFlow holds."
+        ));
+      }
+      function emit(detail, changed) {
+        var didChange = changed !== false;
+        if (didChange) state.emission += 1;
+        state.log.unshift((didChange ? "Emission #" + state.emission + ": " : "No new emission: ") + detail.title);
+        renderLab(lab, state, detail);
+      }
+      lab.querySelector("[data-flow-action='add']").addEventListener("click", function () {
+        state.seq += 1;
+        state.notes.unshift({ id: "local-" + state.seq, title: "Local note " + state.seq, syncState: "PENDING", deleted: false, source: "local" });
+        emit(event(
+          "Local insert",
+          "Add local note",
+          "dao.upsert(Note(... PENDING))",
+          "New note appears with PENDING badge",
+          "A local write changes Room first. The Flow reacts to the database change, so the screen updates before any cloud upload happens.",
+          [
+            "The ViewModel calls repo.addNote(...).",
+            "The Repository creates a Note with syncState = PENDING.",
+            "dao.upsert(note) writes the row into Room.",
+            "Room invalidates the observeVisibleNotes() query and emits the new visible list.",
+            "StateFlow stores that list and Compose redraws the note row with a Pending badge."
+          ],
+          "A new visible PENDING row was inserted at the top of the table.",
+          "The emitted list includes the new local row because deleted = false.",
+          "StateFlow.value is replaced with the newest emitted list.",
+          "The UI does not wait for the cloud. It draws the local row immediately."
+        ));
+      });
+      lab.querySelector("[data-flow-action='cloud']").addEventListener("click", function () {
+        state.seq += 1;
+        state.notes.unshift({ id: "cloud-" + state.seq, title: "Cloud note " + state.seq, syncState: "SYNCED", deleted: false, source: "cloud" });
+        emit(event(
+          "Cloud pull saved locally",
+          "Pull cloud note",
+          "dao.upsert(remote.toEntity(SYNCED))",
+          "Cloud note appears",
+          "The UI still does not read the cloud. Sync saves the cloud row into Room first, then the Room Flow emits and the screen redraws from local data.",
+          [
+            "Sync calls cloud.pullSince(cursor) and receives a NoteDto.",
+            "The Repository converts the DTO into a local Note with syncState = SYNCED.",
+            "dao.upsert(remoteNote) writes that cloud change into Room.",
+            "Room reruns observeVisibleNotes() and emits the new visible list.",
+            "StateFlow receives the list, then Compose redraws with the cloud note included."
+          ],
+          "A synced row from the cloud was inserted into the local Room table.",
+          "The Flow emits because Room changed, not because Compose asked the cloud directly.",
+          "StateFlow now holds the local list after the cloud row was saved.",
+          "Compose draws the cloud note only after it exists in Room."
+        ));
+      });
+      lab.querySelector("[data-flow-action='sync']").addEventListener("click", function () {
+        var pending = state.notes.filter(function (n) { return !n.deleted && n.syncState === "PENDING"; })[0];
+        if (!pending) {
+          emit(event(
+            "No pending note to mark synced",
+            "Mark pending Synced",
+            "notesToPush() finds nothing visible",
+            "Screen stays the same",
+            "No visible PENDING row was changed, so Room would not need to emit a new list. The lab keeps showing the latest StateFlow value.",
+            [
+              "The button looks for a visible row whose syncState is PENDING.",
+              "There is no matching row.",
+              "No dao.upsert(...) runs.",
+              "Because Room did not change, a real Flow would not emit a fresh value for this action.",
+              "The screen keeps drawing the current StateFlow.value."
+            ],
+            "No row changed in Room.",
+            "No new database invalidation happened.",
+            "StateFlow.value stays the same.",
+            "The UI stays stable because its state did not change."
+          ), false);
+          return;
+        }
+        pending.syncState = "SYNCED";
+        pending.source = "local uploaded";
+        emit(event(
+          "Pending row confirmed",
+          "Mark pending Synced",
+          "dao.upsert(serverCopy.toEntity(SYNCED))",
+          "Badge changes from PENDING to SYNCED",
+          "After upload succeeds, the Repository saves the server copy back into Room as SYNCED. That row update triggers a new Flow emission and the badge redraws.",
+          [
+            "sync() gets a pending row from notesToPush().",
+            "cloud.push(local.toDto()) succeeds.",
+            "The Repository saves the returned server copy as syncState = SYNCED.",
+            "Room notices the row changed and emits the visible list again.",
+            "Compose redraws the same note with a Synced badge."
+          ],
+          "One visible row changed from PENDING to SYNCED.",
+          "The emitted list still contains the same note, but its syncState changed.",
+          "StateFlow.value updates because one object in the list changed.",
+          "The visible row remains, but its badge changes to SYNCED."
+        ));
+      });
+      lab.querySelector("[data-flow-action='delete']").addEventListener("click", function () {
+        var first = visibleNotes(state.notes)[0];
+        if (!first) {
+          emit(event(
+            "No visible note to delete",
+            "Delete first note",
+            "observeVisibleNotes() has no visible rows",
+            "Screen stays empty",
+            "There is no visible row to update, so no delete tombstone is written. The current StateFlow value stays empty.",
+            [
+              "The button asks for the first note that is not deleted.",
+              "The visible list is empty.",
+              "No tombstone is created because there is no target row.",
+              "Room does not change, so the Flow does not emit for this action.",
+              "Compose keeps drawing the empty list."
+            ],
+            "No row changed in Room.",
+            "No new query result was produced.",
+            "StateFlow.value stays as the empty visible list.",
+            "The UI remains empty."
+          ), false);
+          return;
+        }
+        first.deleted = true;
+        first.syncState = "PENDING";
+        first.source = "local delete";
+        emit(event(
+          "Soft delete tombstone",
+          "Delete first note",
+          "dao.upsert(existing.copy(deleted = true, PENDING))",
+          "Deleted note disappears",
+          "Delete is not a hard delete yet. The row stays in Room as a hidden tombstone so sync can push the delete later, while observeVisibleNotes() filters it out of the UI list.",
+          [
+            "The Repository finds the visible row in Room.",
+            "It saves the same row with deleted = true and syncState = PENDING.",
+            "Room reruns observeVisibleNotes().",
+            "The query filters out deleted rows, so the emitted visible list no longer includes that note.",
+            "StateFlow updates and Compose redraws without the deleted note."
+          ],
+          "The row is still in Room, but deleted = true makes it a tombstone.",
+          "The emitted payload excludes the tombstone because the DAO query has WHERE deleted = 0.",
+          "StateFlow.value now holds the visible list after filtering.",
+          "The note disappears from the UI while the tombstone remains available for sync."
+        ));
+      });
+      lab.querySelector("[data-flow-action='reset']").addEventListener("click", function () {
+        reset(event(
+          "Reset and collect again",
+          "Reset",
+          "observeVisibleNotes()",
+          "Welcome note is drawn",
+          "Reset returns the lab to one local Room row and starts the collection story again.",
+          [
+            "The lab clears its simulated Room table.",
+            "It inserts the synced seed row again.",
+            "The screen collects observeVisibleNotes().",
+            "Room emits the visible rows.",
+            "StateFlow stores the emitted list and Compose draws it."
+          ],
+          "Room contains one synced seed row after reset.",
+          "The first visible list after reset is emitted.",
+          "StateFlow.value is the reset list.",
+          "Compose redraws the seed note."
+        ));
+      });
+      reset();
+    }
+    labs.forEach(initLab);
+  })();
+
+  // ---------------- sort-swap stepper ----------------
+  (function () {
+    var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
+    if (!steps.length) return;
+    var prev = document.getElementById("stepPrev");
+    var next = document.getElementById("stepNext");
+    var reset = document.getElementById("stepReset");
+    var count = document.getElementById("stepCount");
+    var i = 0;
+    function render() {
+      steps.forEach(function (s, idx) {
+        s.classList.toggle("active", idx === i);
+        s.classList.toggle("done", idx < i);
+      });
+      count.textContent = (i + 1) + " / " + steps.length;
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+    }
+    prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+    next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    if (reset) reset.addEventListener("click", function () { i = 0; render(); });
+    steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
+    render();
+  })();
+
+  // ---------------- lightweight syntax highlighter ----------------
+  var KW = {};
+  ("package import class object interface fun val var private public internal protected abstract " +
+   "override suspend return if else when for while is as in out by companion data enum sealed this " +
+   "super null true false const lateinit init get set open typealias vararg operator inline noinline " +
+   "crossinline reified where do try catch finally throw it").split(" ").forEach(function (k) { KW[k] = 1; });
+
+  function esc(s) {
+    return s.replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+  function isWord(c) { return c && /[A-Za-z0-9_]/.test(c); }
+
+  function highlight(code, lang) {
+    var out = "", i = 0, n = code.length;
+    var lineC = (lang === "toml" || lang === "bash" || lang === "properties") ? "#" : "//";
+    while (i < n) {
+      var c = code[i];
+      // block comment (kotlin/kts)
+      if ((lang === "kotlin" || lang === "kts") && c === "/" && code[i + 1] === "*") {
+        var j = code.indexOf("*/", i + 2); if (j < 0) j = n - 2;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j + 2)) + "</span>"; i = j + 2; continue;
+      }
+      // xml comment
+      if (lang === "xml" && code.slice(i, i + 4) === "<!--") {
+        var j2 = code.indexOf("-->", i + 4); if (j2 < 0) j2 = n - 3;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j2 + 3)) + "</span>"; i = j2 + 3; continue;
+      }
+      // line comment
+      if (lang !== "xml" && code.slice(i, i + lineC.length) === lineC) {
+        var j3 = code.indexOf("\n", i); if (j3 < 0) j3 = n;
+        out += '<span class="c-cmt">' + esc(code.slice(i, j3)) + "</span>"; i = j3; continue;
+      }
+      // double-quoted string
+      if (c === '"') {
+        var j4 = i + 1; while (j4 < n && !(code[j4] === '"' && code[j4 - 1] !== "\\")) j4++;
+        out += '<span class="c-str">' + esc(code.slice(i, j4 + 1)) + "</span>"; i = j4 + 1; continue;
+      }
+      // single-quoted string
+      if (c === "'") {
+        var j5 = i + 1; while (j5 < n && !(code[j5] === "'" && code[j5 - 1] !== "\\")) j5++;
+        out += '<span class="c-str">' + esc(code.slice(i, j5 + 1)) + "</span>"; i = j5 + 1; continue;
+      }
+      // annotation
+      if (c === "@" && isWord(code[i + 1])) {
+        var j6 = i + 1; while (j6 < n && isWord(code[j6])) j6++;
+        out += '<span class="c-ann">' + esc(code.slice(i, j6)) + "</span>"; i = j6; continue;
+      }
+      // xml tag name after < or </
+      if (lang === "xml" && c === "<") {
+        var j7 = i + 1; if (code[j7] === "/") j7++;
+        var k = j7; while (k < n && /[A-Za-z0-9_:.\-]/.test(code[k])) k++;
+        out += esc(code.slice(i, j7)) + '<span class="c-tag">' + esc(code.slice(j7, k)) + "</span>";
+        i = k; continue;
+      }
+      // word: keyword / number / plain
+      if (isWord(c)) {
+        var j8 = i; while (j8 < n && isWord(code[j8])) j8++;
+        var w = code.slice(i, j8);
+        if ((lang === "kotlin" || lang === "kts") && KW[w]) out += '<span class="c-kw">' + esc(w) + "</span>";
+        else if (/^[0-9]/.test(w)) out += '<span class="c-num">' + esc(w) + "</span>";
+        else out += esc(w);
+        i = j8; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  function lineConcepts(line) {
+    var concepts = [];
+    if (/dao\.upsert|@Insert|Room|Note\(|toEntity|syncState\s*=/.test(line)) concepts.push("room-write");
+    if (/cloud\.|CloudApi|Retrofit|pullSince|push\(|NoteDto|HTTP/.test(line)) concepts.push("cloud-call");
+    if (/Result\.retry|BackoffPolicy|WorkManager|NetworkType|enqueueUniqueWork|OneTimeWorkRequestBuilder|Constraints/.test(line)) concepts.push("retry");
+    if (/StateFlow|stateIn|collectAsStateWithLifecycle|viewModelScope|Flow<|observeVisibleNotes|observePendingCount|pendingCount|isOnline/.test(line)) concepts.push("ui-state");
+    if (/deleted|hardDelete|tombstone|DELETE FROM|SOFT delete|soft-delete/.test(line)) concepts.push("delete");
+    return concepts.join(" ");
+  }
+
+  document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
+    try {
+      var lang = pre.getAttribute("data-lang");
+      var code = pre.textContent;
+      pre.innerHTML = code.split("\n").map(function (line) {
+        return '<span class="code-line" data-concepts="' + lineConcepts(line) + '">' + highlight(line, lang) + "</span>";
+      }).join("\n");
+    } catch (e) { /* leave plain text on any error */ }
+  });
+
+  // ---------------- concept highlighter ----------------
+  (function () {
+    var buttons = Array.prototype.slice.call(document.querySelectorAll("[data-code-concept]"));
+    if (!buttons.length) return;
+    var note = document.querySelector("[data-code-note]");
+    var labels = {
+      "room-write": "Highlighted Room writes and local row saves.",
+      "cloud-call": "Highlighted cloud interface calls, DTOs, pushes, and pulls.",
+      "retry": "Highlighted WorkManager retry, constraints, and queueing logic.",
+      "ui-state": "Highlighted Flow, StateFlow, and ViewModel state lines.",
+      "delete": "Highlighted tombstones, hidden deletes, and final hard deletes."
+    };
+    function apply(concept) {
+      document.querySelectorAll(".code-line").forEach(function (line) {
+        var has = (" " + (line.getAttribute("data-concepts") || "") + " ").indexOf(" " + concept + " ") >= 0;
+        line.classList.toggle("concept-hit", concept !== "clear" && has);
+      });
+      buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-code-concept") === concept && concept !== "clear"); });
+      if (note) note.textContent = concept === "clear" ? "Pick a concept to highlight matching lines across the code blocks." : labels[concept];
+    }
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () { apply(button.getAttribute("data-code-concept")); });
+    });
+  })();
+
+  // ---------------- timeline ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-sync-timeline]"));
+    labs.forEach(function (lab) {
+      var steps = Array.prototype.slice.call(lab.querySelectorAll("[data-timeline-step]"));
+      var prev = lab.querySelector("[data-timeline-prev]");
+      var next = lab.querySelector("[data-timeline-next]");
+      var reset = lab.querySelector("[data-timeline-reset]");
+      var count = lab.querySelector("[data-timeline-count]");
+      var explain = lab.querySelector("[data-timeline-explain]");
+      var i = 0;
+      function render() {
+        steps.forEach(function (step, idx) {
+          step.classList.toggle("active", idx === i);
+          step.classList.toggle("done", idx < i);
+        });
+        if (count) count.textContent = (i + 1) + " / " + steps.length;
+        if (explain) explain.textContent = steps[i].getAttribute("data-explain") || "";
+        if (prev) prev.disabled = i === 0;
+        if (next) next.disabled = i === steps.length - 1;
+      }
+      if (prev) prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+      if (next) next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+      if (reset) reset.addEventListener("click", function () { i = 0; render(); });
+      steps.forEach(function (step, idx) { step.addEventListener("click", function () { i = idx; render(); }); });
+      render();
+    });
+  })();
+
+  // ---------------- what breaks lab ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-break-lab]"));
+    var answers = {
+      "cloud-ui": "The UI would fail or stall when offline, because the screen would be waiting on the network instead of reading Room. The fix is: UI reads Room only.",
+      "hard-delete": "The app would forget that a delete happened while offline. There would be no row left to upload as a delete request. The fix is: save a tombstone until the cloud confirms it.",
+      "server-id": "An offline-created note would have no stable id yet. The user could not safely edit, delete, or upload the exact row later. The fix is: create a UUID on the device.",
+      "pull-first": "A cloud copy could arrive before local pending work is uploaded. That raises the chance of replacing local offline work. The fix is: push waiting local rows first, then pull newer cloud rows."
+    };
+    labs.forEach(function (lab) {
+      var out = lab.querySelector("[data-break-output]");
+      var buttons = Array.prototype.slice.call(lab.querySelectorAll("[data-break-case]"));
+      function show(key) {
+        buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-break-case") === key); });
+        if (out) out.textContent = answers[key] || "";
+      }
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () { show(button.getAttribute("data-break-case")); });
+      });
+      if (buttons[0]) show(buttons[0].getAttribute("data-break-case"));
+    });
+  })();
+
+  // ---------------- symptom debugger ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-debug-lab]"));
+    var answers = {
+      "pending-stuck": "Likely layer: SyncWorker, WorkManager constraint, or CloudApi. Check whether the job is allowed to run online, whether cloud.push() fails, and whether the Repository writes the server copy back as SYNCED.",
+      "remote-missing": "Likely layer: pull path. Check dao.maxUpdatedAt(), cloud.pullSince(...), shouldAcceptRemote(...), and whether pulled rows are upserted into Room.",
+      "delete-returns": "Likely layer: tombstone handling. Check that delete sets deleted = true and PENDING, pushes that tombstone, then hard-deletes only after cloud confirmation.",
+      "duplicate-sync": "Likely layer: SyncScheduler. Check enqueueUniqueWork(...) and the existing-work policy so repeated button taps do not create many independent sync jobs.",
+      "ui-stale": "Likely layer: Flow to StateFlow to Compose. Check observeVisibleNotes(), stateIn(...), and collectAsStateWithLifecycle() so Room changes reach the screen."
+    };
+    labs.forEach(function (lab) {
+      var out = lab.querySelector("[data-debug-output]");
+      var buttons = Array.prototype.slice.call(lab.querySelectorAll("[data-debug-case]"));
+      function show(key) {
+        buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-debug-case") === key); });
+        if (out) out.textContent = answers[key] || "";
+      }
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () { show(button.getAttribute("data-debug-case")); });
+      });
+      if (buttons[0]) show(buttons[0].getAttribute("data-debug-case"));
+    });
+  })();
+
+  // ---------------- mastery checklist ----------------
+  (function () {
+    var trackers = Array.prototype.slice.call(document.querySelectorAll("[data-mastery-tracker]"));
+    trackers.forEach(function (tracker) {
+      var key = tracker.getAttribute("data-mastery-key") || "supabasesync-mastery";
+      var checks = Array.prototype.slice.call(tracker.querySelectorAll("[data-mastery-item]"));
+      var fill = tracker.querySelector("[data-mastery-fill]");
+      var count = tracker.querySelector("[data-mastery-count]");
+      var reset = tracker.querySelector("[data-mastery-reset]");
+      function read() {
+        try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; }
+      }
+      function write(values) {
+        try { localStorage.setItem(key, JSON.stringify(values)); } catch (e) {}
+      }
+      function render() {
+        var done = checks.filter(function (c) { return c.checked; }).length;
+        var total = checks.length || 1;
+        if (fill) fill.style.width = Math.round(done / total * 100) + "%";
+        if (count) count.textContent = done + " / " + checks.length;
+        write(checks.map(function (c) { return c.checked; }));
+      }
+      read().forEach(function (value, idx) { if (checks[idx]) checks[idx].checked = !!value; });
+      checks.forEach(function (check) { check.addEventListener("change", render); });
+      if (reset) reset.addEventListener("click", function () { checks.forEach(function (c) { c.checked = false; }); render(); });
+      render();
+    });
+  })();
+
+  // ---------------- worksheet clear ----------------
+  document.querySelectorAll("[data-worksheet-clear]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var box = button.closest(".worksheet");
+      if (!box) return;
+      box.querySelectorAll("textarea").forEach(function (area) { area.value = ""; });
+    });
+  });
+
+  // ---------------- worksheet copy ----------------
+  document.querySelectorAll("[data-worksheet-copy]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var box = button.closest(".worksheet");
+      if (!box) return;
+      var lines = Array.prototype.slice.call(box.querySelectorAll(".worksheet-item")).map(function (item) {
+        var label = item.querySelector("label");
+        var area = item.querySelector("textarea");
+        return (label ? label.textContent.trim() : "Prompt") + "\n" + ((area && area.value.trim()) || "[blank]");
+      });
+      var text = "SupabaseSync worksheet answers\n\n" + lines.join("\n\n");
+      var status = box.querySelector("[data-worksheet-status]");
+      function done(ok) {
+        if (status) status.textContent = ok ? "Answers copied." : "Copy unavailable; select and copy the text manually.";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      } else {
+        done(false);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

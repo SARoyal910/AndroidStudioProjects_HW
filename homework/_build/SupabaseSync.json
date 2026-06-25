@@ -1,0 +1,98 @@
+{
+  "name": "SupabaseSync",
+  "tagline": "The CloudSync offline-first app with a REAL cloud database: Supabase (hosted Postgres). Same Room-backed architecture; only the CloudApi implementation changed.",
+  "whatItDoes": "The same single-screen notes app as CloudSync — add/edit/delete with per-row sync badges and an online/offline + pending banner, all driven by the local Room database — but the real cloud is now Supabase, i.e. hosted Postgres reached through its auto-generated REST API. Push is an upsert into a 'notes' table; pull is a filtered, ordered select on the updated_at column. By default it runs offline against the in-memory FakeCloudApi, so it builds, runs, and unit-tests with no Supabase project; create the table, add your project URL + anon key to local.properties (git-ignored), and the app syncs against real Postgres automatically — no source edit, no flag to flip.",
+  "mentalModel": "Keep CloudSync's mental model exactly — the UI reads only local Room, a background worker reconciles with the cloud — and notice that swapping the cloud is a ONE-CLASS change. Here the cloud is a Postgres TABLE, so the two operations map straight onto SQL: pull is SELECT ... WHERE updated_at > cursor, push is INSERT ... ON CONFLICT DO UPDATE (an upsert).",
+  "domain": "notes",
+  "estTime": "15-20 min",
+  "screens": [
+    { "name": "SupabaseSyncApp", "role": "The whole screen (identical to CloudSync): add/edit form, Sync now + Simulate remote edit, the online/offline + pending banner, and the notes list. Reads Room-backed StateFlows only." },
+    { "name": "SyncStatusBar", "role": "Green (Online) / amber (Offline — changes queued) banner with the not-yet-synced count." },
+    { "name": "NoteCard", "role": "One note row with a colour-coded sync badge; tap to edit, button to delete." },
+    { "name": "SyncBadge", "role": "Per-row ✓ Synced / ⏳ Pending / ⚠ Failed, from the row's SyncState." }
+  ],
+  "concepts": [
+    { "term": "Supabase = hosted Postgres", "plain": "Supabase wraps a real Postgres database with an auto-generated REST API (PostgREST). supabase-kt turns that into typed Kotlin calls against a table — here a 'notes' table whose columns mirror NoteDto." },
+    { "term": "push = upsert", "plain": "push(note) does from(\"notes\").upsert(note) { select() }.decodeSingle(). upsert is INSERT, or UPDATE if a row with this primary key already exists; the trailing select() asks Postgres to RETURN the stored row, which we decode as the server copy." },
+    { "term": "pull = a filtered select", "plain": "pullSince(since) does from(\"notes\").select { filter { gt(\"updated_at\", since) }; order(\"updated_at\", ASCENDING) }.decodeList() — only rows changed after the cursor, oldest first, decoded straight into NoteDto." },
+    { "term": "@SerialName bridges the column boundary", "plain": "Postgres columns are conventionally snake_case but Kotlin properties are camelCase, so NoteDto maps updatedAt to the column with @SerialName(\"updated_at\"). The other names (id/title/body/deleted) match directly. supabase-kt uses kotlinx.serialization, so NoteDto stays @Serializable." },
+    { "term": "Building the SupabaseClient", "plain": "createSupabaseClient(url, anonKey) { install(Postgrest) } builds one client; the url + anonKey come from BuildConfig.SUPABASE_URL / SUPABASE_ANON_KEY, which build.gradle.kts feeds in from local.properties (git-ignored). supabase-kt sends HTTP through the Ktor engine (ktor-client-okhttp) on the classpath. No local cache — that is exactly why we keep Room as the offline source of truth." },
+    { "term": "Row Level Security (RLS)", "plain": "Postgres enforces access with RLS policies. For the demo you enable RLS on 'notes' and add open policies so the public anon key can read/write; in production you would scope those policies to authenticated users." },
+    { "term": "Credentials via local.properties → BuildConfig", "plain": "Keys never live in committed source: build.gradle.kts reads supabase.url / supabase.anonKey from local.properties (git-ignored) into BuildConfig.SUPABASE_URL / SUPABASE_ANON_KEY, and provideCloudApi auto-uses real Supabase when both are present, the offline Fake when blank — so there is no flag to flip and nothing to paste into CloudApi.kt." },
+    { "term": "One-class swap from CloudSync", "plain": "Compared to CloudSync, only CloudApi.kt's real implementation, NoteDto's @SerialName, and the build dependencies changed. The entity, DAO, repository, SyncWorker, SyncScheduler, ViewModel, UI, and unit tests are identical — the payoff of hiding the backend behind an interface." }
+  ],
+  "files": [
+    { "path": "SupabaseSync/src/main/java/com/example/supabasesync/data/CloudApi.kt", "role": "The CloudApi interface + SupabaseCloudApi (the REAL cloud, reading BuildConfig) + the offline FakeCloudApi + provideCloudApi (auto-selects real vs Fake)." },
+    { "path": "SupabaseSync/src/main/java/com/example/supabasesync/data/Note.kt", "role": "@Entity Note + @Serializable NoteDto with @SerialName(\"updated_at\") + mappers + SyncState." },
+    { "path": "SupabaseSync/src/main/java/com/example/supabasesync/data/NoteRepository.kt", "role": "Optimistic writes, sync() push→pull, and the pure shouldAcceptRemote last-write-wins rule (unchanged from CloudSync)." },
+    { "path": "SupabaseSync/src/main/java/com/example/supabasesync/sync/SyncScheduler.kt", "role": "Enqueues the SyncWorker with a NetworkType.CONNECTED constraint + backoff (unchanged)." },
+    { "path": "SupabaseSync/build.gradle.kts", "role": "Reads local.properties → BuildConfig.SUPABASE_* (buildConfig = true); adds the supabase-kt BoM + postgrest-kt + a Ktor engine + kotlinx-serialization-json; drops Retrofit/OkHttp." }
+  ],
+  "highlights": [
+    {
+      "title": "Sync bookkeeping: the entity + a column-mapped DTO",
+      "file": "SupabaseSync/src/main/java/com/example/supabasesync/data/Note.kt",
+      "start": 43,
+      "end": 85,
+      "explain": "The @Entity Note is unchanged from CloudSync (client id, updatedAt clock, syncState, deleted tombstone). NoteDto stays @Serializable (supabase-kt speaks JSON) but adds @SerialName(\"updated_at\") so the camelCase Kotlin property maps to the snake_case Postgres column — the single place that naming boundary is bridged."
+    },
+    {
+      "title": "The same tiny cloud interface CloudSync used",
+      "file": "SupabaseSync/src/main/java/com/example/supabasesync/data/CloudApi.kt",
+      "start": 27,
+      "end": 38,
+      "explain": "Identical to CloudSync: pullSince(cursor) + push(note). Everything above the data layer depends only on this, which is why moving from a Retrofit stub to real Supabase changes nothing else in the app."
+    },
+    {
+      "title": "The REAL cloud — Supabase (Postgres)",
+      "file": "SupabaseSync/src/main/java/com/example/supabasesync/data/CloudApi.kt",
+      "start": 73,
+      "end": 144,
+      "explain": "This is the whole 'cloud is now defined' change. createSupabaseClient(url, anonKey) { install(Postgrest) } builds the client (url/key from BuildConfig, fed from local.properties). pullSince() is from(\"notes\").select { filter { gt(\"updated_at\", since) }; order(...) } decoded to a List<NoteDto>; push() is from(\"notes\").upsert(note) { select() } decoded to one NoteDto. Those map directly onto SELECT ... WHERE and INSERT ... ON CONFLICT DO UPDATE. The repository, worker, and UI never see any of this."
+    },
+    {
+      "title": "Optimistic local writes (Room first, marked PENDING)",
+      "file": "SupabaseSync/src/main/java/com/example/supabasesync/data/NoteRepository.kt",
+      "start": 38,
+      "end": 52,
+      "explain": "Unchanged from CloudSync: addNote writes to Room immediately with a fresh UUID and PENDING — no network here. The Supabase upsert happens later in the background worker, so a new note shows instantly whether or not Supabase is reachable."
+    },
+    {
+      "title": "sync(): push the outbox, then pull remote changes",
+      "file": "SupabaseSync/src/main/java/com/example/supabasesync/data/NoteRepository.kt",
+      "start": 84,
+      "end": 109,
+      "explain": "Identical engine: upsert every PENDING row (FAILED + rethrow on error so the worker retries), then select rows newer than MAX(updatedAt) and merge each through shouldAcceptRemote. The only thing that changed since CloudSync is what cloud.push / cloud.pullSince do under the hood."
+    },
+    {
+      "title": "Last-write-wins, as a pure function",
+      "file": "SupabaseSync/src/main/java/com/example/supabasesync/data/NoteRepository.kt",
+      "start": 18,
+      "end": 27,
+      "explain": "The same pure conflict rule, unit-tested with no Supabase: accept a remote row only if we have no local copy or ours is SYNCED and not newer; a still-PENDING local edit wins until it is pushed."
+    },
+    {
+      "title": "Why offline 'just queues': the network constraint",
+      "file": "SupabaseSync/src/main/java/com/example/supabasesync/sync/SyncScheduler.kt",
+      "start": 22,
+      "end": 40,
+      "explain": "Unchanged: the NetworkType.CONNECTED constraint defers the sync until there is a connection, APPEND_OR_REPLACE keeps a write made mid-sync, and backoff handles transient Supabase/network errors. Offline-first behaviour is identical regardless of which real backend is plugged in."
+    }
+  ],
+  "newVsPrev": "FirebaseSync wired a real cloud as a document store (Firestore). SupabaseSync plugs the SAME CloudApi seam into a relational one: Supabase = hosted Postgres via supabase-kt, where push is an upsert and pull is a filtered select, and NoteDto gains @SerialName(\"updated_at\") to bridge camelCase to the snake_case column. The contrast is the lesson: Firestore bundles its own offline cache, Supabase brings none — which is exactly why both lean on Room as the local source of truth. Same architecture, two real backends, two SDK idioms.",
+  "tryThis": [
+    "Run it as-is (offline): identical to CloudSync/FirebaseSync — notes go Pending then Synced against the in-memory fake, with no Supabase setup.",
+    "Create a Supabase project, run the create-table SQL from the README (with the demo RLS policies), and add supabase.url + supabase.anonKey to local.properties (git-ignored). Rebuild and run on a networked device — provideCloudApi auto-detects the keys (no source edit, no flag).",
+    "With real Supabase, add a note and watch the row appear in the Supabase Table Editor (id == the note's UUID, updated_at == the millis clock).",
+    "Insert a row directly in the Table Editor with a larger updated_at and watch the app PULL it in on the next sync.",
+    "Open Note.kt and change a column name in the SQL without updating the matching @SerialName — observe the decode break, proving where the Kotlin↔Postgres name boundary lives."
+  ],
+  "gotchas": [
+    "Runs OFFLINE until you create the table and add your URL + anon key to local.properties (supabase.url / supabase.anonKey); then build.gradle.kts feeds them into BuildConfig and provideCloudApi auto-detects them. There is no flag to flip and nothing to paste into source.",
+    "You must create the 'notes' table first (SQL in the README). Column names are snake_case (updated_at) — that is why NoteDto uses @SerialName(\"updated_at\").",
+    "Access is governed by Row Level Security. The README's demo policies are wide open so the anon key works; tighten them before storing anything real (the anon key is publishable, but only as safe as your policies).",
+    "supabase-kt is pinned to 3.2.2 (built against Kotlin 2.2, matching this repo). Newer 3.x releases target Kotlin 2.3 and can clash with the 2.2.10 compiler — bump deliberately.",
+    "supabase-kt needs a Ktor engine on the classpath (ktor-client-okhttp here); without one the client cannot make HTTP calls."
+  ],
+  "runTest": "Offline by default, so it builds and unit-tests with no Supabase project: ./gradlew :compileDebugKotlin, then ./gradlew :testDebugUnitTest (the last-write-wins rule, the SyncState converter, and the fake-cloud round trip — none need a network), then ./gradlew installDebug. To go live, create the notes table (README SQL), add your URL + anon key to local.properties (supabase.url / supabase.anonKey), and run on a networked device — the app auto-detects them via BuildConfig."
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Upsert = INSERT ON CONFLICT</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Supabase', sim: 'sync', flavor: 'supabase',
+  id: 'supa-03', title: 'Lab · Upsert = INSERT … ON CONFLICT', level: 'Intermediate',
+  goal: 'One push handles BOTH create and edit. upsert() maps to INSERT … ON CONFLICT (id) DO UPDATE — and you ask Postgres to return the stored row.',
+  steps: [
+    'Call <code>client.from("notes").upsert(note)</code> — insert a new row, or update the existing one with the same <code>id</code>.',
+    'Pass <code>{ select() }</code> so PostgREST returns the stored row (<code>Prefer: return=representation</code>).',
+    'Finish with <code>.decodeSingle&lt;NoteDto&gt;()</code> to read back the server’s authoritative copy.',
+  ],
+  hints: [
+    'Because the id is the primary key, the same call creates a brand-new note OR overwrites an edited one.',
+    'Without <code>{ select() }</code> the response body is empty and there is nothing to decode.',
+    'Run <b>Go online</b> — push is what flips your PENDING rows to SYNCED in the cloud.',
+  ],
+  scenarios: [ {id:'goOnline',label:'Go online & sync'}, {id:'editOffline',label:'Edit offline'} ],
+  starter:
+'// push = INSERT INTO notes (...) VALUES (...) ON CONFLICT (id) DO UPDATE\n' +
+'// One call handles BOTH "create a new note" and "edit an existing one".\n' +
+'override suspend fun push(note: NoteDto): NoteDto =\n' +
+'    TODO("upsert the row, ask Postgres to return it, then decode that one row")\n',
+  solution:
+'override suspend fun push(note: NoteDto): NoteDto =\n' +
+'    client.from("notes").upsert(note) { select() }.decodeSingle<NoteDto>()\n',
+  checks: [
+    { id:'push', label:'<code>upsert(note)</code> then <code>.decodeSingle&lt;NoteDto&gt;()</code>', all:[/upsert\(\s*note\s*\)/, /decodeSingle<NoteDto>\(\)/] },
+    { id:'returnRep', label:'Returns the stored row with <code>{ select() }</code>', re:/\{\s*select\(\)\s*\}/ },
+  ],
+});
+</script>
+</body>
+</html>

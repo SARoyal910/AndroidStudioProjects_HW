@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Add sync bookkeeping</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Firebase', sim: 'sync', flavor: 'firestore',
+  id: 'fire-01', title: 'Lab · Add sync bookkeeping to the entity', level: 'Beginner',
+  goal: 'An offline-first row is a normal Room entity PLUS a little bookkeeping: a clock for last-write-wins, a pending marker, and a tombstone flag.',
+  steps: [
+    'Add <code>val updatedAt: Long</code> — the clock used for last-write-wins.',
+    'Add <code>val syncState: SyncState = SyncState.PENDING</code> — the outbox marker.',
+    'Add <code>val deleted: Boolean = false</code> — the soft-delete tombstone.',
+    'Declare <code>enum class SyncState { SYNCED, PENDING, FAILED }</code>.',
+  ],
+  hints: [
+    'The id stays a <b>client-generated String</b> (a UUID) so a row created offline already has an identity.',
+    'Without <code>updatedAt</code> there is no way to resolve conflicts; without <code>syncState</code> nothing knows a row is unpushed; without <code>deleted</code> you cannot push a delete made while offline.',
+    'Run the <b>Edit offline</b> scenario — until the entity can be tracked, nothing can be marked pending.',
+  ],
+  scenarios: [ {id:'editOffline',label:'Edit offline'}, {id:'goOnline',label:'Go online & sync'} ],
+  starter:
+'// A plain Room entity — fine for local-only, but it cannot be SYNCED: there is\n' +
+'// no clock for last-write-wins, no "pending" marker, and no tombstone.\n' +
+'@Entity(tableName = "notes")\n' +
+'data class Note(\n' +
+'    @PrimaryKey val id: String,\n' +
+'    val title: String,\n' +
+'    val body: String,\n' +
+'    // TODO: add updatedAt (Long), syncState (SyncState), deleted (Boolean)\n' +
+')\n' +
+'\n' +
+'// TODO: declare  enum class SyncState { ... }\n',
+  solution:
+'enum class SyncState { SYNCED, PENDING, FAILED }\n' +
+'\n' +
+'@Entity(tableName = "notes")\n' +
+'data class Note(\n' +
+'    @PrimaryKey val id: String,\n' +
+'    val title: String,\n' +
+'    val body: String,\n' +
+'    val updatedAt: Long,\n' +
+'    val syncState: SyncState = SyncState.PENDING,\n' +
+'    val deleted: Boolean = false,\n' +
+')\n',
+  checks: [
+    { id:'pk', label:'Client-generated <code>@PrimaryKey val id: String</code>', all:[/@PrimaryKey/, /val id\s*:\s*String/] },
+    { id:'bookkeeping', label:'Adds <code>updatedAt</code>, <code>syncState</code>, <code>deleted</code>', all:[/val updatedAt\s*:\s*Long/, /val syncState\s*:\s*SyncState/, /val deleted\s*:\s*Boolean/] },
+    { id:'enumState', label:'<code>enum class SyncState { SYNCED, PENDING, FAILED }</code>', re:/enum class SyncState\s*\{[^}]*PENDING[^}]*\}/ },
+  ],
+});
+</script>
+</body>
+</html>

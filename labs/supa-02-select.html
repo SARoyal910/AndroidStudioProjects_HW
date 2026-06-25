@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — SELECT the changed rows</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Supabase', sim: 'sync', flavor: 'supabase',
+  id: 'supa-02', title: 'Lab · SELECT the changed rows', level: 'Intermediate',
+  goal: 'pullSince maps onto SQL: SELECT * FROM notes WHERE updated_at > since ORDER BY updated_at ASC. Build that query with the Postgrest DSL.',
+  steps: [
+    'Inside <code>select { ... }</code>, add <code>filter { gt("updated_at", since) }</code> — only rows changed after the cursor.',
+    'Add <code>order("updated_at", Order.ASCENDING)</code> so rows arrive oldest-first (keeps the cursor correct mid-batch).',
+    'Use the Postgres column name <code>"updated_at"</code>, not the Kotlin name.',
+  ],
+  hints: [
+    '<code>gt(column, value)</code> appends <code>WHERE updated_at &gt; :since</code>.',
+    '<code>.decodeList&lt;NoteDto&gt;()</code> fires the GET and deserializes the JSON array.',
+    'Run <b>Go online</b> / <b>Remote edit</b> — pull is what brings other devices’ rows in.',
+  ],
+  scenarios: [ {id:'goOnline',label:'Go online & sync'}, {id:'remoteEdit',label:'Remote edit arrives'} ],
+  starter:
+'// pull = SELECT * FROM notes WHERE updated_at > since ORDER BY updated_at ASC\n' +
+'override suspend fun pullSince(since: Long): List<NoteDto> =\n' +
+'    client.from("notes").select {\n' +
+'        // TODO: filter to rows changed AFTER `since`, oldest first\n' +
+'    }.decodeList<NoteDto>()\n',
+  solution:
+'override suspend fun pullSince(since: Long): List<NoteDto> =\n' +
+'    client.from("notes").select {\n' +
+'        filter { gt("updated_at", since) }\n' +
+'        order("updated_at", Order.ASCENDING)\n' +
+'    }.decodeList<NoteDto>()\n',
+  checks: [
+    { id:'pull', label:'<code>from("notes").select { filter { gt("updated_at", since) } }.decodeList&lt;NoteDto&gt;()</code>', all:[/from\(\s*"notes"\s*\)/, /gt\(\s*"updated_at"\s*,\s*since\s*\)/, /decodeList<NoteDto>\(\)/] },
+    { id:'order', label:'Oldest-first: <code>order("updated_at", Order.ASCENDING)</code>', re:/order\(\s*"updated_at"\s*,\s*Order\.ASCENDING\s*\)/ },
+    { id:'snakeCol', label:'Uses the Postgres column name <code>"updated_at"</code>', re:/"updated_at"/ },
+  ],
+});
+</script>
+</body>
+</html>

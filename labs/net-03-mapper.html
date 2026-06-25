@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Map wire shape to domain</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Networking', sim: 'net',
+  id: 'net-03', title: 'Lab · Map the wire shape to the domain', level: 'Beginner',
+  goal: 'Write the single mapper that turns a network NoteDto into a clean domain Note — copying id/title/body and leaving userId behind.',
+  steps: [
+    'Build a <code>Note(...)</code> inside <code>toNote()</code>.',
+    'Copy <code>id</code>, <code>title</code>, and <code>body</code> across.',
+    'Do <b>not</b> carry <code>userId</code> into the domain model — the UI never needs it.',
+  ],
+  hints: [
+    'This extension function is the ONE place the wire shape becomes the app shape — keep all mapping here.',
+    'It reads like <code>dto.toNote()</code> at the call site.',
+    'Watch the preview: until the mapper exists, the list is bound to the raw DTO and leaks <code>userId</code>.',
+  ],
+  scenarios: [ {id:'happy',label:'Happy path'} ],
+  starter:
+'// Convert one NETWORK NoteDto into a clean DOMAIN Note.\n' +
+'// Right now there is no mapper, so the UI is stuck with the raw wire shape.\n' +
+'fun NoteDto.toNote(): Note =\n' +
+'    TODO("build a Note from id, title, body — and leave userId behind")\n',
+  solution:
+'fun NoteDto.toNote(): Note =\n' +
+'    Note(\n' +
+'        id = id,\n' +
+'        title = title,\n' +
+'        body = body,\n' +
+'    )\n',
+  checks: [
+    { id:'signature', label:'Extension <code>fun NoteDto.toNote(): Note</code>', re:/fun NoteDto\.toNote\(\)\s*:\s*Note/ },
+    { id:'mapper', label:'Copies <code>id</code>, <code>title</code>, <code>body</code> into a <code>Note</code>', all:[/id\s*=\s*id/, /title\s*=\s*title/, /body\s*=\s*body/] },
+    { id:'dropsUserId', label:'<code>userId</code> is left out of the domain model', re:/userId\s*=/, not:true },
+  ],
+});
+</script>
+</body>
+</html>

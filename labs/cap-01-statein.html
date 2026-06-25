@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Cold Flow to hot StateFlow</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Cumulative', sim: 'pipeline',
+  id: 'cap-01', title: 'Lab · Cold Flow → hot StateFlow', level: 'Intermediate',
+  goal: 'Room hands you a cold Flow<List<Task>> (it only runs while collected). The UI wants a hot StateFlow with an immediate value. stateIn(...) bridges them. (Homework 6)',
+  steps: [
+    'Scope it to the ViewModel: <code>scope = viewModelScope</code>.',
+    'Keep the upstream alive briefly after the last collector with <code>started = SharingStarted.WhileSubscribed(5_000)</code>.',
+    'Give the UI something to render on frame one: <code>initialValue = emptyList()</code>.',
+  ],
+  hints: [
+    'A cold Flow starts fresh per collector; a StateFlow is hot and always holds the latest value.',
+    'WhileSubscribed(5_000) avoids restarting the DB query across a rotation.',
+    'Each box lights up as you supply the matching argument.',
+  ],
+  diagram: [
+    { label:'Room @Query → Flow<List<Task>>', detail:'cold: runs only while collected', fact:null },
+    { label:'.stateIn(scope = viewModelScope)', detail:'tie its lifetime to the ViewModel', fact:'scope' },
+    { label:'SharingStarted.WhileSubscribed(5_000)', detail:'survive rotation without re-querying', fact:'whileSubscribed' },
+    { label:'initialValue = emptyList()', detail:'a value to show on the first frame', fact:'initial' },
+    { label:'StateFlow<List<Task>> → the UI', detail:'collectAsStateWithLifecycle()', fact:null },
+  ],
+  resultOk: 'The DB Flow is now a rotation-proof StateFlow the screen can collect.',
+  resultPending: 'Supply all three stateIn arguments to turn the cold Flow into a hot StateFlow.',
+  starter:
+'// Room hands you a COLD Flow<List<Task>>. The UI wants a HOT StateFlow with an\n' +
+'// immediate value. stateIn(...) bridges them — supply its three arguments.\n' +
+'val tasks: StateFlow<List<Task>> =\n' +
+'    repository.observeTasks()\n' +
+'        .stateIn(\n' +
+'            scope = TODO(),\n' +
+'            started = TODO(),\n' +
+'            initialValue = TODO(),\n' +
+'        )\n',
+  solution:
+'val tasks: StateFlow<List<Task>> =\n' +
+'    repository.observeTasks()\n' +
+'        .stateIn(\n' +
+'            scope = viewModelScope,\n' +
+'            started = SharingStarted.WhileSubscribed(5_000),\n' +
+'            initialValue = emptyList(),\n' +
+'        )\n',
+  checks: [
+    { id:'scope', label:'Scoped with <code>scope = viewModelScope</code>', re:/scope\s*=\s*viewModelScope/ },
+    { id:'whileSubscribed', label:'<code>started = SharingStarted.WhileSubscribed(5_000)</code>', re:/SharingStarted\.WhileSubscribed\(\s*5_?000\s*\)/ },
+    { id:'initial', label:'<code>initialValue = emptyList()</code>', re:/initialValue\s*=\s*emptyList\(\)/ },
+  ],
+});
+</script>
+</body>
+</html>

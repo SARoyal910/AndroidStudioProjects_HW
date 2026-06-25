@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Match the JSON shape</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Networking', sim: 'net',
+  id: 'net-01', title: 'Lab · Match the JSON shape', level: 'Beginner',
+  goal: 'Make a DTO that kotlinx.serialization can decode from the /posts JSON, and a separate, clean domain model the rest of the app uses.',
+  steps: [
+    'Annotate <code>NoteDto</code> with <code>@Serializable</code> — that is what lets the JSON be decoded into it.',
+    'Make every field name match a JSON key exactly: <code>userId</code>, <code>id</code>, <code>title</code>, <code>body</code>.',
+    'Declare a plain <code>data class Note(...)</code> — the domain model. No <code>@Serializable</code>, and it <b>drops</b> <code>userId</code>.',
+  ],
+  hints: [
+    'The sample JSON is <code>{ "userId": 1, "id": 1, "title": "…", "body": "…" }</code> — the property names must spell the keys.',
+    'The DTO is the <i>wire</i> shape; <code>Note</code> is the <i>app</i> shape. Keeping them separate means an API change only touches the DTO.',
+    'Domain <code>Note</code> keeps only <code>id</code>, <code>title</code>, <code>body</code>.',
+  ],
+  scenarios: [ {id:'happy',label:'Happy path'}, {id:'empty',label:'Empty'} ],
+  starter:
+'// NoteDto is the on-the-wire JSON shape. One object from /posts looks like:\n' +
+'//   { "userId": 1, "id": 1, "title": "…", "body": "…" }\n' +
+'data class NoteDto(\n' +
+'    val user: Int,        // ← wrong: the JSON key is "userId"\n' +
+'    val id: Int,\n' +
+'    val title: String,\n' +
+'    val body: String,\n' +
+')\n' +
+'\n' +
+'// The clean shape the app actually uses (no JSON, no userId):\n' +
+'// TODO: declare  data class Note(...)\n',
+  solution:
+'@Serializable\n' +
+'data class NoteDto(\n' +
+'    val userId: Int,\n' +
+'    val id: Int,\n' +
+'    val title: String,\n' +
+'    val body: String,\n' +
+')\n' +
+'\n' +
+'data class Note(\n' +
+'    val id: Int,\n' +
+'    val title: String,\n' +
+'    val body: String,\n' +
+')\n',
+  checks: [
+    { id:'serializable', label:'<code>NoteDto</code> is <code>@Serializable</code> (decodable)', all:[/@Serializable/, /data class NoteDto\s*\(/] },
+    { id:'fields', label:'Fields match the JSON keys: <code>userId</code>, <code>id</code>, <code>title</code>, <code>body</code>', all:[/val userId\s*:\s*Int/, /\bval id\s*:\s*Int/, /val title\s*:\s*String/, /val body\s*:\s*String/] },
+    { id:'domain', label:'A plain domain <code>data class Note(...)</code> exists', re:/data class Note\s*\(/ },
+  ],
+});
+</script>
+</body>
+</html>

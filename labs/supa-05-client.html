@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Wire the Supabase client</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Supabase', sim: 'pipeline',
+  id: 'supa-05', title: 'Lab · Wire the Supabase client', level: 'Beginner',
+  goal: 'supabase-kt talks to your project through one client. The Postgrest plugin is what turns it into table calls — from("notes").select { } / .upsert().',
+  steps: [
+    'Build the client with <code>createSupabaseClient(supabaseUrl, supabaseKey) { … }</code>.',
+    'Inside the config block, <code>install(Postgrest)</code> so table CRUD is enabled.',
+    'The URL + anon key come from <code>BuildConfig</code> (fed in from git-ignored <code>local.properties</code>).',
+  ],
+  hints: [
+    'Without <code>install(Postgrest)</code>, calls like <code>client.from("notes")</code> throw at runtime.',
+    'The anon key identifies the app but RLS is what actually grants access — so it is safe in client code.',
+    'Each layer in the diagram lights up as you wire it.',
+  ],
+  diagram: [
+    { label:'Room — single source of truth', detail:'the UI always reads here (offline-first)', fact:null },
+    { label:'NoteRepository.sync()', detail:'push the outbox · pull the changes', fact:null },
+    { label:'createSupabaseClient(url, anonKey)', detail:'one shared client to your project', fact:'client' },
+    { label:'install(Postgrest)', detail:'enables from("notes").select / upsert', fact:'postgrest' },
+    { label:'Postgres `notes` table', detail:'RLS decides what each user can touch', fact:'postgrest' },
+  ],
+  resultOk: 'The client is wired — sync() can read and write the notes table (RLS permitting).',
+  resultPending: 'The transport is not wired yet — install the Postgrest plugin so table calls work.',
+  starter:
+'// supabase-kt talks to your project through ONE client. The Postgrest plugin is\n' +
+'// what turns it into table calls: from("notes").select { } / .upsert().\n' +
+'private val client = createSupabaseClient(\n' +
+'    supabaseUrl = BuildConfig.SUPABASE_URL,\n' +
+'    supabaseKey = BuildConfig.SUPABASE_ANON_KEY,\n' +
+') {\n' +
+'    // TODO: install the Postgrest plugin so from("notes") works\n' +
+'}\n',
+  solution:
+'private val client = createSupabaseClient(\n' +
+'    supabaseUrl = BuildConfig.SUPABASE_URL,\n' +
+'    supabaseKey = BuildConfig.SUPABASE_ANON_KEY,\n' +
+') {\n' +
+'    install(Postgrest)\n' +
+'}\n',
+  checks: [
+    { id:'client', label:'Builds the client with <code>createSupabaseClient(url, anonKey)</code>', all:[/createSupabaseClient\(/, /BuildConfig\.SUPABASE_URL/, /BuildConfig\.SUPABASE_ANON_KEY/] },
+    { id:'postgrest', label:'Enables table CRUD with <code>install(Postgrest)</code>', re:/install\(\s*Postgrest\s*\)/ },
+  ],
+});
+</script>
+</body>
+</html>

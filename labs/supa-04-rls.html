@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — RLS is the real gate</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Supabase', sim: 'runner', lang: 'sql',
+  id: 'supa-04', title: 'Lab · RLS is the real gate', level: 'Intermediate',
+  goal: 'Your anon key ships inside the app — it does NOT grant access by itself. Row-Level Security policies in Postgres are the real gate. Lock the notes table to its owner.',
+  steps: [
+    'Turn on row security: <code>alter table notes enable row level security;</code>.',
+    'Add a policy with <code>create policy … on notes …</code>.',
+    'Scope it to the signed-in user with <code>using (user_id = auth.uid())</code> (and a matching <code>with check</code>).',
+  ],
+  hints: [
+    'With RLS enabled and NO policy, every row is denied — policies open up exactly what you allow.',
+    '<code>auth.uid()</code> is the id of the currently authenticated user, evaluated per request.',
+    'The anon key is safe to embed precisely because RLS — not the key — decides access.',
+  ],
+  starter:
+'-- Supabase ships your anon key in the app. That key does NOT grant access by\n' +
+'-- itself: Row-Level Security (RLS) policies in Postgres are the real gate.\n' +
+'-- The `notes` table exists; lock it down so users see only their own rows.\n' +
+'\n' +
+'create table if not exists notes (\n' +
+'  id         text primary key,\n' +
+'  user_id    uuid default auth.uid(),\n' +
+'  title      text not null,\n' +
+'  body       text,\n' +
+'  updated_at bigint not null,\n' +
+'  deleted    boolean not null default false\n' +
+');\n' +
+'\n' +
+'-- TODO 1: turn ON row-level security for the notes table\n' +
+'-- TODO 2: add a policy so each user can only touch rows where user_id = auth.uid()\n',
+  solution:
+'create table if not exists notes (\n' +
+'  id         text primary key,\n' +
+'  user_id    uuid default auth.uid(),\n' +
+'  title      text not null,\n' +
+'  body       text,\n' +
+'  updated_at bigint not null,\n' +
+'  deleted    boolean not null default false\n' +
+');\n' +
+'\n' +
+'alter table notes enable row level security;\n' +
+'\n' +
+'create policy "Users manage their own notes"\n' +
+'  on notes\n' +
+'  for all\n' +
+'  using (user_id = auth.uid())\n' +
+'  with check (user_id = auth.uid());\n',
+  checks: [
+    { id:'enableRls', label:'RLS enabled: <code>alter table notes enable row level security</code>', re:/alter\s+table\s+notes\s+enable\s+row\s+level\s+security/i },
+    { id:'policy', label:'A policy on <code>notes</code> is created', all:[/create\s+policy/i, /on\s+notes/i] },
+    { id:'authUid', label:'Scoped to the signed-in user with <code>user_id = auth.uid()</code>', re:/user_id\s*=\s*auth\.uid\(\)/i },
+  ],
+  tests: [
+    { name:'RLS is enabled on notes', needs:['enableRls'] },
+    { name:'a policy on notes exists', needs:['policy'] },
+    { name:'policy is scoped to auth.uid()', needs:['policy','authUid'] },
+  ],
+});
+</script>
+</body>
+</html>

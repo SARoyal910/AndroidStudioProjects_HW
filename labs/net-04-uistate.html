@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Model the three states</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Networking', sim: 'net',
+  id: 'net-04', title: 'Lab · Model the three states', level: 'Intermediate',
+  goal: 'A network screen is always in one of three states. Model them as a sealed interface and render each with an exhaustive when — so it is impossible to forget a case.',
+  steps: [
+    'Add the missing <code>Error(message: String)</code> case to the sealed <code>NotesUiState</code>.',
+    'In <code>NotesContent</code>, add the <code>is NotesUiState.Error -&gt;</code> branch that shows the message + Retry.',
+    'Because the type is <b>sealed</b>, the <code>when</code> is exhaustive — no <code>else</code> needed.',
+  ],
+  hints: [
+    'A sealed interface tells the compiler the COMPLETE set of subtypes.',
+    '<code>Loading</code> carries no data (a <code>data object</code>); <code>Success</code> carries the notes; <code>Error</code> carries a message.',
+    'Until all three states + branches exist, the UI cannot decide what to draw.',
+  ],
+  scenarios: [ {id:'happy',label:'Happy path'}, {id:'empty',label:'Empty'} ],
+  starter:
+'// One screen, three possible states. Model them as a closed (sealed) set.\n' +
+'sealed interface NotesUiState {\n' +
+'    data object Loading : NotesUiState\n' +
+'    data class Success(val notes: List<Note>) : NotesUiState\n' +
+'    // TODO: add the Error(message) case\n' +
+'}\n' +
+'\n' +
+'@Composable\n' +
+'fun NotesContent(uiState: NotesUiState, onRetry: () -> Unit) {\n' +
+'    when (uiState) {\n' +
+'        is NotesUiState.Loading -> LoadingState()\n' +
+'        is NotesUiState.Success -> NotesList(uiState.notes)\n' +
+'        // TODO: render the Error case (message + Retry)\n' +
+'    }\n' +
+'}\n',
+  solution:
+'sealed interface NotesUiState {\n' +
+'    data object Loading : NotesUiState\n' +
+'    data class Success(val notes: List<Note>) : NotesUiState\n' +
+'    data class Error(val message: String) : NotesUiState\n' +
+'}\n' +
+'\n' +
+'@Composable\n' +
+'fun NotesContent(uiState: NotesUiState, onRetry: () -> Unit) {\n' +
+'    when (uiState) {\n' +
+'        is NotesUiState.Loading -> LoadingState()\n' +
+'        is NotesUiState.Success -> NotesList(uiState.notes)\n' +
+'        is NotesUiState.Error -> ErrorState(uiState.message, onRetry)\n' +
+'    }\n' +
+'}\n',
+  checks: [
+    { id:'states', label:'Sealed <code>NotesUiState</code> with <code>Loading</code> / <code>Success(notes)</code> / <code>Error(message)</code>', all:[/sealed interface NotesUiState/, /data object Loading\s*:\s*NotesUiState/, /data class Success\(\s*val notes\s*:\s*List<Note>\s*\)\s*:\s*NotesUiState/, /data class Error\(\s*val message\s*:\s*String\s*\)\s*:\s*NotesUiState/] },
+    { id:'whenExhaustive', label:'<code>when (uiState)</code> handles all three (no <code>else</code>)', all:[/when\s*\(\s*uiState\s*\)/, /is NotesUiState\.Loading\s*->/, /is NotesUiState\.Success\s*->/, /is NotesUiState\.Error\s*->/] },
+  ],
+});
+</script>
+</body>
+</html>

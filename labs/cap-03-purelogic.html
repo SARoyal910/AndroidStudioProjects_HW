@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — A pure, immutable game rule</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Cumulative', sim: 'runner',
+  id: 'cap-03', title: 'Lab · A pure, immutable game rule', level: 'Intermediate',
+  goal: 'Game rules are pure functions: take a Board, return a NEW Board, never mutate. That is what makes them testable on the JVM with no emulator. Implement reset(). (Homework 7)',
+  steps: [
+    'Return a <code>copy(...)</code> of this board — never mutate the receiver.',
+    'Turn every tile face down: <code>tiles = tiles.map { it.copy(state = TileState.FaceDown) }</code>.',
+    'Zero the counter: <code>moves = 0</code>.',
+  ],
+  hints: [
+    'Pure + immutable: no <code>var</code>, no in-place changes — a new value comes out.',
+    '<code>reset()</code> keeps the same faces in the same positions; only the state + move count change.',
+    'Because it is pure, the unit tests need no Android at all.',
+  ],
+  starter:
+'// PURE game rule: return a NEW Board, never mutate the old one. reset() keeps the\n' +
+'// same faces in the same positions but turns every tile FaceDown and zeroes moves.\n' +
+'fun Board.reset(): Board {\n' +
+'    // TODO: copy this board with every tile FaceDown and moves = 0\n' +
+'    return this\n' +
+'}\n',
+  solution:
+'fun Board.reset(): Board =\n' +
+'    copy(\n' +
+'        tiles = tiles.map { it.copy(state = TileState.FaceDown) },\n' +
+'        moves = 0,\n' +
+'    )\n',
+  checks: [
+    { id:'copy', label:'Returns a <code>copy(...)</code> — a new Board', re:/\.?copy\(/ },
+    { id:'faceDown', label:'Every tile becomes <code>TileState.FaceDown</code>', re:/TileState\.FaceDown/ },
+    { id:'movesZero', label:'<code>moves = 0</code>', re:/moves\s*=\s*0/ },
+    { id:'pure', label:'No mutable state (no <code>var</code>)', re:/\bvar\b/, not:true },
+  ],
+  tests: [
+    { name:'reset() returns a NEW Board (copy), never mutates', needs:['copy','pure'] },
+    { name:'every tile is FaceDown after reset', needs:['faceDown'] },
+    { name:'moves resets to 0', needs:['movesZero'] },
+  ],
+});
+</script>
+</body>
+</html>

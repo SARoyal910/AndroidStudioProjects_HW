@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Handle failure without crashing</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Networking', sim: 'net',
+  id: 'net-05', title: 'Lab · Handle failure without crashing', level: 'Intermediate',
+  goal: 'Turn any failure (no network, bad JSON, timeout) into an Error state instead of a crash — and observe the StateFlow lifecycle-awarely.',
+  steps: [
+    'Wrap the suspending <code>repository.getNotes()</code> in a <code>try/catch (e: Exception)</code>.',
+    'On success publish <code>Success(notes)</code>; in the catch publish <code>NotesUiState.Error(...)</code>.',
+    'In <code>NotesScreen</code>, collect with <code>collectAsStateWithLifecycle()</code> (not plain <code>collectAsState()</code>).',
+  ],
+  hints: [
+    'The single <code>try/catch</code> in the ViewModel is the one error-handling boundary for the whole screen.',
+    'Run the <b>No network</b> scenario: without the catch the app crashes; with it you get an Error card + Retry.',
+    '<code>collectAsStateWithLifecycle()</code> pauses collection while the screen is off-screen.',
+  ],
+  scenarios: [ {id:'offline',label:'No network'}, {id:'happy',label:'Happy path'}, {id:'badjson',label:'Bad JSON'} ],
+  starter:
+'fun loadNotes() {\n' +
+'    viewModelScope.launch {\n' +
+'        _uiState.value = NotesUiState.Loading\n' +
+'        // TODO: a failing call throws here — catch it and publish Error instead\n' +
+'        val notes = repository.getNotes()\n' +
+'        _uiState.value = NotesUiState.Success(notes)\n' +
+'    }\n' +
+'}\n' +
+'\n' +
+'@Composable\n' +
+'fun NotesScreen(viewModel: NotesViewModel = viewModel()) {\n' +
+'    // TODO: observe the StateFlow lifecycle-awarely\n' +
+'    val uiState by viewModel.uiState.collectAsState()\n' +
+'    NotesContent(uiState, onRetry = viewModel::loadNotes)\n' +
+'}\n',
+  solution:
+'fun loadNotes() {\n' +
+'    viewModelScope.launch {\n' +
+'        _uiState.value = NotesUiState.Loading\n' +
+'        try {\n' +
+'            val notes = repository.getNotes()\n' +
+'            _uiState.value = NotesUiState.Success(notes)\n' +
+'        } catch (e: Exception) {\n' +
+'            _uiState.value = NotesUiState.Error(\n' +
+'                e.message ?: "Something went wrong while loading notes."\n' +
+'            )\n' +
+'        }\n' +
+'    }\n' +
+'}\n' +
+'\n' +
+'@Composable\n' +
+'fun NotesScreen(viewModel: NotesViewModel = viewModel()) {\n' +
+'    val uiState by viewModel.uiState.collectAsStateWithLifecycle()\n' +
+'    NotesContent(uiState, onRetry = viewModel::loadNotes)\n' +
+'}\n',
+  checks: [
+    { id:'loading', label:'Sets <code>NotesUiState.Loading</code> before loading', re:/NotesUiState\.Loading/ },
+    { id:'trycatch', label:'<code>try { … } catch (e: Exception)</code> maps failure to <code>Error</code>', all:[/try\s*\{/, /catch\s*\(\s*e\s*:\s*Exception\s*\)/, /NotesUiState\.Error/] },
+    { id:'collectLifecycle', label:'Collected with <code>collectAsStateWithLifecycle()</code>', re:/collectAsStateWithLifecycle\(\)/ },
+  ],
+});
+</script>
+</body>
+</html>

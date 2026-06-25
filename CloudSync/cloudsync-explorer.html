@@ -348,6 +348,7 @@ p { overflow-wrap: anywhere; }
 /* ---------------- tables ---------------- */
 .tbl {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   border: 1px solid var(--line);
   border-radius: 9px;
@@ -363,6 +364,7 @@ p { overflow-wrap: anywhere; }
   padding: 9px 11px;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 .tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
 .tbl tr:last-child td { border-bottom: 0; }
@@ -443,6 +445,331 @@ p { overflow-wrap: anywhere; }
 .foot a { font-weight: 600; }
 .anchor { scroll-margin-top: 12px; }
 
+/* ---------------- lesson helpers ---------------- */
+.lesson-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+.lesson-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 13px 14px;
+}
+.band:nth-child(odd) .lesson-card { background: var(--bg); }
+.lesson-card h3 { margin: 4px 0 8px; font-size: 1rem; }
+.lesson-card ol { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.9rem; }
+.lesson-card li { margin-bottom: 5px; }
+.lesson-time {
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---------------- active learning helpers ---------------- */
+.tip {
+  position: relative;
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+  font-weight: 750;
+}
+.tip:focus { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.tip:hover::after,
+.tip:focus::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  width: min(320px, 80vw);
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+}
+.predict-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--violet);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 14px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .predict-card { background: var(--bg); }
+.predict-card summary {
+  cursor: pointer;
+  padding: 11px 14px;
+  font-weight: 850;
+  color: var(--ink);
+  background: var(--violet-soft);
+}
+.predict-card .answer { padding: 12px 14px; color: var(--muted); font-size: 0.93rem; }
+.sync-timeline {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .sync-timeline { background: var(--bg); }
+.timeline-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.timeline-title { font-weight: 850; }
+.timeline-ctrl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.timeline-ctrl button,
+.concept-btn,
+.break-btn,
+.scenario-btn,
+.worksheet-btn {
+  min-height: 32px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 11px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.timeline-ctrl button:hover,
+.concept-btn:hover,
+.break-btn:hover,
+.scenario-btn:hover,
+.worksheet-btn:hover { background: var(--surface-alt); }
+.timeline-ctrl button:disabled { opacity: 0.45; cursor: not-allowed; }
+.timeline-track {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+.timeline-step {
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--muted);
+  border-radius: 9px;
+  padding: 9px 10px;
+  min-height: 118px;
+  opacity: 0.55;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.timeline-step.active {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(45,100,200,0.22);
+}
+.timeline-step.done { opacity: 0.85; }
+.timeline-step.room { border-top-color: var(--green); }
+.timeline-step.ui { border-top-color: var(--blue); }
+.timeline-step.repo { border-top-color: var(--teal); }
+.timeline-step.worker { border-top-color: var(--amber); }
+.timeline-step.cloud { border-top-color: var(--violet); }
+.timeline-step strong { display: block; margin-bottom: 4px; font-size: 0.88rem; }
+.timeline-step span { display: block; color: var(--muted); font-size: 0.8rem; }
+.timeline-explain {
+  border-top: 1px solid var(--line);
+  padding: 11px 14px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.break-lab,
+.debug-lab,
+.code-tools,
+.worksheet,
+.scenario-lab {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .break-lab,
+.band:nth-child(odd) .debug-lab,
+.band:nth-child(odd) .code-tools,
+.band:nth-child(odd) .worksheet,
+.band:nth-child(odd) .scenario-lab { background: var(--bg); }
+.lab-head {
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+  font-weight: 850;
+}
+.lab-body { padding: 12px 14px; }
+.lab-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.break-btn.active,
+.scenario-btn.active,
+.concept-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.lab-output {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 13px;
+  color: var(--ink);
+  min-height: 52px;
+}
+.worksheet-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.worksheet-item {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px;
+  background: var(--surface-alt);
+}
+.worksheet-item label { display: block; font-weight: 850; margin-bottom: 6px; }
+.worksheet-item textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 9px 10px;
+}
+.code-line { display: inline; border-radius: 4px; }
+.code-line.concept-hit {
+  background: rgba(224, 175, 104, 0.24);
+  box-shadow: 0 0 0 2px rgba(224, 175, 104, 0.18);
+}
+.concept-note { color: var(--muted); font-size: 0.88rem; margin-top: 8px; }
+.term-search {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.term-search input {
+  flex: 1;
+  min-width: 220px;
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0 11px;
+}
+.term-count,
+.status-note { color: var(--muted); font-size: 0.85rem; font-weight: 750; }
+
+/* ---------------- Flow lab ---------------- */
+.flow-lab {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+  margin: 16px 0;
+}
+.band:nth-child(odd) .flow-lab { background: var(--bg); }
+.flow-lab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.flow-lab-title { font-weight: 850; }
+.flow-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.flow-btn {
+  min-height: 34px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 11px;
+  font-size: 0.84rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.flow-btn:hover { background: var(--surface-alt); }
+.flow-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.flow-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; padding: 12px; }
+.flow-stage {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--muted);
+  border-radius: 9px;
+  padding: 10px 12px;
+  min-width: 0;
+  background: var(--surface);
+}
+.band:nth-child(odd) .flow-stage { background: var(--bg); }
+.flow-stage.active { box-shadow: 0 0 0 2px rgba(45,100,200,0.28); }
+.flow-stage.room { border-left-color: var(--green); }
+.flow-stage.flow { border-left-color: var(--teal); }
+.flow-stage.state { border-left-color: var(--violet); }
+.flow-stage.ui { border-left-color: var(--blue); }
+.flow-stage h3 { margin: 0 0 7px; font-size: 0.92rem; }
+.flow-stage p { margin-bottom: 7px; }
+.flow-list { display: grid; gap: 6px; }
+.flow-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 8px;
+  background: var(--surface-alt);
+  font-size: 0.86rem;
+}
+.flow-row strong { display: block; }
+.flow-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.flow-pill.pending { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.flow-pill.synced { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.flow-pill.deleted { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.flow-empty { color: var(--muted); font-size: 0.84rem; }
+.flow-emission {
+  display: grid;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.flow-burst {
+  border: 1px dashed var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-weight: 800;
+}
+.flow-code {
+  display: block;
+  white-space: pre-wrap;
+  color: var(--muted);
+}
+.flow-explain {
+  border-top: 1px solid var(--line);
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 980px) {
+  .flow-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 980px) {
   .app { grid-template-columns: 1fr; }
   .rail { display: none; }
@@ -450,7 +777,18 @@ p { overflow-wrap: anywhere; }
   .band { padding: 26px 18px; }
   h1 { font-size: 2.1rem; }
   h2 { font-size: 1.5rem; }
-  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+  .grid2, .grid3, .statgrid, .lesson-grid, .worksheet-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+  html { scroll-behavior: auto; }
+  body { background: #fff; color: #111; }
+  .app { display: block; }
+  .rail, .topbar, .copy-btn, .controls, .seg, .theme-toggle, .btn, .x-btn, .flow-controls, .timeline-ctrl, .lab-controls, .worksheet-btn { display: none !important; }
+  .band { padding: 18px 0; border-bottom: 1px solid #ddd; }
+  .band-inner { max-width: none; }
+  .card, .lesson-card, .callout, .tree, .tbl, .code-panel { break-inside: avoid; }
+  a { color: #111; text-decoration: underline; }
 }
 </style>
 <style>
@@ -692,8 +1030,8 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <h1>CloudSync, hands-on</h1>
         <p class="lead">
           <strong>CloudSync</strong> shows <em>cloud storage used together with Room</em> — the <strong>offline-first</strong>
-          pattern. Room is the single source of truth the UI always reads; a background sync reconciles it with a cloud
-          backend, and everything keeps working <strong>offline</strong>. This page lets you <strong>drive that yourself</strong>:
+          pattern. <span class="tip" tabindex="0" data-tip="Room is Android's local database library. It saves rows on the device.">Room</span> is the single source of truth the UI always reads; a background sync reconciles it with a <span class="tip" tabindex="0" data-tip="The cloud backend is the server-side copy. CloudSync syncs with it, but the UI does not read it directly.">cloud
+          backend</span>, and everything keeps working <strong><span class="tip" tabindex="0" data-tip="Offline-first means local Room reads and writes keep working, then sync catches up later.">offline</span></strong>. This page lets you <strong>drive that yourself</strong>:
           toggle the network, add and delete notes, and watch them queue as <span class="kbd">Pending</span> and drain to
           <span class="kbd">Synced</span> — then explore conflicts, the architecture, and the source.
         </p>
@@ -704,16 +1042,19 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           <span class="tag amber">last-write-wins</span>
           <span class="tag teal">runnable + this explainer</span>
         </div>
-        <div class="grid3">
-          <div class="card"><div class="card-head"><span class="card-title">▶ Run it</span></div><div class="card-body"><p class="dense">The <a href="#simulator">offline-first simulator</a> queues writes while offline and drains them to the cloud when you reconnect.</p></div></div>
-          <div class="card"><div class="card-head"><span class="card-title">🧭 Explore it</span></div><div class="card-body"><p class="dense">Click the <a href="#architecture">architecture</a>, browse the <a href="#code">source</a>, and resolve a <a href="#conflict">conflict</a>.</p></div></div>
-          <div class="card"><div class="card-head"><span class="card-title">🧠 Get it</span></div><div class="card-body"><p class="dense">See the <a href="#realfake">Real/Fake switch</a> that makes it run offline, then <a href="#quiz">check yourself</a>.</p></div></div>
-        </div>
-        <div class="callout good">
-          <span class="callout-label">One sentence to hold onto</span>
-          The UI never touches the network: it reads Room and writes Room (optimistically). A worker pushes and pulls
-          when it can — so <strong>offline is just a queue that hasn't drained yet.</strong>
-        </div>
+        <table class="tbl">
+          <thead><tr><th>Term</th><th>Plain meaning</th><th>What to watch for in the simulator</th></tr></thead>
+          <tbody>
+            <tr><td><code>Room</code></td><td>Android's local database library. It saves rows on the device.</td><td>The "This device · Room" panel changes immediately when you add or delete a note.</td></tr>
+            <tr><td><code>cloud backend</code></td><td>The server-side copy of the data.</td><td>The cloud panel changes only after sync pushes or pulls.</td></tr>
+            <tr><td><code>offline-first</code></td><td>The app works from local data first, then catches up with the cloud later.</td><td>Turn the network off, add a note, and the UI still updates.</td></tr>
+            <tr><td><code>outbox</code></td><td>The waiting line of local changes that still need to upload.</td><td>Pending notes appear in the outbox while offline.</td></tr>
+            <tr><td><code>ViewModel</code></td><td>The screen's data coordinator. It prepares current data and handles button actions.</td><td>The architecture panel shows that button actions go through the ViewModel, then into Room.</td></tr>
+            <tr><td><code>Flow</code></td><td>A stream that can send many values over time.</td><td>The Flow lab shows Room emitting a new list after each database change.</td></tr>
+            <tr><td><code>StateFlow</code></td><td>A <code>Flow</code> that always holds the latest current value.</td><td>The UI redraws from the latest <code>StateFlow.value</code>.</td></tr>
+            <tr><td><code>WorkManager</code></td><td>Android's reliable background job system.</td><td>When offline, sync waits; when online returns, the queue drains.</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -738,6 +1079,21 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           </span>
           <button class="btn" id="csSync" type="button">⟳ Sync now</button>
           <button class="btn" id="csRemote" type="button">📡 Simulate remote edit</button>
+          <button class="btn ghost" id="csReset" type="button">Reset demo</button>
+        </div>
+        <div class="scenario-lab" data-scenario-lab>
+          <div class="lab-head">Scenario mode — load a state, predict the next change, then inspect the panels</div>
+          <div class="lab-body">
+            <div class="lab-controls">
+              <button class="scenario-btn" type="button" data-scenario="offline-create">Offline create</button>
+              <button class="scenario-btn" type="button" data-scenario="remote-edit">Remote edit waiting</button>
+              <button class="scenario-btn" type="button" data-scenario="delete-offline">Delete offline</button>
+              <button class="scenario-btn" type="button" data-scenario="failed-upload">Failed upload</button>
+              <button class="scenario-btn" type="button" data-scenario="reconnect">Reconnect queue</button>
+              <button class="scenario-btn" type="button" data-scenario="conflict">Conflict demo</button>
+            </div>
+            <div class="lab-output" data-scenario-output>Choose a scenario to load the simulator into a specific learning state.</div>
+          </div>
         </div>
 
         <div class="device" style="max-width:none; margin:14px 0;">
@@ -771,6 +1127,29 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           <div class="card-head"><span class="card-title">Sync log</span><button class="x-btn" id="csClearLog" type="button">Clear</button></div>
           <div class="card-body"><div class="jl" id="csLog"><div class="jl-empty">Toggle the network or add a note to see what the sync engine does.</div></div></div>
         </div>
+
+        <div class="sync-timeline" data-sync-timeline>
+          <div class="timeline-head">
+            <span class="timeline-title">Sync timeline — predict the next layer before pressing Next</span>
+            <div class="timeline-ctrl">
+              <button type="button" data-timeline-prev>Prev</button>
+              <span class="s-count" data-timeline-count>1 / 8</span>
+              <button type="button" data-timeline-next>Next</button>
+              <button type="button" data-timeline-reset>Reset</button>
+            </div>
+          </div>
+          <div class="timeline-track">
+            <div class="timeline-step ui" data-timeline-step data-explain="The screen receives the tap. It does not call the cloud."><strong>1. UI tap</strong><span>Add note</span></div>
+            <div class="timeline-step ui" data-timeline-step data-explain="The ViewModel is the screen's coordinator. It turns the tap into work."><strong>2. ViewModel</strong><span>Handle intent</span></div>
+            <div class="timeline-step repo" data-timeline-step data-explain="The Repository saves locally first because Room is the source of truth."><strong>3. Repository</strong><span>Write first</span></div>
+            <div class="timeline-step room" data-timeline-step data-explain="Room stores the note as PENDING, so it survives offline."><strong>4. Room</strong><span>Save PENDING</span></div>
+            <div class="timeline-step ui" data-timeline-step data-explain="Flow emits, StateFlow holds the latest list, and Compose redraws."><strong>5. Redraw</strong><span>Show Pending</span></div>
+            <div class="timeline-step worker" data-timeline-step data-explain="WorkManager waits if offline and runs when the network is connected."><strong>6. Worker</strong><span>Wait online</span></div>
+            <div class="timeline-step cloud" data-timeline-step data-explain="The pending local row is pushed to the cloud."><strong>7. Cloud</strong><span>Receive note</span></div>
+            <div class="timeline-step room" data-timeline-step data-explain="Room is updated to SYNCED, so the UI badge flips on the next emission."><strong>8. Confirm</strong><span>Mark Synced</span></div>
+          </div>
+          <div class="timeline-explain" data-timeline-explain></div>
+        </div>
       </div>
     </section>
 
@@ -789,6 +1168,31 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           <button class="arch-chip log" data-layer="worker" type="button"><div class="ac-name">⑥ SyncWorker</div><div class="ac-file">sync/SyncWorker.kt</div></button>
         </div>
         <div class="arch-detail" id="archDetail"></div>
+        <div class="break-lab" data-break-lab>
+          <div class="lab-head">What breaks if...</div>
+          <div class="lab-body">
+            <div class="lab-controls">
+              <button class="break-btn active" type="button" data-break-case="cloud-ui">The UI reads the cloud directly</button>
+              <button class="break-btn" type="button" data-break-case="hard-delete">Deletes vanish immediately</button>
+              <button class="break-btn" type="button" data-break-case="server-id">The server creates ids</button>
+              <button class="break-btn" type="button" data-break-case="pull-first">Sync pulls before pushing</button>
+            </div>
+            <div class="lab-output" data-break-output></div>
+          </div>
+        </div>
+        <div class="debug-lab" data-debug-lab>
+          <div class="lab-head">Debug a symptom — choose what you see, then identify the likely broken layer</div>
+          <div class="lab-body">
+            <div class="lab-controls">
+              <button class="break-btn active" type="button" data-debug-case="pending-stuck">Badge stuck Pending</button>
+              <button class="break-btn" type="button" data-debug-case="remote-missing">Cloud note never appears</button>
+              <button class="break-btn" type="button" data-debug-case="delete-returns">Deleted note comes back</button>
+              <button class="break-btn" type="button" data-debug-case="duplicate-sync">Many sync jobs run</button>
+              <button class="break-btn" type="button" data-debug-case="ui-stale">UI does not redraw</button>
+            </div>
+            <div class="lab-output" data-debug-output></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -798,6 +1202,85 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <p class="eyebrow">The source</p>
         <h2>Code explorer</h2>
         <p class="dense">Every key file, lightly trimmed. For the full, commented code open <a href="how-a-note-syncs.html">the step-by-step page</a> or the files themselves.</p>
+        <div class="callout good">
+          <span class="callout-label">What Flow does</span>
+          <code>Flow</code> is how Room keeps the screen updated. A DAO function like
+          <code>observeVisibleNotes(): Flow&lt;List&lt;Note&gt;&gt;</code> does not mean "give me the list once." It means
+          "send me the current list, then send me a new list any time the matching database rows change." When the app
+          adds a note, deletes a note, or sync pulls a cloud note into Room, the <code>Flow</code> emits again and the UI
+          redraws from Room. A <code>StateFlow</code> is the screen-ready version of that stream: it always has the latest
+          value available, so Compose can draw immediately.
+        </div>
+        <div class="flow-lab" data-flow-lab>
+          <div class="flow-lab-head">
+            <span class="flow-lab-title">Flow lab — click an event and watch the screen update</span>
+            <div class="flow-controls">
+              <button class="flow-btn primary" type="button" data-flow-action="add">Add local note</button>
+              <button class="flow-btn" type="button" data-flow-action="cloud">Pull cloud note</button>
+              <button class="flow-btn" type="button" data-flow-action="sync">Mark pending Synced</button>
+              <button class="flow-btn" type="button" data-flow-action="delete">Delete first note</button>
+              <button class="flow-btn" type="button" data-flow-action="reset">Reset</button>
+            </div>
+          </div>
+          <div class="flow-grid">
+            <div class="flow-stage room" data-flow-stage="room">
+              <h3>1. Room table</h3>
+              <p class="dense">This is the local database. Writes land here first.</p>
+              <div class="flow-list" data-flow-room></div>
+            </div>
+            <div class="flow-stage flow" data-flow-stage="flow">
+              <h3>2. Flow emits</h3>
+              <p class="dense">Room sends a new value when matching rows change.</p>
+              <div class="flow-emission" data-flow-emission></div>
+            </div>
+            <div class="flow-stage state" data-flow-stage="state">
+              <h3>3. StateFlow holds latest</h3>
+              <p class="dense">The ViewModel turns the stream into a current value Compose can draw.</p>
+              <div class="flow-list" data-flow-state></div>
+            </div>
+            <div class="flow-stage ui" data-flow-stage="ui">
+              <h3>4. UI redraws</h3>
+              <p class="dense">Compose redraws the screen from the latest StateFlow value.</p>
+              <div class="flow-list" data-flow-ui></div>
+            </div>
+          </div>
+          <div class="flow-explain" data-flow-explain></div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Code word</th><th>Plain meaning</th><th>Where it appears below</th></tr></thead>
+          <tbody>
+            <tr><td><code>Entity</code></td><td>A Kotlin class Room saves as a database row.</td><td><code>Note.kt</code></td></tr>
+            <tr><td><code>DTO</code></td><td>The network version of data: shaped for sending to and from the cloud.</td><td><code>NoteDto</code> in <code>Note.kt</code> and <code>CloudApi.kt</code></td></tr>
+            <tr><td><code>UUID</code></td><td>A random id the phone can safely create before the server sees the note.</td><td><code>UUID.randomUUID()</code> in <code>NoteRepository.kt</code></td></tr>
+            <tr><td><code>DAO</code></td><td>The database doorway: the object with Room read and write queries.</td><td><code>NoteDao.kt</code></td></tr>
+            <tr><td><code>suspend</code></td><td>A function can pause for database or network work without freezing the screen.</td><td>DAO, CloudApi, Repository, and Worker functions</td></tr>
+            <tr><td><code>upsert</code></td><td>Update the row if it exists; insert it if it does not.</td><td>Saving local rows and pulled cloud rows</td></tr>
+            <tr><td><code>OnConflictStrategy.REPLACE</code></td><td>If a row with the same primary key exists, replace it.</td><td>Room updates an existing note instead of adding a duplicate.</td></tr>
+            <tr><td><code>hardDelete</code></td><td>Really remove a Room row after the cloud has accepted the delete marker.</td><td>Delete handling in DAO and Repository</td></tr>
+            <tr><td><code>CoroutineWorker</code></td><td>A WorkManager background job that can call <code>suspend</code> functions.</td><td><code>SyncWorker.kt</code></td></tr>
+            <tr><td><code>Context</code></td><td>An Android handle to app-level services and resources.</td><td>The worker uses it to get the Repository.</td></tr>
+            <tr><td><code>WorkerParameters</code></td><td>Startup information WorkManager gives to a worker.</td><td><code>SyncWorker</code> receives it because every WorkManager worker does.</td></tr>
+            <tr><td><code>NetworkType.CONNECTED</code></td><td>The rule that makes sync wait until the device is online.</td><td><code>SyncScheduler.kt</code></td></tr>
+            <tr><td><code>OneTimeWorkRequestBuilder</code></td><td>A builder for one background job request.</td><td>CloudSync creates one sync request when a write asks for sync.</td></tr>
+            <tr><td><code>Constraints.Builder</code></td><td>A builder for rules a job must satisfy before it runs.</td><td>The sync request gets the "network must be connected" rule.</td></tr>
+            <tr><td><code>BackoffPolicy.EXPONENTIAL</code></td><td>After repeated failures, wait longer before each retry.</td><td>Prevents sync from retrying too aggressively.</td></tr>
+            <tr><td><code>TimeUnit.SECONDS</code></td><td>The unit for the retry delay.</td><td>The first retry delay is measured in seconds.</td></tr>
+          </tbody>
+        </table>
+        <div class="code-tools" data-code-tools>
+          <div class="lab-head">Highlight code by concept</div>
+          <div class="lab-body">
+            <div class="lab-controls">
+              <button class="concept-btn" type="button" data-code-concept="room-write">Show Room writes</button>
+              <button class="concept-btn" type="button" data-code-concept="cloud-call">Show cloud calls</button>
+              <button class="concept-btn" type="button" data-code-concept="retry">Show retry logic</button>
+              <button class="concept-btn" type="button" data-code-concept="ui-state">Show UI state</button>
+              <button class="concept-btn" type="button" data-code-concept="delete">Show delete markers</button>
+              <button class="concept-btn" type="button" data-code-concept="clear">Clear</button>
+            </div>
+            <div class="concept-note" data-code-note>Pick a concept to highlight matching lines across the code tabs.</div>
+          </div>
+        </div>
         <div class="tabs" id="codeTabs">
           <button class="tab on" data-tab="t-note" type="button">Note.kt</button>
           <button class="tab" data-tab="t-dao" type="button">NoteDao.kt</button>
@@ -846,7 +1329,7 @@ interface NoteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsert(note: Note)
     @Query("DELETE FROM notes WHERE id = :id") suspend fun hardDelete(id: String)
 }</pre></div>
-          <div class="tag-row"><span class="tag green">Flow reads</span><span class="tag">outbox query</span><span class="tag">pull cursor</span></div>
+          <div class="tag-row"><span class="tag green">screen reads</span><span class="tag">outbox query</span><span class="tag">newest local time</span></div>
         </div>
 
         <div class="tabpane" data-pane="t-cloud">
@@ -864,7 +1347,7 @@ class FakeCloudApi : CloudApi {                            // offline, in-memory
     override suspend fun push(note: NoteDto): NoteDto {
         delay(500)
         val existing = server[note.id]
-        if (existing == null || note.updatedAt &gt;= existing.updatedAt) server[note.id] = note   // server LWW
+        if (existing == null || note.updatedAt &gt;= existing.updatedAt) server[note.id] = note   // server last-write-wins
         return server.getValue(note.id)
     }
 }
@@ -875,7 +1358,7 @@ fun provideCloudApi(useFake: Boolean = true): CloudApi =   // THE SWITCH
         </div>
 
         <div class="tabpane" data-pane="t-repo">
-          <div class="code-panel"><div class="code-head"><span class="code-file">data/NoteRepository.kt — optimistic writes + sync() + LWW</span><button class="copy-btn" type="button">Copy</button></div>
+          <div class="code-panel"><div class="code-head"><span class="code-file">data/NoteRepository.kt — optimistic writes + sync() + last-write-wins</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">// PURE last-write-wins rule (unit-tested with no Room/coroutines).
 fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean =
     local == null || (local.syncState == SyncState.SYNCED &amp;&amp; remote.updatedAt &gt;= local.updatedAt)
@@ -959,6 +1442,10 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
       <div class="band-inner">
         <p class="eyebrow">Plain-language terms</p>
         <h2>Glossary — tap to expand</h2>
+        <div class="term-search">
+          <input id="termSearch" type="search" data-term-search placeholder="Search terms like StateFlow, tombstone, retry..." autocomplete="off">
+          <span class="term-count" data-term-count></span>
+        </div>
         <div class="acc" id="acc"></div>
       </div>
     </section>
@@ -969,8 +1456,11 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
         <p class="eyebrow">Check yourself</p>
         <h2>Did it click?</h2>
         <p class="dense">Five questions. Pick an answer to see if it’s right and why. <span class="quiz-score" id="quizScore">0 / 5</span></p>
-        <div class="quiz" id="quiz"></div>
-        <p class="foot">CloudSync · Room is what the user sees, the cloud is what eventually agrees with it · part of the AndroidStudioProjects teaching set. See also <a href="how-a-note-syncs.html">the step-by-step code page</a>.</p>
+        <div class="controls">
+          <button class="btn ghost" id="quizReset" type="button">Reset quiz</button>
+        </div>
+        <div class="quiz" id="quizWrap"></div>
+        <p class="foot">CloudSync · Room is what the user sees, the cloud is what eventually agrees with it · part of the AndroidStudioProjects learning set. See also <a href="how-a-note-syncs.html">the step-by-step code page</a>.</p>
       </div>
     </section>
   </main>
@@ -1051,6 +1541,125 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
     sections.forEach(function (s) { obs.observe(s); });
   }
+
+  // ---------------- Flow lab ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-flow-lab]"));
+    if (!labs.length) return;
+
+    function visibleNotes(notes) {
+      return notes.filter(function (n) { return !n.deleted; });
+    }
+    function clear(el) {
+      while (el && el.firstChild) el.removeChild(el.firstChild);
+    }
+    function addNoteRow(target, note, compact) {
+      var row = document.createElement("div");
+      row.className = "flow-row";
+      var title = document.createElement("strong");
+      title.textContent = note.title;
+      row.appendChild(title);
+      if (!compact) {
+        var id = document.createElement("code");
+        id.textContent = note.id;
+        row.appendChild(id);
+      }
+      var pill = document.createElement("span");
+      pill.className = "flow-pill " + (note.deleted ? "deleted" : note.syncState.toLowerCase());
+      pill.textContent = note.deleted ? "DELETED / PENDING" : note.syncState;
+      row.appendChild(pill);
+      target.appendChild(row);
+    }
+    function addEmpty(target, text) {
+      var empty = document.createElement("div");
+      empty.className = "flow-empty";
+      empty.textContent = text;
+      target.appendChild(empty);
+    }
+    function renderLab(lab, state, reason) {
+      var visible = visibleNotes(state.notes);
+      var room = lab.querySelector("[data-flow-room]");
+      var emission = lab.querySelector("[data-flow-emission]");
+      var stateBox = lab.querySelector("[data-flow-state]");
+      var ui = lab.querySelector("[data-flow-ui]");
+      var explain = lab.querySelector("[data-flow-explain]");
+
+      clear(room);
+      state.notes.forEach(function (note) { addNoteRow(room, note, false); });
+      if (!state.notes.length) addEmpty(room, "Room has no rows.");
+
+      clear(emission);
+      var burst = document.createElement("div");
+      burst.className = "flow-burst";
+      burst.textContent = "Emission #" + state.emission;
+      emission.appendChild(burst);
+      var emitted = document.createElement("code");
+      emitted.className = "flow-code";
+      emitted.textContent = "Flow<List<Note>> emits: " + JSON.stringify(visible.map(function (n) { return n.title; }));
+      emission.appendChild(emitted);
+
+      clear(stateBox);
+      var current = document.createElement("code");
+      current.className = "flow-code";
+      current.textContent = "StateFlow.value = " + JSON.stringify(visible.map(function (n) { return n.title; }));
+      stateBox.appendChild(current);
+      addEmpty(stateBox, "StateFlow is the current-value stream: it keeps this latest list ready for the screen.");
+
+      clear(ui);
+      if (!visible.length) addEmpty(ui, "No visible notes.");
+      visible.forEach(function (note) { addNoteRow(ui, note, true); });
+
+      explain.textContent = reason;
+      Array.prototype.slice.call(lab.querySelectorAll("[data-flow-stage]")).forEach(function (stage) {
+        stage.classList.add("active");
+      });
+    }
+    function initLab(lab) {
+      var state = { seq: 1, emission: 0, notes: [] };
+      function reset(reason) {
+        state.seq = 1;
+        state.emission = 0;
+        state.notes = [{ id: "seed-welcome", title: "Welcome note", syncState: "SYNCED", deleted: false }];
+        emit(reason || "Initial collection: the screen starts collecting the Flow, so Room sends the current visible notes list.");
+      }
+      function emit(reason) {
+        state.emission += 1;
+        renderLab(lab, state, reason);
+      }
+      lab.querySelector("[data-flow-action='add']").addEventListener("click", function () {
+        state.seq += 1;
+        state.notes.unshift({ id: "local-" + state.seq, title: "Local note " + state.seq, syncState: "PENDING", deleted: false });
+        emit("Room inserted a PENDING local note. The Flow emits a new visible notes list immediately, before any cloud upload.");
+      });
+      lab.querySelector("[data-flow-action='cloud']").addEventListener("click", function () {
+        state.seq += 1;
+        state.notes.unshift({ id: "cloud-" + state.seq, title: "Cloud note " + state.seq, syncState: "SYNCED", deleted: false });
+        emit("Sync pulled a cloud note and saved it into Room. Because Room changed, the Flow emits and the UI redraws.");
+      });
+      lab.querySelector("[data-flow-action='sync']").addEventListener("click", function () {
+        var pending = state.notes.filter(function (n) { return !n.deleted && n.syncState === "PENDING"; })[0];
+        if (!pending) {
+          emit("No visible PENDING notes right now. The Flow still shows the latest Room-backed list.");
+          return;
+        }
+        pending.syncState = "SYNCED";
+        emit("A pending note was marked SYNCED after upload. The row changed in Room, so the Flow emits again.");
+      });
+      lab.querySelector("[data-flow-action='delete']").addEventListener("click", function () {
+        var first = visibleNotes(state.notes)[0];
+        if (!first) {
+          emit("There are no visible notes to delete. The latest StateFlow value, meaning the current list the screen can read, stays empty.");
+          return;
+        }
+        first.deleted = true;
+        first.syncState = "PENDING";
+        emit("The first note became a hidden delete marker. observeVisibleNotes() filters it out, so the Flow emits a list without that note.");
+      });
+      lab.querySelector("[data-flow-action='reset']").addEventListener("click", function () { reset("Reset: collecting the Flow starts again with the current Room rows."); });
+      reset();
+    }
+    labs.forEach(initLab);
+  })();
 
   // ---------------- sort-swap stepper ----------------
   (function () {
@@ -1145,12 +1754,157 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     return out;
   }
 
+  function lineConcepts(line) {
+    var concepts = [];
+    if (/dao\.upsert|@Insert|Room|Note\(|toEntity|syncState\s*=/.test(line)) concepts.push("room-write");
+    if (/cloud\.|CloudApi|Retrofit|pullSince|push\(|NoteDto|HTTP/.test(line)) concepts.push("cloud-call");
+    if (/Result\.retry|BackoffPolicy|WorkManager|NetworkType|enqueueUniqueWork|OneTimeWorkRequestBuilder|Constraints/.test(line)) concepts.push("retry");
+    if (/StateFlow|stateIn|collectAsStateWithLifecycle|viewModelScope|Flow<|observeVisibleNotes|observePendingCount|pendingCount|isOnline/.test(line)) concepts.push("ui-state");
+    if (/deleted|hardDelete|tombstone|DELETE FROM|SOFT delete|soft-delete/.test(line)) concepts.push("delete");
+    return concepts.join(" ");
+  }
+
   document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
     try {
       var lang = pre.getAttribute("data-lang");
       var code = pre.textContent;
-      pre.innerHTML = highlight(code, lang);
+      pre.innerHTML = code.split("\n").map(function (line) {
+        return '<span class="code-line" data-concepts="' + lineConcepts(line) + '">' + highlight(line, lang) + "</span>";
+      }).join("\n");
     } catch (e) { /* leave plain text on any error */ }
+  });
+
+  // ---------------- concept highlighter ----------------
+  (function () {
+    var buttons = Array.prototype.slice.call(document.querySelectorAll("[data-code-concept]"));
+    if (!buttons.length) return;
+    var note = document.querySelector("[data-code-note]");
+    var labels = {
+      "room-write": "Highlighted Room writes and local row saves.",
+      "cloud-call": "Highlighted cloud interface calls, DTOs, pushes, and pulls.",
+      "retry": "Highlighted WorkManager retry, constraints, and queueing logic.",
+      "ui-state": "Highlighted Flow, StateFlow, and ViewModel state lines.",
+      "delete": "Highlighted tombstones, hidden deletes, and final hard deletes."
+    };
+    function apply(concept) {
+      document.querySelectorAll(".code-line").forEach(function (line) {
+        var has = (" " + (line.getAttribute("data-concepts") || "") + " ").indexOf(" " + concept + " ") >= 0;
+        line.classList.toggle("concept-hit", concept !== "clear" && has);
+      });
+      buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-code-concept") === concept && concept !== "clear"); });
+      if (note) note.textContent = concept === "clear" ? "Pick a concept to highlight matching lines across the code blocks." : labels[concept];
+    }
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () { apply(button.getAttribute("data-code-concept")); });
+    });
+  })();
+
+  // ---------------- timeline ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-sync-timeline]"));
+    labs.forEach(function (lab) {
+      var steps = Array.prototype.slice.call(lab.querySelectorAll("[data-timeline-step]"));
+      var prev = lab.querySelector("[data-timeline-prev]");
+      var next = lab.querySelector("[data-timeline-next]");
+      var reset = lab.querySelector("[data-timeline-reset]");
+      var count = lab.querySelector("[data-timeline-count]");
+      var explain = lab.querySelector("[data-timeline-explain]");
+      var i = 0;
+      function render() {
+        steps.forEach(function (step, idx) {
+          step.classList.toggle("active", idx === i);
+          step.classList.toggle("done", idx < i);
+        });
+        if (count) count.textContent = (i + 1) + " / " + steps.length;
+        if (explain) explain.textContent = steps[i].getAttribute("data-explain") || "";
+        if (prev) prev.disabled = i === 0;
+        if (next) next.disabled = i === steps.length - 1;
+      }
+      if (prev) prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+      if (next) next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+      if (reset) reset.addEventListener("click", function () { i = 0; render(); });
+      steps.forEach(function (step, idx) { step.addEventListener("click", function () { i = idx; render(); }); });
+      render();
+    });
+  })();
+
+  // ---------------- what breaks lab ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-break-lab]"));
+    var answers = {
+      "cloud-ui": "The UI would fail or stall when offline, because the screen would be waiting on the network instead of reading Room. The fix is: UI reads Room only.",
+      "hard-delete": "The app would forget that a delete happened while offline. There would be no row left to upload as a delete request. The fix is: save a tombstone until the cloud confirms it.",
+      "server-id": "An offline-created note would have no stable id yet. The user could not safely edit, delete, or upload the exact row later. The fix is: create a UUID on the device.",
+      "pull-first": "A cloud copy could arrive before local pending work is uploaded. That raises the chance of replacing local offline work. The fix is: push waiting local rows first, then pull newer cloud rows."
+    };
+    labs.forEach(function (lab) {
+      var out = lab.querySelector("[data-break-output]");
+      var buttons = Array.prototype.slice.call(lab.querySelectorAll("[data-break-case]"));
+      function show(key) {
+        buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-break-case") === key); });
+        if (out) out.textContent = answers[key] || "";
+      }
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () { show(button.getAttribute("data-break-case")); });
+      });
+      if (buttons[0]) show(buttons[0].getAttribute("data-break-case"));
+    });
+  })();
+
+  // ---------------- symptom debugger ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-debug-lab]"));
+    var answers = {
+      "pending-stuck": "Likely layer: SyncWorker, WorkManager constraint, or CloudApi. Check whether the job is allowed to run online, whether cloud.push() fails, and whether the Repository writes the server copy back as SYNCED.",
+      "remote-missing": "Likely layer: pull path. Check dao.maxUpdatedAt(), cloud.pullSince(...), shouldAcceptRemote(...), and whether pulled rows are upserted into Room.",
+      "delete-returns": "Likely layer: tombstone handling. Check that delete sets deleted = true and PENDING, pushes that tombstone, then hard-deletes only after cloud confirmation.",
+      "duplicate-sync": "Likely layer: SyncScheduler. Check enqueueUniqueWork(...) and the existing-work policy so repeated button taps do not create many independent sync jobs.",
+      "ui-stale": "Likely layer: Flow to StateFlow to Compose. Check observeVisibleNotes(), stateIn(...), and collectAsStateWithLifecycle() so Room changes reach the screen."
+    };
+    labs.forEach(function (lab) {
+      var out = lab.querySelector("[data-debug-output]");
+      var buttons = Array.prototype.slice.call(lab.querySelectorAll("[data-debug-case]"));
+      function show(key) {
+        buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-debug-case") === key); });
+        if (out) out.textContent = answers[key] || "";
+      }
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () { show(button.getAttribute("data-debug-case")); });
+      });
+      if (buttons[0]) show(buttons[0].getAttribute("data-debug-case"));
+    });
+  })();
+
+  // ---------------- worksheet clear ----------------
+  document.querySelectorAll("[data-worksheet-clear]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var box = button.closest(".worksheet");
+      if (!box) return;
+      box.querySelectorAll("textarea").forEach(function (area) { area.value = ""; });
+    });
+  });
+
+  // ---------------- worksheet copy ----------------
+  document.querySelectorAll("[data-worksheet-copy]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var box = button.closest(".worksheet");
+      if (!box) return;
+      var lines = Array.prototype.slice.call(box.querySelectorAll(".worksheet-item")).map(function (item) {
+        var label = item.querySelector("label");
+        var area = item.querySelector("textarea");
+        return (label ? label.textContent.trim() : "Prompt") + "\n" + ((area && area.value.trim()) || "[blank]");
+      });
+      var text = "CloudSync worksheet answers\n\n" + lines.join("\n\n");
+      var status = box.querySelector("[data-worksheet-status]");
+      function done(ok) {
+        if (status) status.textContent = ok ? "Answers copied." : "Copy unavailable; select and copy the text manually.";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      } else {
+        done(false);
+      }
+    });
   });
 })();
 </script>
@@ -1174,10 +1928,12 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     online: true,
     seq: 1,
     syncing: false,
+    failNextPush: false,
     local: [{ id: "seed-welcome", title: "Welcome to CloudSync", syncState: "SYNCED", deleted: false }],
     cloud: [{ id: "seed-welcome", title: "Welcome to CloudSync" }],
     log: [],
   };
+  var syncTicket = 0;
 
   function logAdd(kind, msg) { sim.log.push({ kind: kind, msg: msg }); renderLog(); }
 
@@ -1255,7 +2011,12 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
   function scheduleSync() {
     if (sim.syncing) return;
     sim.syncing = true;
-    setTimeout(function () { sim.syncing = false; runSync(); }, 700); // imitate latency
+    var ticket = ++syncTicket;
+    setTimeout(function () {
+      if (ticket !== syncTicket) return;
+      sim.syncing = false;
+      runSync();
+    }, 700); // imitate network waiting
   }
 
   function runSync() {
@@ -1264,6 +2025,12 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     // 1) PUSH the outbox
     sim.local.filter(function (n) { return n.syncState !== "SYNCED"; }).forEach(function (n) {
       did = true;
+      if (sim.failNextPush && !n.deleted) {
+        sim.failNextPush = false;
+        n.syncState = "FAILED";
+        logAdd("offline", 'Simulated upload failure for "' + n.title + '" → marked Failed so WorkManager can retry later.');
+        return;
+      }
       if (n.deleted) {
         sim.cloud = sim.cloud.filter(function (c) { return c.id !== n.id; });
         sim.local = sim.local.filter(function (x) { return x.id !== n.id; });   // tombstone confirmed -> hard delete
@@ -1302,6 +2069,81 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     render();
     requestSync();
   }
+  function resetSimulator() {
+    syncTicket++;
+    sim.online = true;
+    sim.seq = 1;
+    sim.syncing = false;
+    sim.failNextPush = false;
+    sim.local = [{ id: "seed-welcome", title: "Welcome to CloudSync", syncState: "SYNCED", deleted: false }];
+    sim.cloud = [{ id: "seed-welcome", title: "Welcome to CloudSync" }];
+    sim.log = [];
+    $$("#netSeg button").forEach(function (b) { b.classList.toggle("on", b.dataset.net === "on"); });
+    $("#csInput").value = "Buy milk";
+    render();
+    logAdd("info", "Demo reset — ready to show the offline queue again.");
+  }
+
+  function setNetworkState(online) {
+    sim.online = online;
+    $$("#netSeg button").forEach(function (b) {
+      b.classList.toggle("on", (b.dataset.net === "on") === online);
+    });
+  }
+
+  function loadScenario(name) {
+    syncTicket++;
+    sim.syncing = false;
+    sim.failNextPush = false;
+    sim.seq = 20;
+    sim.log = [];
+    sim.local = [{ id: "seed-welcome", title: "Welcome to CloudSync", syncState: "SYNCED", deleted: false }];
+    sim.cloud = [{ id: "seed-welcome", title: "Welcome to CloudSync" }];
+    var message = "";
+    if (name === "offline-create") {
+      setNetworkState(false);
+      sim.local.unshift({ id: "local-20", title: "Offline grocery list", syncState: "PENDING", deleted: false });
+      message = "Predict: Room changes immediately, the outbox gets one pending row, and the cloud waits.";
+      logAdd("write", "Scenario loaded: a note was created offline and is waiting in the outbox.");
+    } else if (name === "remote-edit") {
+      setNetworkState(true);
+      sim.cloud.push({ id: "remote-20", title: "Remote note waiting in cloud" });
+      message = "Predict: press Sync now or wait for sync. The pull step saves the remote note into Room.";
+      logAdd("info", "Scenario loaded: another device added a cloud note that this device has not pulled yet.");
+    } else if (name === "delete-offline") {
+      setNetworkState(false);
+      sim.local[0].deleted = true;
+      sim.local[0].syncState = "PENDING";
+      message = "Predict: the visible note disappears, but the outbox keeps a delete marker for the cloud.";
+      logAdd("write", "Scenario loaded: a note was deleted offline, so a hidden tombstone is queued.");
+    } else if (name === "failed-upload") {
+      setNetworkState(true);
+      sim.local.unshift({ id: "local-21", title: "Retry this upload", syncState: "PENDING", deleted: false });
+      sim.failNextPush = true;
+      message = "Predict: the next sync marks the local row FAILED, then a later retry can try again.";
+      logAdd("info", "Scenario loaded: the next upload is set to fail once.");
+      scheduleSync();
+    } else if (name === "reconnect") {
+      setNetworkState(true);
+      sim.local.unshift({ id: "local-22", title: "Queued while offline", syncState: "PENDING", deleted: false });
+      message = "Predict: because the network is online now, WorkManager can drain the queued note into the cloud.";
+      logAdd("info", "Scenario loaded: a pending offline row is ready to drain after reconnect.");
+      scheduleSync();
+    } else if (name === "conflict") {
+      setNetworkState(true);
+      message = "Predict: two devices edit, then last-write-wins compares updatedAt. Use the conflict demo below to run it.";
+      logAdd("info", "Scenario loaded: jump to the conflict demo and edit both devices before syncing.");
+      var target = document.getElementById("conflict");
+      if (target) target.scrollIntoView({ behavior: "smooth" });
+    }
+    render();
+    renderLog();
+    $$(".scenario-btn").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-scenario") === name);
+    });
+    var out = document.querySelector("[data-scenario-output]");
+    if (out) out.textContent = message;
+  }
 
   $("#csAdd").addEventListener("click", function () {
     var t = $("#csInput").value.trim();
@@ -1312,6 +2154,7 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
   $("#csInput").addEventListener("focus", function () { $("#csField").classList.add("focus"); });
   $("#csInput").addEventListener("blur", function () { $("#csField").classList.remove("focus"); });
   $("#csSync").addEventListener("click", function () { requestSync(); });
+  $("#csReset").addEventListener("click", resetSimulator);
   $("#csRemote").addEventListener("click", function () {
     var id = "remote-" + (sim.seq++);
     sim.cloud.push({ id: id, title: "Note from another device" });
@@ -1319,6 +2162,9 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
     requestSync();
   });
   $("#csClearLog").addEventListener("click", function () { sim.log = []; renderLog(); });
+  $$(".scenario-btn").forEach(function (b) {
+    b.addEventListener("click", function () { loadScenario(b.getAttribute("data-scenario")); });
+  });
   $$("#netSeg button").forEach(function (b) {
     b.addEventListener("click", function () {
       $$("#netSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on");
@@ -1332,23 +2178,23 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
   // ======================= ARCHITECTURE =======================
   var ARCH = {
     ui:     { name: "① UI — the screen", file: "MainActivity.kt", tab: "how-a-note-syncs.html#viewmodel",
-      what: "Reads Room StateFlows with collectAsStateWithLifecycle() and writes to Room — never the network. Renders each note with a sync badge (Synced/Pending/Failed) and an online/offline + 'N pending' banner.",
-      points: ["Observes notes + pendingCount + isOnline", "Optimistic writes via the ViewModel", "Never calls the cloud directly"] },
+      what: "The UI is the visible screen. It reads Room-backed StateFlows with collectAsStateWithLifecycle() and writes to Room through the ViewModel — never directly to the network. A StateFlow always holds the latest value for the screen, so when Room sends a new notes list, Compose redraws.",
+      points: ["Observes notes, pendingCount, and isOnline", "StateFlow holds the latest value from a Flow", "ViewModel means the screen's data coordinator", "Compose means Android's UI toolkit that redraws when state changes", "Never calls the cloud directly"] },
     model:  { name: "② Entity + sync fields", file: "data/Note.kt", tab: "t-note",
-      what: "A normal Room @Entity plus the offline-first bookkeeping: a client-generated UUID id, an updatedAt clock, a SyncState, and a deleted tombstone. NoteDto is the cloud's wire shape; mappers convert between them.",
-      points: ["Client UUID — identity before the server sees it", "updatedAt drives last-write-wins", "deleted tombstone = a pushable offline delete"] },
+      what: "The Entity is the local database shape: one saved Note row in Room. The sync fields are extra labels on that row. They tell the app whether the note has an id, when it changed, whether it still needs to upload, and whether it is a delete waiting to be sent.",
+      points: ["id — the phone creates this right away, even offline", "updatedAt — the last time this note changed", "syncState — SYNCED, PENDING, or FAILED", "deleted — a hidden delete marker that can upload later", "NoteDto — the simpler network version of the note"] },
     dao:    { name: "③ DAO", file: "data/NoteDao.kt", tab: "t-dao",
-      what: "Reactive reads the UI observes (visible notes only — tombstones hidden; a live pending count) plus sync-engine queries (the outbox of unsynced rows, and the MAX(updatedAt) pull cursor).",
-      points: ["observeVisibleNotes(): Flow — the UI source", "notesToPush() — the outbox", "maxUpdatedAt() — the pull cursor"] },
+      what: "The DAO is the database doorway. The screen uses Flow-returning DAO functions to keep watching Room. The sync code uses other DAO functions to find notes waiting to upload and to save notes that came from the cloud.",
+      points: ["observeVisibleNotes() — a Flow of notes the user should see", "observePendingCount() — a Flow of how many notes still need sync", "Flow means Room sends a new value when matching rows change", "notesToPush() — the outbox: rows not synced yet", "maxUpdatedAt() — the newest local change time", "upsert()/hardDelete() — save a row or remove one"] },
     repo:   { name: "④ Repository", file: "data/NoteRepository.kt", tab: "t-repo",
-      what: "The only code that touches both Room and the cloud. Writes are optimistic (Room first, PENDING). sync() pushes the outbox then pulls remote changes, resolving conflicts with the pure shouldAcceptRemote (last-write-wins).",
-      points: ["addNote/editNote/deleteNote → Room, PENDING", "sync(): push outbox → pull remote", "shouldAcceptRemote — pure LWW rule"] },
+      what: "The Repository is the traffic director. It tells Room what to save, tells CloudApi what to upload or download, and keeps the steps in the right order: save locally first, upload waiting notes, then download cloud changes.",
+      points: ["add/edit/delete — save to Room first as PENDING", "delete — hide the row first, upload the delete later", "sync() upload step — send pending rows to the cloud", "sync() download step — pull newer cloud rows into Room", "shouldAcceptRemote() — pick the newer copy when two copies disagree"] },
     cloud:  { name: "⑤ CloudApi", file: "data/CloudApi.kt", tab: "t-cloud",
-      what: "A tiny interface (pullSince + push) with a Retrofit-backed Real impl and an in-memory Fake (latency, server-side LWW, a remote-edit hook). provideCloudApi(useFake = …) is the switch that lets the app run offline.",
-      points: ["pullSince(cursor) + push(note)", "RetrofitCloudApi vs FakeCloudApi", "Default Fake → builds/runs/tests offline"] },
+      what: "CloudApi is the cloud doorway. The Repository does not care if the cloud is real or fake. It only calls two actions: push one note up, or pull newer notes down.",
+      points: ["push(note) — save this note in the cloud", "pullSince(time) — give me cloud notes newer than this time", "FakeCloudApi — pretend cloud for local runs and tests", "RetrofitCloudApi — real web cloud", "provideCloudApi(useFake) — choose fake or real in one place"] },
     worker: { name: "⑥ SyncWorker", file: "sync/SyncWorker.kt", tab: "t-worker",
-      what: "A WorkManager CoroutineWorker that runs repository.sync() in the background, surviving process death. Enqueued with a NetworkType.CONNECTED constraint — so it just defers while offline and fires on reconnect; failures Result.retry() with backoff.",
-      points: ["Runs sync() off the UI, retryably", "NetworkType.CONNECTED = offline just queues", "Result.retry() → exponential backoff"] },
+      what: "SyncWorker is the background runner. It does not decide the sync rules. It simply asks the Repository to sync. WorkManager makes sure the job waits for network and can try again after failure.",
+      points: ["doWork() — get the Repository and call sync()", "NetworkType.CONNECTED — run only when online", "Result.success() — upload and download finished", "Result.retry() — try again later", "enqueueUniqueWork — avoid duplicate sync jobs"] },
   };
   function renderArch(layer) {
     var a = ARCH[layer]; var d = $("#archDetail"); d.innerHTML = "";
@@ -1419,7 +2265,7 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
         " edited later (updatedAt = " + r.winner.at + "), so the cloud now holds <strong>“" + r.winner.title + "”</strong>.";
       if (r.loser) detail += " The earlier edit (“" + r.loser.title + "”, updatedAt = " + r.loser.at + ") is overwritten.";
       out.innerHTML = '<span class="callout-label">Resolved · last-write-wins</span>' + detail +
-        '<p class="tiny" style="margin:8px 0 0;">For shared, multi-user data you would escalate to versioned (optimistic-lock) or field-level merge instead.</p>';
+        '<p class="tiny" style="margin:8px 0 0;">For shared, multi-user data, a real app usually uses a version check, which makes the server reject stale edits, or a field-level merge, which combines non-conflicting fields instead of picking one whole note.</p>';
       board.appendChild(out);
     } else {
       var hint = document.createElement("p"); hint.className = "dense"; hint.style.marginTop = "12px";
@@ -1432,11 +2278,11 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
   // ======================= REAL vs FAKE =======================
   var RF = {
     fake: { name: "FakeCloudApi — offline (the default)", path: "provideCloudApi(useFake = true)",
-      what: "An in-memory 'server' that imitates a real backend: network latency via delay(), server-side last-write-wins on push, and a simulateRemoteEdit() hook so a pull has something new. No network — so the app and unit tests run anywhere.",
-      points: ["Works in airplane mode and in CI", "delay() imitates latency; LWW on push", "A process singleton so its store persists between syncs"] },
-    real: { name: "RetrofitCloudApi — live REST backend", path: "provideCloudApi(useFake = false)",
-      what: "Talks to a real server over HTTP: GET /notes?since=cursor to pull and POST /notes to push, decoded with kotlinx.serialization. Requires the INTERNET permission and a running backend; point baseUrl at your server.",
-      points: ["GET/POST /notes via Retrofit", "kotlinx.serialization JSON converter", "Throws offline → SyncWorker retries"] },
+      what: "An in-memory 'server' that imitates a real backend: network waiting via delay(), server-side last-write-wins on push, and a simulateRemoteEdit() hook so a pull has something new. No network — so the app and unit tests run anywhere.",
+      points: ["Works in airplane mode and automated tests", "delay() imitates network waiting; pushes use last-write-wins", "One shared fake store persists between syncs while the app process is running"] },
+    real: { name: "RetrofitCloudApi — real web cloud", path: "provideCloudApi(useFake = false)",
+      what: "Talks to a real server over the web. It asks the server for newer notes and sends local notes up. This needs the INTERNET permission and a running server.",
+      points: ["GET notes from the server", "POST changed notes to the server", "If the network fails, SyncWorker tries again later"] },
   };
   function renderRf(which) {
     $$("#rfSeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.rf === which); });
@@ -1453,28 +2299,63 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
 
   // ======================= GLOSSARY =======================
   var TERMS = [
+    ["UI", "The visible screen the user reads and taps: note list, add field, sync badges, and online/offline banner."],
+    ["Room", "Android's local database library. It stores rows on the device and can notify the app when matching rows change."],
+    ["cloud backend", "The server-side copy of the data. CloudSync treats it as a sync target, not as the thing the UI reads directly."],
     ["offline-first", "An architecture where the app reads and writes a LOCAL store and works fully offline; the cloud is synced in the background. Offline is the default case, not an error."],
     ["single source of truth", "One place the UI trusts for data — here, Room. Every screen reads it; the cloud only ever updates it. The UI never reads the network directly."],
+    ["sync", "The catch-up work that makes Room and the cloud agree: upload waiting local changes, then download newer cloud changes."],
     ["optimistic UI", "A local write is shown immediately (marked Pending) before it reaches the server, so the app feels instant whether online or off."],
+    ["ViewModel", "The screen's data coordinator. It exposes current data for the UI and handles user actions like add, edit, delete, and sync request."],
+    ["Compose", "Android's modern UI toolkit. Compose redraws the affected UI when the state it reads changes."],
+    ["Flow", "A live stream of values. In CloudSync, Room uses Flow to send the current notes list, then send a new list whenever matching rows change. The screen does not poll or manually refresh."],
+    ["StateFlow", "A screen-friendly Flow that always holds the latest value. The ViewModel turns Room Flows into StateFlows so Compose can draw the current notes list and pending count."],
+    ["DAO", "Data Access Object: the database doorway. A DAO holds the queries and write functions used to read and change Room rows."],
+    ["Repository", "The traffic director between Room and CloudApi. It saves locally first, uploads waiting rows, downloads newer cloud rows, and resolves conflicts."],
+    ["Entity", "A Kotlin class Room saves as a database table row. CloudSync's Note entity is one saved note plus sync fields."],
+    ["DTO", "Data Transfer Object: the network-shaped version of data. NoteDto is the note shape sent to and from the cloud."],
+    ["UUID", "A randomly generated id that is extremely unlikely to collide. The phone creates it before the server sees the note."],
     ["outbox", "The set of local rows not yet pushed (syncState != SYNCED). notesToPush() returns it; the sync engine drains it."],
     ["SyncState", "Per-row status: SYNCED (matches the cloud), PENDING (queued to push), FAILED (a push errored). Drives both the sync engine and the UI badge."],
-    ["tombstone (soft delete)", "A delete recorded as deleted = true (hidden from the UI) instead of removing the row, so the delete can still be PUSHED while offline. The row is hard-deleted only after the cloud confirms."],
-    ["client-generated id", "A UUID the app assigns on creation, so an offline-created row has a stable identity before the server ever sees it — and can be pushed later."],
-    ["updatedAt", "An epoch-millis timestamp bumped on every local change; the value two copies compare for last-write-wins."],
-    ["last-write-wins", "A conflict rule: when two copies disagree, the one with the newer updatedAt wins. Simple and fine for personal data."],
-    ["shouldAcceptRemote", "The pure function encoding last-write-wins: accept a remote row only if there's no local copy, or the local copy is SYNCED and not newer. Unit-testable with no Room or coroutines."],
-    ["pull cursor", "How the engine asks for only NEW remote rows. Here it's MAX(updatedAt) of local rows — pull everything changed after the newest thing we already have."],
-    ["WorkManager", "Android's deferrable background-work scheduler. It survives process death, waits for constraints (like a network), and retries with backoff — the right home for sync."],
-    ["CoroutineWorker", "A WorkManager worker whose doWork() is a suspend function. CloudSync's SyncWorker just calls repository.sync()."],
-    ["NetworkType.CONNECTED", "The constraint that makes offline 'just queue': WorkManager runs the sync when there's a connection and defers it (without losing it) when there isn't."],
-    ["Result.retry()", "What the worker returns on a network/server failure — WorkManager runs it again later with exponential backoff. The local data stays safe in Room meanwhile."],
-    ["CloudApi", "The two-method abstraction (pullSince + push) the sync engine depends on, hiding whether a real backend or the offline fake is behind it."],
-    ["Real / Fake switch", "provideCloudApi(useFake = …) returns the in-memory fake (default) or the Retrofit-backed real cloud — a one-line toggle for offline runs and tests."],
+    ["PENDING", "This row changed locally and still needs to upload to the cloud."],
+    ["SYNCED", "This row matches the cloud copy, as far as the app knows."],
+    ["FAILED", "The app tried to upload this row and hit an error. The worker can try again later."],
+    ["tombstone (soft delete)", "A hidden row that means: this note was deleted, but the delete still needs to be sent to the cloud."],
+    ["client-generated id", "An id the phone makes right away, so a note created offline can still be found and uploaded later."],
+    ["updatedAt", "The last time this note changed. If two copies disagree, the newer time wins."],
+    ["last-write-wins", "A simple conflict rule: whichever copy was edited last wins."],
+    ["shouldAcceptRemote", "The small function that decides whether a cloud copy should replace the local copy."],
+    ["pull cursor", "The newest local change time. The app sends this time to the cloud and asks for anything newer."],
+    ["push", "Upload a local change to the cloud."],
+    ["pull", "Download cloud changes into Room."],
+    ["API", "A small set of functions one part of the app promises other parts can call. CloudApi promises push() and pullSince()."],
+    ["Retrofit", "A library that turns Kotlin functions into HTTP web calls for the real cloud."],
+    ["HTTP", "The request/response protocol web clients and servers use to talk."],
+    ["JSON", "A text format for sending structured data over the web."],
+    ["suspend", "A Kotlin keyword for a function that can pause while waiting for database or network work without freezing the screen."],
+    ["upsert", "Update if the row exists; insert if it does not. Room uses this to save the latest version of a note."],
+    ["OnConflictStrategy.REPLACE", "Room's rule for upsert-style saves: if a row with the same primary key already exists, replace it."],
+    ["hardDelete", "Really remove a row from Room. CloudSync only does this after the cloud has received a tombstone delete."],
+    ["WorkManager", "Android's background job system. It can wait for network and try work again later."],
+    ["CoroutineWorker", "The type of WorkManager job used here. CloudSync's worker calls repository.sync()."],
+    ["Context", "An Android handle to app-level services and resources. The worker uses it to reach the app Repository."],
+    ["WorkerParameters", "Startup information WorkManager gives a worker when it runs."],
+    ["NetworkType.CONNECTED", "The rule that says: only run this sync job when the device is online."],
+    ["OneTimeWorkRequestBuilder", "A builder for one WorkManager background job request."],
+    ["Constraints.Builder", "A builder for rules a WorkManager job must satisfy before it runs, such as requiring network."],
+    ["BackoffPolicy.EXPONENTIAL", "A retry rule that waits longer between repeated failures, instead of hammering the network."],
+    ["TimeUnit.SECONDS", "The unit for a delay value. In this code, 30 means 30 seconds."],
+    ["enqueueUniqueWork", "WorkManager's way to queue one named job without starting duplicate copies of the same sync."],
+    ["Result.success()", "The worker's way to say: this job finished successfully."],
+    ["Result.retry()", "The worker's way to say: this failed, please try again later."],
+    ["CloudApi", "The cloud doorway. It has one function to upload a note and one function to download newer notes."],
+    ["Real / Fake switch", "One setting chooses the pretend cloud for local runs and tests or the real web cloud."],
   ];
   (function () {
     var acc = $("#acc");
     TERMS.forEach(function (t) {
       var item = document.createElement("div"); item.className = "acc-item";
+      item.setAttribute("data-term-text", (t[0] + " " + t[1]).toLowerCase());
       var q = document.createElement("button"); q.className = "acc-q"; q.type = "button";
       var term = document.createElement("span"); term.innerHTML = "<code>" + t[0].replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
       var plus = document.createElement("span"); plus.className = "plus"; plus.textContent = "+";
@@ -1483,6 +2364,20 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
       q.addEventListener("click", function () { item.classList.toggle("open"); });
       item.appendChild(q); item.appendChild(a); acc.appendChild(item);
     });
+    var search = $("[data-term-search]");
+    var count = $("[data-term-count]");
+    function filterTerms() {
+      var q = (search && search.value || "").trim().toLowerCase();
+      var shown = 0;
+      $$(".acc-item", acc).forEach(function (item) {
+        var match = !q || (item.getAttribute("data-term-text") || "").indexOf(q) >= 0;
+        item.style.display = match ? "" : "none";
+        if (match) shown++;
+      });
+      if (count) count.textContent = shown + " / " + TERMS.length + " terms";
+    }
+    if (search) search.addEventListener("input", filterTerms);
+    filterTerms();
   })();
 
   // ======================= QUIZ =======================
@@ -1509,27 +2404,36 @@ OneTimeWorkRequestBuilder&lt;SyncWorker&gt;()
       exp: "The row is marked deleted = true (hidden from the UI) and stays in the outbox until the cloud confirms the delete; only then is it hard-deleted locally. That makes deletes survive offline." },
   ];
   (function () {
-    var wrap = $("#quiz"); var answered = {}; var score = 0;
-    QUIZ.forEach(function (item, qi) {
-      var card = document.createElement("div"); card.className = "q";
-      var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
-      var opts = document.createElement("div"); opts.className = "q-opts";
-      item.opts.forEach(function (text, oi) {
-        var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
-        b.addEventListener("click", function () {
-          if (answered[qi]) return;
-          answered[qi] = true;
-          var buttons = $$(".opt", opts);
-          buttons.forEach(function (x, xi) { x.disabled = true; if (xi === item.correct) x.classList.add("correct"); });
-          if (oi !== item.correct) b.classList.add("wrong"); else score++;
-          card.classList.add("answered");
-          $("#quizScore").textContent = score + " / " + QUIZ.length;
+    var wrap = $("#quizWrap");
+    function renderQuiz() {
+      var answered = {};
+      var score = 0;
+      wrap.innerHTML = "";
+      $("#quizScore").textContent = "0 / " + QUIZ.length;
+      QUIZ.forEach(function (item, qi) {
+        var card = document.createElement("div"); card.className = "q";
+        var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
+        var opts = document.createElement("div"); opts.className = "q-opts";
+        item.opts.forEach(function (text, oi) {
+          var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
+          b.addEventListener("click", function () {
+            if (answered[qi]) return;
+            answered[qi] = true;
+            var buttons = $$(".opt", opts);
+            buttons.forEach(function (x, xi) { x.disabled = true; if (xi === item.correct) x.classList.add("correct"); });
+            if (oi !== item.correct) b.classList.add("wrong"); else score++;
+            card.classList.add("answered");
+            $("#quizScore").textContent = score + " / " + QUIZ.length;
+          });
+          opts.appendChild(b);
         });
-        opts.appendChild(b);
+        var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
+        card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
       });
-      var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
-      card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
-    });
+    }
+    var reset = $("#quizReset");
+    if (reset) reset.addEventListener("click", renderQuiz);
+    renderQuiz();
   })();
 })();
 </script>

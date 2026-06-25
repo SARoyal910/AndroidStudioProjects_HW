@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Using a real API — Open-Meteo · NetworkParsing</title>
+<style>
+  :root{
+    --ink:#16212e; --muted:#5b6b7b; --line:#e4e9f0; --bg:#f4f6f9; --card:#fff;
+    --accent:#0f9d58; --accent-soft:#ecfdf3; --accent-line:#bfe9cf;
+    --blue:#2563eb; --blue-soft:#eef4ff; --blue-line:#d3e0ff;
+    --warn:#b45309; --warn-soft:#fff7ed; --warn-line:#fed7aa;
+    --err:#b91c1c; --err-soft:#fef2f2; --err-line:#fecaca;
+    --code-bg:#0f172a; --code-ink:#e6edf6;
+    --shadow:0 1px 2px rgba(15,23,42,.05),0 10px 30px -18px rgba(15,23,42,.3);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:var(--blue);}
+  code,kbd{font-family:ui-monospace,Menlo,Consolas,monospace;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px 80px;}
+
+  /* hero */
+  header.hero{background:linear-gradient(135deg,#0b1220 0%,#0c2a22 55%,#0f9d58 175%);color:#fff;padding:34px 20px 30px;}
+  header.hero .inner{max-width:880px;margin:0 auto;}
+  .eyebrow{letter-spacing:.16em;text-transform:uppercase;font-size:12px;font-weight:800;color:#7fe9c0;margin:0;}
+  header.hero h1{margin:6px 0 0;font-size:30px;line-height:1.12;font-weight:850;letter-spacing:-.015em;}
+  header.hero p.lede{margin:12px 0 0;color:#dbeee6;font-size:16.5px;max-width:70ch;}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#eafff6;font-size:12.5px;font-weight:700;padding:4px 11px;border-radius:999px;}
+  .crumbs{margin-top:16px;font-size:13px;}
+  .crumbs a{color:#bff0db;text-decoration:none;font-weight:700;border:1px solid rgba(255,255,255,.25);padding:5px 11px;border-radius:8px;}
+  .crumbs a:hover{background:rgba(255,255,255,.1);}
+
+  /* table of contents */
+  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:24px 0 0;box-shadow:var(--shadow);}
+  nav.toc b{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#9aa8b8;}
+  nav.toc ol{margin:8px 0 0;padding-left:22px;columns:2;column-gap:26px;}
+  nav.toc li{margin:3px 0;font-size:14.5px;}
+  @media (max-width:620px){ nav.toc ol{columns:1;} }
+
+  section{margin-top:34px;}
+  h2{font-size:22px;font-weight:850;letter-spacing:-.01em;margin:0 0 4px;display:flex;align-items:center;gap:10px;}
+  h2 .n{flex:none;width:30px;height:30px;border-radius:9px;background:var(--ink);color:#fff;font-size:15px;display:grid;place-items:center;}
+  h3{font-size:16px;margin:20px 0 6px;}
+  p{margin:10px 0;}
+  .sub{color:var(--muted);font-size:15px;margin-top:2px;}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);margin:14px 0;}
+  .callout{border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:0 12px 12px 0;padding:12px 16px;margin:14px 0;font-size:15px;}
+  .callout.blue{border-color:var(--blue);background:var(--blue-soft);}
+  .callout.warn{border-color:var(--warn);background:var(--warn-soft);}
+  .callout b{color:var(--ink);}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:14px 16px;overflow:auto;font-size:13.5px;line-height:1.6;margin:12px 0;}
+  pre .c{color:#7d8aa0;font-style:italic;} pre .k{color:#c792ea;} pre .s{color:#9ae6a6;} pre .t{color:#7fd4ff;} pre .a{color:#ffcb6b;} pre .n{color:#f5b86b;}
+  p code, li code, td code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:13.5px;}
+
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px;}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+  th{background:#f7f9fc;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:#7c8aa0;}
+  td code{white-space:nowrap;}
+
+  /* URL builder */
+  .builder label{display:block;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#7c8aa0;margin:0 0 6px;}
+  .builder select{font:15px inherit;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;min-width:180px;}
+  .checks{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:4px;}
+  .checks label{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink);margin:0;}
+  .urlout{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:12px 14px;font:13px ui-monospace,Menlo,monospace;word-break:break-all;margin-top:12px;}
+  .urlout .host{color:#7fd4ff;} .urlout .path{color:#9ae6a6;} .urlout .q{color:#ffcb6b;} .urlout .amp{color:#7d8aa0;}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  button.btn,a.btn{font:14px inherit;font-weight:700;padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block;}
+  button.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  button.btn:hover,a.btn:hover{border-color:var(--accent);}
+  button.btn.primary:hover{background:#0c8a4d;}
+
+  .result{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+  @media (max-width:680px){ .result{grid-template-columns:1fr;} }
+  .resultcard{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;}
+  .resultcard .h{font-size:12px;font-weight:800;color:#475569;background:#f7f9fc;border-bottom:1px solid var(--line);padding:8px 12px;}
+  .resultcard .b{padding:12px;}
+  .wcard{text-align:center;}
+  .wcard .emoji{font-size:46px;line-height:1;}
+  .wcard .temp{font-size:34px;font-weight:850;margin-top:2px;}
+  .wcard .city{font-size:16px;font-weight:750;}
+  .wcard .desc{color:var(--muted);font-size:14px;}
+  .wcard .details{display:flex;justify-content:space-evenly;margin-top:10px;font-size:13px;}
+  .wcard .details b{display:block;font-size:15px;}
+  pre.json{margin:0;border-radius:0;max-height:280px;font-size:12px;}
+  .errbox{border:1px solid var(--err-line);background:var(--err-soft);color:var(--err);border-radius:10px;padding:12px 14px;font-size:14px;margin-top:12px;}
+
+  footer{margin-top:50px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13.5px;}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="inner">
+    <p class="eyebrow">NetworkParsing · Android · Kotlin · Retrofit</p>
+    <h1>Using a real API: Open-Meteo</h1>
+    <p class="lede">A plain-English, step-by-step guide to the live weather API this app talks to — what the request looks like, how to read the JSON it sends back, and exactly how the Kotlin code turns that into the screen. You can try every call right here in the browser first.</p>
+    <div class="badges">
+      <span class="badge">✅ 100% free</span>
+      <span class="badge">🔑 No API key</span>
+      <span class="badge">📝 No sign-up</span>
+      <span class="badge">🌍 Real, live data</span>
+    </div>
+    <div class="crumbs"><a href="./README.md">← Project README</a> &nbsp; <a href="./network-parsing-explorer.html">Interactive explorer</a> &nbsp; <a href="./how-a-note-is-fetched.html">Step-by-step walkthrough</a> &nbsp; <a href="../labs/index.html">Networking labs</a></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc">
+  <b>On this page</b>
+  <ol>
+    <li><a href="#what">What an API is</a></li>
+    <li><a href="#request">The request, piece by piece</a></li>
+    <li><a href="#builder">Build &amp; run a call (live)</a></li>
+    <li><a href="#response">Read the JSON it returns</a></li>
+    <li><a href="#mapping">JSON → Kotlin → screen</a></li>
+    <li><a href="#code">How the app makes the call</a></li>
+    <li><a href="#cities">Coordinates &amp; adding cities</a></li>
+    <li><a href="#run">Run it: live vs offline</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+    <li><a href="#keys">When an API <em>does</em> need a key</a></li>
+  </ol>
+</nav>
+
+<!-- 1 ------------------------------------------------------------------->
+<section id="what">
+  <h2><span class="n">1</span> What an “API” is, in one minute</h2>
+  <p>An <b>API</b> (Application Programming Interface) is a doorway one program opens so other programs can ask it for things. A <b>web API</b> is that doorway reachable over the internet: you send an HTTP request to a URL, and the server sends back data — almost always as <b>JSON</b> text.</p>
+  <p class="sub">Think of a restaurant: the <b>menu</b> is the API (what you’re allowed to order), your <b>order</b> is the request, and the <b>plate of food</b> is the response. You don’t go into the kitchen — you just use the menu.</p>
+  <div class="card">
+    <p style="margin:0"><b>Our API:</b> <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> — a free weather service. We use one endpoint, <b>Forecast</b>, which lives at:</p>
+    <pre style="margin-top:10px">https://api.open-meteo.com/v1/forecast</pre>
+    <p class="sub" style="margin-bottom:0">Open-Meteo is free for non-commercial use and needs <b>no API key</b>, which is why this app works the moment you run it.</p>
+  </div>
+</section>
+
+<!-- 2 ------------------------------------------------------------------->
+<section id="request">
+  <h2><span class="n">2</span> The request, piece by piece</h2>
+  <p>Every web request is just a URL plus an HTTP <b>method</b>. We only ever do a <b>GET</b> (“fetch me some data”). Here is the exact URL the app builds, color-coded:</p>
+  <div class="urlout">
+    <span class="host">https://api.open-meteo.com</span><span class="path">/v1/forecast</span><span class="q">?latitude=28.54</span><span class="amp">&amp;</span><span class="q">longitude=-81.38</span><span class="amp">&amp;</span><span class="q">current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m</span>
+  </div>
+  <table>
+    <tr><th>Piece</th><th>What it is</th><th>Why it’s there</th></tr>
+    <tr><td><code>https://</code></td><td>scheme</td><td>Encrypted HTTP — always use HTTPS.</td></tr>
+    <tr><td><code>api.open-meteo.com</code></td><td>host</td><td>Which server to talk to. In Retrofit this is the <b>base URL</b>.</td></tr>
+    <tr><td><code>/v1/forecast</code></td><td>path</td><td>Which endpoint on that server. In Retrofit this is the <code>@GET("v1/forecast")</code> path.</td></tr>
+    <tr><td><code>?…</code></td><td>query start</td><td>A <code>?</code> begins the list of parameters.</td></tr>
+    <tr><td><code>latitude</code>, <code>longitude</code></td><td>query params</td><td><b>Where</b> to get the weather. Open-Meteo is coordinate-based (not city names).</td></tr>
+    <tr><td><code>current</code></td><td>query param</td><td><b>What</b> readings you want, comma-separated. We ask for temperature, humidity, “feels like”, the weather code, and wind.</td></tr>
+  </table>
+  <p class="sub">Each <code>&amp;name=value</code> pair becomes one <code>@Query("name")</code> parameter in the Kotlin interface — see §6.</p>
+</section>
+
+<!-- 3 ------------------------------------------------------------------->
+<section id="builder">
+  <h2><span class="n">3</span> Build a call — and run it live</h2>
+  <p>Pick a city and the readings you want; the URL updates as you go. Then press <b>Fetch live weather</b> to make the <i>real</i> request from this page — the exact same call the Android app makes.</p>
+  <div class="card builder">
+    <label for="city">City (sets latitude &amp; longitude)</label>
+    <select id="city"></select>
+    <div style="margin-top:14px">
+      <label>Current readings (the <code>current=</code> list)</label>
+      <div class="checks" id="vars"></div>
+    </div>
+    <div class="urlout" id="urlOut" style="margin-top:14px"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="fetchBtn">⚡ Fetch live weather</button>
+      <a class="btn" id="openBtn" target="_blank" rel="noopener">↗ Open URL in a new tab</a>
+      <button class="btn" id="copyBtn">⧉ Copy URL</button>
+    </div>
+    <div id="liveArea"></div>
+  </div>
+  <p class="sub">No network? The fetch will fail — and that is exactly the <b>Error</b> state the app is built to show. Try it offline to see it.</p>
+</section>
+
+<!-- 4 ------------------------------------------------------------------->
+<section id="response">
+  <h2><span class="n">4</span> Read the JSON it sends back</h2>
+  <p>A successful response is a JSON object. It contains a lot we ignore (location, units, timezone) and one block we care about: <code>current</code>. Here is a real, trimmed response:</p>
+  <pre><span class="c">// GET …/v1/forecast?latitude=28.54&amp;longitude=-81.38&amp;current=…</span>
+{
+  <span class="t">"latitude"</span>: 28.55, <span class="t">"longitude"</span>: -81.38, <span class="t">"timezone"</span>: <span class="s">"GMT"</span>,
+  <span class="t">"current_units"</span>: { <span class="t">"temperature_2m"</span>: <span class="s">"°C"</span>, <span class="t">"wind_speed_10m"</span>: <span class="s">"km/h"</span> },
+  <span class="t">"current"</span>: {
+    <span class="t">"time"</span>: <span class="s">"2026-06-25T12:30"</span>,
+    <span class="t">"temperature_2m"</span>: 26.8,
+    <span class="t">"relative_humidity_2m"</span>: 41,
+    <span class="t">"apparent_temperature"</span>: 26.3,
+    <span class="t">"weather_code"</span>: 0,
+    <span class="t">"wind_speed_10m"</span>: 8.4
+  }
+}</pre>
+  <div class="callout"><b>Two things to notice.</b> (1) The keys are <code>snake_case</code> (<code>temperature_2m</code>), which doesn’t match Kotlin’s <code>camelCase</code> — we bridge that with <code>@SerialName</code>. (2) <code>weather_code</code> is a <b>number</b> (a WMO code), not text — we decode it ourselves (see the table below).</p></div>
+  <h3>What <code>weather_code</code> means (WMO codes)</h3>
+  <table>
+    <tr><th>Code(s)</th><th>Meaning</th><th></th></tr>
+    <tr><td><code>0</code>, <code>1</code></td><td>clear / mainly clear</td><td>☀️</td></tr>
+    <tr><td><code>2</code></td><td>partly cloudy</td><td>⛅</td></tr>
+    <tr><td><code>3</code></td><td>overcast</td><td>☁️</td></tr>
+    <tr><td><code>45</code>, <code>48</code></td><td>fog</td><td>🌫️</td></tr>
+    <tr><td><code>51–67</code></td><td>drizzle / rain / freezing rain</td><td>🌧️</td></tr>
+    <tr><td><code>71–77</code></td><td>snow</td><td>❄️</td></tr>
+    <tr><td><code>80–82</code></td><td>rain showers</td><td>🌦️</td></tr>
+    <tr><td><code>95–99</code></td><td>thunderstorm</td><td>⛈️</td></tr>
+  </table>
+  <p class="sub">This is the lookup the app’s <code>wmoDescription(code)</code> function performs.</p>
+</section>
+
+<!-- 5 ------------------------------------------------------------------->
+<section id="mapping">
+  <h2><span class="n">5</span> From JSON to a clean object on screen</h2>
+  <p>The app never lets that nested, snake_cased JSON reach the UI. It does this in three steps, in one place each:</p>
+  <table>
+    <tr><th>JSON key (wire)</th><th>DTO property (<code>CurrentDto</code>)</th><th>Domain field (<code>Weather</code>)</th></tr>
+    <tr><td><code>current.temperature_2m</code></td><td><code>@SerialName("temperature_2m") temperature</code></td><td><code>temperatureC</code> (rounded)</td></tr>
+    <tr><td><code>current.apparent_temperature</code></td><td><code>@SerialName("apparent_temperature") feelsLike</code></td><td><code>feelsLikeC</code> (rounded)</td></tr>
+    <tr><td><code>current.relative_humidity_2m</code></td><td><code>@SerialName("relative_humidity_2m") humidity</code></td><td><code>humidityPercent</code></td></tr>
+    <tr><td><code>current.weather_code</code></td><td><code>@SerialName("weather_code") weatherCode</code></td><td><code>description</code> (via <code>wmoDescription</code>)</td></tr>
+    <tr><td><code>current.wind_speed_10m</code></td><td><code>@SerialName("wind_speed_10m") windSpeed</code></td><td><code>windKmh</code> (rounded)</td></tr>
+  </table>
+  <p>The <b>DTO</b> mirrors the wire exactly; the <b>domain model</b> is flat and UI-ready; the <b>mapper</b> (<code>toWeather()</code>) is the single bridge. If Open-Meteo ever renames a field, only the DTO + mapper change — never the screen.</p>
+</section>
+
+<!-- 6 ------------------------------------------------------------------->
+<section id="code">
+  <h2><span class="n">6</span> How the app makes the call (the Kotlin)</h2>
+  <p>You declare the endpoint as an interface; Retrofit writes the HTTP code for you. Each <code>@Query</code> becomes one <code>&amp;name=value</code> in the URL from §2.</p>
+  <pre><span class="c">// WeatherApi.kt</span>
+<span class="k">interface</span> <span class="t">WeatherApi</span> {
+    <span class="a">@GET</span>(<span class="s">"v1/forecast"</span>)
+    <span class="k">suspend fun</span> fetchForecast(
+        <span class="a">@Query</span>(<span class="s">"latitude"</span>) latitude: <span class="t">Double</span>,
+        <span class="a">@Query</span>(<span class="s">"longitude"</span>) longitude: <span class="t">Double</span>,
+        <span class="a">@Query</span>(<span class="s">"current"</span>) current: <span class="t">String</span> = <span class="s">"temperature_2m,…,wind_speed_10m"</span>,
+    ): <span class="t">ForecastResponseDto</span>          <span class="c">// JSON object → DTO, parsed for you</span>
+}</pre>
+  <p>The <b>repository</b> makes the call, then flattens the DTO into the domain model — and a one-line switch lets it run offline:</p>
+  <pre><span class="c">// WeatherRepository.kt</span>
+<span class="k">class</span> <span class="t">RealWeatherRepository</span>(<span class="k">private val</span> api: <span class="t">WeatherApi</span> = provideWeatherApi()) : <span class="t">WeatherRepository</span> {
+    <span class="k">override suspend fun</span> getWeather(city: <span class="t">City</span>): <span class="t">Weather</span> {
+        <span class="k">val</span> dto = api.fetchForecast(city.latitude, city.longitude)  <span class="c">// network + parse</span>
+        <span class="k">return</span> dto.toWeather(city)                                   <span class="c">// nested DTO → flat domain</span>
+    }
+}
+
+<span class="c">// REAL by default (free, no key); pass useFake = true to run fully offline.</span>
+<span class="k">fun</span> provideWeatherRepository(useFake: <span class="t">Boolean</span> = <span class="k">false</span>): <span class="t">WeatherRepository</span> =
+    <span class="k">if</span> (useFake) FakeWeatherRepository() <span class="k">else</span> RealWeatherRepository()</pre>
+  <p>The <b>ViewModel</b> wraps the call in <code>try/catch</code> so a failure becomes a visible <code>Error</code> state instead of a crash — the whole reason the screen has three states. See <code>WeatherViewModel.kt</code>.</p>
+</section>
+
+<!-- 7 ------------------------------------------------------------------->
+<section id="cities">
+  <h2><span class="n">7</span> Coordinates, and adding your own city</h2>
+  <p>Because Open-Meteo wants <b>latitude/longitude</b>, the app ships a small list of cities with their coordinates (<code>PRESET_CITIES</code> in <code>Weather.kt</code>). To add one, find its coordinates and append an entry:</p>
+  <pre><span class="c">// Weather.kt</span>
+<span class="k">val</span> PRESET_CITIES = listOf(
+    <span class="t">City</span>(<span class="s">"Orlando"</span>, <span class="s">"US"</span>, 28.5384, -81.3789),
+    <span class="t">City</span>(<span class="s">"Paris"</span>,   <span class="s">"FR"</span>, 48.8566,   2.3522),   <span class="c">// ← add a line like this</span>
+)</pre>
+  <div class="callout blue"><b>Want a free-text search box instead?</b> Open-Meteo has a separate, also-free <b>Geocoding API</b> that turns a typed name into coordinates:
+    <pre style="margin:8px 0 0"><span class="host">https://geocoding-api.open-meteo.com</span><span class="path">/v1/search</span><span class="q">?name=Paris&amp;count=1</span></pre>
+    Call it first to get <code>latitude</code>/<code>longitude</code>, then call the forecast endpoint — a nice “chain two requests in the repository” extension.</div>
+</section>
+
+<!-- 8 ------------------------------------------------------------------->
+<section id="run">
+  <h2><span class="n">8</span> Run it: live vs offline</h2>
+  <p>The app runs <b>live by default</b> — no setup. On a device or emulator <b>with internet</b>, tap a city chip and you’ll see real current weather.</p>
+  <ul>
+    <li><b>Offline / no network:</b> the request throws and you get the <code>Error</code> card + <b>Retry</b> — by design.</li>
+    <li><b>Force offline mode</b> (for demos or tests): pass <code>useFake = true</code> to <code>provideWeatherRepository(...)</code>; it returns the hardcoded sample after a short delay so you still see Loading → Success.</li>
+    <li><b>The <code>INTERNET</code> permission</b> is already declared in <code>AndroidManifest.xml</code> — required for the live call.</li>
+  </ul>
+  <pre><span class="c"># Build &amp; run from the project root</span>
+./gradlew installDebug
+<span class="c"># Or just compile + run the offline unit tests (no internet needed)</span>
+./gradlew testDebugUnitTest</pre>
+</section>
+
+<!-- 9 ------------------------------------------------------------------->
+<section id="trouble">
+  <h2><span class="n">9</span> Troubleshooting</h2>
+  <table>
+    <tr><th>You see…</th><th>Why</th><th>Fix</th></tr>
+    <tr><td>The <code>Error</code> card</td><td>No network, airplane mode, or a DNS failure.</td><td>Reconnect and tap <b>Retry</b>. This is the app working correctly.</td></tr>
+    <tr><td>Odd temperature units</td><td>A query param was changed.</td><td>Open-Meteo defaults to °C and km/h; don’t add <code>temperature_unit=fahrenheit</code> unless you mean to.</td></tr>
+    <tr><td><code>SerializationException</code></td><td>A required field (e.g. <code>temperature_2m</code>) was missing from <code>current=</code>.</td><td>Keep the variable you read in the <code>current</code> list.</td></tr>
+    <tr><td>Blank / wrong city</td><td>Coordinates point somewhere unexpected.</td><td>Double-check the latitude/longitude in <code>PRESET_CITIES</code>.</td></tr>
+  </table>
+</section>
+
+<!-- 10 ------------------------------------------------------------------->
+<section id="keys">
+  <h2><span class="n">10</span> When an API <em>does</em> need a key</h2>
+  <p>Open-Meteo is unusual in needing no key. Most commercial APIs (OpenWeatherMap, Google Maps, GitHub, Stripe…) give you a secret <b>API key</b> you must send with each request — and which you must <b>never commit to git</b>. The pattern used elsewhere in this repo (see the <b>FirebaseSync</b> / <b>SupabaseSync</b> projects) is:</p>
+  <ol>
+    <li>Put the key in <code>local.properties</code> (already git-ignored) — never in source:
+      <pre style="margin:8px 0"><span class="c"># local.properties (NOT committed)</span>
+someapi.apiKey=YOUR_SECRET_KEY</pre></li>
+    <li>Have <code>build.gradle.kts</code> read it into <code>BuildConfig</code> at build time:
+      <pre style="margin:8px 0"><span class="k">val</span> props = Properties().apply { rootProject.file(<span class="s">"local.properties"</span>).inputStream().use { load(it) } }
+buildConfigField(<span class="s">"String"</span>, <span class="s">"SOMEAPI_KEY"</span>, <span class="s">"\"${'$'}{props.getProperty(\"someapi.apiKey\") ?: \"\"}\""</span>)</pre></li>
+    <li>Read <code>BuildConfig.SOMEAPI_KEY</code> in code and send it as a query param or header — falling back to an offline fake when the key is blank.</li>
+  </ol>
+  <div class="callout warn"><b>Security rule of thumb:</b> a key in client code can always be extracted, so treat mobile keys as <i>identifiers</i>, restrict them (by app id / referrer / rate limit) in the provider’s dashboard, and put anything truly sensitive behind your own server. Keys in <code>local.properties</code> stay off GitHub; if one leaks, rotate it.</div>
+</section>
+
+<footer>
+  Part of the <b>NetworkParsing</b> teaching project · live data from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC-BY 4.0) ·
+  see the <a href="./README.md">README</a>, the <a href="./network-parsing-explorer.html">interactive explorer</a>, the <a href="./how-a-note-is-fetched.html">step-by-step walkthrough</a>, and the <a href="../labs/index.html">Networking labs</a>.
+</footer>
+</div>
+
+<script>
+(function(){
+  // Cities mirror PRESET_CITIES in Weather.kt — name, country, lat, lon.
+  var CITIES = [
+    { name:'Orlando',  country:'US', lat:28.5384, lon:-81.3789 },
+    { name:'New York', country:'US', lat:40.7128, lon:-74.0060 },
+    { name:'London',   country:'UK', lat:51.5072, lon:-0.1276 },
+    { name:'Tokyo',    country:'JP', lat:35.6762, lon:139.6503 },
+    { name:'Sydney',   country:'AU', lat:-33.8688, lon:151.2093 },
+    { name:'Cairo',    country:'EG', lat:30.0444, lon:31.2357 },
+  ];
+  var VARS = [
+    { id:'temperature_2m', label:'temperature_2m', on:true },
+    { id:'relative_humidity_2m', label:'relative_humidity_2m', on:true },
+    { id:'apparent_temperature', label:'apparent_temperature', on:true },
+    { id:'weather_code', label:'weather_code', on:true },
+    { id:'wind_speed_10m', label:'wind_speed_10m', on:true },
+  ];
+  function wmo(code){
+    if(code===0||code===1) return ['clear sky','☀️'];
+    if(code===2) return ['partly cloudy','⛅'];
+    if(code===3) return ['overcast','☁️'];
+    if(code===45||code===48) return ['fog','🌫️'];
+    if(code>=51&&code<=67) return ['rain','🌧️'];
+    if(code>=71&&code<=77) return ['snow','❄️'];
+    if(code>=80&&code<=82) return ['rain showers','🌦️'];
+    if(code>=95&&code<=99) return ['thunderstorm','⛈️'];
+    return ['code '+code,'🌡️'];
+  }
+  var $ = function(id){ return document.getElementById(id); };
+  var citySel = $('city'), varsBox = $('vars'), urlOut = $('urlOut'),
+      openBtn = $('openBtn'), copyBtn = $('copyBtn'), fetchBtn = $('fetchBtn'), liveArea = $('liveArea');
+
+  CITIES.forEach(function(c, i){
+    var o = document.createElement('option'); o.value = i; o.textContent = c.name + ' (' + c.country + ')'; citySel.appendChild(o);
+  });
+  VARS.forEach(function(v){
+    var l = document.createElement('label');
+    var cb = document.createElement('input'); cb.type='checkbox'; cb.value=v.id; cb.checked=v.on; cb.addEventListener('change', render);
+    l.appendChild(cb); l.appendChild(document.createTextNode(v.label)); varsBox.appendChild(l);
+  });
+  citySel.addEventListener('change', render);
+
+  function selectedVars(){ return Array.prototype.slice.call(varsBox.querySelectorAll('input:checked')).map(function(c){return c.value;}); }
+  function buildUrl(){
+    var c = CITIES[citySel.value|0];
+    var cur = selectedVars().join(',');
+    return 'https://api.open-meteo.com/v1/forecast?latitude=' + c.lat + '&longitude=' + c.lon + (cur ? '&current=' + cur : '');
+  }
+  function render(){
+    var c = CITIES[citySel.value|0];
+    var cur = selectedVars().join(',');
+    urlOut.innerHTML = '<span class="host">https://api.open-meteo.com</span><span class="path">/v1/forecast</span>'
+      + '<span class="q">?latitude=' + c.lat + '</span><span class="amp">&amp;</span><span class="q">longitude=' + c.lon + '</span>'
+      + (cur ? '<span class="amp">&amp;</span><span class="q">current=' + cur + '</span>' : '');
+    openBtn.href = buildUrl();
+  }
+  copyBtn.addEventListener('click', function(){
+    var u = buildUrl();
+    if(navigator.clipboard){ navigator.clipboard.writeText(u).then(function(){ copyBtn.textContent='✓ Copied'; setTimeout(function(){ copyBtn.textContent='⧉ Copy URL'; },1200); }); }
+  });
+
+  fetchBtn.addEventListener('click', function(){
+    var url = buildUrl(), city = CITIES[citySel.value|0];
+    liveArea.innerHTML = '<p class="sub" style="margin-top:14px">⏳ Loading… (this is the app’s <b>Loading</b> state)</p>';
+    fetch(url).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data){ showSuccess(city, data); })
+      .catch(function(err){
+        liveArea.innerHTML = '<div class="errbox"><b>Couldn’t load the weather.</b><br>' + String(err.message) +
+          '<br><span style="opacity:.8">This is exactly the <b>Error</b> state the Android app renders (with a Retry button).</span></div>';
+      });
+  });
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function showSuccess(city, data){
+    var cur = data.current || {};
+    var code = cur.weather_code;
+    var d = wmo(typeof code === 'number' ? code : -1);
+    var temp = Math.round(cur.temperature_2m);
+    var feels = Math.round(cur.apparent_temperature);
+    var hum = cur.relative_humidity_2m;
+    var wind = Math.round(cur.wind_speed_10m);
+    var card = '<div class="resultcard"><div class="h">Parsed → the Weather card the app shows</div><div class="b wcard">'
+      + '<div class="emoji">' + d[1] + '</div>'
+      + '<div class="temp">' + (isNaN(temp)?'—':temp) + '°C</div>'
+      + '<div class="city">' + esc(city.name) + ', ' + esc(city.country) + '</div>'
+      + '<div class="desc">' + d[0] + '</div>'
+      + '<div class="details">'
+      +   '<div>' + (isNaN(feels)?'—':feels) + '°<b>Feels</b></div>'
+      +   '<div>' + (hum==null?'—':hum) + '%<b>Humidity</b></div>'
+      +   '<div>' + (isNaN(wind)?'—':wind) + '<b>km/h wind</b></div>'
+      + '</div></div></div>';
+    var raw = '<div class="resultcard"><div class="h">Raw JSON the API sent back</div><pre class="json">' + esc(JSON.stringify(data, null, 2)) + '</pre></div>';
+    liveArea.innerHTML = '<div class="result">' + card + raw + '</div>';
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

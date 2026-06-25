@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Hands-on Labs — Compose &amp; Navigation 3</title>
 <link rel="stylesheet" href="labs.css" />
+<style>
+  /* per-track accents for the data-layer lab cards */
+  .labcard.networking .lc-num{background:#0f9d58;}
+  .labcard.firebase .lc-num{background:#ffa000;}
+  .labcard.supabase .lc-num{background:#3ecf8e;}
+  .labcard.cumulative .lc-num{background:#a855f7;}
+  .labcard.firebase:hover{border-color:#ffa000;}
+  .labcard.supabase:hover{border-color:#3ecf8e;}
+  .labcard.cumulative:hover{border-color:#a855f7;}
+  .labcard.firebase .lc-skills code{color:#9a6400;background:#fff7e6;border-color:#ffe2a8;}
+  .labcard.supabase .lc-skills code{color:#0c7a52;background:#e9fbf3;border-color:#bdebd6;}
+  .labcard.cumulative .lc-skills code{color:#7c3aed;background:#f5edff;border-color:#e3d3ff;}
+</style>
 </head>
 <body>
 <header class="hero">
@@ -23,13 +36,25 @@
 </header>
 
 <div class="wrap">
-  <p class="intro">Pick a lab. The Compose track builds UI; the Navigation track builds back-stack intuition. Roughly in order of difficulty.</p>
+  <p class="intro">Pick a lab. The <b>Compose</b> and <b>Navigation</b> tracks build UI and back-stack intuition; the <b>Networking</b>, <b>Firebase</b>, and <b>Supabase</b> tracks build the data layer; the <b>Cumulative</b> track ties it all together with capstones drawn from the homework. Roughly in order of difficulty within each track.</p>
 
   <div class="tracktitle">🎨 Compose track</div>
   <div class="labgrid" id="compose-grid"></div>
 
   <div class="tracktitle">🧭 Navigation 3 track</div>
   <div class="labgrid" id="nav-grid"></div>
+
+  <div class="tracktitle">🌐 Networking track · Retrofit + JSON + UI state</div>
+  <div class="labgrid" id="net-grid"></div>
+
+  <div class="tracktitle">🔥 Firebase track · offline-first sync (Firestore)</div>
+  <div class="labgrid" id="firebase-grid"></div>
+
+  <div class="tracktitle">🟢 Supabase track · offline-first sync (Postgres)</div>
+  <div class="labgrid" id="supabase-grid"></div>
+
+  <div class="tracktitle">🎓 Cumulative track · capstones from the homework</div>
+  <div class="labgrid" id="cumulative-grid"></div>
 </div>
 
 <script>
@@ -51,9 +76,37 @@
       { n:12, href:'nav-02-argument.html',  title:'Carry the right argument',   level:'Beginner',     blurb:'Fix the itemId a DetailKey carries so it shows Saturn.', skills:['NavKey args'] },
       { n:13, href:'nav-03-deeplink.html',  title:'Seed a deep-link stack',     level:'Intermediate', blurb:'Hand-build a back stack so a deep link lands on Jupiter with working Back.', skills:['deep link','rememberNavBackStack'] },
     ],
+    networking: [
+      { n:14, href:'net-01-dto.html',      title:'Match the JSON shape',     level:'Beginner',     blurb:'Make a @Serializable DTO whose fields mirror the JSON keys, plus a clean domain model that drops what the UI ignores.', skills:['@Serializable','DTO','data class'] },
+      { n:15, href:'net-02-retrofit.html', title:'Describe the endpoint',     level:'Beginner',     blurb:'Declare GET /posts as a suspend Retrofit method, and make the JSON parser tolerate new server fields.', skills:['Retrofit','@GET','suspend','ignoreUnknownKeys'] },
+      { n:16, href:'net-03-mapper.html',   title:'Map to the domain',         level:'Beginner',     blurb:'Write the one mapper that turns a NoteDto into a clean Note — and watch the UI stop leaking userId.', skills:['mapper','DTO → domain'] },
+      { n:17, href:'net-04-uistate.html',  title:'Model the three states',    level:'Intermediate', blurb:'A sealed Loading / Success / Error state rendered by an exhaustive when — impossible to forget a case.', skills:['sealed interface','UiState','when'] },
+      { n:18, href:'net-05-error.html',    title:'Handle failure',            level:'Intermediate', blurb:'Turn any thrown failure into an Error state with try/catch, and observe the StateFlow lifecycle-awarely.', skills:['try/catch','StateFlow','collectAsStateWithLifecycle'] },
+    ],
+    firebase: [
+      { n:19, href:'fire-01-entity.html',     title:'Add sync bookkeeping',     level:'Beginner',     blurb:'Grow a plain Room row into a syncable one: a client id, an updatedAt clock, a pending marker, and a tombstone flag.', skills:['@Entity','SyncState','offline-first'] },
+      { n:20, href:'fire-02-optimistic.html', title:'Write optimistically',     level:'Intermediate', blurb:'Save to Room first (marked PENDING) with a client-generated id so a note appears instantly, online or not.', skills:['optimistic','PENDING','UUID'] },
+      { n:21, href:'fire-03-tombstone.html',  title:'Soft-delete with a tombstone', level:'Intermediate', blurb:'Delete offline by leaving a tombstone you can still push — never hard-delete a row that has not synced.', skills:['tombstone','copy','soft delete'] },
+      { n:22, href:'fire-04-lww.html',        title:'Last-write-wins',          level:'Intermediate', blurb:'Conflict resolution as one pure, unit-tested function — make the JUnit suite go green.', skills:['pure fn','last-write-wins','unit test'] },
+      { n:23, href:'fire-05-sync.html',       title:'Push the outbox, pull the changes', level:'Advanced', blurb:'Complete the sync engine: push everything offline, then pull remote rows newer than your cursor.', skills:['push / pull','cursor','Firestore'] },
+    ],
+    supabase: [
+      { n:24, href:'supa-01-serialname.html', title:'snake_case ↔ camelCase',   level:'Beginner',     blurb:'Bridge the Postgres updated_at column to a Kotlin updatedAt property with @Serializable + @SerialName.', skills:['@SerialName','@Serializable'] },
+      { n:25, href:'supa-02-select.html',     title:'SELECT the changed rows',  level:'Intermediate', blurb:'Build the pull query with the Postgrest DSL: filter on updated_at and order oldest-first.', skills:['Postgrest','filter / gt','order'] },
+      { n:26, href:'supa-03-upsert.html',     title:'Upsert = INSERT … ON CONFLICT', level:'Intermediate', blurb:'One push that creates or edits a row, asking Postgres to return the stored copy.', skills:['upsert','ON CONFLICT','decodeSingle'] },
+      { n:27, href:'supa-04-rls.html',        title:'RLS is the real gate',     level:'Intermediate', blurb:'The anon key is not a permission. Enable Row-Level Security and scope a policy to auth.uid().', skills:['RLS','auth.uid()','SQL policy'] },
+      { n:28, href:'supa-05-client.html',     title:'Wire the Supabase client', level:'Beginner',     blurb:'Build one client and install the Postgrest plugin so from("notes").select / upsert come to life.', skills:['createSupabaseClient','Postgrest'] },
+    ],
+    cumulative: [
+      { n:29, href:'cap-01-statein.html',     title:'Cold Flow → hot StateFlow', level:'Intermediate', blurb:'Bridge a Room Flow to a rotation-proof StateFlow with stateIn + WhileSubscribed. (Homework 6)', skills:['stateIn','WhileSubscribed','StateFlow'] },
+      { n:30, href:'cap-02-routing.html',     title:'Insert vs update routing',  level:'Intermediate', blurb:'Route one save() to insert or update on id == 0L — green-light the JUnit suite. (Homework 6)', skills:['Room','insert / update','id == 0L'] },
+      { n:31, href:'cap-03-purelogic.html',   title:'A pure, immutable game rule', level:'Intermediate', blurb:'Implement Board.reset() as a pure copy — no var, no mutation — so the tests run on the JVM. (Homework 7)', skills:['pure fn','copy','unit test'] },
+      { n:32, href:'cap-04-sharedstate.html', title:'Shared ViewModel state',    level:'Intermediate', blurb:'Expose favorites read-only and toggle the Set atomically with update { }. (Homework 3)', skills:['StateFlow','update','Set'] },
+      { n:33, href:'cap-05-offlinefirst.html', title:'The offline-first loop',   level:'Advanced',     blurb:'The capstone: read Room as a StateFlow, write locally first, then request a sync — the whole loop in one ViewModel.', skills:['StateFlow','offline-first','sync'] },
+    ],
   };
   function card(lab, kind){
-    var a=document.createElement('a'); a.className='labcard'+(kind==='nav'?' nav':''); a.href=lab.href;
+    var a=document.createElement('a'); a.className='labcard'+(kind?' '+kind:''); a.href=lab.href;
     var top=document.createElement('div'); top.className='lc-top';
     var num=document.createElement('span'); num.className='lc-num'; num.textContent=lab.n; top.appendChild(num);
     var lvl=document.createElement('span'); lvl.className='lc-level'; lvl.textContent=lab.level; top.appendChild(lvl);
@@ -65,8 +118,13 @@
     a.appendChild(sk);
     return a;
   }
-  var cg=document.getElementById('compose-grid'); LABS.compose.forEach(function(l){ cg.appendChild(card(l,'compose')); });
-  var ng=document.getElementById('nav-grid'); LABS.nav.forEach(function(l){ ng.appendChild(card(l,'nav')); });
+  function fill(gridId, list, kind){ var g=document.getElementById(gridId); if(g) list.forEach(function(l){ g.appendChild(card(l,kind)); }); }
+  fill('compose-grid', LABS.compose, 'compose');
+  fill('nav-grid', LABS.nav, 'nav');
+  fill('net-grid', LABS.networking, 'networking');
+  fill('firebase-grid', LABS.firebase, 'firebase');
+  fill('supabase-grid', LABS.supabase, 'supabase');
+  fill('cumulative-grid', LABS.cumulative, 'cumulative');
 </script>
 </body>
 </html>

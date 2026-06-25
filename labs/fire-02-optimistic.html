@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Write optimistically</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Firebase', sim: 'sync', flavor: 'firestore',
+  id: 'fire-02', title: 'Lab · Write optimistically (offline-first)', level: 'Intermediate',
+  goal: 'The offline-first write rule: save to Room FIRST (marked PENDING) so the note appears instantly — online or not — and a background sync pushes it later.',
+  steps: [
+    'Generate a client id with <code>UUID.randomUUID().toString()</code> so the row has an identity before the server sees it.',
+    'Stamp <code>updatedAt = System.currentTimeMillis()</code>.',
+    'Mark it <code>syncState = SyncState.PENDING</code> and <code>dao.upsert(...)</code> it now — do not wait for the network.',
+  ],
+  hints: [
+    'Optimistic = the UI reflects the change immediately, before the cloud confirms it.',
+    'The id is generated on the device, so the SAME id is the key locally and in the cloud.',
+    'Run <b>Edit offline</b>: a correct write shows a PENDING note instantly even with no connection.',
+  ],
+  scenarios: [ {id:'editOffline',label:'Edit offline'}, {id:'goOnline',label:'Go online & sync'} ],
+  starter:
+'// Offline-first WRITE: save to Room FIRST (marked PENDING) so the note shows up\n' +
+'// instantly whether or not we are online. A background sync pushes it later.\n' +
+'suspend fun addNote(title: String, body: String) {\n' +
+'    val clean = title.trim()\n' +
+'    if (clean.isEmpty()) return\n' +
+'    // TODO: upsert a Note NOW — client id, updatedAt stamp, PENDING state\n' +
+'}\n',
+  solution:
+'suspend fun addNote(title: String, body: String) {\n' +
+'    val clean = title.trim()\n' +
+'    if (clean.isEmpty()) return\n' +
+'    dao.upsert(\n' +
+'        Note(\n' +
+'            id = UUID.randomUUID().toString(),\n' +
+'            title = clean,\n' +
+'            body = body.trim(),\n' +
+'            updatedAt = System.currentTimeMillis(),\n' +
+'            syncState = SyncState.PENDING,\n' +
+'        )\n' +
+'    )\n' +
+'}\n',
+  checks: [
+    { id:'clientId', label:'Client id via <code>UUID.randomUUID().toString()</code>', re:/UUID\.randomUUID\(\)\.toString\(\)/ },
+    { id:'ts', label:'Stamps <code>updatedAt = System.currentTimeMillis()</code>', re:/updatedAt\s*=\s*System\.currentTimeMillis\(\)/ },
+    { id:'optimistic', label:'<code>dao.upsert(...)</code> a row marked <code>SyncState.PENDING</code>', all:[/dao\.upsert\(/, /syncState\s*=\s*SyncState\.PENDING/] },
+  ],
+});
+</script>
+</body>
+</html>

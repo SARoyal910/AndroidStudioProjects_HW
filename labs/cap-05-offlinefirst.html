@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — The offline-first loop (capstone)</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Cumulative', sim: 'sync', flavor: 'firestore',
+  id: 'cap-05', title: 'Lab · The offline-first loop (capstone)', level: 'Advanced',
+  goal: 'Tie it together: the screen reads Room as a StateFlow, and every intent writes locally FIRST, then requests a sync. This is the whole offline-first loop in one ViewModel.',
+  steps: [
+    'Surface the local list: <code>repo.notes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())</code>.',
+    'In <code>addNote</code>, run inside <code>viewModelScope.launch { … }</code>.',
+    'Do the optimistic local write first: <code>repo.addNote(title, body)</code>, then <code>requestSync()</code>.',
+  ],
+  hints: [
+    'Reads come from Room (instant, offline-OK); writes go to Room first and a background sync pushes them.',
+    'The order matters: write, THEN sync — the UI updates immediately, the network catches up.',
+    'Run <b>Edit offline</b> then <b>Go online &amp; sync</b> to watch a PENDING note reconcile.',
+  ],
+  scenarios: [ {id:'editOffline',label:'Edit offline'}, {id:'goOnline',label:'Go online & sync'}, {id:'remoteEdit',label:'Remote edit arrives'} ],
+  starter:
+'// The capstone: the screen reads Room as a StateFlow, and every intent writes\n' +
+'// locally FIRST (instant, offline-OK), then requests a sync.\n' +
+'val notes: StateFlow<List<Note>> =\n' +
+'    repo.notes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())\n' +
+'\n' +
+'fun addNote(title: String, body: String) {\n' +
+'    viewModelScope.launch {\n' +
+'        // TODO: 1) optimistic local write   2) request a sync\n' +
+'    }\n' +
+'}\n',
+  solution:
+'val notes: StateFlow<List<Note>> =\n' +
+'    repo.notes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())\n' +
+'\n' +
+'fun addNote(title: String, body: String) {\n' +
+'    viewModelScope.launch {\n' +
+'        repo.addNote(title, body)   // 1) optimistic local write (Room → UI instantly)\n' +
+'        requestSync()               // 2) durable retry + immediate sync when online\n' +
+'    }\n' +
+'}\n',
+  checks: [
+    { id:'stateIn', label:'Local list surfaced via <code>repo.notes.stateIn(… WhileSubscribed …)</code>', all:[/repo\.notes/, /\.stateIn\(/, /WhileSubscribed/] },
+    { id:'scope', label:'Intent runs in <code>viewModelScope.launch { }</code>', re:/viewModelScope\.launch/ },
+    { id:'optimistic', label:'Optimistic local write first: <code>repo.addNote(title, body)</code>', re:/repo\.addNote\(\s*title\s*,\s*body\s*\)/ },
+    { id:'sync', label:'Then <code>requestSync()</code>', re:/requestSync\(\)/ },
+  ],
+});
+</script>
+</body>
+</html>

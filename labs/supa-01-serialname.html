@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Bridge snake_case and camelCase</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Supabase', sim: 'runner',
+  id: 'supa-01', title: 'Lab · Bridge snake_case ↔ camelCase', level: 'Beginner',
+  goal: 'The DTO is one row of the Supabase notes table, sent as JSON. Postgres columns are snake_case; Kotlin properties are camelCase. Bridge them so (de)serialization works.',
+  steps: [
+    'Annotate <code>NoteDto</code> with <code>@Serializable</code> so supabase-kt can <code>decodeList</code> / <code>decodeSingle</code> it.',
+    'Map the clock column with <code>@SerialName("updated_at") val updatedAt: Long</code>.',
+    'Leave <code>id</code>, <code>title</code>, <code>body</code>, <code>deleted</code> as-is — they spell the same in both conventions.',
+  ],
+  hints: [
+    'Without <code>@Serializable</code> the compiler plugin generates no JSON logic and decoding fails.',
+    '<code>@SerialName("updated_at")</code> tells the serializer which JSON key feeds <code>updatedAt</code>.',
+    'The Postgres column MUST be named <code>updated_at</code> for the round-trip to line up.',
+  ],
+  starter:
+'// The DTO is ONE row of the Supabase `notes` table, sent as JSON. Postgres uses\n' +
+'// snake_case ("updated_at"); Kotlin uses camelCase ("updatedAt"). Bridge them.\n' +
+'data class NoteDto(\n' +
+'    val id: String,\n' +
+'    val title: String,\n' +
+'    val body: String,\n' +
+'    val updatedAt: Long,        // JSON key would be "updatedAt" — but the column is "updated_at"\n' +
+'    val deleted: Boolean = false,\n' +
+')\n',
+  solution:
+'@Serializable\n' +
+'data class NoteDto(\n' +
+'    val id: String,\n' +
+'    val title: String,\n' +
+'    val body: String,\n' +
+'    @SerialName("updated_at") val updatedAt: Long,\n' +
+'    val deleted: Boolean = false,\n' +
+')\n',
+  checks: [
+    { id:'serializable', label:'<code>NoteDto</code> is <code>@Serializable</code>', all:[/@Serializable/, /data class NoteDto/] },
+    { id:'serialname', label:'<code>@SerialName("updated_at") val updatedAt: Long</code>', re:/@SerialName\(\s*"updated_at"\s*\)\s*val updatedAt\s*:\s*Long/ },
+    { id:'fields', label:'<code>id</code> / <code>title</code> / <code>body</code> / <code>deleted</code> map 1:1', all:[/val id\s*:\s*String/, /val title\s*:\s*String/, /val body\s*:\s*String/, /val deleted\s*:\s*Boolean/] },
+  ],
+  tests: [
+    { name:'NoteDto is @Serializable (decodeList compiles)', needs:['serializable'] },
+    { name:'updatedAt maps to column "updated_at"', needs:['serialname'] },
+    { name:'id / title / body / deleted map 1:1', needs:['fields'] },
+  ],
+});
+</script>
+</body>
+</html>

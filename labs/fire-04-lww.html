@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Last-write-wins</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Firebase', sim: 'runner',
+  id: 'fire-04', title: 'Lab · Last-write-wins (the pure rule)', level: 'Intermediate',
+  goal: 'Conflict resolution is one pure function — no Room, no coroutines — so it is fully unit-testable. Make the JUnit tests pass.',
+  steps: [
+    'Accept the remote row when <code>local == null</code> (we have no copy — any data beats none).',
+    'Otherwise accept only when our local copy is <code>SyncState.SYNCED</code> <b>and</b> <code>remote.updatedAt &gt;= local.updatedAt</code>.',
+    'A <code>PENDING</code> local edit always wins here — it will be pushed, and the server settles it.',
+  ],
+  hints: [
+    'One boolean expression covers every case: <code>local == null || (local.syncState == SyncState.SYNCED && remote.updatedAt &gt;= local.updatedAt)</code>.',
+    'Using <code>&gt;=</code> (not <code>&gt;</code>) makes re-pulling the same version harmless (idempotent).',
+    'Each test row maps to one case in the FirebaseSync unit-test suite.',
+  ],
+  starter:
+'// PURE last-write-wins rule — no Room, no coroutines, fully unit-testable.\n' +
+'// Accept the incoming REMOTE row only when it should win over our LOCAL copy.\n' +
+'fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean {\n' +
+'    // TODO: accept when there is no local copy, OR our local copy is already\n' +
+'    // SYNCED and not newer than the remote. A PENDING local edit always wins.\n' +
+'    return true\n' +
+'}\n',
+  solution:
+'fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean =\n' +
+'    local == null ||\n' +
+'        (local.syncState == SyncState.SYNCED && remote.updatedAt >= local.updatedAt)\n',
+  checks: [
+    { id:'acceptNull', label:'Accepts when <code>local == null</code>', re:/local\s*==\s*null/ },
+    { id:'syncedNewer', label:'Accepts a SYNCED local only when <code>remote.updatedAt &gt;= local.updatedAt</code>', re:/remote\.updatedAt\s*>=\s*local\.updatedAt/ },
+    { id:'pendingWins', label:'A <code>PENDING</code> local edit is never overwritten (gated on <code>SyncState.SYNCED</code>)', re:/local\.syncState\s*==\s*SyncState\.SYNCED/ },
+  ],
+  tests: [
+    { name:'acceptRemote_whenNoLocalCopy', needs:['acceptNull'] },
+    { name:'acceptRemote_whenLocalSyncedAndRemoteNewer', needs:['syncedNewer','pendingWins'] },
+    { name:'acceptRemote_whenLocalSyncedAndSameTimestamp', needs:['syncedNewer','pendingWins'] },
+    { name:'rejectRemote_whenLocalSyncedButNewer', needs:['syncedNewer','pendingWins'] },
+    { name:'rejectRemote_whenLocalHasUnpushedEdit', needs:['pendingWins'] },
+  ],
+});
+</script>
+</body>
+</html>

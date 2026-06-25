@@ -348,6 +348,7 @@ p { overflow-wrap: anywhere; }
 /* ---------------- tables ---------------- */
 .tbl {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   border: 1px solid var(--line);
   border-radius: 9px;
@@ -363,6 +364,7 @@ p { overflow-wrap: anywhere; }
   padding: 9px 11px;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 .tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
 .tbl tr:last-child td { border-bottom: 0; }
@@ -443,6 +445,499 @@ p { overflow-wrap: anywhere; }
 .foot a { font-weight: 600; }
 .anchor { scroll-margin-top: 12px; }
 
+/* ---------------- lesson helpers ---------------- */
+.lesson-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+.lesson-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 13px 14px;
+}
+.band:nth-child(odd) .lesson-card { background: var(--bg); }
+.lesson-card h3 { margin: 4px 0 8px; font-size: 1rem; }
+.lesson-card ol { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.9rem; }
+.lesson-card li { margin-bottom: 5px; }
+.lesson-time {
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.term-code-table .term-col { width: 20%; }
+.term-code-table .code-col { width: 56%; }
+.term-code-table .where-col { width: 24%; }
+.mini-code {
+  margin: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.band:nth-child(odd) .mini-code { background: var(--surface); }
+
+/* ---------------- active learning helpers ---------------- */
+.tip {
+  position: relative;
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+  font-weight: 750;
+}
+.tip:focus { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.tip:hover::after,
+.tip:focus::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  width: min(320px, 80vw);
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+}
+.predict-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--violet);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 14px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .predict-card { background: var(--bg); }
+.predict-card summary {
+  cursor: pointer;
+  padding: 11px 14px;
+  font-weight: 850;
+  color: var(--ink);
+  background: var(--violet-soft);
+}
+.predict-card .answer { padding: 12px 14px; color: var(--muted); font-size: 0.93rem; }
+.sync-timeline {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .sync-timeline { background: var(--bg); }
+.timeline-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.timeline-title { font-weight: 850; }
+.timeline-ctrl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.timeline-ctrl button,
+.concept-btn,
+.break-btn,
+.scenario-btn,
+.worksheet-btn {
+  min-height: 32px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 11px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.timeline-ctrl button:hover,
+.concept-btn:hover,
+.break-btn:hover,
+.scenario-btn:hover,
+.worksheet-btn:hover { background: var(--surface-alt); }
+.timeline-ctrl button:disabled { opacity: 0.45; cursor: not-allowed; }
+.timeline-track {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+.timeline-step {
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--muted);
+  border-radius: 9px;
+  padding: 9px 10px;
+  min-height: 118px;
+  opacity: 0.55;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.timeline-step.active {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(45,100,200,0.22);
+}
+.timeline-step.done { opacity: 0.85; }
+.timeline-step.room { border-top-color: var(--green); }
+.timeline-step.ui { border-top-color: var(--blue); }
+.timeline-step.repo { border-top-color: var(--teal); }
+.timeline-step.worker { border-top-color: var(--amber); }
+.timeline-step.cloud { border-top-color: var(--violet); }
+.timeline-step strong { display: block; margin-bottom: 4px; font-size: 0.88rem; }
+.timeline-step span { display: block; color: var(--muted); font-size: 0.8rem; }
+.timeline-explain {
+  border-top: 1px solid var(--line);
+  padding: 11px 14px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.break-lab,
+.debug-lab,
+.mastery-tracker,
+.code-tools,
+.worksheet {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .break-lab,
+.band:nth-child(odd) .debug-lab,
+.band:nth-child(odd) .mastery-tracker,
+.band:nth-child(odd) .code-tools,
+.band:nth-child(odd) .worksheet { background: var(--bg); }
+.lab-head {
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+  font-weight: 850;
+}
+.lab-body { padding: 12px 14px; }
+.lab-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.break-btn.active,
+.scenario-btn.active,
+.concept-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.lab-output {
+  border-left: 4px solid var(--blue);
+  background: var(--blue-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 13px;
+  color: var(--ink);
+  min-height: 52px;
+}
+.worksheet-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.worksheet-item {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px;
+  background: var(--surface-alt);
+}
+.worksheet-item label { display: block; font-weight: 850; margin-bottom: 6px; }
+.solution-item {
+  border-left: 4px solid var(--green);
+  cursor: pointer;
+}
+.solution-item strong {
+  display: block;
+  margin-bottom: 6px;
+}
+.solution-item summary {
+  cursor: pointer;
+  font-weight: 850;
+}
+.solution-item summary::-webkit-details-marker {
+  color: var(--green);
+}
+.solution-item[open] {
+  background: var(--green-soft);
+}
+.solution-item p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.worksheet-item textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 9px 10px;
+}
+.code-line { display: inline; border-radius: 4px; }
+.code-line.concept-hit {
+  background: rgba(224, 175, 104, 0.24);
+  box-shadow: 0 0 0 2px rgba(224, 175, 104, 0.18);
+}
+.concept-note { color: var(--muted); font-size: 0.88rem; margin-top: 8px; }
+.mastery-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.mastery-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.mastery-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--green);
+  transition: width 0.2s;
+}
+.mastery-count { color: var(--muted); font-weight: 850; font-size: 0.84rem; }
+.mastery-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mastery-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-alt);
+  padding: 9px 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.mastery-item input { margin-top: 4px; }
+.term-search {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.term-search input {
+  flex: 1;
+  min-width: 220px;
+  min-height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0 11px;
+}
+.term-count,
+.status-note { color: var(--muted); font-size: 0.85rem; font-weight: 750; }
+
+/* ---------------- Flow lab ---------------- */
+.flow-lab {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+  margin: 16px 0;
+}
+.band:nth-child(odd) .flow-lab { background: var(--bg); }
+.flow-lab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+.flow-lab-title { font-weight: 850; }
+.flow-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.flow-btn {
+  min-height: 34px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0 11px;
+  font-size: 0.84rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.flow-btn:hover { background: var(--surface-alt); }
+.flow-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.flow-brief {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 12px 0;
+}
+.flow-brief-card {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 9px 10px;
+  min-width: 0;
+}
+.band:nth-child(odd) .flow-brief-card { background: var(--bg); }
+.flow-brief-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.flow-brief-card strong,
+.flow-brief-card code {
+  overflow-wrap: anywhere;
+}
+.flow-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; padding: 12px; }
+.flow-stage {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--muted);
+  border-radius: 9px;
+  padding: 10px 12px;
+  min-width: 0;
+  background: var(--surface);
+}
+.band:nth-child(odd) .flow-stage { background: var(--bg); }
+.flow-stage.active { box-shadow: 0 0 0 2px rgba(45,100,200,0.28); }
+.flow-stage.room { border-left-color: var(--green); }
+.flow-stage.flow { border-left-color: var(--teal); }
+.flow-stage.state { border-left-color: var(--violet); }
+.flow-stage.ui { border-left-color: var(--blue); }
+.flow-stage h3 { margin: 0 0 7px; font-size: 0.92rem; }
+.flow-stage p { margin-bottom: 7px; }
+.flow-list { display: grid; gap: 6px; }
+.flow-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 8px;
+  background: var(--surface-alt);
+  font-size: 0.86rem;
+}
+.flow-row strong { display: block; }
+.flow-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+}
+.flow-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.flow-pill.pending { background: var(--amber-soft); color: var(--amber); border-color: rgba(181,108,0,0.35); }
+.flow-pill.synced { background: var(--green-soft); color: var(--green); border-color: rgba(27,138,90,0.35); }
+.flow-pill.deleted { background: var(--red-soft); color: var(--red); border-color: rgba(195,61,61,0.35); }
+.flow-empty { color: var(--muted); font-size: 0.84rem; }
+.flow-emission {
+  display: grid;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.flow-burst {
+  border: 1px dashed var(--teal);
+  background: var(--teal-soft);
+  color: var(--teal);
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-weight: 800;
+}
+.flow-code {
+  display: block;
+  white-space: pre-wrap;
+  color: var(--muted);
+}
+.flow-stage-note {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.flow-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+.flow-explain {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 9px;
+  padding: 11px 13px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  background: var(--blue-soft);
+}
+.flow-steps {
+  margin: 9px 0 0;
+  padding-left: 19px;
+  color: var(--muted);
+}
+.flow-steps li { margin-bottom: 5px; }
+.flow-log {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 11px 13px;
+}
+.band:nth-child(odd) .flow-log { background: var(--bg); }
+.flow-log-title {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 850;
+}
+.flow-log-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.flow-log-list li {
+  border-left: 3px solid var(--teal);
+  padding-left: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 980px) {
+  .flow-brief { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .flow-grid { grid-template-columns: 1fr; }
+  .flow-detail { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .flow-brief { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 980px) {
   .app { grid-template-columns: 1fr; }
   .rail { display: none; }
@@ -450,7 +945,18 @@ p { overflow-wrap: anywhere; }
   .band { padding: 26px 18px; }
   h1 { font-size: 2.1rem; }
   h2 { font-size: 1.5rem; }
-  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+  .grid2, .grid3, .statgrid, .lesson-grid, .worksheet-grid, .mastery-list { grid-template-columns: 1fr; }
+}
+
+@media print {
+  html { scroll-behavior: auto; }
+  body { background: #fff; color: #111; }
+  .app { display: block; }
+  .rail, .topbar, .copy-btn, .theme-toggle, .stepper-ctrl, .flow-controls, .timeline-ctrl, .lab-controls, .worksheet-btn { display: none !important; }
+  .band { padding: 18px 0; border-bottom: 1px solid #ddd; }
+  .band-inner { max-width: none; }
+  .card, .lesson-card, .callout, .tree, .tbl, .code-panel, .stepper { break-inside: avoid; }
+  a { color: #111; text-decoration: underline; }
 }
 </style>
 </head>
@@ -485,6 +991,7 @@ p { overflow-wrap: anywhere; }
       <a class="nav-link" href="#offline"><span class="nav-num">13</span><span>What happens offline</span></a>
       <a class="nav-link" href="#trip"><span class="nav-num">14</span><span>The full trip</span></a>
       <a class="nav-link" href="#run"><span class="nav-num">15</span><span>Run &amp; inspect</span></a>
+      <a class="nav-link" href="#worksheet"><span class="nav-num">16</span><span>Practice worksheet</span></a>
     </nav>
     <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
     <div class="rail-foot">
@@ -516,6 +1023,7 @@ p { overflow-wrap: anywhere; }
         <option value="#offline">13 · What happens offline</option>
         <option value="#trip">14 · The full trip</option>
         <option value="#run">15 · Run &amp; inspect</option>
+        <option value="#worksheet">16 · Practice worksheet</option>
       </select>
       <button id="themeToggleTop" type="button">🌙</button>
     </div>
@@ -527,9 +1035,9 @@ p { overflow-wrap: anywhere; }
         <h1>How a note syncs</h1>
         <p class="lead">
           <strong>CloudSync</strong> shows the pattern every real app eventually needs: a
-          <strong>local database (Room)</strong> kept in sync with a <strong>cloud backend</strong>, that keeps working
-          when the device is <strong>offline</strong>. The trick is one rule — <em>Room is the single source of
-          truth</em> — plus a background <code>SyncWorker</code> that reconciles it with the cloud. This page is that
+          <strong><span class="tip" tabindex="0" data-tip="Room is Android's local database library. It saves rows on the device.">local database (Room)</span></strong> kept in sync with a <strong><span class="tip" tabindex="0" data-tip="The cloud backend is the server-side copy of the notes. CloudSync treats it as a sync target, not as the screen's direct data source.">cloud backend</span></strong>, that keeps working
+          when the device is <strong><span class="tip" tabindex="0" data-tip="Offline-first means the app reads and writes local data first, then catches up with the cloud later.">offline</span></strong>. The trick is one rule — <em>Room is the single source of
+          truth</em> — plus a background <code><span class="tip" tabindex="0" data-tip="SyncWorker is the WorkManager job that runs repository.sync() in the background.">SyncWorker</span></code> that reconciles it with the cloud. This page is that
           design as <strong>blocks of real code</strong>, from the entity's sync fields to last-write-wins conflict
           resolution.
         </p>
@@ -540,12 +1048,235 @@ p { overflow-wrap: anywhere; }
           <span class="tag amber">last-write-wins</span>
           <span class="tag">offline-first</span>
         </div>
+        <table class="tbl">
+          <thead><tr><th>Term</th><th>Plain meaning</th><th>CloudSync example</th></tr></thead>
+          <tbody>
+            <tr><td><code>UI</code></td><td>The screen the user sees and taps.</td><td>The note list, sync badges, add button, and online/offline banner.</td></tr>
+            <tr><td><code>Entity</code></td><td>A Kotlin class that Room stores as a database table row.</td><td><code>Note</code> is the entity for one saved note.</td></tr>
+            <tr><td><code>DAO</code></td><td>Database Access Object: the functions Room uses to read and write rows.</td><td><code>NoteDao</code> has queries like <code>observeNotes()</code> and <code>notesToPush()</code>.</td></tr>
+            <tr><td><code>Room</code></td><td>Android's local database library. It saves rows on the device.</td><td>Every note is saved in Room first, so notes still work offline.</td></tr>
+            <tr><td><code>Repository</code></td><td>The data coordinator between the ViewModel, Room, and the cloud.</td><td><code>NoteRepository</code> saves to Room first, then pushes and pulls changes during sync.</td></tr>
+            <tr><td><code>cloud backend</code></td><td>The server-side copy of the data.</td><td>The cloud eventually receives local changes and sends newer notes back.</td></tr>
+            <tr><td><code>API</code></td><td>The functions used to talk to another system.</td><td><code>CloudApi</code> gives the repository <code>push</code> and <code>pullSince</code>.</td></tr>
+            <tr><td><code>DTO</code></td><td>Data Transfer Object: the shape used when sending data over the network.</td><td><code>NoteDto</code> is the cloud version of a note.</td></tr>
+            <tr><td><code>suspend</code></td><td>A Kotlin marker for a function that may pause while waiting, without freezing the UI thread.</td><td>Room, cloud, and sync functions are <code>suspend</code> because disk and network work can take time.</td></tr>
+            <tr><td><code>offline-first</code></td><td>The app reads and writes local data first, then syncs when it can.</td><td>Adding a note offline still updates the screen immediately.</td></tr>
+            <tr><td><code>single source of truth</code></td><td>The one place the screen trusts for data.</td><td>Room is the source of truth; the UI never reads directly from the cloud.</td></tr>
+            <tr><td><code>sync</code></td><td>The catch-up work that makes Room and the cloud agree.</td><td>CloudSync uploads waiting local notes, then downloads newer cloud notes.</td></tr>
+            <tr><td><code>outbox</code></td><td>The waiting line of local changes that still need to upload.</td><td><code>notesToPush()</code> finds rows where <code>syncState != SYNCED</code>.</td></tr>
+            <tr><td><code>syncState</code></td><td>A field that says whether a note still needs cloud work.</td><td><code>PENDING</code> rows go in the outbox; <code>SYNCED</code> rows already caught up.</td></tr>
+            <tr><td><code>tombstone</code></td><td>A hidden row that remembers a delete until the cloud receives it.</td><td>A deleted note can upload its delete later, even if the phone was offline.</td></tr>
+            <tr><td><code>SyncWorker</code></td><td>The background job that runs sync when conditions are right.</td><td>WorkManager starts <code>SyncWorker</code>, then it calls <code>repository.sync()</code>.</td></tr>
+            <tr><td><code>ViewModel</code></td><td>The screen's data coordinator. It prepares data for the UI and handles button actions.</td><td><code>CloudSyncViewModel</code> exposes notes to the screen and asks for sync after writes.</td></tr>
+            <tr><td><code>Flow</code></td><td>A stream that can send many values over time.</td><td>Room sends a new notes list whenever matching database rows change.</td></tr>
+            <tr><td><code>StateFlow</code></td><td>A <code>Flow</code> that always keeps the latest value ready.</td><td>The screen can always read the current notes list, pending count, and online status.</td></tr>
+            <tr><td><code>Compose</code></td><td>Android's modern UI toolkit. It redraws when state changes.</td><td>When a <code>StateFlow</code> changes, Compose redraws the note list.</td></tr>
+            <tr><td><code>conflict resolution</code></td><td>The rule used when Room and the cloud both changed the same note.</td><td>CloudSync compares timestamps before choosing which copy wins.</td></tr>
+            <tr><td><code>last-write-wins</code></td><td>The newest edit wins when two copies disagree.</td><td>The copy with the later <code>updatedAt</code> value replaces the older copy.</td></tr>
+          </tbody>
+        </table>
+        <p class="dense"><strong>Inline code examples for the terms above:</strong></p>
+        <table class="tbl term-code-table">
+          <colgroup>
+            <col class="term-col">
+            <col class="code-col">
+            <col class="where-col">
+          </colgroup>
+          <thead><tr><th>Term</th><th>Mini code example</th><th>Full code later</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>UI</code> / <code>Compose</code></td>
+              <td><pre class="mini-code">val notes by vm.notes.collectAsStateWithLifecycle()
+LazyColumn {
+    items(notes) { note -&gt; NoteRow(note) }
+}</pre></td>
+              <td><a href="#viewmodel">Local state in, intents out</a></td>
+            </tr>
+            <tr>
+              <td><code>Entity</code></td>
+              <td><pre class="mini-code">@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey val id: String,
+    val syncState: SyncState = SyncState.PENDING
+)</pre></td>
+              <td><a href="#entity">The entity</a></td>
+            </tr>
+            <tr>
+              <td><code>DAO</code></td>
+              <td><pre class="mini-code">@Dao
+interface NoteDao {
+    @Query("SELECT * FROM notes WHERE deleted = 0")
+    fun observeVisibleNotes(): Flow&lt;List&lt;Note&gt;&gt;
+}</pre></td>
+              <td><a href="#dao">The DAO</a></td>
+            </tr>
+            <tr>
+              <td><code>Room</code></td>
+              <td><pre class="mini-code">implementation(libs.androidx.room.runtime)
+implementation(libs.androidx.room.ktx)
+ksp(libs.androidx.room.compiler)</pre></td>
+              <td><a href="#init">Step 0</a> and <a href="#dao">The DAO</a></td>
+            </tr>
+            <tr>
+              <td><code>Repository</code></td>
+              <td><pre class="mini-code">class NoteRepository(
+    private val dao: NoteDao,
+    private val cloud: CloudApi
+)</pre></td>
+              <td><a href="#writes">Optimistic writes</a> and <a href="#sync">sync()</a></td>
+            </tr>
+            <tr>
+              <td><code>cloud backend</code> / <code>API</code></td>
+              <td><pre class="mini-code">interface CloudApi {
+    suspend fun pullSince(since: Long): List&lt;NoteDto&gt;
+    suspend fun push(note: NoteDto): NoteDto
+}</pre></td>
+              <td><a href="#cloud">The cloud doorway</a></td>
+            </tr>
+            <tr>
+              <td><code>DTO</code></td>
+              <td><pre class="mini-code">@Serializable
+data class NoteDto(val id: String, val title: String)
+
+fun Note.toDto() = NoteDto(id, title)</pre></td>
+              <td><a href="#entity">The entity</a></td>
+            </tr>
+            <tr>
+              <td><code>suspend</code></td>
+              <td><pre class="mini-code">// may pause while Room or network work finishes
+suspend fun notesToPush(): List&lt;Note&gt;
+suspend fun sync()</pre></td>
+              <td><a href="#dao">The DAO</a>, <a href="#cloud">The cloud doorway</a>, and <a href="#sync">sync()</a></td>
+            </tr>
+            <tr>
+              <td><code>offline-first</code> / <code>single source of truth</code></td>
+              <td><pre class="mini-code">val notes: Flow&lt;List&lt;Note&gt;&gt; = dao.observeVisibleNotes()
+dao.upsert(note.copy(syncState = SyncState.PENDING))</pre></td>
+              <td><a href="#writes">Optimistic writes</a> and <a href="#dao">The DAO</a></td>
+            </tr>
+            <tr>
+              <td><code>sync</code></td>
+              <td><pre class="mini-code">suspend fun sync() {
+    for (local in dao.notesToPush()) cloud.push(local.toDto())
+    for (remote in cloud.pullSince(cursor)) dao.upsert(remote.toEntity())
+}</pre></td>
+              <td><a href="#sync">sync()</a></td>
+            </tr>
+            <tr>
+              <td><code>outbox</code> / <code>syncState</code></td>
+              <td><pre class="mini-code">@Query("SELECT * FROM notes WHERE syncState != 'SYNCED'")
+suspend fun notesToPush(): List&lt;Note&gt;</pre></td>
+              <td><a href="#entity">The entity</a> and <a href="#dao">The DAO</a></td>
+            </tr>
+            <tr>
+              <td><code>tombstone</code></td>
+              <td><pre class="mini-code">dao.upsert(existing.copy(
+    deleted = true,
+    syncState = SyncState.PENDING
+))</pre></td>
+              <td><a href="#writes">Optimistic writes</a> and <a href="#sync">sync()</a></td>
+            </tr>
+            <tr>
+              <td><code>SyncWorker</code></td>
+              <td><pre class="mini-code">class SyncWorker(...) : CoroutineWorker(...) {
+    override suspend fun doWork(): Result =
+        try { repo.sync(); Result.success() }
+        catch (e: Exception) { Result.retry() }
+}</pre></td>
+              <td><a href="#worker">The background worker</a></td>
+            </tr>
+            <tr>
+              <td><code>ViewModel</code> / <code>Flow</code> / <code>StateFlow</code></td>
+              <td><pre class="mini-code">val notes: StateFlow&lt;List&lt;Note&gt;&gt; =
+    repo.notes.stateIn(viewModelScope, started, emptyList())
+
+viewModelScope.launch { repo.addNote(title, body) }</pre></td>
+              <td><a href="#viewmodel">Local state in, intents out</a></td>
+            </tr>
+            <tr>
+              <td><code>conflict resolution</code> / <code>last-write-wins</code></td>
+              <td><pre class="mini-code">fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean =
+    local == null ||
+    (local.syncState == SyncState.SYNCED &amp;&amp; remote.updatedAt &gt;= local.updatedAt)</pre></td>
+              <td><a href="#conflict">Conflict resolution</a></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="lesson-grid" aria-label="Study routes">
+          <div class="lesson-card">
+            <span class="lesson-time">First pass</span>
+            <h3>Concept before code</h3>
+            <ol>
+              <li>Start with the one-sentence rule.</li>
+              <li>Use Room ⇄ cloud to name the four layers.</li>
+              <li>Jump to the full trip and step through it once.</li>
+            </ol>
+          </div>
+          <div class="lesson-card">
+            <span class="lesson-time">Code pass</span>
+            <h3>Build the mental model</h3>
+            <ol>
+              <li>Trace <code>Note</code>, <code>NoteDao</code>, then <code>sync()</code>.</li>
+              <li>Pause at each code block and predict the next read or write.</li>
+              <li>End by running the simulator page.</li>
+            </ol>
+          </div>
+          <div class="lesson-card">
+            <span class="lesson-time">Self-check</span>
+            <h3>Explain it back</h3>
+            <ol>
+              <li>Pick one section and name the file it belongs to.</li>
+              <li>Say the rule that section enforces.</li>
+              <li>Connect it to the offline behavior table.</li>
+            </ol>
+          </div>
+        </div>
         <div class="callout good">
           <span class="callout-label">The one sentence to hold onto</span>
           The UI <strong>never touches the network.</strong> It reads Room (so it's instant and works offline) and
           writes to Room (optimistically, marked <code>Pending</code>); a background worker <strong>pushes</strong> those
           changes and <strong>pulls</strong> remote ones when the network allows. Offline isn't an error state — it's just
           "the sync queue hasn't drained yet."
+        </div>
+        <div class="sync-timeline" data-sync-timeline>
+          <div class="timeline-head">
+            <span class="timeline-title">Animated round trip — tap Next and predict the next layer</span>
+            <div class="timeline-ctrl">
+              <button type="button" data-timeline-prev>Prev</button>
+              <span class="s-count" data-timeline-count>1 / 8</span>
+              <button type="button" data-timeline-next>Next</button>
+              <button type="button" data-timeline-reset>Reset</button>
+            </div>
+          </div>
+          <div class="timeline-track">
+            <div class="timeline-step ui" data-timeline-step data-explain="The button tap starts in the UI. The screen does not decide database or network rules."><strong>1. Button tap</strong><span>User asks to add a note.</span></div>
+            <div class="timeline-step ui" data-timeline-step data-explain="The ViewModel is the screen's coordinator. It receives the intent and calls the Repository."><strong>2. ViewModel</strong><span>Turns the tap into app work.</span></div>
+            <div class="timeline-step repo" data-timeline-step data-explain="The Repository owns the order: save locally first, sync later."><strong>3. Repository</strong><span>Creates a pending note.</span></div>
+            <div class="timeline-step room" data-timeline-step data-explain="Room is written immediately, so the note exists even with no network."><strong>4. Room write</strong><span>Note saved as PENDING.</span></div>
+            <div class="timeline-step ui" data-timeline-step data-explain="Room's Flow emits a new list. StateFlow holds that latest list, and Compose redraws."><strong>5. UI redraw</strong><span>Screen shows Pending.</span></div>
+            <div class="timeline-step worker" data-timeline-step data-explain="WorkManager accepts the sync request. If offline, the network constraint makes it wait."><strong>6. WorkManager</strong><span>Waits for network.</span></div>
+            <div class="timeline-step cloud" data-timeline-step data-explain="When online, sync pushes the pending note to the cloud."><strong>7. Cloud push</strong><span>Server gets the note.</span></div>
+            <div class="timeline-step room" data-timeline-step data-explain="Room is updated to SYNCED. The Flow emits again and the screen badge flips."><strong>8. Room confirms</strong><span>Badge becomes Synced.</span></div>
+          </div>
+          <div class="timeline-explain" data-timeline-explain></div>
+        </div>
+        <div class="mastery-tracker" data-mastery-tracker data-mastery-key="cloudsync-walkthrough-mastery">
+          <div class="lab-head">Mastery checklist — save your progress in this browser</div>
+          <div class="lab-body">
+            <div class="mastery-progress">
+              <div class="mastery-bar"><div class="mastery-fill" data-mastery-fill></div></div>
+              <span class="mastery-count" data-mastery-count>0 / 6</span>
+            </div>
+            <div class="mastery-list">
+              <label class="mastery-item"><input type="checkbox" data-mastery-item> I can explain why the UI reads Room instead of the cloud.</label>
+              <label class="mastery-item"><input type="checkbox" data-mastery-item> I can trace Add Note from UI to ViewModel to Repository to DAO.</label>
+              <label class="mastery-item"><input type="checkbox" data-mastery-item> I can explain PENDING, SYNCED, FAILED, and the outbox.</label>
+              <label class="mastery-item"><input type="checkbox" data-mastery-item> I can explain why deletes use tombstones.</label>
+              <label class="mastery-item"><input type="checkbox" data-mastery-item> I can explain Flow, StateFlow, and Compose redraws.</label>
+              <label class="mastery-item"><input type="checkbox" data-mastery-item> I can explain what WorkManager does when offline.</label>
+            </div>
+            <button class="worksheet-btn" type="button" data-mastery-reset>Reset checklist</button>
+          </div>
         </div>
       </div>
     </section>
@@ -570,28 +1301,32 @@ p { overflow-wrap: anywhere; }
         <div class="layers">
           <div class="layer ui">
             <div class="l-name">① UI — reads Room, writes Room</div>
-            <div class="l-desc">Observes <code>StateFlow</code>s from Room. Renders each note with a sync badge + an online/offline banner. Never calls the network.</div>
+            <div class="l-desc">Observes <code>StateFlow</code>s, which are current values prepared by the ViewModel from Room. Renders each note with a sync badge + an online/offline banner. Never calls the network.</div>
             <div class="l-files"><code>MainActivity.kt</code><code>CloudSyncViewModel.kt</code></div>
           </div>
-          <div class="arrow">↕ &nbsp;reactive Flow (read) · optimistic write</div>
+          <div class="arrow">↕ &nbsp;Flow live stream (read) · optimistic write</div>
           <div class="layer disk">
             <div class="l-name">② Room — the single source of truth</div>
             <div class="l-desc">The on-disk cache the whole UI depends on. Works with no connection.</div>
             <div class="l-files"><code>CloudSyncDatabase.kt</code><code>NoteDao.kt</code></div>
           </div>
-          <div class="arrow">↕ &nbsp;repository.sync(): push the outbox, pull remote changes</div>
+          <div class="arrow">↕ &nbsp;repository.sync(): upload waiting notes, download cloud changes</div>
           <div class="layer repo">
-            <div class="l-name">③ Repository + SyncWorker — the reconciler</div>
+            <div class="l-name">③ Repository + SyncWorker — the sync team</div>
             <div class="l-desc">The only code that talks to both Room and the cloud. WorkManager runs the sync in the background, retryably, when the network is available.</div>
             <div class="l-files"><code>NoteRepository.kt</code><code>sync/SyncWorker.kt</code></div>
           </div>
-          <div class="arrow">↕ &nbsp;pullSince(cursor) · push(note)</div>
+          <div class="arrow">↕ &nbsp;download newer notes · upload one changed note</div>
           <div class="layer engine">
-            <div class="l-name">④ CloudApi — the backend</div>
+            <div class="l-name">④ CloudApi — the cloud doorway</div>
             <div class="l-desc">A Retrofit-backed real cloud, or the in-memory Fake that runs offline. One flag switches them.</div>
             <div class="l-files"><code>CloudApi.kt</code></div>
           </div>
         </div>
+        <details class="predict-card">
+          <summary>Predict before reveal: if the app is offline, which layer still works normally?</summary>
+          <div class="answer">Room still works normally. The UI reads and writes Room, so the screen can show local changes. The Repository and SyncWorker wait to make the cloud agree later.</div>
+        </details>
       </div>
     </section>
 
@@ -600,7 +1335,7 @@ p { overflow-wrap: anywhere; }
       <div class="band-inner">
         <p class="eyebrow">Where everything lives</p>
         <h2>Project map</h2>
-        <p class="dense">The <code>data/</code> package is Room + the cloud + the repository; <code>sync/</code> is the WorkManager glue; the ViewModel and screen are pure UI.</p>
+        <p class="dense">The <code>data/</code> package is Room + the cloud + the repository; <code>sync/</code> is the WorkManager glue; the ViewModel is the screen data holder; the screen draws what the ViewModel exposes.</p>
         <div class="tree">
 <span class="dir">CloudSync/</span>
   <span class="f">build.gradle.kts</span>          <span class="note"># Room + KSP + Retrofit + WorkManager wiring</span>
@@ -608,19 +1343,33 @@ p { overflow-wrap: anywhere; }
     <span class="dir">data/</span>
       <span class="f">Note.kt</span>             <span class="note"># @Entity Note + @Serializable NoteDto + mappers + SyncState</span>
       <span class="f">Converters.kt</span>       <span class="note"># @TypeConverter for SyncState</span>
-      <span class="f">NoteDao.kt</span>          <span class="note"># reactive reads + the sync-engine queries (outbox, cursor)</span>
-      <span class="f">CloudSyncDatabase.kt</span> <span class="note"># @Database holder + singleton (cloudsync.db)</span>
-      <span class="f">CloudApi.kt</span>         <span class="note"># CloudApi: Retrofit Real vs in-memory Fake + the switch</span>
-      <span class="f">NoteRepository.kt</span>   <span class="note"># optimistic writes + sync() + shouldAcceptRemote (pure LWW)</span>
+      <span class="f">NoteDao.kt</span>          <span class="note"># screen reads + sync queries (outbox, newest local time)</span>
+      <span class="f">CloudSyncDatabase.kt</span> <span class="note"># @Database holder + one shared database instance (cloudsync.db)</span>
+      <span class="f">CloudApi.kt</span>         <span class="note"># fake or real cloud behind the same functions</span>
+      <span class="f">NoteRepository.kt</span>   <span class="note"># optimistic writes + sync() + shouldAcceptRemote (pure last-write-wins)</span>
       <span class="f">ConnectivityObserver.kt</span> <span class="note"># online/offline as a Flow</span>
     <span class="dir">sync/</span>
-      <span class="f">SyncWorker.kt</span>       <span class="note"># CoroutineWorker → repository.sync(); Result.retry()</span>
-      <span class="f">SyncScheduler.kt</span>    <span class="note"># enqueue with NetworkType.CONNECTED + backoff</span>
+      <span class="f">SyncWorker.kt</span>       <span class="note"># background job → repository.sync(); try again on failure</span>
+      <span class="f">SyncScheduler.kt</span>    <span class="note"># run only online + try again later</span>
     <span class="f">CloudSyncViewModel.kt</span> <span class="note"># Room flows + connectivity → StateFlows; intents → write + sync</span>
     <span class="f">MainActivity.kt</span>       <span class="note"># notes list + sync badges + offline banner</span>
   <span class="dir">src/test/java/.../</span>
-    <span class="f">CloudSyncUnitTest.kt</span>  <span class="note"># LWW rule + converter + fake-cloud round trip</span>
+    <span class="f">CloudSyncUnitTest.kt</span>  <span class="note"># last-write-wins rule + converter + fake-cloud round trip</span>
   <span class="f">how-a-note-syncs.html</span>     <span class="note"># (this page)</span>
+        </div>
+        <div class="code-tools" data-code-tools>
+          <div class="lab-head">Highlight code by concept</div>
+          <div class="lab-body">
+            <div class="lab-controls">
+              <button class="concept-btn" type="button" data-code-concept="room-write">Show Room writes</button>
+              <button class="concept-btn" type="button" data-code-concept="cloud-call">Show cloud calls</button>
+              <button class="concept-btn" type="button" data-code-concept="retry">Show retry logic</button>
+              <button class="concept-btn" type="button" data-code-concept="ui-state">Show UI state</button>
+              <button class="concept-btn" type="button" data-code-concept="delete">Show delete markers</button>
+              <button class="concept-btn" type="button" data-code-concept="clear">Clear</button>
+            </div>
+            <div class="concept-note" data-code-note>Pick a concept to highlight matching lines across the code blocks.</div>
+          </div>
         </div>
       </div>
     </section>
@@ -631,21 +1380,33 @@ p { overflow-wrap: anywhere; }
         <p class="eyebrow">Initialization · before any sync</p>
         <h2>Step 0 — wiring the offline-first stack</h2>
         <p class="dense">
-          Four pieces: <strong>Room</strong> (+ KSP) for the local cache, <strong>Retrofit + serialization</strong> for
-          the cloud transport, and <strong>WorkManager</strong> for background sync.
+          Four pieces: <strong>Room</strong> (+ KSP) for the local cache, <strong>Retrofit</strong> for the cloud
+          connection, JSON for sending note data, and <strong>WorkManager</strong> for background sync.
         </p>
+        <table class="tbl">
+          <thead><tr><th>Build term</th><th>Plain meaning</th><th>Why CloudSync uses it</th></tr></thead>
+          <tbody>
+            <tr><td><code>Room</code></td><td>The Android library that turns Kotlin classes into SQLite database tables.</td><td>It stores notes locally and can emit a new <code>Flow</code> when rows change.</td></tr>
+            <tr><td><code>KSP</code></td><td>Kotlin Symbol Processing. It generates code at build time.</td><td>Room uses KSP to create the database implementation from <code>@Entity</code>, <code>@Dao</code>, and <code>@Query</code>.</td></tr>
+            <tr><td><code>SQLite</code></td><td>The small database engine built into Android devices.</td><td>Room writes CloudSync notes into a real on-device database file.</td></tr>
+            <tr><td><code>Retrofit</code></td><td>A library that turns Kotlin functions into HTTP web calls.</td><td>The real cloud version can call a server without changing the Repository.</td></tr>
+            <tr><td><code>OkHttp</code></td><td>The lower-level web client Retrofit uses to send requests.</td><td>It handles the actual network connection for the real backend.</td></tr>
+            <tr><td><code>JSON</code></td><td>A text format for sending structured data over the web.</td><td><code>NoteDto</code> is converted to JSON when a note is uploaded.</td></tr>
+            <tr><td><code>WorkManager</code></td><td>Android's reliable background job system.</td><td>It can wait for the network and retry sync after failures.</td></tr>
+          </tbody>
+        </table>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">build.gradle.kts · the offline-first stack</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kts">// Room: the LOCAL single source of truth. The UI only ever reads this.
 implementation(libs.androidx.room.runtime)
 implementation(libs.androidx.room.ktx)
 ksp(libs.androidx.room.compiler)                    // KSP generates the SQLite-backed impls
-// Cloud transport: Retrofit + OkHttp + JSON for the Real sync backend.
+// Cloud connection: Retrofit + OkHttp + JSON for the Real sync backend.
 implementation(libs.retrofit)
 implementation(libs.retrofit.converter.kotlinx.serialization)
 implementation(libs.okhttp)
 implementation(libs.kotlinx.serialization.json)
-// WorkManager: deferrable, retryable background sync (network-constrained, survives death).
+// WorkManager: background sync that can wait for network and try again later.
 implementation(libs.androidx.work.runtime.ktx)</pre>
         </div>
         <div class="callout warn">
@@ -654,6 +1415,10 @@ implementation(libs.androidx.work.runtime.ktx)</pre>
           <code>ACCESS_NETWORK_STATE</code> (so WorkManager's network constraint and the online/offline banner can read
           connectivity). Both are normal install-time permissions — harmless in the default offline Fake mode.
         </div>
+        <details class="predict-card">
+          <summary>Predict before reveal: why does build wiring matter before any note exists?</summary>
+          <div class="answer">Room, Retrofit, JSON, and WorkManager are the infrastructure. The app can only save locally, talk to a real server, convert notes to web data, and retry sync if these libraries are present.</div>
+        </details>
       </div>
     </section>
 
@@ -663,9 +1428,25 @@ implementation(libs.androidx.work.runtime.ktx)</pre>
         <p class="eyebrow">Step 1 · the row, plus sync bookkeeping</p>
         <h2>The entity — a normal note + the offline-first fields</h2>
         <p class="dense">
-          A <code>Note</code> is a normal Room <code>@Entity</code> with four extra fields that make sync possible. The
-          cloud's wire shape is a separate <code>@Serializable NoteDto</code>, converted by mappers.
+          Think of the entity as the shape of one saved note in the local database. Room stores this row on the device.
+          CloudSync adds a few extra fields so the app can tell whether that row still needs to be sent to the cloud.
         </p>
+        <table class="tbl">
+          <thead><tr><th>Piece</th><th>Plain meaning</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td><code>@Entity</code></td><td>This tells Room: "save this class as a table row."</td><td>The app can keep notes on the phone, even with no network.</td></tr>
+            <tr><td><code>data class</code></td><td>A Kotlin class mostly used to hold data.</td><td><code>Note</code> holds the fields for one saved note.</td></tr>
+            <tr><td><code>@PrimaryKey</code></td><td>The field Room uses as the row's unique identity.</td><td>Room can find, replace, or delete the exact note by its <code>id</code>.</td></tr>
+            <tr><td><code>id</code></td><td>The note's permanent name tag. CloudSync makes it on the phone.</td><td>A note made offline already has an id, so it can be edited, deleted, and uploaded later.</td></tr>
+            <tr><td><code>UUID</code></td><td>A randomly generated id that is extremely unlikely to collide.</td><td>The phone can safely create note ids before the server sees the note.</td></tr>
+            <tr><td><code>updatedAt</code></td><td>The time this note was last changed.</td><td>If two copies disagree, CloudSync can pick the newer one.</td></tr>
+            <tr><td><code>enum class</code></td><td>A Kotlin type with a fixed list of allowed values.</td><td><code>SyncState</code> can only be <code>SYNCED</code>, <code>PENDING</code>, or <code>FAILED</code>.</td></tr>
+            <tr><td><code>syncState</code></td><td>The note's upload status: <code>SYNCED</code>, <code>PENDING</code>, or <code>FAILED</code>.</td><td><code>PENDING</code> means "still needs to go to the cloud." The UI badge comes from this.</td></tr>
+            <tr><td><code>deleted</code></td><td>A hidden "please delete this" marker.</td><td>If the user deletes offline, the app must remember that delete and send it later.</td></tr>
+            <tr><td><code>@Serializable</code></td><td>This tells Kotlin how to turn the class into JSON and back.</td><td>The real cloud can receive and return notes as web data.</td></tr>
+            <tr><td><code>NoteDto</code></td><td>The version of a note that is sent over the network.</td><td>The database shape and the network shape stay separate, then mappers copy data between them.</td></tr>
+          </tbody>
+        </table>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">data/Note.kt</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">enum class SyncState { SYNCED, PENDING, FAILED }   // the outbox marker
@@ -687,11 +1468,15 @@ fun Note.toDto() = NoteDto(id, title, body, updatedAt, deleted)
 fun NoteDto.toEntity(state: SyncState = SyncState.SYNCED) = Note(id, title, body, updatedAt, state, deleted)</pre>
         </div>
         <ul class="kicker-list">
-          <li><strong>Client-generated id</strong> — a <code>UUID</code> assigned on creation, so a note made offline already has a stable identity to push later (you can't let the server assign it).</li>
-          <li><strong><code>updatedAt</code></strong> — the timestamp two devices compare to decide whose edit wins.</li>
-          <li><strong><code>syncState</code></strong> — has this row reached the cloud yet? Drives both the sync engine and the UI badge.</li>
-          <li><strong><code>deleted</code> tombstone</strong> — a delete is a soft-delete first, so it survives offline and can still be pushed; the row is hard-deleted only after the cloud confirms.</li>
+          <li><strong>Client-generated id</strong> — the phone makes the id right away, so the app does not need to wait for the server.</li>
+          <li><strong><code>updatedAt</code></strong> — the "last changed" time used when two devices edited the same note.</li>
+          <li><strong><code>syncState</code></strong> — tells the app whether this row is already in the cloud, still waiting, or failed.</li>
+          <li><strong><code>deleted</code> tombstone</strong> — a delete is saved as a hidden row first, then removed after the cloud receives it.</li>
         </ul>
+        <details class="predict-card">
+          <summary>Predict before reveal: why should the phone create the note id before upload?</summary>
+          <div class="answer">An offline note still needs an identity. The user can edit or delete it before the server ever sees it, and the sync code can upload that exact same row later.</div>
+        </details>
       </div>
     </section>
 
@@ -701,9 +1486,107 @@ fun NoteDto.toEntity(state: SyncState = SyncState.SYNCED) = Note(id, title, body
         <p class="eyebrow">Step 2 · reads for the UI, queries for the engine</p>
         <h2>The DAO</h2>
         <p class="dense">
-          The DAO has two audiences: reactive reads the <strong>UI</strong> observes (visible notes only — tombstones
-          hidden), and queries the <strong>sync engine</strong> uses (the outbox of unsynced rows, and the pull cursor).
+          The DAO is the database doorway. All reads and writes to the Room table go through it. Some DAO functions are
+          for the screen. Others are for sync.
         </p>
+        <div class="callout good">
+          <span class="callout-label">What Flow means here</span>
+          A <code>Flow</code> is a live stream of values. It is not just one database answer. It is more like a
+          subscription: the screen says, "tell me the current list of notes, and tell me again any time that list
+          changes." Room sends a new value through the <code>Flow</code> whenever the matching rows in the database
+          change.
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Flow idea</th><th>Plain meaning</th><th>CloudSync example</th></tr></thead>
+          <tbody>
+            <tr><td>Live stream</td><td>More than one value can arrive over time.</td><td><code>observeVisibleNotes()</code> first emits the saved notes, then emits again after add/delete/sync changes Room.</td></tr>
+            <tr><td>Automatic updates</td><td>The screen does not keep asking for data in a loop.</td><td>When <code>dao.upsert(...)</code> saves a row, Room notices and sends a fresh notes list.</td></tr>
+            <tr><td>Cold until collected</td><td>The work starts when something observes, or collects, the <code>Flow</code>.</td><td>The ViewModel, which is the screen's data coordinator, collects Room's <code>Flow</code> and turns it into <code>StateFlow</code> for the screen.</td></tr>
+            <tr><td>One source of truth</td><td>The screen follows Room instead of keeping a separate copy.</td><td>If sync pulls a cloud note into Room, the <code>Flow</code> emits and the UI redraws from Room.</td></tr>
+            <tr><td>Works offline</td><td>The stream comes from the local database, not the network.</td><td>Airplane mode does not stop <code>observeVisibleNotes()</code>; local Room changes still emit.</td></tr>
+          </tbody>
+        </table>
+        <div class="flow-lab" data-flow-lab>
+          <div class="flow-lab-head">
+            <span class="flow-lab-title">Flow lab — click an event and watch the screen update</span>
+            <div class="flow-controls">
+              <button class="flow-btn primary" type="button" data-flow-action="add">Add local note</button>
+              <button class="flow-btn" type="button" data-flow-action="cloud">Pull cloud note</button>
+              <button class="flow-btn" type="button" data-flow-action="sync">Mark pending Synced</button>
+              <button class="flow-btn" type="button" data-flow-action="delete">Delete first note</button>
+              <button class="flow-btn" type="button" data-flow-action="reset">Reset</button>
+            </div>
+          </div>
+          <div class="flow-brief" data-flow-summary aria-label="Current Flow lab event summary"></div>
+          <div class="flow-grid">
+            <div class="flow-stage room" data-flow-stage="room">
+              <h3>1. Room table</h3>
+              <p class="dense">This is the local database. Writes land here first, including hidden delete rows.</p>
+              <div class="flow-list" data-flow-room></div>
+            </div>
+            <div class="flow-stage flow" data-flow-stage="flow">
+              <h3>2. Flow emits</h3>
+              <p class="dense"><code>observeVisibleNotes()</code> reruns after matching table rows change.</p>
+              <div class="flow-emission" data-flow-emission></div>
+            </div>
+            <div class="flow-stage state" data-flow-stage="state">
+              <h3>3. StateFlow holds latest</h3>
+              <p class="dense">The ViewModel turns the stream into a current value Compose can draw.</p>
+              <div class="flow-list" data-flow-state></div>
+            </div>
+            <div class="flow-stage ui" data-flow-stage="ui">
+              <h3>4. UI redraws</h3>
+              <p class="dense">Compose redraws the screen from the latest StateFlow value.</p>
+              <div class="flow-list" data-flow-ui></div>
+            </div>
+          </div>
+          <div class="flow-detail">
+            <div class="flow-explain">
+              <strong data-flow-explain-title>What just happened</strong>
+              <ol class="flow-steps" data-flow-steps></ol>
+              <p class="dense" data-flow-explain></p>
+            </div>
+            <div class="flow-log" aria-label="Recent Flow lab events">
+              <span class="flow-log-title">Recent emissions</span>
+              <ul class="flow-log-list" data-flow-log></ul>
+            </div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">UI-facing queries</span></div>
+            <div class="card-body">
+              <p class="dense">These feed the screen. They return <code>Flow</code>s, so Room can keep sending updated values after the first answer.</p>
+              <ul class="kicker-list">
+                <li><code>observeVisibleNotes()</code> gets notes the user should see. Deleted tombstones stay hidden.</li>
+                <li><code>observePendingCount()</code> counts notes still waiting to sync.</li>
+                <li>Both are live: when Room changes, the next value flows to the ViewModel, then Compose redraws the screen.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Sync-engine queries</span></div>
+            <div class="card-body">
+              <p class="dense">These help the sync code answer two questions: "what do I need to upload?" and "what new cloud rows should I download?"</p>
+              <ul class="kicker-list">
+                <li><code>notesToPush()</code> returns the outbox: rows that are not <code>SYNCED</code> yet.</li>
+                <li><code>maxUpdatedAt()</code> gives the newest local change time, so the app can ask the cloud for newer rows only.</li>
+                <li><code>suspend</code> means the function may pause while waiting for database or network work, without freezing the screen.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>DAO code word</th><th>Plain meaning</th><th>CloudSync example</th></tr></thead>
+          <tbody>
+            <tr><td><code>@Dao</code></td><td>This marks the interface as a Room database access object.</td><td>Room generates the real implementation of <code>NoteDao</code>.</td></tr>
+            <tr><td><code>@Query</code></td><td>A SQL database command written above a Kotlin function.</td><td><code>observeVisibleNotes()</code> runs a query for non-deleted notes.</td></tr>
+            <tr><td><code>@Insert</code></td><td>A Room write command for saving a row.</td><td><code>upsert(note)</code> saves a note row into Room.</td></tr>
+            <tr><td><code>OnConflictStrategy.REPLACE</code></td><td>If a row with the same primary key already exists, replace it.</td><td>Saving a pulled cloud copy updates the existing local row.</td></tr>
+            <tr><td><code>cursor</code></td><td>A saved position used to ask for only newer data.</td><td><code>maxUpdatedAt()</code> is the pull cursor: "give me cloud notes newer than this."</td></tr>
+            <tr><td><code>hardDelete</code></td><td>Really remove a row from Room.</td><td>CloudSync waits to hard-delete until after the cloud confirms the tombstone.</td></tr>
+          </tbody>
+        </table>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">data/NoteDao.kt</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">@Dao
@@ -716,6 +1599,8 @@ interface NoteDao {
     fun observePendingCount(): Flow&lt;Int&gt;                    // drives "N pending"
 
     // --- sync-engine queries ---
+    // suspend = this may pause while Room reads or writes on disk.
+    // Call suspend functions from a coroutine, not directly from Compose.
     @Query("SELECT MAX(updatedAt) FROM notes")
     suspend fun maxUpdatedAt(): Long?                       // the pull cursor
 
@@ -732,6 +1617,10 @@ interface NoteDao {
     suspend fun hardDelete(id: String)                     // only after the cloud confirms a tombstone
 }</pre>
         </div>
+        <details class="predict-card">
+          <summary>Predict before reveal: which DAO query is the outbox?</summary>
+          <div class="answer"><code>notesToPush()</code> is the outbox query. It returns every row whose <code>syncState</code> is not <code>SYNCED</code>, which means the row still needs cloud work.</div>
+        </details>
       </div>
     </section>
 
@@ -739,20 +1628,32 @@ interface NoteDao {
     <section class="band anchor" id="cloud">
       <div class="band-inner">
         <p class="eyebrow">Step 3 · the cloud, Real and Fake</p>
-        <h2>The cloud transport — one interface, two implementations</h2>
+        <h2>The cloud doorway — fake or real behind the same functions</h2>
         <p class="dense">
-          The sync engine talks to a tiny <code>CloudApi</code> with two operations: <code>pullSince</code> (remote rows
-          after a cursor) and <code>push</code> (upsert one row). Behind it sits a Retrofit-backed real cloud or an
-          in-memory fake — swapped by one flag, exactly like the NetworkParsing/WebSocketLive demos.
+          <code>CloudApi</code> is the small doorway to the cloud. The Repository does not need to know if the cloud is
+          real or fake. It only needs two actions: send one note up, and ask for newer notes back.
         </p>
+        <table class="tbl">
+          <thead><tr><th>Method</th><th>Plain English</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td><code>API</code></td><td>A small set of functions one part of the app promises other parts can call.</td><td><code>CloudApi</code> promises <code>push</code> and <code>pullSince</code>.</td></tr>
+            <tr><td><code>push(note)</code></td><td>"Save this local note in the cloud."</td><td>After this works, the local row can become <code>SYNCED</code>.</td></tr>
+            <tr><td><code>pullSince(since)</code></td><td>"Give me cloud notes newer than this time."</td><td>The app downloads only new changes, not the whole database every time.</td></tr>
+            <tr><td><code>FakeCloudApi</code></td><td>A pretend cloud stored in memory.</td><td>You can run the app with no real server.</td></tr>
+            <tr><td><code>in memory</code></td><td>Stored in this running app process instead of on a real server.</td><td>The fake cloud resets when the process is gone, but it is perfect for local practice and tests.</td></tr>
+            <tr><td><code>RetrofitCloudApi</code></td><td>The real web version that talks over HTTP.</td><td>The Repository still calls the same methods, so the rest of the app does not change.</td></tr>
+            <tr><td><code>suspend</code></td><td>A Kotlin keyword for a function that can pause while waiting.</td><td>Cloud calls can wait for network without blocking the UI thread.</td></tr>
+          </tbody>
+        </table>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">data/CloudApi.kt · the contract + the switch</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">interface CloudApi {
+    // suspend = this may pause for network work without blocking the UI thread.
     suspend fun pullSince(since: Long): List&lt;NoteDto&gt;   // remote rows newer than the cursor
     suspend fun push(note: NoteDto): NoteDto            // upsert; returns the server's copy
 }
 
-// THE SWITCH — fake (default, offline) is a process singleton so its in-memory server persists.
+// THE SWITCH — fake (default, offline) uses one shared in-memory server while the app process is running.
 fun provideCloudApi(useFake: Boolean = true): CloudApi =
     if (useFake) fakeCloud else RetrofitCloudApi()</pre>
         </div>
@@ -767,19 +1668,24 @@ fun provideCloudApi(useFake: Boolean = true): CloudApi =
         server["seed-welcome"] = NoteDto("seed-welcome", "Welcome to CloudSync", "Came FROM the cloud.", seededAt)
     }
 
+    // override suspend keeps the same "may pause" contract as CloudApi.
     override suspend fun pullSince(since: Long): List&lt;NoteDto&gt; {
-        delay(700)                                         // imitate latency
+        delay(700)                                         // imitate network waiting
         return server.values.filter { it.updatedAt &gt; since }.sortedBy { it.updatedAt }
     }
     override suspend fun push(note: NoteDto): NoteDto {
         delay(500)
         val existing = server[note.id]
-        if (existing == null || note.updatedAt &gt;= existing.updatedAt) server[note.id] = note  // server LWW too
+        if (existing == null || note.updatedAt &gt;= existing.updatedAt) server[note.id] = note  // server last-write-wins too
         return server.getValue(note.id)
     }
     fun simulateRemoteEdit() { /* add a row as if another device created it */ }
 }</pre>
         </div>
+        <details class="predict-card">
+          <summary>Predict before reveal: why can FakeCloudApi and RetrofitCloudApi be swapped?</summary>
+          <div class="answer">They both implement the same <code>CloudApi</code> interface. The Repository only calls <code>push()</code> and <code>pullSince()</code>, so it does not care whether those functions use a pretend in-memory cloud or a real HTTP server.</div>
+        </details>
       </div>
     </section>
 
@@ -793,25 +1699,41 @@ fun provideCloudApi(useFake: Boolean = true): CloudApi =
           sees the change at once — online or offline — and the row joins the outbox to be pushed later. A delete is a
           soft-delete so it can still be pushed.
         </p>
+        <div class="callout">
+          <span class="callout-label">What the Repository owns</span>
+          The Repository is the traffic director. The DAO only knows the local database. The CloudApi only knows the
+          cloud. The Repository decides the order: save locally first, mark it Pending, send it to the cloud later, then
+          bring cloud changes back into Room.
+        </div>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">data/NoteRepository.kt · the write methods</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">val notes: Flow&lt;List&lt;Note&gt;&gt; = dao.observeVisibleNotes()    // what the UI observes
+<pre data-lang="kotlin">class NoteRepository(
+    private val dao: NoteDao,
+    private val cloud: CloudApi
+) {
+    val notes: Flow&lt;List&lt;Note&gt;&gt; = dao.observeVisibleNotes()    // what the UI observes
 
-suspend fun addNote(title: String, body: String) {
-    dao.upsert(Note(
-        id = UUID.randomUUID().toString(),                 // identity before the server sees it
-        title = title.trim(), body = body.trim(),
-        updatedAt = System.currentTimeMillis(),
-        syncState = SyncState.PENDING,                      // joins the outbox
-    ))
-}
+    // suspend because Room writes may pause; the ViewModel calls this from viewModelScope.launch.
+    suspend fun addNote(title: String, body: String) {
+        dao.upsert(Note(
+            id = UUID.randomUUID().toString(),                 // identity before the server sees it
+            title = title.trim(), body = body.trim(),
+            updatedAt = System.currentTimeMillis(),
+            syncState = SyncState.PENDING,                      // joins the outbox
+        ))
+    }
 
-suspend fun deleteNote(id: String) {
-    val existing = dao.findById(id) ?: return
-    dao.upsert(existing.copy(deleted = true,               // SOFT delete (tombstone) — still pushable offline
-        updatedAt = System.currentTimeMillis(), syncState = SyncState.PENDING))
+    suspend fun deleteNote(id: String) {
+        val existing = dao.findById(id) ?: return
+        dao.upsert(existing.copy(deleted = true,               // SOFT delete (tombstone) — still pushable offline
+            updatedAt = System.currentTimeMillis(), syncState = SyncState.PENDING))
+    }
 }</pre>
         </div>
+        <details class="predict-card">
+          <summary>Predict before reveal: what should the UI show immediately after an offline delete?</summary>
+          <div class="answer">The note disappears from the visible list, but a hidden tombstone remains in Room with <code>syncState = PENDING</code>. That hidden row is what lets sync upload the delete later.</div>
+        </details>
       </div>
     </section>
 
@@ -819,15 +1741,27 @@ suspend fun deleteNote(id: String) {
     <section class="band anchor" id="sync">
       <div class="band-inner">
         <p class="eyebrow">Step 5 · reconcile with the cloud</p>
-        <h2>sync() — push the outbox, then pull remote changes</h2>
+        <h2>sync() — upload waiting notes, then download cloud changes</h2>
         <p class="dense">
-          The repository's <code>sync()</code> is the reconciler. It <strong>pushes</strong> every unsynced row, then
-          <strong>pulls</strong> rows newer than the local cursor. It may throw (no network) — the worker catches that
-          and retries; the local data is safe in Room the whole time.
+          <code>sync()</code> is the catch-up function. First it uploads local notes that are waiting. Then it downloads
+          newer notes from the cloud. If the network fails, the local notes stay safe in Room and the worker tries again
+          later.
         </p>
+        <table class="tbl">
+          <thead><tr><th>Repository step</th><th>What it calls</th><th>What changes</th></tr></thead>
+          <tbody>
+            <tr><td>Save first</td><td><code>dao.upsert(... PENDING)</code></td><td>The note appears on screen right away.</td></tr>
+            <tr><td>Upload waiting notes</td><td><code>dao.notesToPush()</code>, then <code>cloud.push(...)</code></td><td>Pending rows go to the cloud. Good uploads become <code>SYNCED</code>.</td></tr>
+            <tr><td>Handle failure</td><td><code>dao.upsert(... FAILED)</code>, then throw</td><td>The screen can show a failed badge, and the worker knows to try again.</td></tr>
+            <tr><td>Download cloud changes</td><td><code>dao.maxUpdatedAt()</code>, then <code>cloud.pullSince(...)</code></td><td>New cloud rows are saved into Room, so the UI updates.</td></tr>
+            <tr><td>Pick a winner</td><td><code>shouldAcceptRemote(local, remote)</code></td><td>If two copies changed, CloudSync keeps the newer one.</td></tr>
+            <tr><td>Remove confirmed deletes</td><td><code>dao.hardDelete(id)</code></td><td>Only after the cloud receives the tombstone does Room remove the hidden row for good.</td></tr>
+          </tbody>
+        </table>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">data/NoteRepository.kt · sync()</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">suspend fun sync() {
+    // suspend because sync waits for Room and cloud calls without blocking the UI thread.
     // 1) PUSH — every row created/edited/deleted offline.
     for (local in dao.notesToPush()) {
         try {
@@ -852,9 +1786,13 @@ suspend fun deleteNote(id: String) {
         </div>
         <div class="callout good">
           <span class="callout-label">Push before pull</span>
-          Pushing first means your local edits reach the server before you ask it for the latest — so the pull sees the
-          merged result and your work isn't accidentally overwritten by a slightly-older server copy.
+          Upload your local changes first. Then ask the cloud for new changes. That way your own offline work gets to the
+          cloud before the app downloads the latest cloud copy.
         </div>
+        <details class="predict-card">
+          <summary>Predict before reveal: why push before pull?</summary>
+          <div class="answer">The app sends local work first so your offline edits reach the cloud before the app asks for newer cloud data. That keeps local pending work from being accidentally ignored.</div>
+        </details>
       </div>
     </section>
 
@@ -862,18 +1800,16 @@ suspend fun deleteNote(id: String) {
     <section class="band anchor" id="conflict">
       <div class="band-inner">
         <p class="eyebrow">Step 6 · who wins when both changed?</p>
-        <h2>Conflict resolution — last-write-wins, as a pure function</h2>
+        <h2>Conflict resolution — last-write-wins, as a small function</h2>
         <p class="dense">
-          When the local and remote copies disagree, something must decide. CloudSync uses <strong>last-write-wins</strong>
-          by <code>updatedAt</code>, extracted into a pure function so it's trivially unit-testable (no Room, no
-          coroutines).
+          Sometimes the phone and the cloud both changed the same note. CloudSync needs a simple rule. This sample uses
+          <strong>last-write-wins</strong>: the copy with the newer <code>updatedAt</code> time wins.
         </p>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">data/NoteRepository.kt · shouldAcceptRemote</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">/**
- * Accept the incoming remote row only when we have no local copy, OR our local copy is
- * already SYNCED and not newer. A still-PENDING local edit wins here — it carries unpushed
- * work that will be pushed next sync, where the server makes the final call.
+ * Accept the cloud row only if it will not erase a local edit still waiting to upload.
+ * If local work is still PENDING, keep it local and push it on the next sync.
  */
 fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean =
     local == null || (local.syncState == SyncState.SYNCED &amp;&amp; remote.updatedAt &gt;= local.updatedAt)</pre>
@@ -882,10 +1818,14 @@ fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean =
           <thead><tr><th>Strategy</th><th>How</th><th>Used here?</th></tr></thead>
           <tbody>
             <tr><td><strong>Last-write-wins</strong></td><td>Compare <code>updatedAt</code>; newer overwrites</td><td><span class="dot yes">✓</span> simple, fine for personal data</td></tr>
-            <tr><td>Version / optimistic lock</td><td>Server rejects a stale <code>version</code>; client re-pulls</td><td><span class="dot no">—</span> for shared/multi-user data</td></tr>
-            <tr><td>Field-level merge / CRDT</td><td>Merge non-conflicting fields</td><td><span class="dot no">—</span> collaborative editing</td></tr>
+            <tr><td>Version / optimistic lock</td><td>Server rejects a stale <code>version</code>; the app downloads the latest copy and tries again.</td><td><span class="dot no">—</span> for shared or multi-user data</td></tr>
+            <tr><td>Field-level merge / CRDT</td><td>Merge non-conflicting fields instead of picking one whole note. CRDT means "conflict-free replicated data type," an advanced structure for collaborative editing.</td><td><span class="dot no">—</span> for collaborative editing</td></tr>
           </tbody>
         </table>
+        <details class="predict-card">
+          <summary>Predict before reveal: when should CloudSync reject a cloud row?</summary>
+          <div class="answer">It should reject a cloud row when the local row is still <code>PENDING</code>. That local edit has not uploaded yet, so replacing it would erase offline work.</div>
+        </details>
       </div>
     </section>
 
@@ -893,16 +1833,54 @@ fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean =
     <section class="band anchor" id="worker">
       <div class="band-inner">
         <p class="eyebrow">Step 7 · where offline "just queues"</p>
-        <h2>The background worker</h2>
+        <h2>The background worker — sync when the screen is gone</h2>
         <p class="dense">
-          A ViewModel coroutine dies with the screen, so sync runs in a <strong>WorkManager</strong> job that survives
-          process death, waits for the network, and retries. The <code>NetworkType.CONNECTED</code> constraint is exactly
-          why offline writes simply wait instead of failing.
+          <code>SyncWorker</code> runs sync in the background. It is useful because the screen might close, the app might
+          restart, or the network might be offline. WorkManager can wait until the network is back, then run the sync job.
         </p>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">What the worker does</span></div>
+            <div class="card-body">
+              <ul class="kicker-list">
+                <li>Runs outside the screen, so sync can continue after the user leaves the page.</li>
+                <li>Extends <code>CoroutineWorker</code>, a WorkManager worker type that can call <code>suspend</code> functions.</li>
+                <li>Gets the Repository.</li>
+                <li>Calls <code>repo.sync()</code>.</li>
+                <li>Reports success only after upload and download finish.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">What WorkManager adds</span></div>
+            <div class="card-body">
+              <ul class="kicker-list">
+                <li><code>NetworkType.CONNECTED</code> means "run only when online."</li>
+                <li><code>Result.retry()</code> means "try again later."</li>
+                <li><code>BackoffPolicy.EXPONENTIAL</code> means "wait longer between repeated failures."</li>
+                <li><code>enqueueUniqueWork(...)</code> means "do not start a bunch of duplicate sync jobs."</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Worker code word</th><th>Plain meaning</th><th>Why it is here</th></tr></thead>
+          <tbody>
+            <tr><td><code>Context</code></td><td>An Android handle to app-level services and resources.</td><td>The worker uses it to get the same Repository the app uses.</td></tr>
+            <tr><td><code>WorkerParameters</code></td><td>Information WorkManager passes into a worker when it starts it.</td><td><code>SyncWorker</code> receives these because every WorkManager worker does.</td></tr>
+            <tr><td><code>doWork()</code></td><td>The function WorkManager runs in the background.</td><td>CloudSync calls <code>repo.sync()</code> from here.</td></tr>
+            <tr><td><code>Result.success()</code></td><td>The worker reports that the job finished.</td><td>Used only after upload and download complete.</td></tr>
+            <tr><td><code>ExistingWorkPolicy.APPEND_OR_REPLACE</code></td><td>How WorkManager handles a new request with the same job name.</td><td>CloudSync avoids piling up duplicate sync jobs.</td></tr>
+            <tr><td><code>OneTimeWorkRequestBuilder</code></td><td>A builder for one background job request.</td><td>CloudSync creates one sync request each time it asks WorkManager to sync.</td></tr>
+            <tr><td><code>Constraints.Builder</code></td><td>A builder for rules a job must satisfy before it runs.</td><td>The sync request gets the "network must be connected" rule.</td></tr>
+            <tr><td><code>TimeUnit.SECONDS</code></td><td>The unit for the retry delay.</td><td>The first retry waits about 30 seconds before trying again.</td></tr>
+          </tbody>
+        </table>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">sync/SyncWorker.kt</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">class SyncWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
+        // WorkManager runs doWork() in a coroutine, so it can call suspend sync code.
         val repo = NoteRepository.get(applicationContext)   // the SAME repo the UI uses
         return try { repo.sync(); Result.success() }
         catch (e: Exception) { Result.retry() }             // backoff; try again later
@@ -925,9 +1903,13 @@ fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean =
         </div>
         <div class="callout violet">
           <span class="callout-label">This one constraint is the whole offline story</span>
-          With <code>NetworkType.CONNECTED</code>, an enqueued sync simply <em>waits</em> while the device is offline and
-          fires the moment connectivity returns — no polling, no lost work, no special offline code path.
+          With <code>NetworkType.CONNECTED</code>, a sync job waits while the device is offline. When the network comes
+          back, WorkManager runs it. The app does not lose the local notes.
         </div>
+        <details class="predict-card">
+          <summary>Predict before reveal: what happens if the sync job is requested with no network?</summary>
+          <div class="answer">WorkManager keeps the job waiting because of <code>NetworkType.CONNECTED</code>. The local Room rows stay safe, and the job runs when the device is online again.</div>
+        </details>
       </div>
     </section>
 
@@ -937,9 +1919,28 @@ fun shouldAcceptRemote(local: Note?, remote: NoteDto): Boolean =
         <p class="eyebrow">Step 8 · ViewModel &amp; screen</p>
         <h2>Local state in, intents out</h2>
         <p class="dense">
-          The ViewModel exposes Room as <code>StateFlow</code>s (so the UI is offline-first by construction) plus the
-          online signal; every intent does the same two steps — write to Room, request a sync.
+          The DAO gives the Repository regular <code>Flow</code>s. The <strong>ViewModel</strong> is the screen's data
+          coordinator: it turns those streams into <code>StateFlow</code>s so the screen always has a current value to
+          draw. Every button press still does the same two steps: write to Room, then request a sync.
         </p>
+        <div class="callout">
+          <span class="callout-label">Flow vs StateFlow</span>
+          <code>Flow</code> is the stream coming from Room: values arrive when the database changes. <code>StateFlow</code>
+          is the screen-friendly version: it always holds the latest value, like "the current notes list right now."
+          Compose reads that latest value with <code>collectAsStateWithLifecycle()</code>.
+        </div>
+        <table class="tbl">
+          <thead><tr><th>UI term</th><th>Plain meaning</th><th>What it does here</th></tr></thead>
+          <tbody>
+            <tr><td><code>ViewModel</code></td><td>A class that holds screen data and screen actions outside the composable UI function.</td><td><code>CloudSyncViewModel</code> exposes notes, pending count, and online status; it also handles add/edit/delete button actions.</td></tr>
+            <tr><td><code>viewModelScope</code></td><td>A coroutine scope owned by the ViewModel.</td><td>Work started here is tied to the ViewModel instead of one button click.</td></tr>
+            <tr><td><code>launch</code></td><td>Start background coroutine work.</td><td>The app can write to Room and request sync without freezing the screen.</td></tr>
+            <tr><td><code>stateIn(...)</code></td><td>Turn a regular <code>Flow</code> into a <code>StateFlow</code>.</td><td>The screen gets an immediate current value instead of waiting for a future emission.</td></tr>
+            <tr><td><code>emptyList()</code> / <code>0</code> / <code>true</code></td><td>Starting values used before the first real database or network-status value arrives.</td><td>The screen has something safe to draw immediately.</td></tr>
+            <tr><td><code>collectAsStateWithLifecycle()</code></td><td>Compose's safe way to read a <code>StateFlow</code> while the screen is visible.</td><td>When the value changes, Compose redraws the affected UI.</td></tr>
+            <tr><td><code>intent</code></td><td>A user action the screen asks the ViewModel to handle.</td><td><code>addNote(...)</code> is an intent: the screen says what happened, and the ViewModel decides the work.</td></tr>
+          </tbody>
+        </table>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">CloudSyncViewModel.kt</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">val notes: StateFlow&lt;List&lt;Note&gt;&gt; = repo.notes.stateIn(viewModelScope, started, emptyList())
@@ -949,17 +1950,47 @@ val isOnline: StateFlow&lt;Boolean&gt; = connectivity.isOnline.stateIn(viewModel
 fun addNote(title: String, body: String) = writeThenSync { repo.addNote(title, body) }
 
 private fun writeThenSync(block: suspend () -&gt; Unit) {
+    // block is suspend because it will call repository functions that may wait for Room.
     viewModelScope.launch {
-        block()                                     // 1) optimistic local write (Room updates the UI)
+        block()                                     // 1) call suspend work from inside a coroutine
         SyncScheduler.requestSync(getApplication()) // 2) push/pull when the network allows
     }
 }</pre>
         </div>
+        <div class="code-panel">
+          <div class="code-head"><span class="code-file">MainActivity.kt · Compose reads current state and sends intents</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">@Composable
+fun NotesScreen(vm: CloudSyncViewModel = viewModel()) {
+    val notes by vm.notes.collectAsStateWithLifecycle()
+    val pendingCount by vm.pendingCount.collectAsStateWithLifecycle()
+    val isOnline by vm.isOnline.collectAsStateWithLifecycle()
+
+    Column {
+        SyncBanner(isOnline = isOnline, pendingCount = pendingCount)
+        Button(onClick = { vm.addNote("Buy milk", "2% milk") }) {
+            Text("Add note")
+        }
+        LazyColumn {
+            items(notes, key = { it.id }) { note -&gt;
+                NoteRow(
+                    note = note,
+                    badge = note.syncState,
+                    onDelete = { vm.deleteNote(note.id) }
+                )
+            }
+        }
+    }
+}</pre>
+        </div>
         <p class="dense">
-          The screen reads those flows with <code>collectAsStateWithLifecycle()</code>, draws each note with a
+          The screen reads those <code>StateFlow</code>s with <code>collectAsStateWithLifecycle()</code>, draws each note with a
           color-coded sync badge (<code>✓ Synced</code> / <code>⏳ Pending</code> / <code>⚠ Failed</code>), and shows an
           online/offline + "N pending" banner.
         </p>
+        <details class="predict-card">
+          <summary>Predict before reveal: why does the ViewModel expose StateFlow instead of a plain list?</summary>
+          <div class="answer">A plain list is only one value. <code>StateFlow</code> keeps the latest value from Room ready and updates when Room emits again, so Compose can redraw without manual refresh code.</div>
+        </details>
       </div>
     </section>
 
@@ -984,6 +2015,31 @@ private fun writeThenSync(block: suspend () -&gt; Unit) {
           Because the UI only ever reads Room and writes Room, it literally cannot tell whether the network is up. The
           gap between the device and the cloud is just a queue waiting to drain.
         </div>
+        <div class="break-lab" data-break-lab>
+          <div class="lab-head">What breaks if...</div>
+          <div class="lab-body">
+            <div class="lab-controls">
+              <button class="break-btn active" type="button" data-break-case="cloud-ui">The UI reads the cloud directly</button>
+              <button class="break-btn" type="button" data-break-case="hard-delete">Deletes are hard-deleted immediately</button>
+              <button class="break-btn" type="button" data-break-case="server-id">The server creates ids</button>
+              <button class="break-btn" type="button" data-break-case="pull-first">Sync pulls before pushing</button>
+            </div>
+            <div class="lab-output" data-break-output></div>
+          </div>
+        </div>
+        <div class="debug-lab" data-debug-lab>
+          <div class="lab-head">Debug a symptom — choose what you see, then identify the likely broken layer</div>
+          <div class="lab-body">
+            <div class="lab-controls">
+              <button class="break-btn active" type="button" data-debug-case="pending-stuck">Badge stuck Pending</button>
+              <button class="break-btn" type="button" data-debug-case="remote-missing">Cloud note never appears</button>
+              <button class="break-btn" type="button" data-debug-case="delete-returns">Deleted note comes back</button>
+              <button class="break-btn" type="button" data-debug-case="duplicate-sync">Many sync jobs run</button>
+              <button class="break-btn" type="button" data-debug-case="ui-stale">UI does not redraw</button>
+            </div>
+            <div class="lab-output" data-debug-output></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1000,15 +2056,16 @@ private fun writeThenSync(block: suspend () -&gt; Unit) {
               <button id="stepPrev" type="button">‹ Prev</button>
               <span class="s-count" id="stepCount">1 / 6</span>
               <button id="stepNext" type="button">Next ›</button>
+              <button id="stepReset" type="button">Reset</button>
             </div>
           </div>
           <ol class="steps" id="stepList">
-            <li class="step" data-step><div class="s-num">1</div><div class="s-body"><strong>Write.</strong> <code>addNote("Buy milk", …)</code> inserts a row into Room with a fresh UUID and <code>syncState = PENDING</code>. The list recomposes instantly — even though you're offline.<span class="s-where">NoteRepository.addNote() → Room</span></div></li>
+            <li class="step" data-step><div class="s-num">1</div><div class="s-body"><strong>Write.</strong> <code>addNote("Buy milk", …)</code> inserts a row into Room with a fresh UUID and <code>syncState = PENDING</code>. The Compose list recomposes, meaning it redraws from the latest state, even though you're offline.<span class="s-where">NoteRepository.addNote() → Room</span></div></li>
             <li class="step" data-step><div class="s-num">2</div><div class="s-body"><strong>Queue.</strong> The ViewModel calls <code>SyncScheduler.requestSync()</code>. WorkManager accepts the job but its <code>NetworkType.CONNECTED</code> constraint is unmet, so it <em>waits</em>.<span class="s-where">SyncScheduler.requestSync()</span></div></li>
             <li class="step" data-step><div class="s-num">3</div><div class="s-body"><strong>Offline UI.</strong> The note shows a <code>⏳ Pending</code> badge; the banner reads "🔴 Offline — changes are queued · ⏳ 1 pending". Nothing is lost; it's safely in Room.<span class="s-where">MainActivity · SyncBadge + banner</span></div></li>
             <li class="step" data-step><div class="s-num">4</div><div class="s-body"><strong>Reconnect.</strong> Connectivity returns; WorkManager's constraint is satisfied, so it runs <code>SyncWorker.doWork()</code> → <code>repository.sync()</code>.<span class="s-where">SyncWorker → repository.sync()</span></div></li>
             <li class="step" data-step><div class="s-num">5</div><div class="s-body"><strong>Push.</strong> <code>notesToPush()</code> returns the pending note; <code>cloud.push(it)</code> uploads it; the row is re-saved as <code>SYNCED</code> with the server's copy.<span class="s-where">sync() · push loop</span></div></li>
-            <li class="step" data-step><div class="s-num">6</div><div class="s-body"><strong>Pull + recompose.</strong> <code>pullSince(cursor)</code> brings any remote changes; upserts hit Room; the <code>Flow</code> re-emits and the badge flips to <code>✓ Synced</code>. No manual refresh anywhere.<span class="s-where">sync() · pull loop → Room → UI</span></div></li>
+            <li class="step" data-step><div class="s-num">6</div><div class="s-body"><strong>Download + redraw.</strong> <code>pullSince(cursor)</code> brings newer cloud notes; Room saves them; the screen updates and the badge flips to <code>✓ Synced</code>. No manual refresh anywhere.<span class="s-where">sync() · pull loop → Room → UI</span></div></li>
           </ol>
         </div>
       </div>
@@ -1027,6 +2084,18 @@ private fun writeThenSync(block: suspend () -&gt; Unit) {
 ./gradlew :testDebugUnitTest        # last-write-wins + converter + fake-cloud tests
 ./gradlew installDebug              # build &amp; install on a running device/emulator</pre>
         </div>
+        <table class="tbl">
+          <thead><tr><th>Command word</th><th>Plain meaning</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td><code>JAVA_HOME</code></td><td>The path to the Java runtime Gradle should use.</td><td>Android Studio includes the Java runtime this project needs.</td></tr>
+            <tr><td><code>./gradlew</code></td><td>The project's Gradle wrapper script.</td><td>It runs the same build tool version for everyone.</td></tr>
+            <tr><td><code>:compileDebugKotlin</code></td><td>Compile the app's debug Kotlin code.</td><td>This catches Kotlin errors and runs Room's generated-code step.</td></tr>
+            <tr><td><code>:testDebugUnitTest</code></td><td>Run the local unit tests for the debug build.</td><td>Checks the converter, fake cloud, and last-write-wins rule.</td></tr>
+            <tr><td><code>installDebug</code></td><td>Build and install the debug app on a connected device or emulator.</td><td>Use this to try the offline queue in the real Android app.</td></tr>
+            <tr><td><code>emulator</code></td><td>A virtual Android device running on the computer.</td><td>It lets you run the app without a physical phone.</td></tr>
+            <tr><td><code>Database Inspector</code></td><td>Android Studio's tool for viewing an app's local database.</td><td>It lets you watch Room rows and <code>syncState</code> change while sync runs.</td></tr>
+          </tbody>
+        </table>
         <div class="grid2">
           <div class="card">
             <div class="card-head"><span class="card-title">See the offline queue</span></div>
@@ -1040,10 +2109,86 @@ private fun writeThenSync(block: suspend () -&gt; Unit) {
         <div class="callout good">
           <span class="callout-label">Where this sits in the set</span>
           It combines <a href="../StorageShowcase/how-a-note-reaches-storage.html">Storage Showcase</a> (the Room cache)
-          with <a href="../NetworkParsing/how-a-note-is-fetched.html">Network Parsing</a> (the transport). Want to play
+          with <a href="../NetworkParsing/how-a-note-is-fetched.html">Network Parsing</a> (the web connection). Want to play
           with the offline queue in your browser? Open the <a href="cloudsync-explorer.html">interactive explainer</a>.
         </div>
-        <p class="foot">CloudSync · Room is what the user sees, the cloud is what eventually agrees with it · part of the AndroidStudioProjects teaching set.</p>
+        <p class="foot">CloudSync · Room is what the user sees, the cloud is what eventually agrees with it · part of the AndroidStudioProjects learning set.</p>
+      </div>
+    </section>
+
+    <!-- ============ 16. WORKSHEET ============ -->
+    <section class="band anchor" id="worksheet">
+      <div class="band-inner">
+        <p class="eyebrow">Practice</p>
+        <h2>Student worksheet — trace one note end to end</h2>
+        <p class="dense">Use these prompts to check whether the architecture is clear enough to explain without looking back.</p>
+        <div class="worksheet">
+          <div class="lab-head">Write your answers in your own words</div>
+          <div class="lab-body">
+            <div class="worksheet-grid">
+              <div class="worksheet-item">
+                <label for="ws1">1. You tap Add while offline. What are the first three layers touched?</label>
+                <textarea id="ws1" placeholder="Write three layer names in order."></textarea>
+              </div>
+              <div class="worksheet-item">
+                <label for="ws2">2. Which Room fields prove the note still needs cloud work?</label>
+                <textarea id="ws2" placeholder="Name the field values and what each one means."></textarea>
+              </div>
+              <div class="worksheet-item">
+                <label for="ws3">3. Why is a delete saved as a tombstone before hardDelete?</label>
+                <textarea id="ws3" placeholder="Explain what would be impossible if the row vanished immediately."></textarea>
+              </div>
+              <div class="worksheet-item">
+                <label for="ws4">4. When the network returns, what does WorkManager do first?</label>
+                <textarea id="ws4" placeholder="Trace from SyncWorker to Repository to cloud and back to Room."></textarea>
+              </div>
+              <div class="worksheet-item">
+                <label for="ws5">5. A cloud note arrives. How does the UI learn about it?</label>
+                <textarea id="ws5" placeholder="Use Room, Flow, StateFlow, and Compose in the explanation."></textarea>
+              </div>
+              <div class="worksheet-item">
+                <label for="ws6">6. What single rule prevents the UI from breaking offline?</label>
+                <textarea id="ws6" placeholder="Write the rule as one clear sentence."></textarea>
+              </div>
+            </div>
+            <div class="lab-controls" style="margin-top:12px;">
+              <button class="worksheet-btn" type="button" data-worksheet-copy>Copy answers</button>
+              <button class="worksheet-btn" type="button" data-worksheet-clear>Clear worksheet</button>
+              <span class="status-note" data-worksheet-status></span>
+            </div>
+          </div>
+        </div>
+        <div class="worksheet">
+          <div class="lab-head">Sample solutions</div>
+          <div class="lab-body">
+            <div class="worksheet-grid">
+              <details class="worksheet-item solution-item">
+                <summary>1. You tap Add while offline. What are the first three layers touched?</summary>
+                <p>UI → ViewModel → Repository. The UI sends the user intent, the ViewModel calls the repository from a coroutine, and the Repository writes the note to Room first.</p>
+              </details>
+              <details class="worksheet-item solution-item">
+                <summary>2. Which Room fields prove the note still needs cloud work?</summary>
+                <p><code>syncState = PENDING</code> proves the note is in the outbox. If it is a delete, <code>deleted = true</code> means the row is a tombstone that still needs to be pushed to the cloud.</p>
+              </details>
+              <details class="worksheet-item solution-item">
+                <summary>3. Why is a delete saved as a tombstone before hardDelete?</summary>
+                <p>If the row vanished immediately while offline, the app would forget that the delete ever happened. A tombstone keeps enough data to upload the delete later; <code>hardDelete</code> waits until the cloud confirms it.</p>
+              </details>
+              <details class="worksheet-item solution-item">
+                <summary>4. When the network returns, what does WorkManager do first?</summary>
+                <p>WorkManager runs <code>SyncWorker.doWork()</code>. The worker calls <code>repo.sync()</code>, which pushes local outbox rows first, saves successful rows back as <code>SYNCED</code>, then pulls newer cloud rows into Room.</p>
+              </details>
+              <details class="worksheet-item solution-item">
+                <summary>5. A cloud note arrives. How does the UI learn about it?</summary>
+                <p>The Repository saves the cloud note into Room. Room reruns the DAO query and the <code>Flow</code> emits a new list. The ViewModel's <code>StateFlow</code> holds that latest list, and Compose redraws from it.</p>
+              </details>
+              <details class="worksheet-item solution-item">
+                <summary>6. What single rule prevents the UI from breaking offline?</summary>
+                <p>The UI never reads the network directly. It reads and writes Room; the Repository, SyncWorker, and CloudApi make the cloud catch up later.</p>
+              </details>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -1125,12 +2270,349 @@ private fun writeThenSync(block: suspend () -&gt; Unit) {
     sections.forEach(function (s) { obs.observe(s); });
   }
 
+  // ---------------- Flow lab ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-flow-lab]"));
+    if (!labs.length) return;
+
+    function visibleNotes(notes) {
+      return notes.filter(function (n) { return !n.deleted; });
+    }
+    function clear(el) {
+      while (el && el.firstChild) el.removeChild(el.firstChild);
+    }
+    function addNoteRow(target, note, compact) {
+      var row = document.createElement("div");
+      row.className = "flow-row";
+      var title = document.createElement("strong");
+      title.textContent = note.title;
+      row.appendChild(title);
+      if (!compact) {
+        var id = document.createElement("code");
+        id.textContent = note.id;
+        row.appendChild(id);
+      }
+      var pill = document.createElement("span");
+      pill.className = "flow-pill " + (note.deleted ? "deleted" : note.syncState.toLowerCase());
+      pill.textContent = note.deleted ? "DELETED / PENDING" : note.syncState;
+      row.appendChild(pill);
+      var meta = document.createElement("div");
+      meta.className = "flow-meta";
+      var visibility = note.deleted ? "hidden from UI" : "visible to UI";
+      var source = note.source ? "source=" + note.source : "source=local";
+      meta.appendChild(document.createTextNode(visibility + " | " + source));
+      row.appendChild(meta);
+      target.appendChild(row);
+    }
+    function addEmpty(target, text) {
+      var empty = document.createElement("div");
+      empty.className = "flow-empty";
+      empty.textContent = text;
+      target.appendChild(empty);
+    }
+    function addStageNote(target, text) {
+      if (!text) return;
+      var note = document.createElement("div");
+      note.className = "flow-stage-note";
+      note.textContent = text;
+      target.appendChild(note);
+    }
+    function addBriefCard(target, label, value, codeLike) {
+      var card = document.createElement("div");
+      card.className = "flow-brief-card";
+      var labelEl = document.createElement("span");
+      labelEl.className = "flow-brief-label";
+      labelEl.textContent = label;
+      card.appendChild(labelEl);
+      var valueEl = document.createElement(codeLike ? "code" : "strong");
+      valueEl.textContent = value;
+      card.appendChild(valueEl);
+      target.appendChild(card);
+    }
+    function payloadFor(notes) {
+      return notes.map(function (n) {
+        return { id: n.id, title: n.title, syncState: n.syncState };
+      });
+    }
+    function renderLab(lab, state, event) {
+      var visible = visibleNotes(state.notes);
+      var summary = lab.querySelector("[data-flow-summary]");
+      var room = lab.querySelector("[data-flow-room]");
+      var emission = lab.querySelector("[data-flow-emission]");
+      var stateBox = lab.querySelector("[data-flow-state]");
+      var ui = lab.querySelector("[data-flow-ui]");
+      var explain = lab.querySelector("[data-flow-explain]");
+      var explainTitle = lab.querySelector("[data-flow-explain-title]");
+      var steps = lab.querySelector("[data-flow-steps]");
+      var log = lab.querySelector("[data-flow-log]");
+
+      clear(summary);
+      addBriefCard(summary, "Trigger", event.trigger, false);
+      addBriefCard(summary, "DAO / source", event.dao, true);
+      addBriefCard(summary, "Flow payload", visible.length + " visible row(s)", false);
+      addBriefCard(summary, "UI result", event.ui, false);
+
+      clear(room);
+      state.notes.forEach(function (note) { addNoteRow(room, note, false); });
+      if (!state.notes.length) addEmpty(room, "Room has no rows.");
+      addStageNote(room, event.roomNote);
+
+      clear(emission);
+      var burst = document.createElement("div");
+      burst.className = "flow-burst";
+      burst.textContent = "Emission #" + state.emission;
+      emission.appendChild(burst);
+      var query = document.createElement("code");
+      query.className = "flow-code";
+      query.textContent = "Query: SELECT * FROM notes WHERE deleted = 0 ORDER BY updatedAt DESC";
+      emission.appendChild(query);
+      var emitted = document.createElement("code");
+      emitted.className = "flow-code";
+      emitted.textContent = "Flow<List<Note>> emits: " + JSON.stringify(payloadFor(visible));
+      emission.appendChild(emitted);
+      addStageNote(emission, event.flowNote);
+
+      clear(stateBox);
+      var current = document.createElement("code");
+      current.className = "flow-code";
+      current.textContent = "StateFlow.value = " + JSON.stringify(payloadFor(visible));
+      stateBox.appendChild(current);
+      addStageNote(stateBox, event.stateNote || "StateFlow caches the latest emitted list so Compose can read a current value immediately.");
+
+      clear(ui);
+      if (!visible.length) addEmpty(ui, "No visible notes.");
+      visible.forEach(function (note) { addNoteRow(ui, note, true); });
+      addStageNote(ui, event.uiNote);
+
+      if (explainTitle) explainTitle.textContent = event.title || "What just happened";
+      clear(steps);
+      (event.steps || []).forEach(function (step) {
+        var li = document.createElement("li");
+        li.textContent = step;
+        steps.appendChild(li);
+      });
+      explain.textContent = event.reason;
+      clear(log);
+      state.log.slice(0, 5).forEach(function (item) {
+        var li = document.createElement("li");
+        li.textContent = item;
+        log.appendChild(li);
+      });
+      Array.prototype.slice.call(lab.querySelectorAll("[data-flow-stage]")).forEach(function (stage) {
+        stage.classList.add("active");
+      });
+    }
+    function initLab(lab) {
+      var state = { seq: 1, emission: 0, notes: [], log: [] };
+      function event(title, trigger, dao, ui, reason, steps, roomNote, flowNote, stateNote, uiNote) {
+        return {
+          title: title,
+          trigger: trigger,
+          dao: dao,
+          ui: ui,
+          reason: reason,
+          steps: steps,
+          roomNote: roomNote,
+          flowNote: flowNote,
+          stateNote: stateNote,
+          uiNote: uiNote
+        };
+      }
+      function reset(detail) {
+        state.seq = 1;
+        state.emission = 0;
+        state.log = [];
+        state.notes = [{ id: "seed-welcome", title: "Welcome note", syncState: "SYNCED", deleted: false, source: "seed" }];
+        emit(detail || event(
+          "Initial collection",
+          "Screen opens",
+          "observeVisibleNotes()",
+          "Welcome note is drawn",
+          "The screen starts collecting the Flow. Room runs the DAO query once and sends the current visible notes list.",
+          [
+            "Compose reaches the screen and the ViewModel starts collecting repo.notes.",
+            "Room runs observeVisibleNotes() against the local notes table.",
+            "The Flow emits the visible rows. Deleted rows would be filtered out here.",
+            "stateIn(...) stores that emission as StateFlow.value.",
+            "Compose reads the StateFlow value and draws the list."
+          ],
+          "Room already has one synced seed row.",
+          "The first emission happens because collection started.",
+          "StateFlow now holds the latest visible Room rows.",
+          "Compose draws exactly what StateFlow holds."
+        ));
+      }
+      function emit(detail, changed) {
+        var didChange = changed !== false;
+        if (didChange) state.emission += 1;
+        state.log.unshift((didChange ? "Emission #" + state.emission + ": " : "No new emission: ") + detail.title);
+        renderLab(lab, state, detail);
+      }
+      lab.querySelector("[data-flow-action='add']").addEventListener("click", function () {
+        state.seq += 1;
+        state.notes.unshift({ id: "local-" + state.seq, title: "Local note " + state.seq, syncState: "PENDING", deleted: false, source: "local" });
+        emit(event(
+          "Local insert",
+          "Add local note",
+          "dao.upsert(Note(... PENDING))",
+          "New note appears with PENDING badge",
+          "A local write changes Room first. The Flow reacts to the database change, so the screen updates before any cloud upload happens.",
+          [
+            "The ViewModel calls repo.addNote(...).",
+            "The Repository creates a Note with syncState = PENDING.",
+            "dao.upsert(note) writes the row into Room.",
+            "Room invalidates the observeVisibleNotes() query and emits the new visible list.",
+            "StateFlow stores that list and Compose redraws the note row with a Pending badge."
+          ],
+          "A new visible PENDING row was inserted at the top of the table.",
+          "The emitted list includes the new local row because deleted = false.",
+          "StateFlow.value is replaced with the newest emitted list.",
+          "The UI does not wait for the cloud. It draws the local row immediately."
+        ));
+      });
+      lab.querySelector("[data-flow-action='cloud']").addEventListener("click", function () {
+        state.seq += 1;
+        state.notes.unshift({ id: "cloud-" + state.seq, title: "Cloud note " + state.seq, syncState: "SYNCED", deleted: false, source: "cloud" });
+        emit(event(
+          "Cloud pull saved locally",
+          "Pull cloud note",
+          "dao.upsert(remote.toEntity(SYNCED))",
+          "Cloud note appears",
+          "The UI still does not read the cloud. Sync saves the cloud row into Room first, then the Room Flow emits and the screen redraws from local data.",
+          [
+            "Sync calls cloud.pullSince(cursor) and receives a NoteDto.",
+            "The Repository converts the DTO into a local Note with syncState = SYNCED.",
+            "dao.upsert(remoteNote) writes that cloud change into Room.",
+            "Room reruns observeVisibleNotes() and emits the new visible list.",
+            "StateFlow receives the list, then Compose redraws with the cloud note included."
+          ],
+          "A synced row from the cloud was inserted into the local Room table.",
+          "The Flow emits because Room changed, not because Compose asked the cloud directly.",
+          "StateFlow now holds the local list after the cloud row was saved.",
+          "Compose draws the cloud note only after it exists in Room."
+        ));
+      });
+      lab.querySelector("[data-flow-action='sync']").addEventListener("click", function () {
+        var pending = state.notes.filter(function (n) { return !n.deleted && n.syncState === "PENDING"; })[0];
+        if (!pending) {
+          emit(event(
+            "No pending note to mark synced",
+            "Mark pending Synced",
+            "notesToPush() finds nothing visible",
+            "Screen stays the same",
+            "No visible PENDING row was changed, so Room would not need to emit a new list. The lab keeps showing the latest StateFlow value.",
+            [
+              "The button looks for a visible row whose syncState is PENDING.",
+              "There is no matching row.",
+              "No dao.upsert(...) runs.",
+              "Because Room did not change, a real Flow would not emit a fresh value for this action.",
+              "The screen keeps drawing the current StateFlow.value."
+            ],
+            "No row changed in Room.",
+            "No new database invalidation happened.",
+            "StateFlow.value stays the same.",
+            "The UI stays stable because its state did not change."
+          ), false);
+          return;
+        }
+        pending.syncState = "SYNCED";
+        pending.source = "local uploaded";
+        emit(event(
+          "Pending row confirmed",
+          "Mark pending Synced",
+          "dao.upsert(serverCopy.toEntity(SYNCED))",
+          "Badge changes from PENDING to SYNCED",
+          "After upload succeeds, the Repository saves the server copy back into Room as SYNCED. That row update triggers a new Flow emission and the badge redraws.",
+          [
+            "sync() gets a pending row from notesToPush().",
+            "cloud.push(local.toDto()) succeeds.",
+            "The Repository saves the returned server copy as syncState = SYNCED.",
+            "Room notices the row changed and emits the visible list again.",
+            "Compose redraws the same note with a Synced badge."
+          ],
+          "One visible row changed from PENDING to SYNCED.",
+          "The emitted list still contains the same note, but its syncState changed.",
+          "StateFlow.value updates because one object in the list changed.",
+          "The visible row remains, but its badge changes to SYNCED."
+        ));
+      });
+      lab.querySelector("[data-flow-action='delete']").addEventListener("click", function () {
+        var first = visibleNotes(state.notes)[0];
+        if (!first) {
+          emit(event(
+            "No visible note to delete",
+            "Delete first note",
+            "observeVisibleNotes() has no visible rows",
+            "Screen stays empty",
+            "There is no visible row to update, so no delete tombstone is written. The current StateFlow value stays empty.",
+            [
+              "The button asks for the first note that is not deleted.",
+              "The visible list is empty.",
+              "No tombstone is created because there is no target row.",
+              "Room does not change, so the Flow does not emit for this action.",
+              "Compose keeps drawing the empty list."
+            ],
+            "No row changed in Room.",
+            "No new query result was produced.",
+            "StateFlow.value stays as the empty visible list.",
+            "The UI remains empty."
+          ), false);
+          return;
+        }
+        first.deleted = true;
+        first.syncState = "PENDING";
+        first.source = "local delete";
+        emit(event(
+          "Soft delete tombstone",
+          "Delete first note",
+          "dao.upsert(existing.copy(deleted = true, PENDING))",
+          "Deleted note disappears",
+          "Delete is not a hard delete yet. The row stays in Room as a hidden tombstone so sync can push the delete later, while observeVisibleNotes() filters it out of the UI list.",
+          [
+            "The Repository finds the visible row in Room.",
+            "It saves the same row with deleted = true and syncState = PENDING.",
+            "Room reruns observeVisibleNotes().",
+            "The query filters out deleted rows, so the emitted visible list no longer includes that note.",
+            "StateFlow updates and Compose redraws without the deleted note."
+          ],
+          "The row is still in Room, but deleted = true makes it a tombstone.",
+          "The emitted payload excludes the tombstone because the DAO query has WHERE deleted = 0.",
+          "StateFlow.value now holds the visible list after filtering.",
+          "The note disappears from the UI while the tombstone remains available for sync."
+        ));
+      });
+      lab.querySelector("[data-flow-action='reset']").addEventListener("click", function () {
+        reset(event(
+          "Reset and collect again",
+          "Reset",
+          "observeVisibleNotes()",
+          "Welcome note is drawn",
+          "Reset returns the lab to one local Room row and starts the collection story again.",
+          [
+            "The lab clears its simulated Room table.",
+            "It inserts the synced seed row again.",
+            "The screen collects observeVisibleNotes().",
+            "Room emits the visible rows.",
+            "StateFlow stores the emitted list and Compose draws it."
+          ],
+          "Room contains one synced seed row after reset.",
+          "The first visible list after reset is emitted.",
+          "StateFlow.value is the reset list.",
+          "Compose redraws the seed note."
+        ));
+      });
+      reset();
+    }
+    labs.forEach(initLab);
+  })();
+
   // ---------------- sort-swap stepper ----------------
   (function () {
     var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
     if (!steps.length) return;
     var prev = document.getElementById("stepPrev");
     var next = document.getElementById("stepNext");
+    var reset = document.getElementById("stepReset");
     var count = document.getElementById("stepCount");
     var i = 0;
     function render() {
@@ -1144,6 +2626,7 @@ private fun writeThenSync(block: suspend () -&gt; Unit) {
     }
     prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
     next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+    if (reset) reset.addEventListener("click", function () { i = 0; render(); });
     steps.forEach(function (s, idx) { s.addEventListener("click", function () { i = idx; render(); }); });
     render();
   })();
@@ -1218,12 +2701,186 @@ private fun writeThenSync(block: suspend () -&gt; Unit) {
     return out;
   }
 
+  function lineConcepts(line) {
+    var concepts = [];
+    if (/dao\.upsert|@Insert|Room|Note\(|toEntity|syncState\s*=/.test(line)) concepts.push("room-write");
+    if (/cloud\.|CloudApi|Retrofit|pullSince|push\(|NoteDto|HTTP/.test(line)) concepts.push("cloud-call");
+    if (/Result\.retry|BackoffPolicy|WorkManager|NetworkType|enqueueUniqueWork|OneTimeWorkRequestBuilder|Constraints/.test(line)) concepts.push("retry");
+    if (/StateFlow|stateIn|collectAsStateWithLifecycle|viewModelScope|Flow<|observeVisibleNotes|observePendingCount|pendingCount|isOnline/.test(line)) concepts.push("ui-state");
+    if (/deleted|hardDelete|tombstone|DELETE FROM|SOFT delete|soft-delete/.test(line)) concepts.push("delete");
+    return concepts.join(" ");
+  }
+
   document.querySelectorAll(".code-panel pre[data-lang]").forEach(function (pre) {
     try {
       var lang = pre.getAttribute("data-lang");
       var code = pre.textContent;
-      pre.innerHTML = highlight(code, lang);
+      pre.innerHTML = code.split("\n").map(function (line) {
+        return '<span class="code-line" data-concepts="' + lineConcepts(line) + '">' + highlight(line, lang) + "</span>";
+      }).join("\n");
     } catch (e) { /* leave plain text on any error */ }
+  });
+
+  // ---------------- concept highlighter ----------------
+  (function () {
+    var buttons = Array.prototype.slice.call(document.querySelectorAll("[data-code-concept]"));
+    if (!buttons.length) return;
+    var note = document.querySelector("[data-code-note]");
+    var labels = {
+      "room-write": "Highlighted Room writes and local row saves.",
+      "cloud-call": "Highlighted cloud interface calls, DTOs, pushes, and pulls.",
+      "retry": "Highlighted WorkManager retry, constraints, and queueing logic.",
+      "ui-state": "Highlighted Flow, StateFlow, and ViewModel state lines.",
+      "delete": "Highlighted tombstones, hidden deletes, and final hard deletes."
+    };
+    function apply(concept) {
+      document.querySelectorAll(".code-line").forEach(function (line) {
+        var has = (" " + (line.getAttribute("data-concepts") || "") + " ").indexOf(" " + concept + " ") >= 0;
+        line.classList.toggle("concept-hit", concept !== "clear" && has);
+      });
+      buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-code-concept") === concept && concept !== "clear"); });
+      if (note) note.textContent = concept === "clear" ? "Pick a concept to highlight matching lines across the code blocks." : labels[concept];
+    }
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () { apply(button.getAttribute("data-code-concept")); });
+    });
+  })();
+
+  // ---------------- timeline ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-sync-timeline]"));
+    labs.forEach(function (lab) {
+      var steps = Array.prototype.slice.call(lab.querySelectorAll("[data-timeline-step]"));
+      var prev = lab.querySelector("[data-timeline-prev]");
+      var next = lab.querySelector("[data-timeline-next]");
+      var reset = lab.querySelector("[data-timeline-reset]");
+      var count = lab.querySelector("[data-timeline-count]");
+      var explain = lab.querySelector("[data-timeline-explain]");
+      var i = 0;
+      function render() {
+        steps.forEach(function (step, idx) {
+          step.classList.toggle("active", idx === i);
+          step.classList.toggle("done", idx < i);
+        });
+        if (count) count.textContent = (i + 1) + " / " + steps.length;
+        if (explain) explain.textContent = steps[i].getAttribute("data-explain") || "";
+        if (prev) prev.disabled = i === 0;
+        if (next) next.disabled = i === steps.length - 1;
+      }
+      if (prev) prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
+      if (next) next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });
+      if (reset) reset.addEventListener("click", function () { i = 0; render(); });
+      steps.forEach(function (step, idx) { step.addEventListener("click", function () { i = idx; render(); }); });
+      render();
+    });
+  })();
+
+  // ---------------- what breaks lab ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-break-lab]"));
+    var answers = {
+      "cloud-ui": "The UI would fail or stall when offline, because the screen would be waiting on the network instead of reading Room. The fix is: UI reads Room only.",
+      "hard-delete": "The app would forget that a delete happened while offline. There would be no row left to upload as a delete request. The fix is: save a tombstone until the cloud confirms it.",
+      "server-id": "An offline-created note would have no stable id yet. The user could not safely edit, delete, or upload the exact row later. The fix is: create a UUID on the device.",
+      "pull-first": "A cloud copy could arrive before local pending work is uploaded. That raises the chance of replacing local offline work. The fix is: push waiting local rows first, then pull newer cloud rows."
+    };
+    labs.forEach(function (lab) {
+      var out = lab.querySelector("[data-break-output]");
+      var buttons = Array.prototype.slice.call(lab.querySelectorAll("[data-break-case]"));
+      function show(key) {
+        buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-break-case") === key); });
+        if (out) out.textContent = answers[key] || "";
+      }
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () { show(button.getAttribute("data-break-case")); });
+      });
+      if (buttons[0]) show(buttons[0].getAttribute("data-break-case"));
+    });
+  })();
+
+  // ---------------- symptom debugger ----------------
+  (function () {
+    var labs = Array.prototype.slice.call(document.querySelectorAll("[data-debug-lab]"));
+    var answers = {
+      "pending-stuck": "Likely layer: SyncWorker, WorkManager constraint, or CloudApi. Check whether the job is allowed to run online, whether cloud.push() fails, and whether the Repository writes the server copy back as SYNCED.",
+      "remote-missing": "Likely layer: pull path. Check dao.maxUpdatedAt(), cloud.pullSince(...), shouldAcceptRemote(...), and whether pulled rows are upserted into Room.",
+      "delete-returns": "Likely layer: tombstone handling. Check that delete sets deleted = true and PENDING, pushes that tombstone, then hard-deletes only after cloud confirmation.",
+      "duplicate-sync": "Likely layer: SyncScheduler. Check enqueueUniqueWork(...) and the existing-work policy so repeated button taps do not create many independent sync jobs.",
+      "ui-stale": "Likely layer: Flow to StateFlow to Compose. Check observeVisibleNotes(), stateIn(...), and collectAsStateWithLifecycle() so Room changes reach the screen."
+    };
+    labs.forEach(function (lab) {
+      var out = lab.querySelector("[data-debug-output]");
+      var buttons = Array.prototype.slice.call(lab.querySelectorAll("[data-debug-case]"));
+      function show(key) {
+        buttons.forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-debug-case") === key); });
+        if (out) out.textContent = answers[key] || "";
+      }
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () { show(button.getAttribute("data-debug-case")); });
+      });
+      if (buttons[0]) show(buttons[0].getAttribute("data-debug-case"));
+    });
+  })();
+
+  // ---------------- mastery checklist ----------------
+  (function () {
+    var trackers = Array.prototype.slice.call(document.querySelectorAll("[data-mastery-tracker]"));
+    trackers.forEach(function (tracker) {
+      var key = tracker.getAttribute("data-mastery-key") || "cloudsync-mastery";
+      var checks = Array.prototype.slice.call(tracker.querySelectorAll("[data-mastery-item]"));
+      var fill = tracker.querySelector("[data-mastery-fill]");
+      var count = tracker.querySelector("[data-mastery-count]");
+      var reset = tracker.querySelector("[data-mastery-reset]");
+      function read() {
+        try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; }
+      }
+      function write(values) {
+        try { localStorage.setItem(key, JSON.stringify(values)); } catch (e) {}
+      }
+      function render() {
+        var done = checks.filter(function (c) { return c.checked; }).length;
+        var total = checks.length || 1;
+        if (fill) fill.style.width = Math.round(done / total * 100) + "%";
+        if (count) count.textContent = done + " / " + checks.length;
+        write(checks.map(function (c) { return c.checked; }));
+      }
+      read().forEach(function (value, idx) { if (checks[idx]) checks[idx].checked = !!value; });
+      checks.forEach(function (check) { check.addEventListener("change", render); });
+      if (reset) reset.addEventListener("click", function () { checks.forEach(function (c) { c.checked = false; }); render(); });
+      render();
+    });
+  })();
+
+  // ---------------- worksheet clear ----------------
+  document.querySelectorAll("[data-worksheet-clear]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var box = button.closest(".worksheet");
+      if (!box) return;
+      box.querySelectorAll("textarea").forEach(function (area) { area.value = ""; });
+    });
+  });
+
+  // ---------------- worksheet copy ----------------
+  document.querySelectorAll("[data-worksheet-copy]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var box = button.closest(".worksheet");
+      if (!box) return;
+      var lines = Array.prototype.slice.call(box.querySelectorAll(".worksheet-item")).map(function (item) {
+        var label = item.querySelector("label");
+        var area = item.querySelector("textarea");
+        return (label ? label.textContent.trim() : "Prompt") + "\n" + ((area && area.value.trim()) || "[blank]");
+      });
+      var text = "CloudSync worksheet answers\n\n" + lines.join("\n\n");
+      var status = box.querySelector("[data-worksheet-status]");
+      function done(ok) {
+        if (status) status.textContent = ok ? "Answers copied." : "Copy unavailable; select and copy the text manually.";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      } else {
+        done(false);
+      }
+    });
   });
 })();
 </script>

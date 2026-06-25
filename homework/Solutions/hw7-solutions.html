@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 7 — Answer Key — Match Mania: A Memory-Match Grid Game</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84; --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed; --warn-line:#fde2c0;
+    --good-soft:#ecfdf3; --good-line:#c5ebd3;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 22px 80px;}
+  header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:30px; border-bottom:4px solid var(--accent);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px; color:var(--accent);
+    font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:66ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:12px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:15.5px; margin:20px 0 4px;}
+  p{margin:11px 0;}
+  ul,ol{margin:10px 0; padding-left:22px;} li{margin:5px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.9em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:15px 17px; border-radius:10px;
+    overflow:auto; font-size:13px; line-height:1.6; margin:13px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre code{background:none; padding:0; font-size:inherit; color:inherit;}
+
+  .where{flex:none; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .where.as{background:#fff3e6; color:#b4530a; border:1px solid var(--warn-line);}
+
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 8px; margin:16px 0; box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:2px;}
+  .qid{font-weight:800; color:var(--ink); font-size:16px;}
+  .ask{color:var(--muted); font-size:14.5px; margin:4px 0 10px;}
+  .ans{margin:12px 0;}
+  .ans b, .ask b{color:var(--ink);}
+  .file{font-size:12.5px; color:var(--muted); margin:0 0 8px;}
+  .file code{font-size:.92em;}
+
+  .callout{border-radius:10px; padding:12px 15px; margin:14px 0; font-size:14.5px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.good{background:var(--good-soft); border:1px solid var(--good-line);}
+  .callout.predict{background:var(--warn-soft); border:1px solid var(--warn-line); color:#7c4a12;}
+  .callout b{display:block; margin-bottom:2px;}
+  .callout.inline{font-size:13.5px; margin:12px 0 4px;}
+  .callout.inline b{display:inline; margin:0;}
+  .callout.inline code{background:#fff3e6; color:#b4530a;}
+
+  ul.check{list-style:none; padding-left:0; margin:8px 0;}
+  ul.check li{position:relative; padding-left:26px; margin:5px 0; font-size:14.5px;}
+  ul.check li::before{content:"✓"; position:absolute; left:0; top:0; color:var(--accent-deep);
+    font-weight:800;}
+
+  footer{margin-top:42px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13.5px;}
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.callout{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Compose · State · Unit tests · Answer Key</p>
+    <h1>Homework 7 — Solutions</h1>
+    <p class="sub">Complete, runnable answer key for <b>Match Mania</b>, the memory / pairs-matching game. Every task
+       is solved with the <em>real</em> finished code — the three pure rule functions (<code>newBoard</code>,
+       <code>flip</code>, <code>reset</code>), the tappable 4×4 grid, the win banner, and the full unit-test suite —
+       each with a "why it works" and a "common mistake". The solution project compiles and <b>all 11 unit tests
+       pass</b>. You write three files: <code>MatchLogic.kt</code>, <code>MainActivity.kt</code>,
+       <code>MatchLogicTest.kt</code>.</p>
+    <div class="meta">
+      <span><b>Project</b> · MatchMania</span>
+      <span><b>Part B</b> logic · <b>C</b> UI · <b>D</b> tests</span>
+      <span>3 files · 11 passing tests</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="../Assigned/hw7.html">← Homework 7 (assignment)</a>
+      <a href="../projects.html">Projects, Explained</a>
+      <a href="./hw6-solutions.html">Homework 6 — Solutions</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout proj">
+    <b>How to read this key</b>
+    The tasks run in build order, grouped by the assignment's parts: <b>B</b> the pure game logic, <b>C</b> the
+    Compose UI, <b>D</b> the unit tests. For each one you get the <em>solution code</em> (commented in the teaching
+    style), a one-or-two-sentence <b>why it works</b>, and a <b>common mistake</b> to avoid. Everything runs in
+    Android Studio on an emulator/device, so the <span class="where as">Android Studio</span> tag is on every part.
+  </div>
+
+  <div class="callout predict">
+    <b>One idea carries the whole game: state + pure rules + a UI that draws the state</b>
+    The board is an immutable value (<code>Board</code>). Every rule — build, flip, reset — is a <em>pure function</em>
+    that returns a <b>new</b> board rather than editing the old one. The screen holds the current board in
+    <code>remember { mutableStateOf(...) }</code>; a tap calls a rule function and stores the returned board back into
+    that state, which is exactly what makes Compose redraw. Because the rules are pure and Android-free, the unit
+    tests drive them on the JVM with no emulator. Get that loop right and the game almost writes itself.
+  </div>
+
+  <!-- ================= Part B. The game logic ================= -->
+  <h2><span class="part">Part B.</span> The game logic — <code>MatchLogic.kt</code></h2>
+  <p class="lead">Pure Kotlin, no Android imports. The model (<code>TileState</code>/<code>Tile</code>/<code>Board</code>
+     and its helpers) is provided; you implement the three functions below.</p>
+
+  <!-- B2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B2 — Build a fresh, shuffled board</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Return a board of <strong>PAIR_COUNT (8) symbols, each used twice, shuffled</strong> into the 16
+       positions, all <strong>FaceDown</strong>, with <code>moves = 0</code>. Accept a <code>Random</code> so tests can seed it.</p>
+    <p class="file">Where: <code>MatchLogic.kt → newBoard()</code></p>
+<pre><code>fun newBoard(symbols: List&lt;String&gt;, random: Random = Random.Default): Board {
+    // 1. Take the first PAIR_COUNT (8) symbols and DOUBLE the list (+ joins two
+    //    lists), so every symbol now appears exactly twice -&gt; 16 faces in all.
+    // 2. shuffled(random) returns a NEW randomly-ordered copy. We pass `random`
+    //    in (rather than calling Random.Default here) so a test can hand us a
+    //    seeded Random and get a repeatable board — that's the testability hook.
+    // 3. map wraps each face in a FaceDown Tile.
+    val tiles = (symbols.take(PAIR_COUNT) + symbols.take(PAIR_COUNT))
+        .shuffled(random)
+        .map { face -&gt; Tile(face, TileState.FaceDown) }
+    return Board(tiles = tiles, moves = 0)
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> doubling the 8-symbol list yields the 16 faces a 4×4 board needs with each
+       symbol present exactly twice; <code>shuffled(random)</code> randomizes their positions while threading the
+       caller's RNG through, so production gets real randomness and tests get a repeatable layout from
+       <code>Random(seed)</code>. The <code>Board(tiles, moves = 0)</code> constructor's <code>init</code> check
+       passes because the list is exactly 16 long.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> calling <code>symbols.shuffled().take(16)</code>
+      instead of doubling — that picks 16 <em>distinct</em> symbols with no pairs, so nothing can ever match. Or
+      ignoring the <code>random</code> parameter and calling <code>shuffled()</code> with no argument, which makes
+      the determinism test fail.</div>
+  </div>
+
+  <!-- B3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B3 — Flip a tile (the heart of the game)</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Apply the tap rules and return a <strong>new</strong> board. The outcome depends on how many tiles
+       are currently face-up (0, 1, or 2).</p>
+    <p class="file">Where: <code>MatchLogic.kt → Board.flip()</code> (plus a small <code>withState</code> helper)</p>
+<pre><code>fun Board.flip(index: Int): Board {
+    val up = faceUpIndices() // the 0, 1, or 2 tiles currently showing their face.
+
+    return when {
+        // (a) A leftover, non-matching pair is still showing from the previous
+        //     turn. This tap's ONLY job is to clear it: flip those two back down.
+        //     We do NOT reveal the tapped tile and we do NOT count a move.
+        up.size == 2 -&gt;
+            withState(up.toSet(), TileState.FaceDown)
+
+        // (b) No-op: an out-of-range index, or a tile already FaceUp/Matched.
+        //     Only FaceDown tiles can be revealed. Hand back the unchanged board.
+        index !in tiles.indices || tiles[index].state != TileState.FaceDown -&gt;
+            this
+
+        // (c) Nothing is up yet -&gt; simply reveal the tapped tile.
+        up.isEmpty() -&gt;
+            withState(setOf(index), TileState.FaceUp)
+
+        // (d) Exactly one tile is up -&gt; reveal the tapped one to make two, then
+        //     judge the pair. Either way a pair ATTEMPT happened, so moves + 1.
+        else -&gt; {
+            val other = up.first()
+            val isMatch = tiles[index].face == tiles[other].face
+            val newState = if (isMatch) TileState.Matched else TileState.FaceUp
+            withState(setOf(index, other), newState, moveDelta = 1)
+        }
+    }
+}
+
+// Return a NEW board with the tiles at [indices] set to [state] and moves bumped
+// by [moveDelta]. mapIndexed builds a fresh List; untouched tiles are reused as-is,
+// so the original board is never mutated.
+private fun Board.withState(indices: Set&lt;Int&gt;, state: TileState, moveDelta: Int = 0): Board =
+    copy(
+        tiles = tiles.mapIndexed { i, tile -&gt;
+            if (i in indices) tile.copy(state = state) else tile
+        },
+        moves = moves + moveDelta,
+    )</code></pre>
+    <p class="ans"><b>Why it works:</b> branching on <code>faceUpIndices().size</code> turns the English rules into
+       four mutually-exclusive cases, ordered most-specific first. Case (a) clears a leftover mismatch <em>before</em>
+       anything else so a stale pair can't block the next turn; (b) makes illegal taps harmless; (c) reveals the first
+       tile of a pair; (d) reveals the second, compares faces, and locks (<code>Matched</code>) or shows
+       (<code>FaceUp</code>) accordingly, counting the one move. Every branch funnels through <code>withState</code>,
+       which rebuilds the list with <code>mapIndexed</code>+<code>copy</code> — so a brand-new <code>Board</code> comes
+       out and the one passed in is untouched.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> mutating a tile in place (e.g. a <code>MutableList</code>
+      and <code>tiles[i] = ...</code>) — Compose won't see a change and the immutability test fails. Also: counting a
+      move on the <em>first</em> reveal (case c), or incrementing <code>moves</code> when clearing a mismatch (case a).
+      A move is one pair <em>attempt</em>, i.e. only case (d).</div>
+  </div>
+
+  <!-- B4 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">B4 — Reset (clear) the board</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Keep the <strong>same faces in the same positions</strong>, but turn every tile FaceDown and zero the
+       move counter.</p>
+    <p class="file">Where: <code>MatchLogic.kt → Board.reset()</code></p>
+<pre><code>fun Board.reset(): Board =
+    copy(tiles = tiles.map { it.copy(state = TileState.FaceDown) }, moves = 0)</code></pre>
+    <p class="ans"><b>Why it works:</b> <code>copy(...)</code> on the data class produces a new <code>Board</code>;
+       <code>tiles.map { it.copy(state = FaceDown) }</code> produces a new list where every tile keeps its
+       <code>face</code> (and its index, since <code>map</code> preserves order) but loses its revealed/matched state.
+       That is exactly "same layout, fresh start" — distinct from <b>New Game</b>, which calls
+       <code>newBoard(...)</code> for a brand-new shuffle.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> reshuffling inside <code>reset()</code> — that's what
+      New Game is for. Reset must preserve the order so the player can replay the <em>same</em> board.</div>
+  </div>
+
+  <!-- ================= Part C. The Compose UI ================= -->
+  <h2><span class="part">Part C.</span> The Compose UI — <code>MainActivity.kt</code></h2>
+  <p class="lead">The starter wires the Activity, Scaffold, hoisted state, stats line, and buttons. You build the real
+     board (C2) and the win banner (C3).</p>
+
+  <!-- C1 reference -->
+  <div class="q">
+    <div class="qhead"><span class="qid">C1 (provided) — Hoisted state &amp; the events-up tap</span><span class="where as">Android Studio</span></div>
+    <p class="ask">For reference: the screen owns the board, and a tile tap becomes the next board.</p>
+    <p class="file">Where: <code>MainActivity.kt → MatchManiaScreen()</code></p>
+<pre><code>var board by remember { mutableStateOf(newBoard(DEFAULT_SYMBOLS)) }
+val won = board.isSolved()          // derived — NOT separate state
+// ...
+BoardGrid(
+    board = board,
+    onTap = { index -&gt;
+        board = board.flip(index)   // events up: the tap produces the next board
+        message = ""
+    },
+    modifier = Modifier.fillMaxWidth(),
+)</code></pre>
+    <p class="ans"><b>Why it works:</b> <code>board</code> is the single source of truth; reassigning it to the board
+       returned by <code>flip</code> triggers recomposition. <code>won</code> is computed from <code>board</code> each
+       pass, so it never drifts out of sync — derived UI, not duplicated state.</p>
+  </div>
+
+  <!-- C2 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">C2 — The 4×4 board of tappable tiles</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Render the 16 tiles as a 4-column grid of square, tappable cells whose look depends on each tile's
+       state.</p>
+    <p class="file">Where: <code>MainActivity.kt → BoardGrid + TileView</code></p>
+<pre><code>@Composable
+private fun BoardGrid(board: Board, onTap: (Int) -&gt; Unit, modifier: Modifier = Modifier) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(GRID_SIZE),                 // 4 columns -&gt; a 4×4 layout
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        userScrollEnabled = false,                            // the whole board fits on screen
+    ) {
+        itemsIndexed(board.tiles) { index, tile -&gt;
+            TileView(tile = tile, onTap = { onTap(index) })
+        }
+    }
+}
+
+@Composable
+private fun TileView(tile: Tile, onTap: () -&gt; Unit) {
+    val background = when (tile.state) {
+        TileState.Matched -&gt; MatchedColor                            // green: a found pair
+        TileState.FaceUp -&gt; FaceUpColor                              // blue: just revealed
+        TileState.FaceDown -&gt; MaterialTheme.colorScheme.surfaceVariant
+    }
+    val faceText = if (tile.state == TileState.FaceDown) "?" else tile.face
+    val faceColor = if (tile.state == TileState.FaceDown)
+        MaterialTheme.colorScheme.onSurfaceVariant else Color.White
+
+    Card(
+        onClick = onTap,                              // whole face is tappable + accessible
+        modifier = Modifier.aspectRatio(1f),          // force a perfect square
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = background),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = faceText, fontSize = 30.sp, color = faceColor)
+        }
+    }
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> <code>LazyVerticalGrid(GridCells.Fixed(GRID_SIZE))</code> arranges the flat
+       16-tile list into 4 columns automatically — every 5th item wraps to a new row. <code>itemsIndexed</code> hands
+       back both the tile and its <code>0..15</code> index, which the tap forwards up so the screen knows <em>which</em>
+       tile was pressed. <code>aspectRatio(1f)</code> keeps cells square at any width, and the <code>when</code> over
+       <code>tile.state</code> gives each of the three states a distinct, glanceable look.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> using <code>items(board.tiles)</code> (no index) and
+      then having no way to tell the screen which tile was tapped. Also, leaving the grid scrollable or not setting
+      <code>aspectRatio(1f)</code>, which makes the cells stretch into rectangles.</div>
+  </div>
+
+  <!-- C3 -->
+  <div class="q">
+    <div class="qhead"><span class="qid">C3 — The win banner</span><span class="where as">Android Studio</span></div>
+    <p class="ask">When the board is solved, show a celebratory message that includes the move count.</p>
+    <p class="file">Where: <code>MainActivity.kt → WinBanner</code> (shown when <code>won</code>)</p>
+<pre><code>if (won) {
+    WinBanner(moves = board.moves)
+}
+
+@Composable
+private fun WinBanner(moves: Int) {
+    Text(
+        text = "🎉  You win in $moves moves!",
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))          // round corners BEFORE the background…
+            .background(MatchedColor)                 // …so the fill respects the shape
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        color = Color.White,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+    )
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> <code>won</code> is derived from <code>board.isSolved()</code>, so the banner
+       appears automatically the instant the last pair is matched and disappears after New Game / Reset — no extra
+       state to manage. Ordering <code>clip</code> before <code>background</code> makes the colored fill follow the
+       rounded shape.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> tracking a separate <code>var hasWon</code> boolean and
+      forgetting to reset it on New Game, so the banner sticks around. Deriving it from the board avoids the bug
+      entirely.</div>
+  </div>
+
+  <!-- ================= Part D. Unit tests ================= -->
+  <h2><span class="part">Part D.</span> Unit tests — <code>MatchLogicTest.kt</code></h2>
+  <p class="lead">Pure rules mean fast JVM tests. The full key has 11 tests (all passing). Below are the test helpers
+     and the trickiest cases — match, mismatch-then-clear, and a full win — that pin down the rules.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">D — The helpers and the key tests</span><span class="where as">Android Studio</span></div>
+    <p class="ask">Verify generation, flipping (reveal / match / mismatch-then-clear), immutability, win, and reset.</p>
+    <p class="file">Where: <code>MatchLogicTest.kt</code> — run with <code>./gradlew testDebugUnitTest</code></p>
+<pre><code>// Find the OTHER tile sharing a face with tile [i] (its twin) — there's exactly one.
+private fun Board.twinOf(i: Int): Int =
+    tiles.indices.first { it != i &amp;&amp; tiles[it].face == tiles[i].face }
+
+// Find any tile whose face differs from tile [i]'s — used to force a mismatch.
+private fun Board.differentFrom(i: Int): Int =
+    tiles.indices.first { tiles[it].face != tiles[i].face }
+
+// Play the whole board to completion, matching one pair at a time.
+private fun solved(seed: Int): Board {
+    var b = newBoard(DEFAULT_SYMBOLS, Random(seed))
+    repeat(PAIR_COUNT) {
+        val i = b.tiles.indexOfFirst { it.state == TileState.FaceDown }
+        b = b.flip(i).flip(b.twinOf(i)) // reveal one, then its twin -&gt; both Matched
+    }
+    return b
+}
+
+@Test
+fun flip_matchingPair_locksBoth_andCountsOneMove() {
+    val fresh = newBoard(DEFAULT_SYMBOLS, Random(3))
+    val i = 0
+    val j = fresh.twinOf(i)
+    val b = fresh.flip(i).flip(j)
+    assertEquals(TileState.Matched, b.tiles[i].state)
+    assertEquals(TileState.Matched, b.tiles[j].state)
+    assertEquals(1, b.moves)
+}
+
+@Test
+fun flip_mismatch_leavesBothUp_thenNextTapClearsThem() {
+    val fresh = newBoard(DEFAULT_SYMBOLS, Random(5))
+    val i = 0
+    val j = fresh.differentFrom(i)
+    val two = fresh.flip(i).flip(j)
+    assertEquals(TileState.FaceUp, two.tiles[i].state)   // both stay up so the miss is visible
+    assertEquals(TileState.FaceUp, two.tiles[j].state)
+    assertEquals(1, two.moves)
+
+    val k = two.tiles.indices.first { it != i &amp;&amp; it != j }
+    val cleared = two.flip(k)
+    assertEquals(TileState.FaceDown, cleared.tiles[i].state)
+    assertEquals(TileState.FaceDown, cleared.tiles[j].state)
+    assertEquals(TileState.FaceDown, cleared.tiles[k].state) // k was NOT revealed
+    assertEquals(1, cleared.moves)                           // clearing is not a move
+}
+
+@Test
+fun flip_isImmutable_doesNotMutateTheOriginalBoard() {
+    val original = newBoard(DEFAULT_SYMBOLS)
+    original.flip(0)                                  // discard the result
+    assertEquals(TileState.FaceDown, original.tiles[0].state)
+}
+
+@Test
+fun matchingEveryPair_winsWithExactlyPairCountMoves() {
+    val b = solved(7)
+    assertTrue(b.isSolved())
+    assertEquals(PAIR_COUNT, b.moves)                 // 8 pairs -&gt; 8 moves on a perfect game
+}</code></pre>
+    <p class="ans"><b>Why it works:</b> seeding <code>Random</code> makes each board reproducible, so assertions are
+       stable. <code>twinOf</code> and <code>differentFrom</code> let a test deterministically force a match or a
+       mismatch without knowing the shuffle. The mismatch test is the important one — it checks both halves of the
+       "clear on the next tap" rule (two up after the miss, both down after the next tap, and that the next tap reveals
+       nothing and adds no move). <code>solved()</code> drives a whole game so the win and reset tests have a
+       fully-played board to assert against.</p>
+    <div class="callout predict inline"><b>Common mistake:</b> hard-coding tile indices like "0 and 1 match" — the
+      board is shuffled, so 0 and 1 usually <em>don't</em> match. Always find the twin by face. The other 7 tests in
+      the suite cover size, the 8-distinct-faces-each-twice composition, determinism, the no-move first reveal,
+      out-of-range/already-up no-ops, and reset.</div>
+  </div>
+
+  <!-- ================= Self-check ================= -->
+  <h2>Self-check before you submit</h2>
+  <ul class="check">
+    <li>The app launches to a 4×4 board of "?" tiles; tapping reveals a tile, a matching second tile turns both green, a mismatch shows both then clears on the next tap.</li>
+    <li>The Pairs / Moves line updates, and the win banner appears with the move count once all 8 pairs are found.</li>
+    <li><b>New Game</b> reshuffles; <b>Reset</b> returns the same layout to all face-down.</li>
+    <li><code>./gradlew testDebugUnitTest</code> is green — the reference solution passes all <b>11</b> tests.</li>
+    <li>Every rule function returns a <em>new</em> board and never mutates the one passed in.</li>
+  </ul>
+
+  <div class="callout good">
+    <b>What to submit</b>
+    Push your finished <code>MatchMania</code> project to a GitHub repository and submit the repo link. It should
+    build and run, and the unit tests should pass.
+  </div>
+
+  <footer>
+    Homework 7 · Answer key for Match Mania — a Compose memory-match game built from state + pure rules + a thin UI,
+    proven by JVM unit tests. See the <a href="../Assigned/hw7.html">assignment</a> and
+    <a href="../projects.html">Projects, Explained</a>.
+  </footer>
+
+</div>
+</body>
+</html>

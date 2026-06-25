@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Push the outbox, pull the changes</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Firebase', sim: 'sync', flavor: 'firestore',
+  id: 'fire-05', title: 'Lab · Push the outbox, then pull the changes', level: 'Advanced',
+  goal: 'The sync engine: push every row created/edited/deleted offline, then pull remote rows newer than what you already have — accepting them last-write-wins.',
+  steps: [
+    'PULL cursor: read <code>dao.maxUpdatedAt()</code> — the newest <code>updatedAt</code> you already know about.',
+    'Call <code>cloud.pullSince(since)</code> and loop the returned rows.',
+    'For each, gate on <code>shouldAcceptRemote(local, remote)</code>; accept by hard-deleting tombstones or upserting as <code>SYNCED</code>.',
+  ],
+  hints: [
+    'The PUSH half is already written: it sends <code>notesToPush()</code> and marks each row SYNCED (or hard-deletes a confirmed tombstone).',
+    'Firestore pull is a range query on <code>updatedAt</code>; here it is the <code>cloud.pullSince(since)</code> abstraction.',
+    'Run <b>Go online &amp; sync</b> and <b>Remote edit</b> — pull is what makes another device’s note appear.',
+  ],
+  scenarios: [ {id:'goOnline',label:'Go online & sync'}, {id:'remoteEdit',label:'Remote edit arrives'} ],
+  starter:
+'// The sync engine: PUSH the outbox, then PULL remote changes (resolving LWW).\n' +
+'suspend fun sync() {\n' +
+'    // 1) PUSH everything created/edited/deleted offline\n' +
+'    for (local in dao.notesToPush()) {\n' +
+'        val serverCopy = cloud.push(local.toDto())\n' +
+'        if (local.deleted) dao.hardDelete(local.id)\n' +
+'        else dao.upsert(serverCopy.toEntity(SyncState.SYNCED))\n' +
+'    }\n' +
+'\n' +
+'    // 2) TODO: PULL rows changed since our newest, accept by last-write-wins\n' +
+'}\n',
+  solution:
+'suspend fun sync() {\n' +
+'    // 1) PUSH everything created/edited/deleted offline\n' +
+'    for (local in dao.notesToPush()) {\n' +
+'        val serverCopy = cloud.push(local.toDto())\n' +
+'        if (local.deleted) dao.hardDelete(local.id)\n' +
+'        else dao.upsert(serverCopy.toEntity(SyncState.SYNCED))\n' +
+'    }\n' +
+'\n' +
+'    // 2) PULL remote rows newer than the newest we already have\n' +
+'    val since = dao.maxUpdatedAt() ?: 0L\n' +
+'    for (remote in cloud.pullSince(since)) {\n' +
+'        val local = dao.findById(remote.id)\n' +
+'        if (shouldAcceptRemote(local, remote)) {\n' +
+'            if (remote.deleted) dao.hardDelete(remote.id)\n' +
+'            else dao.upsert(remote.toEntity(SyncState.SYNCED))\n' +
+'        }\n' +
+'    }\n' +
+'}\n',
+  checks: [
+    { id:'push', label:'Pushes <code>dao.notesToPush()</code> via <code>cloud.push(...)</code>, marking rows SYNCED', all:[/notesToPush\(\)/, /cloud\.push\(/, /SyncState\.SYNCED/] },
+    { id:'pull', label:'Pulls with <code>cloud.pullSince(dao.maxUpdatedAt())</code>', all:[/maxUpdatedAt\(\)/, /cloud\.pullSince\(/] },
+    { id:'lww', label:'Accepts remote rows via <code>shouldAcceptRemote(local, remote)</code>', re:/shouldAcceptRemote\(/ },
+  ],
+});
+</script>
+</body>
+</html>

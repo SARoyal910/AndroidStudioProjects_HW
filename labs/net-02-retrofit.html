@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Describe the endpoint</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Networking', sim: 'net',
+  id: 'net-02', title: 'Lab · Describe the endpoint', level: 'Beginner',
+  goal: 'Describe the /posts endpoint as a Retrofit interface, and configure the JSON parser to tolerate new server fields.',
+  steps: [
+    'Annotate <code>fetchNotes()</code> with <code>@GET("posts")</code> — the relative path appended to the base URL.',
+    'Make it a <code>suspend fun</code> returning <code>List&lt;NoteDto&gt;</code> — Retrofit runs it off the main thread and decodes the JSON array for you.',
+    'Configure the parser with <code>ignoreUnknownKeys = true</code> so a new server field never breaks decoding.',
+  ],
+  hints: [
+    'Retrofit turns the annotated interface into a working HTTP client at runtime — you never write the request by hand.',
+    '<code>suspend</code> means callers await it from a coroutine; no callbacks, no manual threads.',
+    'Try the <b>Bad JSON</b> scenario before and after setting <code>ignoreUnknownKeys</code>.',
+  ],
+  scenarios: [ {id:'happy',label:'Happy path'}, {id:'badjson',label:'Bad JSON (extra field)'}, {id:'offline',label:'No network'} ],
+  starter:
+'interface NoteApi {\n' +
+'    // TODO: annotate as an HTTP GET to "posts", suspend, returning List<NoteDto>\n' +
+'    fun fetchNotes(): List<NoteDto>\n' +
+'}\n' +
+'\n' +
+'// TODO: make the parser tolerate fields we did not model\n' +
+'private val json = Json { }\n' +
+'\n' +
+'fun provideNoteApi(): NoteApi =\n' +
+'    Retrofit.Builder()\n' +
+'        .baseUrl("https://jsonplaceholder.typicode.com/")\n' +
+'        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))\n' +
+'        .build()\n' +
+'        .create(NoteApi::class.java)\n',
+  solution:
+'interface NoteApi {\n' +
+'    @GET("posts")\n' +
+'    suspend fun fetchNotes(): List<NoteDto>\n' +
+'}\n' +
+'\n' +
+'private val json = Json { ignoreUnknownKeys = true }\n' +
+'\n' +
+'fun provideNoteApi(): NoteApi =\n' +
+'    Retrofit.Builder()\n' +
+'        .baseUrl("https://jsonplaceholder.typicode.com/")\n' +
+'        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))\n' +
+'        .build()\n' +
+'        .create(NoteApi::class.java)\n',
+  checks: [
+    { id:'endpoint', label:'<code>@GET("posts")</code> + <code>suspend fun fetchNotes(): List&lt;NoteDto&gt;</code>', all:[/@GET\s*\(\s*"posts"\s*\)/, /suspend\s+fun\s+fetchNotes\(\)\s*:\s*List<NoteDto>/] },
+    { id:'ignoreUnknown', label:'Parser set to <code>ignoreUnknownKeys = true</code>', re:/ignoreUnknownKeys\s*=\s*true/ },
+    { id:'converter', label:'kotlinx.serialization wired as the converter', re:/asConverterFactory/ },
+  ],
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Shared ViewModel state</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Cumulative', sim: 'pipeline',
+  id: 'cap-04', title: 'Lab · Shared ViewModel state', level: 'Intermediate',
+  goal: 'One ViewModel owns the favorites set that many screens observe. Expose it read-only as a StateFlow, and mutate it atomically with update { }. (Homework 3)',
+  steps: [
+    'Expose the public flow read-only: <code>val favorites: StateFlow&lt;Set&lt;Int&gt;&gt; = _favorites.asStateFlow()</code>.',
+    'In <code>toggleFavorite</code>, mutate atomically with <code>_favorites.update { … }</code>.',
+    'Toggle by set arithmetic: if the id is present remove it (<code>it - id</code>), else add it (<code>it + id</code>).',
+  ],
+  hints: [
+    'Private <code>_favorites</code> (mutable) vs public <code>favorites</code> (read-only) is the standard one-way exposure.',
+    '<code>update { }</code> is atomic — safe even if two events arrive at once.',
+    'Every screen that collects this one StateFlow recomposes together.',
+  ],
+  diagram: [
+    { label:'private _favorites = MutableStateFlow<Set<Int>>', detail:'the single writable source', fact:'stateFlow' },
+    { label:'val favorites = _favorites.asStateFlow()', detail:'public, read-only — screens collect this', fact:'readonly' },
+    { label:'toggleFavorite(id) → _favorites.update { }', detail:'atomic add / remove', fact:'toggle' },
+    { label:'Every screen recomposes together', detail:'one shared ViewModel, many collectors', fact:null },
+  ],
+  resultOk: 'Favorites are a single shared source of truth every screen observes.',
+  resultPending: 'Expose the flow read-only and toggle it atomically to share it safely.',
+  starter:
+'// One ViewModel, one source of truth for favorites that MANY screens observe.\n' +
+'// Expose a read-only StateFlow<Set<Int>>; mutate it atomically with update { }.\n' +
+'private val _favorites = MutableStateFlow<Set<Int>>(emptySet())\n' +
+'val favorites: StateFlow<Set<Int>> = _favorites   // TODO: expose as read-only\n' +
+'\n' +
+'fun toggleFavorite(id: Int) {\n' +
+'    // TODO: add id if absent, remove it if present — atomically\n' +
+'}\n',
+  solution:
+'private val _favorites = MutableStateFlow<Set<Int>>(emptySet())\n' +
+'val favorites: StateFlow<Set<Int>> = _favorites.asStateFlow()\n' +
+'\n' +
+'fun toggleFavorite(id: Int) {\n' +
+'    _favorites.update { current ->\n' +
+'        if (id in current) current - id else current + id\n' +
+'    }\n' +
+'}\n',
+  checks: [
+    { id:'stateFlow', label:'Private <code>MutableStateFlow</code> + public <code>StateFlow&lt;Set&lt;Int&gt;&gt;</code>', all:[/_favorites\s*=\s*MutableStateFlow/, /val favorites\s*:\s*StateFlow<Set<Int>>/] },
+    { id:'readonly', label:'Public flow exposed read-only via <code>asStateFlow()</code>', re:/asStateFlow\(\)/ },
+    { id:'toggle', label:'Atomic toggle: <code>update { if (id in it) it - id else it + id }</code>', all:[/_favorites\.update\s*\{/, /in (it|current)/, /(it|current)\s*-\s*id/, /(it|current)\s*\+\s*id/] },
+  ],
+});
+</script>
+</body>
+</html>

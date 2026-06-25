@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Soft-delete with a tombstone</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Firebase', sim: 'sync', flavor: 'firestore',
+  id: 'fire-03', title: 'Lab · Soft-delete with a tombstone', level: 'Intermediate',
+  goal: 'Deleting offline is tricky: if you remove the row outright there is nothing left to PUSH, so the cloud copy lives forever. Leave a tombstone instead.',
+  steps: [
+    'Do NOT call <code>dao.hardDelete(id)</code> here — that destroys the row before it can be pushed.',
+    'Use <code>existing.copy(...)</code> to set <code>deleted = true</code> and bump <code>updatedAt</code>.',
+    'Mark it <code>syncState = SyncState.PENDING</code> so the tombstone is in the outbox; the UI hides it, the sync pushes it, then it is hard-deleted once confirmed.',
+  ],
+  hints: [
+    'A tombstone is a row that still exists locally but is flagged deleted — hidden from the UI, kept until the cloud confirms.',
+    'Immutable update: <code>copy(...)</code> returns a new row; you never mutate the old one.',
+    'Run <b>Delete offline</b> — the correct version hides the note and queues a deletion you can still push.',
+  ],
+  scenarios: [ {id:'deleteOffline',label:'Delete offline'}, {id:'goOnline',label:'Go online & sync'} ],
+  starter:
+'// Deleting offline: removing the row outright leaves NOTHING to push, so the\n' +
+'// cloud copy never goes away. Leave a TOMBSTONE the sync engine can push.\n' +
+'suspend fun deleteNote(id: String) {\n' +
+'    val existing = dao.findById(id) ?: return\n' +
+'    // TODO: mark it deleted + PENDING (a tombstone) instead of hard-deleting\n' +
+'    dao.hardDelete(id)\n' +
+'}\n',
+  solution:
+'suspend fun deleteNote(id: String) {\n' +
+'    val existing = dao.findById(id) ?: return\n' +
+'    dao.upsert(\n' +
+'        existing.copy(\n' +
+'            deleted = true,\n' +
+'            updatedAt = System.currentTimeMillis(),\n' +
+'            syncState = SyncState.PENDING,\n' +
+'        )\n' +
+'    )\n' +
+'}\n',
+  checks: [
+    { id:'tombstone', label:'Marks <code>deleted = true</code> and <code>syncState = SyncState.PENDING</code>', all:[/deleted\s*=\s*true/, /syncState\s*=\s*SyncState\.PENDING/] },
+    { id:'copy', label:'Uses an immutable <code>existing.copy(...)</code> update', re:/\.copy\(/ },
+    { id:'noHardDelete', label:'Does <b>not</b> hard-delete the row here', re:/hardDelete\(/, not:true },
+  ],
+});
+</script>
+</body>
+</html>

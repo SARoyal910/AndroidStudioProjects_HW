@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    // Kotlin serialization compiler plugin — generates serializers for @Serializable NoteDto.
+    // Kotlin serialization compiler plugin — generates serializers for the @Serializable DTOs.
     alias(libs.plugins.kotlin.serialization)
 }
 

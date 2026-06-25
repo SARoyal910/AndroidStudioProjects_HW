@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Insert vs update routing</title>
+<link rel="stylesheet" href="labs.css" />
+<script src="code-lab.js"></script>
+</head>
+<body>
+<script>
+mountCodeLab({
+  kind: 'code', track: 'Cumulative', sim: 'runner',
+  id: 'cap-02', title: 'Lab · Insert vs update routing', level: 'Intermediate',
+  goal: 'One save() handles both new and existing tasks. A task with id == 0L has never been saved (Room autoGenerates the real id on insert); non-zero means it already exists. Route on that. (Homework 6)',
+  steps: [
+    'Run the write inside <code>viewModelScope.launch { … }</code> (Room writes are suspend functions).',
+    'When <code>task.id == 0L</code>, call <code>dao.insert(task)</code>.',
+    'Otherwise call <code>dao.update(task)</code>.',
+  ],
+  hints: [
+    '<code>@PrimaryKey(autoGenerate = true)</code> means a fresh task starts at <code>0L</code> and gets its id on insert.',
+    'The edit screen reuses the same <code>save()</code> — only the id distinguishes new from existing.',
+    'Each JUnit row turns green when its branch is wired.',
+  ],
+  starter:
+'// A task with id == 0L has never been saved (autoGenerate assigns the real id on\n' +
+'// insert). Non-zero means it already exists → update. Route on that.\n' +
+'fun save(task: Task) {\n' +
+'    viewModelScope.launch {\n' +
+'        // TODO: insert when id == 0L, otherwise update\n' +
+'        dao.insert(task)\n' +
+'    }\n' +
+'}\n',
+  solution:
+'fun save(task: Task) {\n' +
+'    viewModelScope.launch {\n' +
+'        if (task.id == 0L) dao.insert(task) else dao.update(task)\n' +
+'    }\n' +
+'}\n',
+  checks: [
+    { id:'scope', label:'Write runs in <code>viewModelScope.launch { }</code>', re:/viewModelScope\.launch/ },
+    { id:'routing', label:'Branches on <code>if (task.id == 0L)</code>', re:/if\s*\(\s*task\.id\s*==\s*0L\s*\)/ },
+    { id:'insert', label:'New task → <code>dao.insert(task)</code>', re:/dao\.insert\(/ },
+    { id:'update', label:'Existing task → <code>dao.update(task)</code>', re:/dao\.update\(/ },
+  ],
+  tests: [
+    { name:'new task (id == 0L) is INSERTed', needs:['routing','insert'] },
+    { name:'existing task (id != 0L) is UPDATEd', needs:['routing','update'] },
+    { name:'the write runs in viewModelScope', needs:['scope'] },
+  ],
+});
+</script>
+</body>
+</html>

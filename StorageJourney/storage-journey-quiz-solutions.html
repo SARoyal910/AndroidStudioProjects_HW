@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Storage Journey — Quiz Answer Key</title>
+<meta name="description" content="Complete, explained answer key for the Storage Journey quiz: 10 multi-select questions tracing one item from the Compose text field through the ViewModel, Repository, Room/SQLite, and back via a reactive Flow. Every option is marked correct or incorrect with a reason grounded in the real source." />
+<style>
+  :root{
+    --bg:#f7f8fb; --surface:#ffffff; --surface-alt:#eef3f7;
+    --ink:#17202a; --muted:#5c6a78; --line:#d9e1e8; --line-strong:#b9c7d2;
+    --green:#1b8a5a; --green-soft:#e6f5ee; --green-line:#bfe6d3;
+    --red:#c33d3d; --red-soft:#fdeced; --red-line:#f3c9cc;
+    --blue:#2d64c8; --blue-soft:#e9f0ff;
+    --amber:#b56c00; --amber-soft:#fff3dd;
+    --code-bg:#111827; --code-ink:#e9eef7; --code-dim:#93a4ba;
+    /* the five journey stages — same palette as the interactive explorer */
+    --ui:#2d64c8; --vm:#6d58b8; --repo:#0a8f9a; --room:#b56c00; --flow:#1b8a5a;
+    --ui-soft:#e9f0ff; --vm-soft:#eeeafb; --repo-soft:#e1f6f8; --room-soft:#fff3dd; --flow-soft:#e6f5ee;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 var(--sans);}
+  .wrap{max-width:920px; margin:0 auto; padding:0 22px 90px;}
+
+  header.hero{
+    background:
+      linear-gradient(135deg, rgba(27,138,90,.96), rgba(45,100,200,.93)),
+      linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+    color:#fff; padding:42px 0 36px; margin-bottom:28px; border-bottom:4px solid #3ddc84;}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px; color:#c9f7e1;
+    font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#e7eefb; font-size:16px; max-width:70ch;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22);
+    color:#eef4ff; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px;}
+  .herolinks a{color:#eaf2ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.30); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.12);}
+  .herolinks a.primary{background:#fff; color:#0f5132; border-color:#fff;}
+
+  h2{font-size:15px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted);
+     margin:40px 0 4px; padding-top:14px; border-top:1px solid var(--line); font-weight:800;}
+  p{margin:11px 0;}
+  ul,ol{margin:10px 0; padding-left:22px;} li{margin:5px 0;}
+  a{color:var(--blue);}
+  code{font-family:var(--mono); font-size:.88em; background:var(--surface-alt);
+    border:1px solid var(--line); padding:1px 5px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:14px 16px; border-radius:10px;
+    overflow:auto; font-size:12.5px; line-height:1.6; margin:13px 0; font-family:var(--mono); tab-size:4;}
+  pre code{background:none; border:none; padding:0; font-size:inherit; color:inherit;}
+  pre .cmt{color:var(--code-dim);}
+
+  /* ---- legend / journey map ---- */
+  .legend{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:18px 0;}
+  .leg{border:1px solid var(--line); border-left:5px solid var(--muted); border-radius:10px;
+    padding:9px 12px; background:var(--surface);}
+  .leg b{display:block; font-size:13.5px;}
+  .leg span{font-size:12.5px; color:var(--muted);}
+  .leg.ui{border-left-color:var(--ui);} .leg.vm{border-left-color:var(--vm);}
+  .leg.repo{border-left-color:var(--repo);} .leg.room{border-left-color:var(--room);}
+  .leg.flow{border-left-color:var(--flow);}
+
+  /* ---- callouts ---- */
+  .callout{border-radius:10px; padding:13px 16px; margin:16px 0; font-size:14.5px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #cfe0ff;}
+  .callout.key{background:var(--amber-soft); border:1px solid #f0dcb0; color:#7c5410;}
+  .callout b{display:block; margin-bottom:3px;}
+
+  /* ---- question card ---- */
+  .q{background:var(--surface); border:1px solid var(--line); border-radius:12px;
+     padding:18px 20px 14px; margin:18px 0; box-shadow:0 1px 2px rgba(15,23,42,.05);}
+  .qhead{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .qnum{font-weight:800; font-size:16px; color:var(--ink);}
+  .qnum .dot{color:var(--green); font-weight:900;}
+  .tag{flex:none; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 9px; border-radius:999px; white-space:nowrap; background:#eef2f7; color:#46586b; border:1px solid var(--line);}
+  .ask{margin:8px 0 4px; font-size:15.5px; font-weight:700; color:var(--ink);}
+  .file{font-size:12.5px; color:var(--muted); margin:2px 0 12px;}
+
+  ul.opts{list-style:none; padding:0; margin:6px 0 4px;}
+  ul.opts li{position:relative; padding:11px 14px 11px 44px; margin:8px 0; border-radius:10px;
+    border:1px solid var(--line); background:#fcfdff; font-size:14.5px;}
+  ul.opts li::before{position:absolute; left:13px; top:10px; font-weight:900; font-size:15px;
+    width:20px; height:20px; line-height:20px; text-align:center; border-radius:50%;}
+  ul.opts li.ok{border-color:var(--green-line); background:var(--green-soft);}
+  ul.opts li.ok::before{content:"✓"; color:#fff; background:var(--green);}
+  ul.opts li.no{border-color:var(--red-line); background:var(--red-soft);}
+  ul.opts li.no::before{content:"✕"; color:#fff; background:var(--red);}
+  ul.opts .ot{font-weight:700; color:var(--ink);}
+  ul.opts .verdict{font-weight:800; font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    margin-left:8px; padding:1px 7px; border-radius:999px; white-space:nowrap;}
+  ul.opts li.ok .verdict{background:var(--green); color:#fff;}
+  ul.opts li.no .verdict{background:var(--red); color:#fff;}
+  ul.opts .why{display:block; margin-top:5px; color:#41505f; font-size:13.5px; line-height:1.55;}
+  ul.opts li.no .why{color:#7a3b3b;}
+
+  .takeaway{margin:12px 0 2px; padding:11px 14px; border-radius:10px; font-size:13.8px;
+    background:var(--surface-alt); border:1px dashed var(--line-strong);}
+  .takeaway b{color:var(--ink);}
+
+  /* stage chip used inline */
+  .chip{display:inline-block; font-size:11px; font-weight:800; padding:1px 8px; border-radius:6px;
+    border:1px solid transparent; vertical-align:1px;}
+  .chip.ui{background:var(--ui-soft); color:var(--ui);}
+  .chip.vm{background:var(--vm-soft); color:var(--vm);}
+  .chip.repo{background:var(--repo-soft); color:var(--repo);}
+  .chip.room{background:var(--room-soft); color:var(--room);}
+  .chip.flow{background:var(--flow-soft); color:var(--flow);}
+
+  footer{margin-top:46px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13.5px;}
+
+  @media print{
+    body{background:#fff;}
+    header.hero{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.callout,ul.opts li,pre{break-inside:avoid;}
+    pre{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    ul.opts li,.callout,.leg,.takeaway{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Kotlin · Room · Coroutines · Flow · Answer Key</p>
+    <h1>Storage Journey — Quiz Answer Key</h1>
+    <p class="sub">Ten multi-select questions that trace <b>one <code>StoredItem</code></b> from the Compose text field
+       through the <b>ViewModel</b>, the <b>Repository</b>, into <b>Room / SQLite</b>, and back to the screen on a
+       reactive <b>Flow</b>. Below, every option is marked <b>correct</b> or <b>not correct</b> with a reason taken
+       straight from the project's source.</p>
+    <div class="meta">
+      <span><b>Project</b> · StorageJourney</span>
+      <span>10 questions · multi-select</span>
+      <span><b>Format</b> · explained answer key</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="./storage-journey-explorer.html">Interactive Explorer</a>
+      <a href="./how-an-item-reaches-storage.html">How an item reaches storage</a>
+      <a href="./README.md">Project README</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout proj">
+    <b>How to read this key</b>
+    Each card shows the question, then every choice as a row: a <b style="color:var(--green)">green ✓</b> row is a
+    correct answer you should have selected, a <b style="color:var(--red)">red ✕</b> row is a distractor you should
+    have left unticked. The <i>why</i> under each row points to the exact line or idea in the code, and a short
+    <b>Takeaway</b> closes each question. Class names and file paths refer to the real
+    <code>com.example.storagejourney</code> sources.
+  </div>
+
+  <div class="callout key">
+    <b>The one idea behind every question: the journey of a single element</b>
+    A save is not magic — it is five named hops, and the in-app Journey panel is just a live recording of them:
+    <span class="chip ui">UI</span> captures the text →
+    <span class="chip vm">ViewModel</span> stamps it &amp; launches a coroutine →
+    <span class="chip repo">Repository</span> is the one storage door →
+    <span class="chip room">Room · SQLite</span> runs the real <code>INSERT</code> on disk →
+    <span class="chip flow">Flow · UI</span> re-emits the new list so the screen recomposes. Hold that map in your
+    head and every answer below falls out of it.
+  </div>
+
+  <div class="legend">
+    <div class="leg ui"><b>UI</b><span><code>MainActivity.kt</code> — captures text</span></div>
+    <div class="leg vm"><b>ViewModel</b><span><code>StorageJourneyViewModel</code> — launches the write</span></div>
+    <div class="leg repo"><b>Repository</b><span><code>ItemRepository</code> — the storage door</span></div>
+    <div class="leg room"><b>Room · SQLite</b><span><code>ItemDao</code> / <code>ItemDatabase</code> — disk</span></div>
+    <div class="leg flow"><b>Flow · UI</b><span>reactive return trip → recompose</span></div>
+  </div>
+
+  <!-- ============================ Q1 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">1.</span> The layers an item travels through</span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">Which of the following are layers a saved item actually travels through on its journey in this app?</p>
+    <p class="file">Across: <code>MainActivity.kt</code> → <code>StorageJourneyViewModel.kt</code> → <code>ItemRepository.kt</code> → <code>ItemDao.kt</code> → back via the <code>items</code> Flow</p>
+    <ul class="opts">
+      <li class="ok"><span class="ot">The Compose UI</span> — the Save button captures the typed text<span class="verdict">Correct</span>
+        <span class="why">The <span class="chip ui">UI</span> leg: the <code>OutlinedTextField</code>'s value is handed to <code>viewModel.addItem(label)</code>. This is hop&nbsp;1, recorded as <code>JourneyStage.UI</code>.</span></li>
+      <li class="ok"><span class="ot">The ViewModel</span> — stamps <code>createdAt</code>, builds the <code>StoredItem</code>, launches a coroutine<span class="verdict">Correct</span>
+        <span class="why">In <code>addItem()</code>: <code>StoredItem(label, createdAt = System.currentTimeMillis())</code> then <code>viewModelScope.launch { repository.save(element) }</code> — hop 2, the <span class="chip vm">ViewModel</span> leg.</span></li>
+      <li class="ok"><span class="ot">The Repository</span> — the one storage boundary that hands the element to the DAO<span class="verdict">Correct</span>
+        <span class="why"><code>ItemRepository.save()</code> is the single door: it calls <code>dao.insert(item)</code>. The ViewModel never touches the DAO directly — hop 3, <span class="chip repo">Repository</span>.</span></li>
+      <li class="ok"><span class="ot">Room / SQLite</span> — the <code>@Insert</code> runs a real <code>INSERT</code> and commits the row to <code>journey.db</code><span class="verdict">Correct</span>
+        <span class="why">Room's generated <code>insert()</code> executes <code>INSERT INTO items(...)</code> and SQLite commits the row to the <code>journey.db</code> file — hop 4, <span class="chip room">Room · SQLite</span>.</span></li>
+      <li class="no"><span class="ot">A remote REST web service over the network</span><span class="verdict">Not correct</span>
+        <span class="why">There is no networking anywhere in StorageJourney — it is a pure <i>local</i> persistence demo. The data never leaves the device. (Networking is the <i>NetworkParsing</i> / <i>CloudSync</i> projects.)</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> four layers, all on-device: UI → ViewModel → Repository → Room. The fifth hop (Flow back to the UI) is the <i>return</i> trip, covered in Q4 and Q8.</div>
+  </div>
+
+  <!-- ============================ Q2 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">2.</span> Why <code>insert(item)</code> is <code>suspend</code></span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">Why is the DAO's <code>insert(item)</code> declared as a suspend function?</p>
+    <p class="file">Where: <code>ItemDao.kt → @Insert suspend fun insert(item): Long</code></p>
+    <ul class="opts">
+      <li class="ok"><span class="ot">So Room can run the actual disk write off the main thread, keeping the UI smooth</span><span class="verdict">Correct</span>
+        <span class="why">A suspend DAO method lets Room move the blocking disk I/O to a background dispatcher internally, so the main thread is never stalled.</span></li>
+      <li class="ok"><span class="ot">So it can be called from a coroutine (<code>viewModelScope.launch</code>) that pauses until SQLite commits</span><span class="verdict">Correct</span>
+        <span class="why"><code>suspend</code> functions are only callable from a coroutine. The ViewModel launches one; it suspends at <code>dao.insert(...)</code> and resumes once the write is committed — without blocking the thread.</span></li>
+      <li class="ok"><span class="ot">So it can return the new row's auto-generated id once the write completes</span><span class="verdict">Correct</span>
+        <span class="why"><code>insert(...): Long</code> returns the freshly assigned primary key. The repository captures it as <code>newId</code> and logs "row #N" in the journey.</span></li>
+      <li class="no"><span class="ot">Because you must always wrap a Room call in <code>Dispatchers.IO</code> yourself</span><span class="verdict">Not correct</span>
+        <span class="why">The opposite is true: because a suspend DAO method already runs the I/O off-thread, wrapping it in <code>withContext(Dispatchers.IO)</code> is redundant. The code comment in <code>ItemDao.kt</code> says exactly this.</span></li>
+      <li class="no"><span class="ot">Because the <code>suspend</code> keyword makes the insert run faster</span><span class="verdict">Not correct</span>
+        <span class="why"><code>suspend</code> is about <i>where</i> work runs (concurrency, not blocking), not raw speed. It doesn't make SQLite write any faster.</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> <code>suspend</code> = "callable from a coroutine, can pause without blocking." Room uses that to keep disk writes off the UI thread <i>for</i> you — you don't add <code>Dispatchers.IO</code> on top.</div>
+  </div>
+
+  <!-- ============================ Q3 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">3.</span> What KSP does in this project</span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">What does KSP (Kotlin Symbol Processing) do in this project?</p>
+    <p class="file">Where: <code>build.gradle.kts</code> (the <code>ksp</code> plugin + <code>ksp("androidx.room:room-compiler")</code>), feeding <code>@Entity</code>/<code>@Dao</code>/<code>@Database</code></p>
+    <ul class="opts">
+      <li class="ok"><span class="ot">Generates the concrete <code>ItemDatabase_Impl</code> and <code>ItemDao_Impl</code> classes at build time</span><span class="verdict">Correct</span>
+        <span class="why">That is why <code>ItemDatabase</code> and <code>itemDao()</code> are <code>abstract</code> — you never write the bodies; KSP emits them into <code>build/generated/ksp/…</code>.</span></li>
+      <li class="ok"><span class="ot">Reads Room's <code>@Entity</code>, <code>@Dao</code>, and <code>@Database</code> annotations to produce the SQLite code</span><span class="verdict">Correct</span>
+        <span class="why">KSP is an annotation processor: it inspects those annotations and writes the matching <code>CREATE TABLE</code> / <code>INSERT</code> / <code>SELECT</code> plumbing so you never hand-write SQL boilerplate.</span></li>
+      <li class="ok"><span class="ot">Must be applied as a Gradle plugin, or the <code>ksp(room-compiler)</code> dependency does nothing</span><span class="verdict">Correct</span>
+        <span class="why">The <code>com.google.devtools.ksp</code> plugin and the <code>ksp(...)</code> dependency work together: without the plugin, the processor never runs and Room's <code>_Impl</code> classes are never generated — the build fails.</span></li>
+      <li class="no"><span class="ot">Runs the app on the device or emulator</span><span class="verdict">Not correct</span>
+        <span class="why">KSP is a <i>compile-time</i> code generator. Launching the app is done by Gradle's install task + the Android runtime, not by KSP.</span></li>
+      <li class="no"><span class="ot">Encrypts the <code>journey.db</code> file on disk</span><span class="verdict">Not correct</span>
+        <span class="why">KSP generates code; it has nothing to do with encryption. The DB is a plain SQLite file (encryption would need SQLCipher or similar, which this project doesn't use).</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> KSP is the build-time robot that turns your annotated <code>abstract</code> Room declarations into real, runnable SQLite code. It never touches runtime behavior or storage security.</div>
+  </div>
+
+  <!-- ============================ Q4 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">4.</span> The reactive read <code>observeItems(): Flow&lt;List&lt;StoredItem&gt;&gt;</code></span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">Which statements about the reactive read <code>observeItems(): Flow&lt;List&lt;StoredItem&gt;&gt;</code> are TRUE?</p>
+    <p class="file">Where: <code>ItemDao.kt → @Query("SELECT * FROM items ORDER BY id DESC") fun observeItems(): Flow&lt;…&gt;</code></p>
+    <ul class="opts">
+      <li class="ok"><span class="ot">Room re-runs the SELECT and emits a new list every time the <code>items</code> table changes</span><span class="verdict">Correct</span>
+        <span class="why">A Room query returning <code>Flow</code> is <i>live</i>: Room watches the table and re-queries on any change, pushing a fresh <code>List</code> down the stream. This is the <span class="chip flow">Flow · UI</span> return trip.</span></li>
+      <li class="ok"><span class="ot">It means you never have to write a manual "reload the list" call</span><span class="verdict">Correct</span>
+        <span class="why">The whole point of the reactive read: after a write, the new row arrives on screen automatically — no <code>refresh()</code> button, no re-fetch code.</span></li>
+      <li class="ok"><span class="ot">It re-emits on deletes as well as inserts</span><span class="verdict">Correct</span>
+        <span class="why">Room re-emits on <i>any</i> change to the watched table. <code>deleteItem()</code> and <code>clearAll()</code> both trigger a fresh emission — which is why the Journey panel records a Flow leg on delete too.</span></li>
+      <li class="ok"><span class="ot"><code>ORDER BY id DESC</code> makes the newest row appear first in the list</span><span class="verdict">Correct</span>
+        <span class="why">Ids auto-increment, so the highest id is the most recently inserted. <code>DESC</code> sorts highest-first, so the item you just saved shows at the top.</span></li>
+      <li class="no"><span class="ot">Like a suspend write, it returns one value once and then stops</span><span class="verdict">Not correct</span>
+        <span class="why">That describes a <code>suspend</code> function (one-shot). A <code>Flow</code> is the opposite — an ongoing <i>stream</i> that keeps emitting as long as someone collects it and the table keeps changing.</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> <code>suspend</code> writes are one-and-done; a <code>Flow</code> read is a living subscription. That contrast is the heart of "write once, screen updates forever."</div>
+  </div>
+
+  <!-- ============================ Q5 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">5.</span> How the primary key <code>id</code> is assigned</span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">How is each <code>StoredItem</code>'s primary key <code>id</code> assigned?</p>
+    <p class="file">Where: <code>StoredItem.kt</code> (the entity) + <code>ItemDao.insert(): Long</code></p>
+    <ul class="opts">
+      <li class="ok"><span class="ot">The <code>id</code> property defaults to 0 in the data class</span><span class="verdict">Correct</span>
+        <span class="why"><code>val id: Long = 0</code>. Passing 0 is the signal "I don't have an id yet — assign one for me."</span></li>
+      <li class="ok"><span class="ot"><code>@PrimaryKey(autoGenerate = true)</code> tells SQLite to assign the next id on insert</span><span class="verdict">Correct</span>
+        <span class="why">With <code>autoGenerate = true</code>, inserting a row whose key is 0 makes SQLite auto-increment and supply the next unique id.</span></li>
+      <li class="ok"><span class="ot"><code>dao.insert(...)</code> returns the new id back to the app as a <code>Long</code></span><span class="verdict">Correct</span>
+        <span class="why">The repository keeps it: <code>val newId = dao.insert(item)</code>, then logs "committed the row … as id #$newId." You literally watch SQLite hand the id back.</span></li>
+      <li class="no"><span class="ot">The ViewModel sets <code>id = System.currentTimeMillis()</code> before saving</span><span class="verdict">Not correct</span>
+        <span class="why"><code>System.currentTimeMillis()</code> is used for <code>createdAt</code> (the timestamp column), <b>not</b> the id. The ViewModel leaves <code>id</code> at its default 0 so SQLite assigns the real key.</span></li>
+      <li class="no"><span class="ot">You must hand-write a <code>CREATE TABLE</code> statement to define the key</span><span class="verdict">Not correct</span>
+        <span class="why">Room/KSP generate the <code>CREATE TABLE</code> (including the auto-increment key) from the <code>@Entity</code> + <code>@PrimaryKey</code> annotations. No hand-written DDL anywhere.</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> default <code>id = 0</code> + <code>autoGenerate = true</code> means "let SQLite number the rows," and <code>insert(): Long</code> reports the number it picked. <code>createdAt</code> is a separate timestamp, not the key.</div>
+  </div>
+
+  <!-- ============================ Q6 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">6.</span> The database singleton <code>ItemDatabase.getInstance</code></span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">Which statements about the Room database singleton (<code>ItemDatabase.getInstance</code>) are correct?</p>
+    <p class="file">Where: <code>ItemDatabase.kt → companion object { @Volatile … getInstance(context) }</code></p>
+    <ul class="opts">
+      <li class="ok"><span class="ot">It uses double-checked locking inside <code>synchronized</code> so only one instance is ever built</span><span class="verdict">Correct</span>
+        <span class="why"><code>INSTANCE ?: synchronized(this) { INSTANCE ?: build… }</code> — the second null-check, inside the lock, stops two racing threads from each building a database.</span></li>
+      <li class="ok"><span class="ot"><code>@Volatile</code> makes a write to <code>INSTANCE</code> immediately visible to other threads</span><span class="verdict">Correct</span>
+        <span class="why">Without <code>@Volatile</code> a thread could see a stale/half-built value. It guarantees the freshly built instance is visible everywhere, which is what makes the double-checked lock correct.</span></li>
+      <li class="ok"><span class="ot">It passes <code>applicationContext</code> so it does not leak an Activity</span><span class="verdict">Correct</span>
+        <span class="why"><code>context.applicationContext</code> is handed to <code>Room.databaseBuilder</code>. The DB outlives any one Activity, so holding an Activity Context would leak it; the app Context lives as long as the process.</span></li>
+      <li class="ok"><span class="ot"><code>"journey.db"</code> is the name of the SQLite file it creates on disk</span><span class="verdict">Correct</span>
+        <span class="why">The third argument to <code>Room.databaseBuilder(...)</code> is the on-disk file name — here <code>"journey.db"</code>, the file the committed rows live in.</span></li>
+      <li class="no"><span class="ot">Opening two databases over the same file is the recommended approach</span><span class="verdict">Not correct</span>
+        <span class="why">Exactly backwards — that is what the singleton <i>prevents</i>. Two database instances over one file is wasteful and can corrupt state, so we build one and cache it.</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> one process, one database instance, one file. <code>@Volatile</code> + double-checked <code>synchronized</code> guarantees that even under a startup race, and <code>applicationContext</code> keeps it leak-free.</div>
+  </div>
+
+  <!-- ============================ Q7 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">7.</span> What survives — persistence vs. lifecycle</span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">After you save an item, which actions leave the stored rows INTACT (still present afterward)?</p>
+    <p class="file">Concept: a committed SQLite row lives in <code>journey.db</code> on disk, independent of process &amp; UI lifecycle</p>
+    <ul class="opts">
+      <li class="ok"><span class="ot">Rotating the screen</span><span class="verdict">Correct</span>
+        <span class="why">Rotation recreates the Activity but the row never left disk — and the ViewModel survives the config change anyway, so the list comes right back.</span></li>
+      <li class="ok"><span class="ot">Killing the app process and relaunching it</span><span class="verdict">Correct</span>
+        <span class="why">In-memory state is gone, but the row was <i>committed</i> to the <code>journey.db</code> file. On relaunch, <code>observeItems()</code> re-reads it and the item reappears. This is the whole point of persistence.</span></li>
+      <li class="ok"><span class="ot">Rebooting the device</span><span class="verdict">Correct</span>
+        <span class="why">The SQLite file lives in the app's private storage on flash, which survives power cycles. Reboot doesn't touch it.</span></li>
+      <li class="no"><span class="ot">Uninstalling the app</span><span class="verdict">Not correct</span>
+        <span class="why">Uninstalling wipes the app's entire private data directory — <code>journey.db</code> and all — so the rows are gone for good.</span></li>
+      <li class="no"><span class="ot">Tapping "Clear storage" (<code>DELETE FROM items</code>)</span><span class="verdict">Not correct</span>
+        <span class="why"><code>clearAll()</code> runs <code>DELETE FROM items</code>, which intentionally removes every row. That's a deliberate write, not an accident of lifecycle.</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> persistence beats <i>lifecycle</i> events (rotate, process death, reboot) because the data is on disk — but it does not beat a deliberate <i>delete</i> or an <i>uninstall</i> that erases the file itself.</div>
+  </div>
+
+  <!-- ============================ Q8 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">8.</span> The <code>items</code> StateFlow in the ViewModel</span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">Which statements about the <code>items</code> StateFlow in the ViewModel are TRUE?</p>
+    <p class="file">Where: <code>StorageJourneyViewModel.kt → val items = repository.items.onEach{…}.stateIn(…)</code></p>
+    <ul class="opts">
+      <li class="ok"><span class="ot"><code>.stateIn(...)</code> converts Room's cold Flow into a hot StateFlow that always has a value</span><span class="verdict">Correct</span>
+        <span class="why"><code>stateIn(viewModelScope, …, emptyList())</code> turns the cold DAO <code>Flow</code> into a hot <code>StateFlow</code> the UI can read synchronously — it always exposes a current <code>.value</code>.</span></li>
+      <li class="ok"><span class="ot"><code>SharingStarted.WhileSubscribed(5000)</code> keeps it hot for 5s after the last collector leaves</span><span class="verdict">Correct</span>
+        <span class="why">The 5-second grace window means a quick rotation (collector briefly detaches, then re-attaches) doesn't tear down and rebuild the upstream query.</span></li>
+      <li class="ok"><span class="ot">It is given an empty list as its initial value</span><span class="verdict">Correct</span>
+        <span class="why">The third <code>stateIn</code> argument is <code>emptyList()</code> — what the screen renders for the first frame before Room's first emission arrives.</span></li>
+      <li class="ok"><span class="ot"><code>.onEach { }</code> records the FLOW leg each time Room re-emits a new list</span><span class="verdict">Correct</span>
+        <span class="why">The <code>.onEach { list -&gt; journeyLog.record(JourneyStage.FLOW, …) }</code> side-effect fires on every emission — that's how the <span class="chip flow">Flow · UI</span> hop appears in the panel.</span></li>
+      <li class="no"><span class="ot">Collecting it blocks the main thread until the database query finishes</span><span class="verdict">Not correct</span>
+        <span class="why">Collecting a <code>Flow</code> <i>suspends</i> — it never blocks. The query runs off-thread and emissions are delivered back without freezing the UI; that's the entire reason for the coroutine/Flow design.</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> <code>stateIn</code> bridges Room's cold stream to an always-has-a-value hot <code>StateFlow</code> the UI can collect lifecycle-safely — initialized empty, kept warm for 5s, and never blocking.</div>
+  </div>
+
+  <!-- ============================ Q9 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">9.</span> Why <code>AndroidViewModel</code> + a <code>ViewModelProvider.Factory</code></span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">Why does <code>StorageJourneyViewModel</code> extend <code>AndroidViewModel</code> and use a <code>ViewModelProvider.Factory</code>?</p>
+    <p class="file">Where: <code>StorageJourneyViewModel(app: Application) : AndroidViewModel(app)</code> + the <code>companion object { factory(app) }</code></p>
+    <ul class="opts">
+      <li class="ok"><span class="ot"><code>AndroidViewModel</code> supplies an Application Context to build Room without leaking an Activity</span><span class="verdict">Correct</span>
+        <span class="why">It needs a Context for <code>ItemDatabase.getInstance(app)</code>. The <i>Application</i> Context is safe to hold for the ViewModel's lifetime; an Activity Context would leak.</span></li>
+      <li class="ok"><span class="ot">The Factory is needed because <code>AndroidViewModel</code> requires the Application be passed in</span><span class="verdict">Correct</span>
+        <span class="why"><code>AndroidViewModel</code> has no zero-arg constructor — it takes an <code>Application</code>. The default ViewModel factory can't supply that, so the tiny <code>factory(app)</code> constructs it explicitly.</span></li>
+      <li class="ok"><span class="ot">The ViewModel survives configuration changes such as rotation</span><span class="verdict">Correct</span>
+        <span class="why">That's the core ViewModel guarantee: it outlives Activity recreation, so the screen's state (and the in-flight save) survives a rotation.</span></li>
+      <li class="ok"><span class="ot"><code>viewModelScope</code> is a CoroutineScope tied to the ViewModel's lifetime, used for the suspend writes</span><span class="verdict">Correct</span>
+        <span class="why"><code>viewModelScope.launch { repository.save(...) }</code> runs the suspend write in a scope that auto-cancels when the ViewModel is cleared — no leaked coroutines.</span></li>
+      <li class="no"><span class="ot">The Factory pulls in a dependency-injection library such as Hilt</span><span class="verdict">Not correct</span>
+        <span class="why">The opposite: the hand-written factory exists <i>so the project needs no DI library</i>. The code comment calls it "a tiny factory rather than pulling in a dependency-injection library."</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> <code>AndroidViewModel</code> gives a leak-safe Application Context; the manual <code>Factory</code> feeds that Context in without any DI framework; and the ViewModel + <code>viewModelScope</code> keep state and coroutines alive exactly as long as the screen needs them.</div>
+  </div>
+
+  <!-- ============================ Q10 ============================ -->
+  <div class="q">
+    <div class="qhead"><span class="qnum"><span class="dot">10.</span> The <code>JourneyLog</code> narrator</span>
+      <span class="tag">Select all that apply</span></div>
+    <p class="ask">Which statements about the <code>JourneyLog</code> narrator are TRUE?</p>
+    <p class="file">Where: <code>journey/JourneyLog.kt</code> (and its JVM test <code>JourneyLogTest.kt</code>)</p>
+    <ul class="opts">
+      <li class="ok"><span class="ot">It holds steps in a <code>MutableStateFlow</code> and exposes a read-only <code>StateFlow</code> via <code>asStateFlow()</code></span><span class="verdict">Correct</span>
+        <span class="why">Private <code>_steps = MutableStateFlow(emptyList())</code>; public <code>val steps = _steps.asStateFlow()</code>. Only the log can mutate it; the UI can only read.</span></li>
+      <li class="ok"><span class="ot">It has no Android dependencies, which lets it be unit-tested on the JVM</span><span class="verdict">Correct</span>
+        <span class="why">No <code>android.*</code> imports — the clock is injected as <code>now: () -&gt; Long</code>. That's exactly why <code>JourneyLogTest.kt</code> runs on a plain JVM with a fake clock, no emulator.</span></li>
+      <li class="ok"><span class="ot"><code>update { old -&gt; old + step }</code> is an atomic read-modify-write that builds a new list</span><span class="verdict">Correct</span>
+        <span class="why"><code>StateFlow.update</code> reads the current list, appends the step into a <i>new</i> list, and stores it atomically (retrying on contention). The new-list identity is what makes <code>StateFlow</code> re-emit.</span></li>
+      <li class="ok"><span class="ot">It uses the same reactive Flow → Compose pattern Room uses for the data</span><span class="verdict">Correct</span>
+        <span class="why">The narration rides the identical mechanism as the data: a <code>StateFlow</code> the UI collects, recomposing the panel on each recorded step — the journey trace <i>is</i> reactive state.</span></li>
+      <li class="no"><span class="ot">It persists the journey steps by writing them into the SQLite <code>items</code> table</span><span class="verdict">Not correct</span>
+        <span class="why">The steps are purely in-memory UI state — they vanish on <code>reset()</code> and process death. Only <code>StoredItem</code> rows go into the <code>items</code> table; the narrator never touches the database.</span></li>
+    </ul>
+    <div class="takeaway"><b>Takeaway:</b> <code>JourneyLog</code> is a tiny, Android-free, testable <code>StateFlow</code> recorder. It <i>describes</i> the trip using the same reactive pattern Room uses for the data — but it stores nothing on disk.</div>
+  </div>
+
+  <!-- ============================ wrap-up ============================ -->
+  <h2>One paragraph that answers all ten</h2>
+  <div class="callout proj">
+    A tap in the <span class="chip ui">UI</span> calls <code>addItem()</code>; the <span class="chip vm">ViewModel</span>
+    stamps <code>createdAt</code>, builds a <code>StoredItem</code> (id left 0), and <code>viewModelScope.launch</code>es a
+    coroutine; the <span class="chip repo">Repository</span> — the one storage door — calls the <code>suspend</code>
+    <code>dao.insert()</code>; <span class="chip room">Room</span> (its <code>_Impl</code> classes generated by KSP from
+    the annotations) runs a real <code>INSERT</code> into <code>journey.db</code>, lets SQLite auto-assign the id, and
+    returns it as a <code>Long</code>; because <code>observeItems()</code> returns a <code>Flow</code>, Room re-runs
+    <code>SELECT … ORDER BY id DESC</code> and pushes a new list, which <code>stateIn</code> exposes as a hot
+    <code>StateFlow</code> the screen collects — recomposing with the new row on top, no manual refresh. The row now
+    survives rotation, process death, and reboot (but not uninstall or "Clear storage"). The whole trip is narrated by
+    <code>JourneyLog</code>, an Android-free <code>StateFlow</code> recorder that uses the very same reactive pattern as
+    the data it describes.
+  </div>
+
+  <footer>
+    Storage Journey · Quiz Answer Key — generated from the live <code>com.example.storagejourney</code> sources
+    (<code>StoredItem</code>, <code>ItemDao</code>, <code>ItemDatabase</code>, <code>ItemRepository</code>,
+    <code>StorageJourneyViewModel</code>, <code>JourneyLog</code>). Pair it with the
+    <a href="./storage-journey-explorer.html">Interactive Explorer</a> to watch a save happen one hop at a time.
+  </footer>
+
+</div>
+</body>
+</html>

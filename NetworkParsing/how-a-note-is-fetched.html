@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How a Note Is Fetched — Network Parsing</title>
-<meta name="description" content="A step-by-step walkthrough of the Network Parsing Android app: follow one request from the screen through the ViewModel, Repository, and Retrofit out to a JSON API, then watch the response parse into notes and come back as a Loading / Success / Error UI state — each step shown as a real block of code.">
+<title>How the Weather Is Fetched — Network Parsing</title>
+<meta name="description" content="A step-by-step walkthrough of the Network Parsing Android app: follow one request from the screen through the ViewModel, Repository, and Retrofit out to the live Open-Meteo weather API, then watch the nested JSON response parse and flatten into one Weather object and come back as a Loading / Success / Error UI state — each step shown as a real block of code.">
 <style>
 :root {
   color-scheme: light;
@@ -682,7 +682,7 @@ button.layer.layer-pick.sel { background: var(--blue-soft); }
       <div class="brand-mark">NP</div>
       <div>
         <div class="brand-title">Network Parsing</div>
-        <div class="brand-subtitle">How a note is fetched</div>
+        <div class="brand-subtitle">How the weather is fetched</div>
       </div>
     </div>
     <nav>
@@ -754,24 +754,25 @@ button.layer.layer-pick.sel { background: var(--blue-soft); }
     <section class="band anchor" id="overview">
       <div class="band-inner">
         <p class="eyebrow">Networking, one request at a time</p>
-        <h1>How a note is fetched</h1>
+        <h1>How the weather is fetched</h1>
         <p class="lead">
-          <strong>Network Parsing</strong> is a small Android app that does one thing: it asks for notes, receives JSON,
-          turns that JSON into Kotlin objects, and shows either a spinner, a list, or an error. This page follows that
-          one fetch slowly. Each section says what the code does in plain English first, then shows the real Kotlin.
+          <strong>Network Parsing</strong> is a small Android app that does one thing: it asks the Open-Meteo API for the
+          current weather, receives nested JSON, flattens that JSON into one Kotlin object, and shows either a spinner, a
+          weather card, or an error. This page follows that one fetch slowly. Each section says what the code does in plain
+          English first, then shows the real Kotlin.
         </p>
         <div class="plain-steps">
           <div class="plain-step">
             <strong>1. The screen asks</strong>
-            <p>The UI does not fetch by itself. It calls the ViewModel and watches one value: <code>uiState</code>.</p>
+            <p>The UI does not fetch by itself. You tap a city chip; it calls the ViewModel and watches one value: <code>uiState</code>.</p>
           </div>
           <div class="plain-step">
             <strong>2. Data travels down</strong>
-            <p>The ViewModel asks the Repository. The Repository uses either the fake JSON or the real Retrofit API.</p>
+            <p>The ViewModel asks the Repository. The Repository uses either the real Retrofit API or the offline fake JSON.</p>
           </div>
           <div class="plain-step">
             <strong>3. State travels back up</strong>
-            <p>JSON becomes <code>NoteDto</code>, then <code>Note</code>, then <code>Success(notes)</code>. A failure becomes <code>Error(message)</code>.</p>
+            <p>Nested JSON becomes a <code>ForecastResponseDto</code>, then a flat <code>Weather</code>, then <code>Success(weather)</code>. A failure becomes <code>Error(message)</code>.</p>
           </div>
         </div>
         <div class="tag-row">
@@ -784,14 +785,15 @@ button.layer.layer-pick.sel { background: var(--blue-soft); }
         <div class="callout good">
           <span class="callout-label">The one sentence to hold onto</span>
           The screen only looks at <strong>one state value</strong>. If that value is <code>Loading</code>, it draws a
-          spinner. If it is <code>Success(notes)</code>, it draws the list. If it is <code>Error(message)</code>, it draws
+          spinner. If it is <code>Success(weather)</code>, it draws the weather card. If it is <code>Error(message)</code>, it draws
           the message and a Retry button.
         </div>
-        <h3>Runs offline by default</h3>
+        <h3>Runs live by default — no key needed</h3>
         <p class="dense">
-          The app ships in <strong>fake mode</strong> (<code>provideNoteRepository(useFake = true)</code>): it parses a
-          hardcoded JSON string after a short delay, so it builds, runs, and unit-tests with <em>no network</em>. One flag
-          flips it to the live API at <code>https://jsonplaceholder.typicode.com/posts</code>.
+          Open-Meteo is free and needs no API key, so the app ships in <strong>real mode</strong>
+          (<code>provideWeatherRepository(useFake = false)</code>): it hits the live API at
+          <code>https://api.open-meteo.com/v1/forecast</code> the moment you run it. One flag flips it to an offline fake
+          that parses a hardcoded JSON string after a short delay, so it still builds and unit-tests with <em>no network</em>.
         </p>
         <h3>Vocabulary before the code</h3>
         <p class="dense">
@@ -803,38 +805,43 @@ button.layer.layer-pick.sel { background: var(--blue-soft); }
           <tbody>
             <tr>
               <td><code>JSON</code></td>
-              <td>Plain text data from the server. It looks like objects with keys such as <code>"id"</code> and <code>"title"</code>.</td>
-              <td>The live API and <code>FAKE_NOTES_JSON</code> both provide JSON shaped like <code>/posts</code>.</td>
+              <td>Plain text data from the server. Here it is a nested object with a <code>"current"</code> block whose keys are snake_case, such as <code>"temperature_2m"</code>.</td>
+              <td>The live API and <code>FAKE_FORECAST_JSON</code> both provide JSON shaped like <code>/v1/forecast</code>.</td>
             </tr>
             <tr>
-              <td><code>NoteDto</code></td>
-              <td>The network-shaped Kotlin class. Its property names and types must match the JSON that is being decoded.</td>
-              <td><code>Note.kt</code>, marked with <code>@Serializable</code>.</td>
+              <td><code>ForecastResponseDto</code></td>
+              <td>The network-shaped Kotlin class. It mirrors the whole JSON object, holding a nested <code>CurrentDto</code>.</td>
+              <td><code>Weather.kt</code>, marked with <code>@Serializable</code>.</td>
             </tr>
             <tr>
-              <td><code>Note</code></td>
-              <td>The app-shaped Kotlin class. It contains only what the UI actually needs.</td>
-              <td><code>Note.kt</code>, with <code>id</code>, <code>title</code>, and <code>body</code>, but no <code>userId</code>.</td>
+              <td><code>CurrentDto</code></td>
+              <td>The nested <code>"current"</code> object. Each property uses <code>@SerialName</code> to bridge a snake_case JSON key to a camelCase Kotlin name.</td>
+              <td><code>Weather.kt</code>, e.g. <code>@SerialName("temperature_2m") temperature</code>.</td>
             </tr>
             <tr>
-              <td><code>toNote()</code></td>
-              <td>The mapper. It converts one <code>NoteDto</code> into one <code>Note</code>.</td>
-              <td><code>NoteDto.toNote()</code> is called after Retrofit or the fake repository parses JSON.</td>
+              <td><code>Weather</code></td>
+              <td>The app-shaped Kotlin class. It is flat and contains only what the UI actually needs.</td>
+              <td><code>Weather.kt</code>, with <code>temperatureC</code>, <code>description</code>, <code>humidityPercent</code>, … (no nesting, no <code>weather_code</code> as raw text).</td>
+            </tr>
+            <tr>
+              <td><code>toWeather()</code></td>
+              <td>The mapper. It flattens one nested <code>ForecastResponseDto</code> into one flat <code>Weather</code>.</td>
+              <td><code>ForecastResponseDto.toWeather(city)</code> is called after Retrofit or the fake repository parses JSON.</td>
             </tr>
             <tr>
               <td>Repository</td>
-              <td>A data-source wrapper. The ViewModel asks it for notes without caring whether they came from the network or the fake.</td>
-              <td><code>NoteRepository.kt</code>, with <code>RealNoteRepository</code> and <code>FakeNoteRepository</code>.</td>
+              <td>A data-source wrapper. The ViewModel asks it for the weather without caring whether it came from the network or the fake.</td>
+              <td><code>WeatherRepository.kt</code>, with <code>RealWeatherRepository</code> and <code>FakeWeatherRepository</code>.</td>
             </tr>
             <tr>
               <td>Retrofit</td>
               <td>A library that turns an annotated Kotlin interface into real HTTP calls.</td>
-              <td><code>NoteApi.kt</code>, especially <code>@GET("posts")</code> and <code>provideNoteApi()</code>.</td>
+              <td><code>WeatherApi.kt</code>, especially <code>@GET("v1/forecast")</code> and <code>provideWeatherApi()</code>.</td>
             </tr>
             <tr>
               <td><code>StateFlow</code></td>
               <td>A stream-like state holder that always has a current value. The UI reads it and redraws when it changes.</td>
-              <td><code>NotesViewModel.uiState</code>, collected by <code>NotesScreen()</code>.</td>
+              <td><code>WeatherViewModel.uiState</code>, collected by <code>WeatherScreen()</code>.</td>
             </tr>
             <tr>
               <td>Recomposition</td>
@@ -852,41 +859,41 @@ button.layer.layer-pick.sel { background: var(--blue-soft); }
         <p class="eyebrow">The shape of the trip</p>
         <h2>The round trip a request takes</h2>
         <p class="dense">
-          The screen asks for notes; the request travels <em>down</em> through the layers and out to the network (the
+          The screen asks for the weather; the request travels <em>down</em> through the layers and out to the network (the
           <strong>request path</strong>). The JSON that comes back is parsed and mapped, and the result travels back
           <em>up</em> as a new <code>StateFlow</code> value (the <strong>return trip</strong>, in green).
         </p>
         <div class="layers">
           <button class="layer ui layer-pick sel" data-layer="ui" type="button">
             <div class="l-name">① UI — the screen</div>
-            <div class="l-desc">On first composition (or a Retry tap) the screen observes the ViewModel's <code>StateFlow</code>.</div>
-            <div class="l-files"><code>MainActivity.kt · NotesScreen</code></div>
+            <div class="l-desc">On first composition (or a city tap / Retry tap) the screen observes the ViewModel's <code>StateFlow</code>.</div>
+            <div class="l-files"><code>MainActivity.kt · WeatherScreen</code></div>
           </button>
-          <div class="arrow">↓ &nbsp;viewModel.loadNotes()</div>
+          <div class="arrow">↓ &nbsp;viewModel.loadWeather(city)</div>
           <button class="layer vm layer-pick" data-layer="vm" type="button">
             <div class="l-name">② ViewModel — the conductor</div>
             <div class="l-desc">Sets <code>Loading</code>, launches a coroutine, and wraps the call in <code>try/catch</code>.</div>
-            <div class="l-files"><code>NotesViewModel.kt · loadNotes()</code></div>
+            <div class="l-files"><code>WeatherViewModel.kt · loadWeather()</code></div>
           </button>
-          <div class="arrow">↓ &nbsp;repository.getNotes() &nbsp;<em>(suspend)</em></div>
+          <div class="arrow">↓ &nbsp;repository.getWeather(city) &nbsp;<em>(suspend)</em></div>
           <button class="layer repo layer-pick" data-layer="repo" type="button">
             <div class="l-name">③ Repository — the source of truth</div>
-            <div class="l-desc">Hides <em>where</em> notes come from: the real network impl, or the offline fake.</div>
-            <div class="l-files"><code>NoteRepository.kt</code></div>
+            <div class="l-desc">Hides <em>where</em> the weather comes from: the real network impl, or the offline fake.</div>
+            <div class="l-files"><code>WeatherRepository.kt</code></div>
           </button>
-          <div class="arrow">↓ &nbsp;api.fetchNotes()</div>
+          <div class="arrow">↓ &nbsp;api.fetchForecast(lat, lon)</div>
           <button class="layer engine layer-pick" data-layer="api" type="button">
             <div class="l-name">④ Retrofit — the HTTP client</div>
-            <div class="l-desc">Turns <code>@GET("posts")</code> into a real HTTP GET and decodes the JSON array with kotlinx.serialization.</div>
-            <div class="l-files"><code>NoteApi.kt</code></div>
+            <div class="l-desc">Turns <code>@GET("v1/forecast")</code> into a real HTTP GET and decodes the JSON object with kotlinx.serialization.</div>
+            <div class="l-files"><code>WeatherApi.kt</code></div>
           </button>
-          <div class="arrow">↓ &nbsp;HTTP GET /posts</div>
+          <div class="arrow">↓ &nbsp;HTTP GET /v1/forecast?latitude=…&amp;longitude=…</div>
           <button class="layer disk layer-pick" data-layer="network" type="button">
             <div class="l-name">⑤ The network — the JSON API</div>
-            <div class="l-desc">The server returns a JSON array of posts.</div>
-            <div class="l-files"><code>https://jsonplaceholder.typicode.com/posts</code></div>
+            <div class="l-desc">The server returns a nested JSON object with a <code>current</code> block.</div>
+            <div class="l-files"><code>https://api.open-meteo.com/v1/forecast</code></div>
           </button>
-          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;the return trip: JSON → <code>List&lt;NoteDto&gt;</code> → <code>.map { toNote() }</code> → <code>Success(notes)</code> → recompose</div>
+          <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;the return trip: JSON → <code>ForecastResponseDto</code> → <code>.toWeather(city)</code> → <code>Success(weather)</code> → recompose</div>
         </div>
         <div class="callout" id="layerDetail"></div>
       </div>
@@ -897,16 +904,16 @@ button.layer.layer-pick.sel { background: var(--blue-soft); }
       <div class="band-inner">
         <p class="eyebrow">Where everything lives</p>
         <h2>Project map</h2>
-        <p class="dense">Five small Kotlin files. The data layer is the three files <code>Note.kt</code>, <code>NoteApi.kt</code>, and <code>NoteRepository.kt</code>; the ViewModel turns it into state, and <code>MainActivity</code> renders it.</p>
+        <p class="dense">Five small Kotlin files. The data layer is the three files <code>Weather.kt</code>, <code>WeatherApi.kt</code>, and <code>WeatherRepository.kt</code>; the ViewModel turns it into state, and <code>MainActivity</code> renders it.</p>
         <div class="tree">
 <span class="dir">NetworkParsing/</span>
   <span class="f">build.gradle.kts</span>          <span class="note"># Retrofit + kotlinx.serialization + OkHttp wiring</span>
   <span class="dir">src/main/java/com/example/networkparsing/</span>
-    <span class="f">Note.kt</span>                 <span class="note"># NoteDto (@Serializable) + Note (domain) + toNote() mapper</span>
-    <span class="f">NoteApi.kt</span>              <span class="note"># the Retrofit interface + provideNoteApi()</span>
-    <span class="f">NoteRepository.kt</span>       <span class="note"># interface + Real (network) + Fake (offline) + the switch</span>
-    <span class="f">NotesViewModel.kt</span>       <span class="note"># NotesUiState sealed interface + StateFlow + loadNotes()</span>
-    <span class="f">MainActivity.kt</span>         <span class="note"># NotesScreen (collect) + stateless NotesContent + previews</span>
+    <span class="f">Weather.kt</span>              <span class="note"># City list + ForecastResponseDto/CurrentDto (@Serializable) + flat Weather + toWeather()</span>
+    <span class="f">WeatherApi.kt</span>           <span class="note"># the Retrofit interface (@GET + @Query) + provideWeatherApi()</span>
+    <span class="f">WeatherRepository.kt</span>    <span class="note"># interface + Real (network) + Fake (offline) + the switch</span>
+    <span class="f">WeatherViewModel.kt</span>     <span class="note"># WeatherUiState sealed interface + StateFlow + loadWeather()</span>
+    <span class="f">MainActivity.kt</span>         <span class="note"># WeatherScreen (collect) + stateless WeatherContent + previews</span>
   <span class="dir">src/test/java/.../</span>
     <span class="f">ExampleUnitTest.kt</span>      <span class="note"># tests for the mapper + the offline fake</span>
   <span class="f">AndroidManifest.xml</span>          <span class="note"># declares the INTERNET permission</span>
@@ -923,21 +930,21 @@ button.layer.layer-pick.sel { background: var(--blue-soft); }
         <p class="dense">
           Three libraries do the work: <strong>Retrofit</strong> builds the HTTP client, <strong>OkHttp</strong> is the
           engine under it, and <strong>kotlinx.serialization</strong> decodes JSON. The serialization compiler plugin
-          generates the serializer for <code>@Serializable NoteDto</code>.
+          generates the serializers for the <code>@Serializable</code> DTOs (<code>ForecastResponseDto</code> + <code>CurrentDto</code>).
         </p>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">build.gradle.kts · plugins + networking deps</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kts">plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    // Generates serializers for @Serializable NoteDto.
+    // Generates serializers for the @Serializable DTOs (ForecastResponseDto + CurrentDto).
     alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
-    // kotlinx.serialization: maps JSON &lt;-&gt; @Serializable NoteDto.
+    // kotlinx.serialization: maps JSON &lt;-&gt; the @Serializable DTOs.
     implementation(libs.kotlinx.serialization.json)
-    // Retrofit: builds a type-safe HTTP client from the NoteApi interface.
+    // Retrofit: builds a type-safe HTTP client from the WeatherApi interface.
     implementation(libs.retrofit)
     // Lets Retrofit decode response bodies with kotlinx.serialization.
     implementation(libs.retrofit.converter.kotlinx.serialization)
@@ -950,8 +957,8 @@ dependencies {
           <tbody>
             <tr>
               <td><code>kotlin.serialization</code> plugin</td>
-              <td>Generates the serializer code for <code>@Serializable NoteDto</code>.</td>
-              <td>The app could not automatically decode JSON into <code>NoteDto</code>.</td>
+              <td>Generates the serializer code for the <code>@Serializable</code> DTOs.</td>
+              <td>The app could not automatically decode JSON into <code>ForecastResponseDto</code>.</td>
             </tr>
             <tr>
               <td><code>kotlinx.serialization.json</code></td>
@@ -960,13 +967,13 @@ dependencies {
             </tr>
             <tr>
               <td><code>retrofit</code></td>
-              <td>Turns <code>NoteApi</code> into a working HTTP client.</td>
-              <td><code>@GET("posts")</code> would just be an annotation with no runtime implementation.</td>
+              <td>Turns <code>WeatherApi</code> into a working HTTP client.</td>
+              <td><code>@GET("v1/forecast")</code> would just be an annotation with no runtime implementation.</td>
             </tr>
             <tr>
               <td><code>retrofit.converter.kotlinx.serialization</code></td>
               <td>Connects Retrofit response bodies to the kotlinx.serialization parser.</td>
-              <td>Retrofit could fetch text, but it would not know how to produce <code>List&lt;NoteDto&gt;</code>.</td>
+              <td>Retrofit could fetch text, but it would not know how to produce a <code>ForecastResponseDto</code>.</td>
             </tr>
             <tr>
               <td><code>okhttp</code></td>
@@ -991,9 +998,9 @@ dependencies {
         <p class="eyebrow">Step 1 · the parsing boundary</p>
         <h2>DTO vs domain model — two shapes, one mapper</h2>
         <p class="dense">
-          Keep the shape the <em>network</em> speaks (the <strong>DTO</strong>) separate from the shape your <em>app</em>
-          speaks (the <strong>domain model</strong>), and convert between them in exactly one place. JSON text arrives,
-          kotlinx.serialization turns it into a <code>NoteDto</code>, and a mapper turns that into a clean <code>Note</code>.
+          Keep the shape the <em>network</em> speaks (the <strong>DTOs</strong>) separate from the shape your <em>app</em>
+          speaks (the <strong>domain model</strong>), and convert between them in exactly one place. Nested JSON text arrives,
+          kotlinx.serialization turns it into a <code>ForecastResponseDto</code>, and a mapper flattens that into a clean <code>Weather</code>.
         </p>
         <div class="controls">
           <span class="hint">Try a response:</span>
@@ -1007,44 +1014,61 @@ dependencies {
           <div class="card">
             <div class="card-head"><span class="card-title">JSON from the server</span></div>
             <div class="card-body">
-              <div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">one object from /posts</span></div><pre id="dtoLabJson" style="white-space:pre-wrap;">—</pre></div>
+              <div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">the response from /v1/forecast</span></div><pre id="dtoLabJson" style="white-space:pre-wrap;">—</pre></div>
             </div>
           </div>
           <div class="card">
             <div class="card-head"><span class="card-title">What the app gets</span></div>
             <div class="card-body">
-              <div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">after parse + toNote()</span></div><pre id="dtoLabResult" style="white-space:pre-wrap;">—</pre></div>
+              <div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">after parse + toWeather()</span></div><pre id="dtoLabResult" style="white-space:pre-wrap;">—</pre></div>
             </div>
           </div>
         </div>
         <div class="callout violet" id="dtoLabMsg"></div>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">Note.kt · the DTO (network shape)</span><button class="copy-btn" type="button">Copy</button></div>
+          <div class="code-head"><span class="code-file">Weather.kt · the nested DTOs (network shape)</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">@Serializable                                  // &lt;-- makes this class JSON-decodable
-data class NoteDto(
-    val userId: Int,                           // matches JSON "userId" (parsed, then dropped)
-    val id: Int,                               // matches JSON "id"
-    val title: String,                         // matches JSON "title"
-    val body: String,                          // matches JSON "body"
+data class ForecastResponseDto(
+    val current: CurrentDto,                   // matches JSON "current": { … } (a NESTED object)
+)
+
+@Serializable
+data class CurrentDto(
+    val time: String,                                          // "2026-06-25T12:30"
+    @SerialName("temperature_2m") val temperature: Double,     // snake_case JSON key -&gt; camelCase Kotlin
+    @SerialName("apparent_temperature") val feelsLike: Double, // "feels like", °C
+    @SerialName("relative_humidity_2m") val humidity: Int,     // %
+    @SerialName("weather_code") val weatherCode: Int,          // a WMO NUMBER (0 = clear), decoded later
+    @SerialName("wind_speed_10m") val windSpeed: Double,       // km/h
 )</pre>
         </div>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">Note.kt · the domain model + the mapper</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">// A PLAIN data class: no @Serializable, no knowledge of JSON, and NO userId.
-data class Note(
-    val id: Int,
-    val title: String,
-    val body: String,
+          <div class="code-head"><span class="code-file">Weather.kt · the flat domain model + the mapper</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// A PLAIN, FLAT data class: no @Serializable, no nesting, no cryptic weather_code.
+data class Weather(
+    val city: String, val country: String,
+    val temperatureC: Int, val feelsLikeC: Int,
+    val description: String,                   // weather_code turned into human text
+    val humidityPercent: Int, val windKmh: Int,
+    val weatherCode: Int,                      // raw WMO code kept only to pick an emoji
 )
 
-// The SINGLE place network-shape becomes app-shape.
-fun NoteDto.toNote(): Note =                   // extension fn: reads like dto.toNote()
-    Note(id = id, title = title, body = body)  // userId is intentionally ignored</pre>
+// The SINGLE place the NESTED network-shape becomes the FLAT app-shape.
+fun ForecastResponseDto.toWeather(city: City): Weather =      // extension fn: dto.toWeather(city)
+    Weather(
+        city = city.name, country = city.country,
+        temperatureC = current.temperature.roundToInt(),       // reach INTO the nested "current"
+        feelsLikeC = current.feelsLike.roundToInt(),
+        description = wmoDescription(current.weatherCode),      // 0 -&gt; "clear sky"
+        humidityPercent = current.humidity,
+        windKmh = current.windSpeed.roundToInt(),
+        weatherCode = current.weatherCode,
+    )</pre>
         </div>
         <div class="callout violet">
           <span class="callout-label">Why two shapes</span>
-          The UI and ViewModel never depend on the API's exact wire format. If the server renamed a field or added twenty
-          more, only <code>NoteDto</code> and <code>toNote()</code> would change — not the screens or the ViewModel. The
+          The UI and ViewModel never depend on the API's exact wire format. If Open-Meteo renamed a field or added twenty
+          more, only the DTOs and <code>toWeather()</code> would change — not the screens or the ViewModel. The
           mapper is the one testable seam between "network shape" and "app shape".
         </div>
         <table class="tbl">
@@ -1052,28 +1076,28 @@ fun NoteDto.toNote(): Note =                   // extension fn: reads like dto.t
           <tbody>
             <tr>
               <td><code>@Serializable</code></td>
-              <td>It is on <code>NoteDto</code>, not on <code>Note</code>.</td>
+              <td>It is on the DTOs, not on <code>Weather</code>.</td>
               <td>Only the network shape needs JSON decoding. The domain model can stay plain and UI-focused.</td>
             </tr>
             <tr>
-              <td><code>userId</code></td>
-              <td>It exists in <code>NoteDto</code> but not in <code>Note</code>.</td>
-              <td>The JSON includes it, so the DTO parses it. The UI does not display it, so the domain model drops it.</td>
+              <td>Nesting</td>
+              <td><code>ForecastResponseDto</code> holds a <code>CurrentDto</code>, mirroring the JSON's <code>"current"</code> block.</td>
+              <td>Real APIs return nested objects; the DTOs mirror that nesting so decoding lines up key-for-key.</td>
             </tr>
             <tr>
-              <td><code>id</code>, <code>title</code>, <code>body</code></td>
-              <td>They exist in both classes with compatible types.</td>
-              <td>These are the fields the UI actually needs to show each row.</td>
+              <td><code>@SerialName("temperature_2m")</code></td>
+              <td>Every <code>current</code> key is snake_case on the wire but camelCase in Kotlin.</td>
+              <td><code>@SerialName</code> bridges each one. Drop it and the decoder cannot find <code>temperature_2m</code> for the <code>temperature</code> property.</td>
             </tr>
             <tr>
-              <td><code>fun NoteDto.toNote()</code></td>
-              <td>This is an extension function, so it reads like <code>dto.toNote()</code>.</td>
-              <td>The mapping code lives in one named place instead of being repeated wherever notes are fetched.</td>
+              <td><code>weather_code</code></td>
+              <td>It decodes into an <code>Int</code>, not text — a numeric WMO code.</td>
+              <td>The mapper turns the number into a phrase via <code>wmoDescription(0)</code> → <code>"clear sky"</code>; the UI never sees the raw code as text.</td>
             </tr>
             <tr>
-              <td>No <code>@SerialName</code></td>
-              <td>The property names already match the JSON keys exactly.</td>
-              <td>If the server used a different key, such as <code>"user_id"</code>, then <code>@SerialName("user_id")</code> would be needed.</td>
+              <td><code>fun ForecastResponseDto.toWeather()</code></td>
+              <td>This is an extension function, so it reads like <code>dto.toWeather(city)</code>.</td>
+              <td>The mapping code lives in one named place; it FLATTENS the nested DTO instead of just copying matching fields.</td>
             </tr>
           </tbody>
         </table>
@@ -1088,61 +1112,72 @@ fun NoteDto.toNote(): Note =                   // extension fn: reads like dto.t
         <p class="dense">
           With Retrofit you <strong>describe</strong> the endpoint as an annotated interface method; Retrofit generates
           the actual HTTP code at runtime. You never write sockets, hand-built URLs, or manual JSON parsing — you declare
-          "GET <code>/posts</code> returns a <code>List&lt;NoteDto&gt;</code>" and call a <code>suspend</code> function.
+          "GET <code>v1/forecast</code> with these query params returns a <code>ForecastResponseDto</code>" and call a
+          <code>suspend</code> function. Each <code>@Query</code> becomes one <code>?name=value</code> in the URL.
         </p>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">NoteApi.kt · the interface</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">interface NoteApi {
-    // GET {baseUrl}/posts -&gt; a JSON array, decoded into List&lt;NoteDto&gt;.
-    // suspend: Retrofit runs the network I/O off the main thread and resumes you with the parsed list.
-    @GET("posts")
-    suspend fun fetchNotes(): List&lt;NoteDto&gt;
+          <div class="code-head"><span class="code-file">WeatherApi.kt · the interface</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface WeatherApi {
+    // GET {baseUrl}v1/forecast?latitude=…&amp;longitude=…&amp;current=… -&gt; one JSON object, decoded into ForecastResponseDto.
+    // suspend: Retrofit runs the network I/O off the main thread and resumes you with the parsed object.
+    @GET("v1/forecast")
+    suspend fun fetchForecast(
+        @Query("latitude") latitude: Double,       // becomes ?latitude=28.5384
+        @Query("longitude") longitude: Double,     // becomes &amp;longitude=-81.3789
+        @Query("current") current: String =        // becomes &amp;current=temperature_2m,…,wind_speed_10m
+            "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m",
+    ): ForecastResponseDto
 }</pre>
         </div>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">NoteApi.kt · assembling Retrofit</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">// ignoreUnknownKeys = true -&gt; if the server adds NEW fields we didn't model, decoding
-// keeps working instead of throwing. The #1 real-world robustness setting.
+          <div class="code-head"><span class="code-file">WeatherApi.kt · assembling Retrofit</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">// ignoreUnknownKeys = true -&gt; the real API returns MANY fields we don't model (latitude,
+// timezone, current_units, …); ignoring them keeps decoding working. The #1 robustness setting.
 private val json = Json { ignoreUnknownKeys = true }
 
-fun provideNoteApi(): NoteApi =
+fun provideWeatherApi(): WeatherApi =
     Retrofit.Builder()
-        .baseUrl("https://jsonplaceholder.typicode.com/")   // every @GET path is appended here; MUST end in "/"
+        .baseUrl("https://api.open-meteo.com/")             // every @GET path is appended here; MUST end in "/"
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
-        .create(NoteApi::class.java)                         // Retrofit generates the implementation</pre>
+        .create(WeatherApi::class.java)                      // Retrofit generates the implementation</pre>
         </div>
         <div class="callout">
           <span class="callout-label">Two robustness details</span>
           The <code>baseUrl</code> must end in <code>/</code> (Retrofit appends the relative path), and
-          <code>ignoreUnknownKeys = true</code> means a server that grows new fields won't break your parser.
+          <code>ignoreUnknownKeys = true</code> means the many fields we don't model (and any new ones) won't break your parser.
         </div>
         <table class="tbl">
           <thead><tr><th>Code</th><th>Read it as</th><th>Important detail</th></tr></thead>
           <tbody>
             <tr>
-              <td><code>interface NoteApi</code></td>
+              <td><code>interface WeatherApi</code></td>
               <td>A description of the server calls the app knows how to make.</td>
               <td>There is no method body because Retrofit creates the implementation at runtime.</td>
             </tr>
             <tr>
-              <td><code>@GET("posts")</code></td>
-              <td>Make an HTTP GET request to <code>{baseUrl}/posts</code>.</td>
-              <td>The path is relative. It is appended to <code>https://jsonplaceholder.typicode.com/</code>.</td>
+              <td><code>@GET("v1/forecast")</code></td>
+              <td>Make an HTTP GET request to <code>{baseUrl}v1/forecast</code>.</td>
+              <td>The path is relative. It is appended to <code>https://api.open-meteo.com/</code>.</td>
             </tr>
             <tr>
-              <td><code>suspend fun fetchNotes()</code></td>
+              <td><code>@Query("latitude") …</code></td>
+              <td>Each annotated parameter becomes one <code>?name=value</code> in the URL.</td>
+              <td>Open-Meteo is coordinate-based, so the city's latitude/longitude go here; <code>current</code> lists the readings.</td>
+            </tr>
+            <tr>
+              <td><code>suspend fun fetchForecast()</code></td>
               <td>This function must be called from a coroutine and can pause while waiting for I/O.</td>
               <td>Suspending is not blocking. The UI thread is not frozen while the request is in progress.</td>
             </tr>
             <tr>
-              <td><code>List&lt;NoteDto&gt;</code></td>
-              <td>The response body should be a JSON array, and each JSON object should decode into one <code>NoteDto</code>.</td>
+              <td><code>ForecastResponseDto</code></td>
+              <td>The response body should be a JSON object that decodes into one nested <code>ForecastResponseDto</code>.</td>
               <td>If the JSON is malformed or has the wrong type for a required field, decoding throws.</td>
             </tr>
             <tr>
-              <td><code>.create(NoteApi::class.java)</code></td>
-              <td>Ask Retrofit to generate an object that implements <code>NoteApi</code>.</td>
+              <td><code>.create(WeatherApi::class.java)</code></td>
+              <td>Ask Retrofit to generate an object that implements <code>WeatherApi</code>.</td>
               <td>This is the moment the interface becomes something callable.</td>
             </tr>
           </tbody>
@@ -1156,65 +1191,66 @@ fun provideNoteApi(): NoteApi =
         <p class="eyebrow">Step 3 · one source of truth</p>
         <h2>The repository — Real, Fake, and the switch</h2>
         <p class="dense">
-          The rest of the app should not care <em>where</em> notes come from. It asks a <code>NoteRepository</code> for
-          notes; behind that interface sits either a <strong>Real</strong> implementation (hits the network and maps the
-          DTOs) or a <strong>Fake</strong> one (parses a hardcoded JSON string after a small delay). Swapping them is a
+          The rest of the app should not care <em>where</em> the weather comes from. It asks a <code>WeatherRepository</code> for
+          a city's weather; behind that interface sits either a <strong>Real</strong> implementation (hits the network and maps the
+          DTO) or a <strong>Fake</strong> one (parses a hardcoded JSON string after a small delay). Swapping them is a
           one-line change — which is what lets the app and the tests run completely offline.
         </p>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">NoteRepository.kt · contract + real + fake + switch</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">interface NoteRepository {
+          <div class="code-head"><span class="code-file">WeatherRepository.kt · contract + real + fake + switch</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface WeatherRepository {
     // suspend because the real impl does network I/O; may THROW on failure.
-    suspend fun getNotes(): List&lt;Note&gt;
+    suspend fun getWeather(city: City): Weather
 }
 
-class RealNoteRepository(private val api: NoteApi = provideNoteApi()) : NoteRepository {
-    override suspend fun getNotes(): List&lt;Note&gt; {
-        val dtos: List&lt;NoteDto&gt; = api.fetchNotes()   // network + parse (throws if offline)
-        return dtos.map { it.toNote() }              // DTO -&gt; domain, the parsing payoff
+class RealWeatherRepository(private val api: WeatherApi = provideWeatherApi()) : WeatherRepository {
+    override suspend fun getWeather(city: City): Weather {
+        val dto: ForecastResponseDto =
+            api.fetchForecast(city.latitude, city.longitude)  // network + parse (throws if offline)
+        return dto.toWeather(city)                            // nested DTO -&gt; flat domain, the parsing payoff
     }
 }
 
-class FakeNoteRepository : NoteRepository {
+class FakeWeatherRepository : WeatherRepository {
     private val json = Json { ignoreUnknownKeys = true }
-    override suspend fun getNotes(): List&lt;Note&gt; {
-        delay(600)                                   // imitate latency so Loading is visible
-        val dtos: List&lt;NoteDto&gt; = json.decodeFromString(FAKE_NOTES_JSON)  // still parses JSON!
-        return dtos.map { it.toNote() }
+    override suspend fun getWeather(city: City): Weather {
+        delay(600)                                            // imitate latency so Loading is visible
+        val dto: ForecastResponseDto = json.decodeFromString(FAKE_FORECAST_JSON)  // still parses JSON!
+        return dto.toWeather(city)
     }
 }
 
-// THE SWITCH — change one argument to toggle offline (default) vs live.
-fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
-    if (useFake) FakeNoteRepository() else RealNoteRepository()</pre>
+// THE SWITCH — change one argument to toggle live (default) vs offline.
+fun provideWeatherRepository(useFake: Boolean = false): WeatherRepository =
+    if (useFake) FakeWeatherRepository() else RealWeatherRepository()</pre>
         </div>
         <div class="callout good">
           <span class="callout-label">The fake still parses real JSON</span>
-          Rather than building <code>NoteDto</code> objects by hand, the fake <code>decodeFromString</code>s a hardcoded
-          JSON payload shaped exactly like the real response — so it exercises the same parse step, just without the
-          network. That's why the offline tests genuinely test parsing.
+          Rather than building a <code>ForecastResponseDto</code> by hand, the fake <code>decodeFromString</code>s a hardcoded
+          JSON payload shaped exactly like the real nested response — so it exercises the same parse-and-flatten step, just
+          without the network. That's why the offline tests genuinely test parsing.
         </div>
         <table class="tbl">
           <thead><tr><th>Repository piece</th><th>Job</th><th>What the ViewModel sees</th></tr></thead>
           <tbody>
             <tr>
-              <td><code>NoteRepository</code></td>
-              <td>The contract: "I can return a <code>List&lt;Note&gt;</code>, and I may suspend while doing it."</td>
+              <td><code>WeatherRepository</code></td>
+              <td>The contract: "I can return a <code>Weather</code> for a city, and I may suspend while doing it."</td>
               <td>Only the interface. The ViewModel does not know whether the implementation is fake or real.</td>
             </tr>
             <tr>
-              <td><code>RealNoteRepository</code></td>
-              <td>Calls <code>api.fetchNotes()</code>, receives <code>List&lt;NoteDto&gt;</code>, maps it to <code>List&lt;Note&gt;</code>.</td>
-              <td>A suspending call that either returns notes or throws.</td>
+              <td><code>RealWeatherRepository</code></td>
+              <td>Calls <code>api.fetchForecast(...)</code>, receives a <code>ForecastResponseDto</code>, flattens it to <code>Weather</code>.</td>
+              <td>A suspending call that either returns the weather or throws.</td>
             </tr>
             <tr>
-              <td><code>FakeNoteRepository</code></td>
-              <td>Waits <code>delay(600)</code>, decodes <code>FAKE_NOTES_JSON</code>, maps it to <code>List&lt;Note&gt;</code>.</td>
+              <td><code>FakeWeatherRepository</code></td>
+              <td>Waits <code>delay(600)</code>, decodes <code>FAKE_FORECAST_JSON</code>, flattens it to <code>Weather</code>.</td>
               <td>The same suspending call shape as real mode, but deterministic and offline.</td>
             </tr>
             <tr>
-              <td><code>provideNoteRepository(useFake = true)</code></td>
-              <td>The switch that chooses fake by default.</td>
+              <td><code>provideWeatherRepository(useFake = false)</code></td>
+              <td>The switch that chooses the live, keyless real repository by default.</td>
               <td>The ViewModel receives whichever implementation this factory returns.</td>
             </tr>
             <tr>
@@ -1234,7 +1270,7 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
         <h2>The UiState pattern — a sealed interface</h2>
         <p class="dense">
           A network screen is never just "the data". At any moment it is in <em>one</em> of three states — still
-          <strong>Loading</strong>, loaded <strong>Success</strong> (with data), or failed <strong>Error</strong> (with a
+          <strong>Loading</strong>, loaded <strong>Success</strong> (with the weather), or failed <strong>Error</strong> (with a
           message). Model those with a <strong>sealed interface</strong>, and the compiler knows the complete set, so a
           <code>when</code> over it is exhaustive — you physically cannot forget a case.
         </p>
@@ -1250,7 +1286,7 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
           <div class="mini-screen">
             <div class="mini-bar"><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-dot"></span></div>
             <div class="mini-body">
-              <div class="mini-title">Network Parsing · Notes</div>
+              <div class="mini-title">Network Parsing · Weather</div>
               <div id="stateDemoScreen" aria-live="polite"></div>
             </div>
           </div>
@@ -1260,16 +1296,16 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
           </div>
         </div>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">NotesViewModel.kt · NotesUiState</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">sealed interface NotesUiState {
+          <div class="code-head"><span class="code-file">WeatherViewModel.kt · WeatherUiState</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">sealed interface WeatherUiState {
     /** The request is in flight; show a spinner. (A singleton — no data to carry.) */
-    data object Loading : NotesUiState
+    data object Loading : WeatherUiState
 
     /** The request succeeded. */
-    data class Success(val notes: List&lt;Note&gt;) : NotesUiState
+    data class Success(val weather: Weather) : WeatherUiState
 
     /** The request failed; carry a human-readable reason. */
-    data class Error(val message: String) : NotesUiState
+    data class Error(val message: String) : WeatherUiState
 }</pre>
         </div>
         <table class="tbl">
@@ -1279,13 +1315,13 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
               <td><code>Loading</code></td>
               <td>Nothing. It is a singleton object.</td>
               <td>A spinner and loading text.</td>
-              <td>At startup and every time Retry calls <code>loadNotes()</code>.</td>
+              <td>At startup, on each city tap, and every time Retry calls <code>loadWeather()</code>.</td>
             </tr>
             <tr>
-              <td><code>Success(notes)</code></td>
-              <td>The parsed list of clean domain <code>Note</code> objects.</td>
-              <td>A scrolling list of note titles and bodies.</td>
-              <td>After the repository returns notes without throwing.</td>
+              <td><code>Success(weather)</code></td>
+              <td>The parsed, flat domain <code>Weather</code> object.</td>
+              <td>A weather card: city, temperature, condition, feels-like, humidity, wind.</td>
+              <td>After the repository returns the weather without throwing.</td>
             </tr>
             <tr>
               <td><code>Error(message)</code></td>
@@ -1309,26 +1345,30 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
           the one place any failure becomes a visible <code>Error</code> state instead of a crash.
         </p>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">NotesViewModel.kt · state + loadNotes()</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">class NotesViewModel(
-    private val repository: NoteRepository = provideNoteRepository(),   // injected; defaults to offline fake
+          <div class="code-head"><span class="code-file">WeatherViewModel.kt · state + loadWeather()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">class WeatherViewModel(
+    private val repository: WeatherRepository = provideWeatherRepository(),  // injected; defaults to the live API
 ) : ViewModel() {
 
+    var city: City = PRESET_CITIES.first()                 // the city shown; tapping a chip changes it
+        private set
+
     // private mutable -> public read-only: the standard one-way exposure.
-    private val _uiState = MutableStateFlow&lt;NotesUiState&gt;(NotesUiState.Loading)
-    val uiState: StateFlow&lt;NotesUiState&gt; = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow&lt;WeatherUiState&gt;(WeatherUiState.Loading)
+    val uiState: StateFlow&lt;WeatherUiState&gt; = _uiState.asStateFlow()
 
-    init { loadNotes() }                                   // start fetching immediately
+    init { loadWeather() }                                  // start fetching immediately
 
-    fun loadNotes() {
+    fun loadWeather(city: City = this.city) {
+        this.city = city
         viewModelScope.launch {
-            _uiState.value = NotesUiState.Loading           // 1) show the spinner
+            _uiState.value = WeatherUiState.Loading             // 1) show the spinner
             try {
-                val notes = repository.getNotes()           // 2) suspend: network/parse
-                _uiState.value = NotesUiState.Success(notes) // 3a) publish the data
+                val weather = repository.getWeather(city)        // 2) suspend: network/parse
+                _uiState.value = WeatherUiState.Success(weather) // 3a) publish the data
             } catch (e: Exception) {
-                _uiState.value = NotesUiState.Error(         // 3b) ANY failure -&gt; Error state
-                    e.message ?: "Something went wrong while loading notes."
+                _uiState.value = WeatherUiState.Error(           // 3b) ANY failure -&gt; Error state
+                    e.message ?: "Something went wrong while loading the weather."
                 )
             }
         }
@@ -1338,15 +1378,15 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
         <div class="callout violet">
           <span class="callout-label">Why <code>viewModelScope</code></span>
           The coroutine is tied to the ViewModel's lifetime, so it's cancelled if the ViewModel is cleared, and the
-          suspending <code>getNotes()</code> never blocks the main thread. <code>loadNotes()</code> is safe to call again —
-          that's exactly what the Retry button does.
+          suspending <code>getWeather()</code> never blocks the main thread. <code>loadWeather()</code> is safe to call again —
+          that's exactly what tapping another city chip or the Retry button does.
         </div>
         <table class="tbl">
           <thead><tr><th>Line / pattern</th><th>Meaning</th><th>Why it matters</th></tr></thead>
           <tbody>
             <tr>
               <td><code>private val repository</code></td>
-              <td>The ViewModel receives a data source instead of creating one directly inside <code>loadNotes()</code>.</td>
+              <td>The ViewModel receives a data source instead of creating one directly inside <code>loadWeather()</code>.</td>
               <td>This keeps the ViewModel focused on state, and it makes tests or fake data easier.</td>
             </tr>
             <tr>
@@ -1360,14 +1400,14 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
               <td>The screen can observe state but cannot accidentally change it.</td>
             </tr>
             <tr>
-              <td><code>init { loadNotes() }</code></td>
+              <td><code>init { loadWeather() }</code></td>
               <td>Start the first fetch when the ViewModel is created.</td>
-              <td>The user does not need to tap anything to see notes load on app launch.</td>
+              <td>The user does not need to tap anything to see the weather load on app launch.</td>
             </tr>
             <tr>
               <td><code>_uiState.value = Loading</code></td>
               <td>Publish the loading state before work starts.</td>
-              <td>Retry visibly resets the screen instead of leaving the old error or old list in place.</td>
+              <td>A city tap or Retry visibly resets the screen instead of leaving the old error or old card in place.</td>
             </tr>
             <tr>
               <td><code>try { ... } catch (e: Exception)</code></td>
@@ -1385,48 +1425,51 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
         <p class="eyebrow">Step 6 · where it starts and ends on screen</p>
         <h2>The screen — collect the state, render it exhaustively</h2>
         <p class="dense">
-          The <strong>stateful</strong> <code>NotesScreen</code> obtains the ViewModel and observes its
-          <code>StateFlow</code>; the <strong>stateless</strong> <code>NotesContent</code> draws whichever state is
-          current. Splitting "get the state" from "draw the state" is what makes the screen previewable without a real
-          ViewModel.
+          The <strong>stateful</strong> <code>WeatherScreen</code> obtains the ViewModel, observes its
+          <code>StateFlow</code>, and shows a row of city chips; the <strong>stateless</strong> <code>WeatherContent</code>
+          draws whichever state is current. Splitting "get the state" from "draw the state" is what makes the screen
+          previewable without a real ViewModel.
         </p>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">MainActivity.kt · NotesScreen (stateful)</span><button class="copy-btn" type="button">Copy</button></div>
+          <div class="code-head"><span class="code-file">MainActivity.kt · WeatherScreen (stateful)</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">@Composable
-fun NotesScreen(modifier: Modifier = Modifier, viewModel: NotesViewModel = viewModel()) {
+fun WeatherScreen(modifier: Modifier = Modifier, viewModel: WeatherViewModel = viewModel()) {
     // Subscribe to the StateFlow lifecycle-awarely (pauses while off-screen).
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    NotesContent(uiState = uiState, onRetry = viewModel::loadNotes, modifier = modifier)
+    Column(modifier = modifier.fillMaxSize()) {
+        CityChips(selected = viewModel.city, onSelect = { city -&gt; viewModel.loadWeather(city) })
+        WeatherContent(uiState = uiState, onRetry = { viewModel.loadWeather() })
+    }
 }</pre>
         </div>
         <div class="code-panel">
-          <div class="code-head"><span class="code-file">MainActivity.kt · NotesContent (stateless) — one exhaustive when</span><button class="copy-btn" type="button">Copy</button></div>
+          <div class="code-head"><span class="code-file">MainActivity.kt · WeatherContent (stateless) — one exhaustive when</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">@Composable
-fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifier = Modifier) {
+fun WeatherContent(uiState: WeatherUiState, onRetry: () -&gt; Unit, modifier: Modifier = Modifier) {
     when (uiState) {                                       // exhaustive: sealed type, no else needed
-        is NotesUiState.Loading -&gt; LoadingState(modifier)            // a centered spinner
-        is NotesUiState.Success -&gt; NotesList(uiState.notes, modifier) // a LazyColumn of notes
-        is NotesUiState.Error   -&gt; ErrorState(uiState.message, onRetry, modifier) // message + Retry
+        is WeatherUiState.Loading -&gt; LoadingState(modifier)                  // a centered spinner
+        is WeatherUiState.Success -&gt; WeatherCard(uiState.weather, modifier)   // the weather card
+        is WeatherUiState.Error   -&gt; ErrorState(uiState.message, onRetry, modifier) // message + Retry
     }
 }</pre>
         </div>
         <div class="callout good">
           <span class="callout-label">Previews drive the stateless half</span>
-          The <code>@Preview</code>s pass hand-made states (<code>Success(previewNotes)</code>, <code>Loading</code>,
-          <code>Error("No internet connection.")</code>) straight into <code>NotesContent</code> — never a real
+          The <code>@Preview</code>s pass hand-made states (<code>Success(previewWeather)</code>, <code>Loading</code>,
+          <code>Error("Unable to resolve host \"api.open-meteo.com\"")</code>) straight into <code>WeatherContent</code> — never a real
           ViewModel, which would try to run a coroutine the design pane can't execute.
         </div>
         <table class="tbl">
           <thead><tr><th>UI piece</th><th>Responsibility</th><th>Why it is split this way</th></tr></thead>
           <tbody>
             <tr>
-              <td><code>NotesScreen()</code></td>
-              <td>Gets the ViewModel, collects <code>uiState</code>, passes state and Retry callback down.</td>
+              <td><code>WeatherScreen()</code></td>
+              <td>Gets the ViewModel, collects <code>uiState</code>, shows the city chips, passes state and Retry callback down.</td>
               <td>This is the stateful wrapper. It knows where state comes from.</td>
             </tr>
             <tr>
-              <td><code>NotesContent()</code></td>
-              <td>Receives a <code>NotesUiState</code> and draws it with an exhaustive <code>when</code>.</td>
+              <td><code>WeatherContent()</code></td>
+              <td>Receives a <code>WeatherUiState</code> and draws it with an exhaustive <code>when</code>.</td>
               <td>This is stateless and easy to preview because it does not create the ViewModel.</td>
             </tr>
             <tr>
@@ -1435,14 +1478,14 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
               <td>When the flow emits a new state, Compose recomposes the UI safely with lifecycle awareness.</td>
             </tr>
             <tr>
-              <td><code>onRetry = viewModel::loadNotes</code></td>
-              <td>Passes the ViewModel function itself as a callback.</td>
+              <td><code>onRetry = { viewModel.loadWeather() }</code></td>
+              <td>Passes a callback that re-runs the load for the current city.</td>
               <td>The Error UI can retry without knowing how loading works internally.</td>
             </tr>
             <tr>
               <td><code>when (uiState)</code></td>
               <td>Chooses Loading, Success, or Error UI.</td>
-              <td>Because <code>NotesUiState</code> is sealed, missing a state becomes a compiler problem.</td>
+              <td>Because <code>WeatherUiState</code> is sealed, missing a state becomes a compiler problem.</td>
             </tr>
           </tbody>
         </table>
@@ -1457,7 +1500,7 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <p class="dense">Step through the exact chain the code follows on a successful load. The first steps are the request path; the last two are the return trip that updates the screen.</p>
         <div class="stepper" id="sortStepper">
           <div class="stepper-head">
-            <span class="s-title">Scenario: the screen opens and notes load successfully</span>
+            <span class="s-title">Scenario: the screen opens and the weather loads successfully</span>
             <div class="stepper-ctrl">
               <button id="stepPrev" type="button">‹ Prev</button>
               <span class="s-count" id="stepCount">1 / 7</span>
@@ -1465,13 +1508,13 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
             </div>
           </div>
           <ol class="steps" id="stepList">
-            <li class="step" data-step><div class="s-num">1</div><div class="s-body"><strong>UI.</strong> <code>NotesScreen</code> obtains the ViewModel, whose <code>init</code> calls <code>loadNotes()</code>. The screen collects <code>uiState</code> and immediately shows <code>Loading</code>.<span class="s-where">MainActivity.kt · NotesScreen + collectAsStateWithLifecycle</span></div></li>
-            <li class="step" data-step><div class="s-num">2</div><div class="s-body"><strong>ViewModel.</strong> <code>loadNotes()</code> sets <code>_uiState = Loading</code> and launches a coroutine on <code>viewModelScope</code>, entering the <code>try</code> block.<span class="s-where">NotesViewModel.kt · loadNotes()</span></div></li>
-            <li class="step" data-step><div class="s-num">3</div><div class="s-body"><strong>Repository.</strong> <code>repository.getNotes()</code> (suspend) runs. In real mode it calls the API; in fake mode it delays and parses the hardcoded JSON.<span class="s-where">NoteRepository.kt · getNotes()</span></div></li>
-            <li class="step" data-step><div class="s-num">4</div><div class="s-body"><strong>Retrofit + network.</strong> <code>api.fetchNotes()</code> performs <code>GET /posts</code>; the server returns a JSON array of posts.<span class="s-where">NoteApi.kt · @GET("posts")</span></div></li>
-            <li class="step" data-step><div class="s-num">5</div><div class="s-body"><strong>Parse.</strong> The kotlinx.serialization converter decodes the JSON array into <code>List&lt;NoteDto&gt;</code>.<span class="s-where">NoteApi.kt · the converter factory</span></div></li>
-            <li class="step" data-step><div class="s-num">6</div><div class="s-body"><strong>Map.</strong> <code>dtos.map { it.toNote() }</code> converts each network DTO into a clean domain <code>Note</code>, dropping <code>userId</code>.<span class="s-where">Note.kt · toNote()</span></div></li>
-            <li class="step" data-step><div class="s-num">7</div><div class="s-body"><strong>State → recompose.</strong> Back in the ViewModel, <code>_uiState = Success(notes)</code>. The <code>StateFlow</code> emits, <code>collectAsStateWithLifecycle()</code> flips Compose state, and <code>NotesContent</code> redraws the list.<span class="s-where">NotesViewModel.kt + MainActivity.kt</span></div></li>
+            <li class="step" data-step><div class="s-num">1</div><div class="s-body"><strong>UI.</strong> <code>WeatherScreen</code> obtains the ViewModel, whose <code>init</code> calls <code>loadWeather()</code>. The screen collects <code>uiState</code> and immediately shows <code>Loading</code>.<span class="s-where">MainActivity.kt · WeatherScreen + collectAsStateWithLifecycle</span></div></li>
+            <li class="step" data-step><div class="s-num">2</div><div class="s-body"><strong>ViewModel.</strong> <code>loadWeather()</code> sets <code>_uiState = Loading</code> and launches a coroutine on <code>viewModelScope</code>, entering the <code>try</code> block.<span class="s-where">WeatherViewModel.kt · loadWeather()</span></div></li>
+            <li class="step" data-step><div class="s-num">3</div><div class="s-body"><strong>Repository.</strong> <code>repository.getWeather(city)</code> (suspend) runs. In real mode it calls the API; in fake mode it delays and parses the hardcoded JSON.<span class="s-where">WeatherRepository.kt · getWeather()</span></div></li>
+            <li class="step" data-step><div class="s-num">4</div><div class="s-body"><strong>Retrofit + network.</strong> <code>api.fetchForecast(lat, lon)</code> performs <code>GET /v1/forecast?…</code>; the server returns a nested JSON object.<span class="s-where">WeatherApi.kt · @GET("v1/forecast")</span></div></li>
+            <li class="step" data-step><div class="s-num">5</div><div class="s-body"><strong>Parse.</strong> The kotlinx.serialization converter decodes the JSON object into a <code>ForecastResponseDto</code> (with its nested <code>CurrentDto</code>).<span class="s-where">WeatherApi.kt · the converter factory</span></div></li>
+            <li class="step" data-step><div class="s-num">6</div><div class="s-body"><strong>Map.</strong> <code>dto.toWeather(city)</code> flattens the nested DTO into one clean domain <code>Weather</code>, decoding <code>weather_code</code> into text.<span class="s-where">Weather.kt · toWeather()</span></div></li>
+            <li class="step" data-step><div class="s-num">7</div><div class="s-body"><strong>State → recompose.</strong> Back in the ViewModel, <code>_uiState = Success(weather)</code>. The <code>StateFlow</code> emits, <code>collectAsStateWithLifecycle()</code> flips Compose state, and <code>WeatherContent</code> redraws the card.<span class="s-where">WeatherViewModel.kt + MainActivity.kt</span></div></li>
           </ol>
         </div>
         <div class="callout" id="stepExplain" aria-live="polite"></div>
@@ -1490,28 +1533,28 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <p class="eyebrow">When things go wrong</p>
         <h2>Error handling — one catch, one Error state</h2>
         <p class="dense">
-          A real network call can fail in many ways. The single <code>try/catch</code> in <code>loadNotes()</code> turns
+          A real network call can fail in many ways. The single <code>try/catch</code> in <code>loadWeather()</code> turns
           <em>any</em> of them into one <code>Error(message)</code> state with a Retry button — never a crash.
         </p>
         <table class="tbl">
           <thead><tr><th>What goes wrong</th><th>The thrown failure</th><th>What the user sees</th></tr></thead>
           <tbody>
-            <tr><td>No network / airplane mode</td><td><code>UnknownHostException</code></td><td>“Couldn't load notes” + the message + Retry</td></tr>
+            <tr><td>No network / airplane mode</td><td><code>UnknownHostException</code></td><td>“Couldn't load the weather” + the message + Retry</td></tr>
             <tr><td>Slow server / timeout</td><td><code>SocketTimeoutException</code></td><td>Same Error state; Retry re-runs the load</td></tr>
             <tr><td>Malformed / unexpected JSON</td><td><code>SerializationException</code></td><td>Same Error state (a parse failure, not a crash)</td></tr>
             <tr><td>HTTP 4xx / 5xx</td><td><code>HttpException</code></td><td>Same Error state with the status message</td></tr>
           </tbody>
         </table>
         <div class="callout good">
-          <span class="callout-label">Retry is just loadNotes() again</span>
-          The error screen's button is wired to <code>viewModel::loadNotes</code>. Because <code>loadNotes()</code> resets
+          <span class="callout-label">Retry is just loadWeather() again</span>
+          The error screen's button is wired to <code>{ viewModel.loadWeather() }</code>. Because <code>loadWeather()</code> resets
           to <code>Loading</code> and re-enters the same <code>try/catch</code>, recovering from a transient failure costs
           one tap and zero extra code.
         </div>
         <div class="callout violet">
           <span class="callout-label">ignoreUnknownKeys handles the friendly case</span>
-          Note that a server merely <em>adding</em> fields does <strong>not</strong> land here — <code>Json { ignoreUnknownKeys = true }</code>
-          decodes successfully and the extra fields are dropped. Only genuinely malformed or type-mismatched JSON throws.
+          The forecast response is full of fields we don't model (latitude, timezone, current_units, …) — <code>Json { ignoreUnknownKeys = true }</code>
+          decodes successfully and those extra fields are dropped. Only genuinely malformed or type-mismatched JSON throws.
         </div>
       </div>
     </section>
@@ -1527,31 +1570,39 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         </p>
         <div class="faq-list">
           <details open>
-            <summary>Why do we need both <code>NoteDto</code> and <code>Note</code>?</summary>
+            <summary>Why do we need both the DTOs and <code>Weather</code>?</summary>
             <p>
-              <code>NoteDto</code> belongs to the server shape; <code>Note</code> belongs to the app shape. Keeping them
-              separate means the UI and ViewModel do not depend on every server field. The mapper is the one controlled
-              place where network data becomes app data.
+              The DTOs belong to the server shape (nested, snake_case); <code>Weather</code> belongs to the app shape
+              (flat, UI-ready). Keeping them separate means the UI and ViewModel do not depend on Open-Meteo's wire format.
+              The mapper is the one controlled place where network data becomes app data.
             </p>
           </details>
           <details>
-            <summary>Why parse <code>userId</code> if the app drops it?</summary>
+            <summary>Why is the JSON modelled as two DTOs instead of one?</summary>
             <p>
-              The JSON contains <code>userId</code>, so <code>NoteDto</code> models it honestly. The UI does not use it,
-              so <code>toNote()</code> leaves it behind. This shows that parsing the response and designing the UI model
-              are related but not identical.
+              The response is nested: a top-level object with a <code>"current"</code> block inside it. The DTOs mirror
+              that nesting — <code>ForecastResponseDto</code> holds a <code>CurrentDto</code> — so decoding lines up
+              key-for-key. The mapper then flattens both levels into a single <code>Weather</code>.
+            </p>
+          </details>
+          <details>
+            <summary>What does <code>@SerialName</code> do here?</summary>
+            <p>
+              The JSON keys are snake_case (<code>temperature_2m</code>) but Kotlin properties are camelCase
+              (<code>temperature</code>). <code>@SerialName("temperature_2m")</code> bridges each one so the decoder knows
+              which JSON key feeds which property. Without it, decoding can't find the value.
             </p>
           </details>
           <details>
             <summary>Where is the real HTTP request code?</summary>
             <p>
-              You do not write it by hand. <code>@GET("posts")</code> describes the request, and
-              <code>Retrofit.Builder().create(NoteApi::class.java)</code> generates an implementation of that interface.
-              Calling <code>api.fetchNotes()</code> is what triggers the generated HTTP GET.
+              You do not write it by hand. <code>@GET("v1/forecast")</code> plus the <code>@Query</code> params describe the
+              request, and <code>Retrofit.Builder().create(WeatherApi::class.java)</code> generates an implementation of that
+              interface. Calling <code>api.fetchForecast(...)</code> is what triggers the generated HTTP GET.
             </p>
           </details>
           <details>
-            <summary>Why is <code>fetchNotes()</code> marked <code>suspend</code>?</summary>
+            <summary>Why is <code>fetchForecast()</code> marked <code>suspend</code>?</summary>
             <p>
               Network I/O takes time. <code>suspend</code> lets the coroutine pause until the response is ready without
               blocking the main thread. The user can still see a responsive Loading UI while the work is in progress.
@@ -1561,45 +1612,45 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
             <summary>Why does fake mode still decode JSON?</summary>
             <p>
               The fake repository is offline, but it is not skipping the parsing lesson. It decodes
-              <code>FAKE_NOTES_JSON</code> into <code>List&lt;NoteDto&gt;</code> and maps those DTOs to
-              <code>Note</code>, so the same parse-and-map idea is exercised without depending on the internet.
+              <code>FAKE_FORECAST_JSON</code> into a <code>ForecastResponseDto</code> and flattens that DTO into a
+              <code>Weather</code>, so the same parse-and-flatten idea is exercised without depending on the internet.
             </p>
           </details>
           <details>
             <summary>What actually causes the screen to change from Loading to Success?</summary>
             <p>
-              The ViewModel assigns <code>_uiState.value = NotesUiState.Success(notes)</code>. The public
+              The ViewModel assigns <code>_uiState.value = WeatherUiState.Success(weather)</code>. The public
               <code>uiState</code> emits that new value, <code>collectAsStateWithLifecycle()</code> sees it, and Compose
-              recomposes <code>NotesContent()</code>, which now takes the Success branch.
+              recomposes <code>WeatherContent()</code>, which now takes the Success branch.
             </p>
           </details>
           <details>
-            <summary>Why is there no manual refresh call on the list?</summary>
+            <summary>Why is there no manual refresh call on the card?</summary>
             <p>
               Compose UI is declarative. The screen describes what to draw for each state. When the state value changes,
-              Compose reruns the relevant composables. You update the state, not the list widget.
+              Compose reruns the relevant composables. You update the state, not the card widget.
             </p>
           </details>
           <details>
             <summary>What happens if the server adds a new field?</summary>
             <p>
               Because the JSON parser is configured with <code>ignoreUnknownKeys = true</code>, decoding still succeeds.
-              The unknown field is ignored unless you later add it to <code>NoteDto</code> and map it into the domain model.
+              The unknown field is ignored unless you later add it to a DTO and map it into the domain model.
             </p>
           </details>
           <details>
             <summary>What happens if the server sends the wrong type?</summary>
             <p>
-              A wrong type, such as <code>"title": 404</code> when <code>title</code> must be a String, is not safe to
+              A wrong type, such as <code>"temperature_2m": "warm"</code> when it must be a number, is not safe to
               ignore. Decoding throws a serialization exception. The ViewModel catches that exception and publishes
               <code>Error(message)</code>.
             </p>
           </details>
           <details>
-            <summary>Why is <code>NotesUiState</code> sealed?</summary>
+            <summary>Why is <code>WeatherUiState</code> sealed?</summary>
             <p>
               A sealed type gives the compiler the complete list of possible states. That makes the
-              <code>when (uiState)</code> in <code>NotesContent()</code> exhaustive, so adding or missing a state becomes
+              <code>when (uiState)</code> in <code>WeatherContent()</code> exhaustive, so adding or missing a state becomes
               visible during development.
             </p>
           </details>
@@ -1607,16 +1658,16 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
             <summary>Why do previews pass fake states instead of creating a ViewModel?</summary>
             <p>
               Android Studio previews need quick, deterministic UI. A real ViewModel would start coroutines and use a
-              repository. Passing literal states like <code>Success(previewNotes)</code> previews the UI without network,
+              repository. Passing literal states like <code>Success(previewWeather)</code> previews the UI without network,
               timers, or lifecycle complexity.
             </p>
           </details>
           <details>
             <summary>Where should new behavior go if the app grows?</summary>
             <p>
-              New response fields start in <code>NoteDto</code> and <code>toNote()</code>. New endpoints go in
-              <code>NoteApi</code>. New data-source choices go behind <code>NoteRepository</code>. New screen states go
-              in <code>NotesUiState</code> and must be rendered in <code>NotesContent()</code>.
+              New response fields start in the DTOs and <code>toWeather()</code>. New endpoints go in
+              <code>WeatherApi</code>. New data-source choices go behind <code>WeatherRepository</code>. New screen states go
+              in <code>WeatherUiState</code> and must be rendered in <code>WeatherContent()</code>.
             </p>
           </details>
         </div>
@@ -1635,12 +1686,12 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <div class="annotation-lab">
           <div class="annotation-list" id="annotationList">
             <button class="line-pick on" data-anno="serializable" type="button">@Serializable</button>
-            <button class="line-pick" data-anno="mapper" type="button">fun NoteDto.toNote(): Note</button>
-            <button class="line-pick" data-anno="get" type="button">@GET("posts") suspend fun fetchNotes()</button>
+            <button class="line-pick" data-anno="mapper" type="button">fun ForecastResponseDto.toWeather(city): Weather</button>
+            <button class="line-pick" data-anno="get" type="button">@GET("v1/forecast") suspend fun fetchForecast()</button>
             <button class="line-pick" data-anno="converter" type="button">addConverterFactory(json.asConverterFactory(...))</button>
-            <button class="line-pick" data-anno="repo" type="button">interface NoteRepository { suspend fun getNotes() }</button>
-            <button class="line-pick" data-anno="switch" type="button">provideNoteRepository(useFake = true)</button>
-            <button class="line-pick" data-anno="stateflow" type="button">MutableStateFlow&lt;NotesUiState&gt;(Loading)</button>
+            <button class="line-pick" data-anno="repo" type="button">interface WeatherRepository { suspend fun getWeather() }</button>
+            <button class="line-pick" data-anno="switch" type="button">provideWeatherRepository(useFake = false)</button>
+            <button class="line-pick" data-anno="stateflow" type="button">MutableStateFlow&lt;WeatherUiState&gt;(Loading)</button>
             <button class="line-pick" data-anno="catch" type="button">catch (e: Exception) { Error(...) }</button>
             <button class="line-pick" data-anno="collect" type="button">collectAsStateWithLifecycle()</button>
             <button class="line-pick" data-anno="when" type="button">when (uiState) { Loading / Success / Error }</button>
@@ -1676,41 +1727,41 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         </div>
         <div class="lesson-grid">
           <div class="lesson-card">
-            <h3>Exercise 1: switch from fake to real</h3>
-            <p class="dense"><strong>Predict:</strong> What changes if <code>provideNoteRepository(useFake = false)</code> is used?</p>
-            <p class="dense"><strong>Do:</strong> Change the flag, run on a connected emulator, and watch the same UI states.</p>
-            <details><summary>Reveal answer</summary><p class="dense">The ViewModel and UI do not change. Only the repository implementation changes. Success still publishes <code>Success(notes)</code>; offline failure becomes <code>Error(message)</code>.</p></details>
+            <h3>Exercise 1: switch from real to fake</h3>
+            <p class="dense"><strong>Predict:</strong> What changes if <code>provideWeatherRepository(useFake = true)</code> is used?</p>
+            <p class="dense"><strong>Do:</strong> Change the flag, run with no network, and watch the same UI states (Loading → Success).</p>
+            <details><summary>Reveal answer</summary><p class="dense">The ViewModel and UI do not change. Only the repository implementation changes. The fake always publishes <code>Success(weather)</code> from the hardcoded JSON; a live failure becomes <code>Error(message)</code>.</p></details>
             <div class="teacher-only teacher-note"><strong>Teacher note</strong>Ask students why the ViewModel does not need an if/else for fake vs real.</div>
           </div>
           <div class="lesson-card">
-            <h3>Exercise 2: add a harmless JSON field</h3>
-            <p class="dense"><strong>Predict:</strong> Will parsing fail if the JSON adds <code>"likes": 12</code>?</p>
-            <p class="dense"><strong>Do:</strong> Use the DTO mini-lab's Extra field option, then find <code>ignoreUnknownKeys</code> in <code>NoteApi.kt</code>.</p>
-            <details><summary>Reveal answer</summary><p class="dense">Parsing succeeds because unknown keys are ignored. The new field does not enter <code>Note</code> until the app explicitly models and maps it.</p></details>
+            <h3>Exercise 2: tolerate an unmodelled JSON field</h3>
+            <p class="dense"><strong>Predict:</strong> Will parsing fail because the real response also has <code>"timezone"</code> and <code>"current_units"</code>?</p>
+            <p class="dense"><strong>Do:</strong> Use the DTO mini-lab's Extra field option, then find <code>ignoreUnknownKeys</code> in <code>WeatherApi.kt</code>.</p>
+            <details><summary>Reveal answer</summary><p class="dense">Parsing succeeds because unknown keys are ignored. Those fields never enter <code>Weather</code> until the app explicitly models and maps them.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Exercise 3: break a required type</h3>
-            <p class="dense"><strong>Predict:</strong> What happens if <code>"title"</code> is a number instead of a String?</p>
-            <p class="dense"><strong>Do:</strong> Use Wrong type in the DTO mini-lab or simulator's Bad JSON outcome.</p>
+            <p class="dense"><strong>Predict:</strong> What happens if <code>"temperature_2m"</code> is a string instead of a number?</p>
+            <p class="dense"><strong>Do:</strong> Use Wrong type in the DTO mini-lab to see the decode failure.</p>
             <details><summary>Reveal answer</summary><p class="dense">Decoding throws. The ViewModel catches the exception and publishes <code>Error(message)</code>. The app should not crash.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Exercise 4: trace Retry</h3>
             <p class="dense"><strong>Predict:</strong> Which function runs when the Retry button is tapped?</p>
-            <p class="dense"><strong>Do:</strong> Find <code>onRetry = viewModel::loadNotes</code>, then follow <code>loadNotes()</code>.</p>
-            <details><summary>Reveal answer</summary><p class="dense">Retry calls <code>loadNotes()</code>. That sets Loading again, tries the repository call again, then publishes Success or Error.</p></details>
+            <p class="dense"><strong>Do:</strong> Find <code>onRetry = { viewModel.loadWeather() }</code>, then follow <code>loadWeather()</code>.</p>
+            <details><summary>Reveal answer</summary><p class="dense">Retry calls <code>loadWeather()</code>. That sets Loading again, tries the repository call again for the current city, then publishes Success or Error.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Exercise 5: add a new UI state on paper</h3>
-            <p class="dense"><strong>Predict:</strong> If you add <code>Empty</code> to <code>NotesUiState</code>, what else must change?</p>
+            <p class="dense"><strong>Predict:</strong> If you add <code>Empty</code> to <code>WeatherUiState</code>, what else must change?</p>
             <p class="dense"><strong>Do:</strong> Do not code it first. List every file and branch that needs a decision.</p>
-            <details><summary>Reveal answer</summary><p class="dense">At minimum, <code>NotesContent()</code> needs a new <code>when</code> branch. The ViewModel must decide when to publish Empty, usually after a successful fetch returns an empty list.</p></details>
+            <details><summary>Reveal answer</summary><p class="dense">At minimum, <code>WeatherContent()</code> needs a new <code>when</code> branch. The ViewModel must decide when to publish Empty, e.g. if a city's reading ever comes back missing.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Exercise 6: explain the whole trip aloud</h3>
             <p class="dense"><strong>Predict:</strong> Can you say the successful path in fewer than 45 seconds?</p>
             <p class="dense"><strong>Do:</strong> Use the seven-step trip section, then try without looking.</p>
-            <details><summary>Reveal answer</summary><p class="dense">UI calls ViewModel. ViewModel sets Loading. Repository fetches. Retrofit or fake JSON parses into DTOs. Mapper creates Notes. ViewModel publishes Success. Compose redraws the list.</p></details>
+            <details><summary>Reveal answer</summary><p class="dense">UI calls ViewModel. ViewModel sets Loading. Repository fetches. Retrofit or fake JSON parses into a nested DTO. Mapper flattens it into one Weather. ViewModel publishes Success. Compose redraws the card.</p></details>
           </div>
         </div>
       </div>
@@ -1726,12 +1777,12 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
           the named file.
         </p>
         <div class="lesson-grid">
-          <div class="lesson-card"><h3>Missing <code>@Serializable</code></h3><p class="dense"><strong>Symptom:</strong> JSON decoding cannot find a serializer for <code>NoteDto</code>.</p><p class="dense"><strong>Fix:</strong> Keep <code>@Serializable</code> on DTO classes and keep the serialization plugin enabled.</p></div>
-          <div class="lesson-card"><h3>Wrong <code>baseUrl</code></h3><p class="dense"><strong>Symptom:</strong> Retrofit complains about the base URL or the request goes to the wrong path.</p><p class="dense"><strong>Fix:</strong> Use <code>https://jsonplaceholder.typicode.com/</code> with the trailing slash.</p></div>
+          <div class="lesson-card"><h3>Missing <code>@Serializable</code></h3><p class="dense"><strong>Symptom:</strong> JSON decoding cannot find a serializer for <code>ForecastResponseDto</code>.</p><p class="dense"><strong>Fix:</strong> Keep <code>@Serializable</code> on every DTO class and keep the serialization plugin enabled.</p></div>
+          <div class="lesson-card"><h3>Forgot <code>@SerialName</code></h3><p class="dense"><strong>Symptom:</strong> A camelCase property like <code>temperature</code> decodes as missing because the JSON key is <code>temperature_2m</code>.</p><p class="dense"><strong>Fix:</strong> Add <code>@SerialName("temperature_2m")</code> to bridge the snake_case key.</p></div>
           <div class="lesson-card"><h3>No <code>INTERNET</code> permission</h3><p class="dense"><strong>Symptom:</strong> Real mode cannot reach the network even though the device has a connection.</p><p class="dense"><strong>Fix:</strong> Keep <code>&lt;uses-permission android:name="android.permission.INTERNET" /&gt;</code> in the manifest.</p></div>
-          <div class="lesson-card"><h3>DTO used directly in UI</h3><p class="dense"><strong>Symptom:</strong> Server-only fields leak into screen code, and API changes ripple everywhere.</p><p class="dense"><strong>Fix:</strong> Map <code>NoteDto</code> to <code>Note</code> in the repository boundary.</p></div>
-          <div class="lesson-card"><h3>Error handled in the UI only</h3><p class="dense"><strong>Symptom:</strong> The app can crash before Compose gets a chance to show a friendly state.</p><p class="dense"><strong>Fix:</strong> Keep the <code>try/catch</code> around <code>repository.getNotes()</code> in the ViewModel.</p></div>
-          <div class="lesson-card"><h3>Preview creates a real ViewModel</h3><p class="dense"><strong>Symptom:</strong> Android Studio preview is slow, flaky, or tries to run app logic.</p><p class="dense"><strong>Fix:</strong> Preview <code>NotesContent()</code> with hand-made <code>NotesUiState</code> values.</p></div>
+          <div class="lesson-card"><h3>DTO used directly in UI</h3><p class="dense"><strong>Symptom:</strong> The nested, snake_cased server shape leaks into screen code, and API changes ripple everywhere.</p><p class="dense"><strong>Fix:</strong> Flatten <code>ForecastResponseDto</code> to <code>Weather</code> in the repository boundary.</p></div>
+          <div class="lesson-card"><h3>Error handled in the UI only</h3><p class="dense"><strong>Symptom:</strong> The app can crash before Compose gets a chance to show a friendly state.</p><p class="dense"><strong>Fix:</strong> Keep the <code>try/catch</code> around <code>repository.getWeather()</code> in the ViewModel.</p></div>
+          <div class="lesson-card"><h3>Preview creates a real ViewModel</h3><p class="dense"><strong>Symptom:</strong> Android Studio preview is slow, flaky, or tries to run app logic.</p><p class="dense"><strong>Fix:</strong> Preview <code>WeatherContent()</code> with hand-made <code>WeatherUiState</code> values.</p></div>
         </div>
         <div class="teacher-only teacher-note">
           <strong>Teacher note</strong>
@@ -1752,18 +1803,18 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <div class="worksheet">
           <ol>
             <li>Draw the request path from the screen to the network or fake JSON, then draw the return path back to the UI state.<div class="answer-line"></div></li>
-            <li>Explain the difference between <code>NoteDto</code> and <code>Note</code> in one sentence.<div class="answer-line"></div></li>
-            <li>Why does the fake repository still parse JSON instead of returning <code>Note</code> objects by hand?<div class="answer-line"></div></li>
+            <li>Explain the difference between <code>ForecastResponseDto</code> and <code>Weather</code> in one sentence.<div class="answer-line"></div></li>
+            <li>Why does the fake repository still parse JSON instead of building a <code>Weather</code> object by hand?<div class="answer-line"></div></li>
             <li>What exact line changes the screen from Loading to Success?<div class="answer-line"></div></li>
-            <li>What happens if the JSON contains an extra field? What happens if it contains the wrong type?<div class="answer-line"></div></li>
+            <li>What does <code>@SerialName("temperature_2m")</code> do, and what happens if you forget it?<div class="answer-line"></div></li>
             <li>Why does Retry not need a separate code path?<div class="answer-line"></div></li>
           </ol>
         </div>
         <div class="teacher-only teacher-note">
           <strong>Teacher answer key</strong>
-          Look for: UI to ViewModel to Repository to Retrofit/fake JSON; DTO is server shape and Note is app shape;
-          fake mode still teaches parsing; <code>_uiState.value = NotesUiState.Success(notes)</code>; extra fields are
-          ignored but wrong types throw; Retry calls the same <code>loadNotes()</code> path.
+          Look for: UI to ViewModel to Repository to Retrofit/fake JSON; the DTOs are the nested server shape and Weather is the flat app shape;
+          fake mode still teaches parsing; <code>_uiState.value = WeatherUiState.Success(weather)</code>; @SerialName bridges a
+          snake_case key to a camelCase property (forgetting it makes the value decode as missing); Retry calls the same <code>loadWeather()</code> path.
         </div>
       </div>
     </section>
@@ -1776,14 +1827,14 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <p class="dense">The app builds and tests offline by default. Build from the <code>NetworkParsing/</code> project directory:</p>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">terminal · from NetworkParsing/</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="bash">./gradlew assembleDebug --console=plain --stacktrace   # build (offline fake mode)
-./gradlew testDebugUnitTest                            # mapper + fake-repository unit tests</pre>
+<pre data-lang="bash">./gradlew assembleDebug --console=plain --stacktrace   # build the app
+./gradlew testDebugUnitTest                            # mapper + fake-repository unit tests (no network)</pre>
         </div>
-        <h3>Switch to the live API</h3>
+        <h3>Run live (the default) or force offline</h3>
         <ul class="kicker-list">
-          <li><strong>In <code>NoteRepository.kt</code></strong>, change the default to <code>provideNoteRepository(useFake = false)</code>.</li>
+          <li><strong>Live is the default</strong> — Open-Meteo is free and keyless, so <code>provideWeatherRepository(useFake = false)</code> hits the real API out of the box.</li>
           <li><strong>The <code>INTERNET</code> permission</strong> is already declared in <code>AndroidManifest.xml</code>, so no manifest edit is needed.</li>
-          <li><strong>Run on a device/emulator with a connection</strong> — it will hit <code>https://jsonplaceholder.typicode.com/posts</code> live.</li>
+          <li><strong>Run on a device/emulator with a connection</strong> — tap a city chip and it will hit <code>https://api.open-meteo.com/v1/forecast</code> live. To demo offline, pass <code>useFake = true</code>.</li>
         </ul>
         <div class="callout good">
           <span class="callout-label">Where to go next</span>
@@ -1791,7 +1842,7 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
           keeps a single connection open and streams messages both ways — the full-duplex contrast to this HTTP
           request/response. Want to play with this one? Open the <a href="network-parsing-explorer.html">interactive explainer</a>.
         </div>
-        <p class="foot">Network Parsing · one request, three states · part of the AndroidStudioProjects teaching set.</p>
+        <p class="foot">Network Parsing · one weather request, three states · part of the AndroidStudioProjects teaching set.</p>
       </div>
     </section>
   </main>
@@ -1992,42 +2043,42 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     var annotations = {
       serializable: {
         title: "@Serializable",
-        does: "Tells kotlinx.serialization to generate code that can decode JSON into NoteDto.",
-        why: "Retrofit's converter needs that generated serializer. Without it, the response body cannot become List<NoteDto> automatically.",
-        confusion: "It belongs on the DTO, not the domain model. The domain model does not need to know about JSON."
+        does: "Tells kotlinx.serialization to generate code that can decode JSON into the DTOs (ForecastResponseDto + CurrentDto).",
+        why: "Retrofit's converter needs that generated serializer. Without it, the response body cannot become a ForecastResponseDto automatically.",
+        confusion: "It belongs on the DTOs, not the domain model. The Weather domain model does not need to know about JSON."
       },
       mapper: {
-        title: "fun NoteDto.toNote(): Note",
-        does: "Converts one network-shaped DTO into one app-shaped Note.",
-        why: "It keeps server details like userId from leaking into UI and ViewModel code.",
+        title: "fun ForecastResponseDto.toWeather(city): Weather",
+        does: "Flattens the nested network DTO (reaching into current) into one flat, app-shaped Weather, and decodes the numeric weather_code into text.",
+        why: "It keeps the nested, snake_cased server shape from leaking into UI and ViewModel code.",
         confusion: "This is not another network call. It is just local object conversion after parsing succeeds."
       },
       get: {
-        title: "@GET(\"posts\") suspend fun fetchNotes()",
-        does: "Describes an HTTP GET request to the posts endpoint and says the parsed result should be List<NoteDto>.",
-        why: "Retrofit generates the implementation, so the repository can call api.fetchNotes() like normal Kotlin.",
+        title: "@GET(\"v1/forecast\") suspend fun fetchForecast()",
+        does: "Describes an HTTP GET request to the forecast endpoint, with latitude/longitude/current as @Query params, returning a ForecastResponseDto.",
+        why: "Retrofit generates the implementation, so the repository can call api.fetchForecast(...) like normal Kotlin.",
         confusion: "suspend does not mean slow or blocking. It means the coroutine can pause while waiting."
       },
       converter: {
         title: "addConverterFactory(json.asConverterFactory(...))",
         does: "Installs the JSON converter Retrofit uses to decode response bodies.",
         why: "Retrofit can perform HTTP, but it needs a converter to turn JSON text into Kotlin objects.",
-        confusion: "OkHttp gets bytes from the network; the converter turns those bytes into NoteDto objects."
+        confusion: "OkHttp gets bytes from the network; the converter turns those bytes into a ForecastResponseDto."
       },
       repo: {
-        title: "interface NoteRepository { suspend fun getNotes() }",
+        title: "interface WeatherRepository { suspend fun getWeather() }",
         does: "Defines the one data call the ViewModel depends on.",
         why: "The ViewModel can work with fake data or real network data without changing its own code.",
-        confusion: "The interface does not fetch anything by itself. RealNoteRepository and FakeNoteRepository implement it."
+        confusion: "The interface does not fetch anything by itself. RealWeatherRepository and FakeWeatherRepository implement it."
       },
       switch: {
-        title: "provideNoteRepository(useFake = true)",
-        does: "Chooses the offline fake repository by default.",
-        why: "The project can build, run, and test without internet while still exercising JSON parsing.",
+        title: "provideWeatherRepository(useFake = false)",
+        does: "Chooses the live, keyless real repository by default.",
+        why: "Open-Meteo is free and needs no key, so the app fetches real weather out of the box; useFake = true forces the offline fake.",
         confusion: "Changing this flag should not require UI or ViewModel edits. That is the point of the repository abstraction."
       },
       stateflow: {
-        title: "MutableStateFlow<NotesUiState>(Loading)",
+        title: "MutableStateFlow<WeatherUiState>(Loading)",
         does: "Creates the writable state holder and starts it in Loading.",
         why: "The screen has a valid first state immediately, before data arrives.",
         confusion: "The ViewModel keeps the mutable version private and exposes only read-only uiState."
@@ -2048,7 +2099,7 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         title: "when (uiState) { Loading / Success / Error }",
         does: "Selects exactly one UI branch for the current state.",
         why: "The sealed interface lets the compiler know all possible cases, so the renderer stays complete.",
-        confusion: "The list is not shown by the repository. It is shown because the Success branch receives notes."
+        confusion: "The card is not shown by the repository. It is shown because the Success branch receives the weather."
       }
     };
     function render(key) {
@@ -2075,28 +2126,28 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     var data = {
       ui: {
         title: "UI: asks for work, then draws the latest state",
-        body: "The screen calls loadNotes() through the ViewModel. After that, it does not manually push rows around. It watches uiState and redraws whenever that value changes.",
-        look: "Look for NotesScreen() collecting uiState, then NotesContent() rendering Loading / Success / Error."
+        body: "The screen calls loadWeather(city) through the ViewModel. After that, it does not manually redraw the card. It watches uiState and redraws whenever that value changes.",
+        look: "Look for WeatherScreen() collecting uiState, the CityChips row, then WeatherContent() rendering Loading / Success / Error."
       },
       vm: {
         title: "ViewModel: turns a request into one clear state",
-        body: "The ViewModel sets Loading first, then calls the repository inside try/catch. Success becomes Success(notes). Any thrown failure becomes Error(message).",
-        look: "Look for MutableStateFlow, viewModelScope.launch, and the single try/catch in loadNotes()."
+        body: "The ViewModel sets Loading first, then calls the repository inside try/catch. Success becomes Success(weather). Any thrown failure becomes Error(message).",
+        look: "Look for MutableStateFlow, viewModelScope.launch, and the single try/catch in loadWeather()."
       },
       repo: {
-        title: "Repository: hides where the notes came from",
-        body: "The ViewModel asks for notes through one interface. The repository can be Real (network) or Fake (offline JSON), but the ViewModel code stays the same.",
-        look: "Look for NoteRepository, RealNoteRepository, FakeNoteRepository, and provideNoteRepository(useFake = true)."
+        title: "Repository: hides where the weather came from",
+        body: "The ViewModel asks for the weather through one interface. The repository can be Real (network) or Fake (offline JSON), but the ViewModel code stays the same.",
+        look: "Look for WeatherRepository, RealWeatherRepository, FakeWeatherRepository, and provideWeatherRepository(useFake = false)."
       },
       api: {
         title: "Retrofit API: describes the HTTP request",
-        body: "The API interface says: GET the posts endpoint and return List&lt;NoteDto&gt;. Retrofit performs the HTTP work and the converter parses the response body.",
-        look: "Look for @GET(\"posts\"), suspend fun fetchNotes(), baseUrl, and addConverterFactory(...)."
+        body: "The API interface says: GET the v1/forecast endpoint with latitude/longitude/current query params and return a ForecastResponseDto. Retrofit performs the HTTP work and the converter parses the response body.",
+        look: "Look for @GET(\"v1/forecast\"), @Query, suspend fun fetchForecast(), baseUrl, and addConverterFactory(...)."
       },
       network: {
         title: "Network or fake JSON: returns raw data",
-        body: "Real mode asks jsonplaceholder for JSON. Fake mode reads a hardcoded JSON string. Either way, the app still needs to parse that network-shaped data before the UI can use it.",
-        look: "Look for FAKE_NOTES_JSON in the fake repository and the live base URL in provideNoteApi()."
+        body: "Real mode asks Open-Meteo for nested JSON. Fake mode reads a hardcoded JSON string. Either way, the app still needs to parse that network-shaped data before the UI can use it.",
+        look: "Look for FAKE_FORECAST_JSON in the fake repository and the live base URL in provideWeatherApi()."
       }
     };
     function render(key) {
@@ -2117,22 +2168,22 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     if (!jsonEl || !resultEl || !msgEl || !buttons.length) return;
     var demos = {
       normal: {
-        json: '{\n  "userId": 1,\n  "id": 7,\n  "title": "Buy milk",\n  "body": "Remember the list"\n}',
-        result: 'Note(\n  id = 7,\n  title = "Buy milk",\n  body = "Remember the list"\n)',
+        json: '{\n  "current": {\n    "time": "2026-06-25T12:30",\n    "temperature_2m": 26.8,\n    "relative_humidity_2m": 41,\n    "apparent_temperature": 26.3,\n    "weather_code": 0,\n    "wind_speed_10m": 8.4\n  }\n}',
+        result: 'Weather(\n  city = "Orlando",\n  temperatureC = 27,\n  description = "clear sky",\n  feelsLikeC = 26,\n  humidityPercent = 41,\n  windKmh = 8\n)',
         cls: "callout violet",
-        msg: "The JSON keys match NoteDto, so parsing succeeds. Then toNote() copies id/title/body and intentionally drops userId."
+        msg: "The snake_case keys match the DTOs via @SerialName, so parsing succeeds. Then toWeather() reaches into the nested current block, rounds the Doubles, and turns weather_code 0 into \"clear sky\"."
       },
       extra: {
-        json: '{\n  "userId": 1,\n  "id": 7,\n  "title": "Buy milk",\n  "body": "Remember the list",\n  "likes": 12\n}',
-        result: 'Note(\n  id = 7,\n  title = "Buy milk",\n  body = "Remember the list"\n)',
+        json: '{\n  "latitude": 28.55,\n  "timezone": "GMT",\n  "current_units": { "temperature_2m": "°C" },\n  "current": {\n    "time": "2026-06-25T12:30",\n    "temperature_2m": 26.8,\n    "relative_humidity_2m": 41,\n    "apparent_temperature": 26.3,\n    "weather_code": 0,\n    "wind_speed_10m": 8.4\n  }\n}',
+        result: 'Weather(\n  city = "Orlando",\n  temperatureC = 27,\n  description = "clear sky",\n  feelsLikeC = 26,\n  humidityPercent = 41,\n  windKmh = 8\n)',
         cls: "callout good",
-        msg: "The server added likes, but Json { ignoreUnknownKeys = true } ignores that new field. This is safe because the app does not need likes yet."
+        msg: "The real response also carries latitude, timezone, and current_units, but Json { ignoreUnknownKeys = true } ignores those unmodelled fields. This is safe because the app does not need them."
       },
       badtype: {
-        json: '{\n  "userId": 1,\n  "id": 7,\n  "title": 404,\n  "body": "Remember the list"\n}',
-        result: 'No Note is created.\n\nParsing throws SerializationException\nbecause title should be a String, not a number.',
+        json: '{\n  "current": {\n    "time": "2026-06-25T12:30",\n    "temperature_2m": "warm",\n    "relative_humidity_2m": 41,\n    "apparent_temperature": 26.3,\n    "weather_code": 0,\n    "wind_speed_10m": 8.4\n  }\n}',
+        result: 'No Weather is created.\n\nParsing throws SerializationException\nbecause temperature_2m should be a number, not a String.',
         cls: "callout danger",
-        msg: "A wrong type is different from an extra field. The parser cannot safely turn title = 404 into a String, so it throws. The ViewModel catches that and shows Error(message)."
+        msg: "A wrong type is different from an unmodelled field. The parser cannot safely turn temperature_2m = \"warm\" into a Double, so it throws. The ViewModel catches that and shows Error(message)."
       }
     };
     function show(key) {
@@ -2154,16 +2205,16 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     if (!screen || !text || !buttons.length) return;
     var states = {
       loading: {
-        screen: '<div style="text-align:center;padding:34px 0;color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div>Loading notes...</div></div>',
+        screen: '<div style="text-align:center;padding:34px 0;color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div>Loading weather...</div></div>',
         text: '<p><strong>Loading</strong> means the request is still running.</p><p class="dense">It carries no data because the only thing the UI needs to know is: show the spinner.</p>'
       },
       success: {
-        screen: '<div class="mini-note"><strong>Buy milk</strong><span>Remember the list</span></div><div class="mini-note"><strong>Call Sam</strong><span>Ask about the trip</span></div>',
-        text: '<p><strong>Success(notes)</strong> means parsing and mapping finished.</p><p class="dense">This state carries the list, so NotesContent can draw a row for each Note.</p>'
+        screen: '<div class="mini-note" style="text-align:center;"><div style="font-size:2rem;">☀️</div><strong>Orlando, US · 27°C</strong><span>clear sky · feels like 26° · humidity 41% · wind 8 km/h</span></div>',
+        text: '<p><strong>Success(weather)</strong> means parsing and mapping finished.</p><p class="dense">This state carries the flat Weather object, so WeatherContent can draw the weather card.</p>'
       },
       error: {
-        screen: '<div style="text-align:center;padding:26px 4px;"><div style="font-weight:850;">Could not load notes</div><div class="tiny" style="margin:8px 0 12px;color:var(--red);">No internet connection.</div><button class="btn" type="button">Retry</button></div>',
-        text: '<p><strong>Error(message)</strong> means something threw: no network, timeout, bad JSON, or an HTTP problem.</p><p class="dense">The Retry button just calls loadNotes() again.</p>'
+        screen: '<div style="text-align:center;padding:26px 4px;"><div style="font-weight:850;">Could not load the weather</div><div class="tiny" style="margin:8px 0 12px;color:var(--red);">No internet connection.</div><button class="btn" type="button">Retry</button></div>',
+        text: '<p><strong>Error(message)</strong> means something threw: no network, timeout, bad JSON, or an HTTP problem.</p><p class="dense">The Retry button just calls loadWeather() again.</p>'
       }
     };
     function show(key) {
@@ -2186,10 +2237,10 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     var notes = [
       "Start at the screen. The user sees Loading because the screen observes uiState, and uiState begins as Loading.",
       "The ViewModel is the error boundary. It starts work in a coroutine and promises to publish either Success or Error.",
-      "The Repository keeps the source flexible. Fake and Real both satisfy the same getNotes() contract.",
-      "Retrofit converts the Kotlin function call into HTTP. The app says fetchNotes(); Retrofit performs GET /posts.",
-      "Parsing turns text into typed Kotlin data. This is where JSON becomes List&lt;NoteDto&gt; or throws if the shape is wrong.",
-      "Mapping protects the rest of the app from the server shape. NoteDto is the wire shape; Note is the app shape.",
+      "The Repository keeps the source flexible. Fake and Real both satisfy the same getWeather(city) contract.",
+      "Retrofit converts the Kotlin function call into HTTP. The app says fetchForecast(lat, lon); Retrofit performs GET /v1/forecast.",
+      "Parsing turns text into typed Kotlin data. This is where the nested JSON becomes a ForecastResponseDto or throws if the shape is wrong.",
+      "Mapping protects the rest of the app from the server shape. The nested DTOs are the wire shape; the flat Weather is the app shape.",
       "The result is just another state value. Compose sees the new StateFlow value and redraws the right branch of the when."
     ];
     var i = 0;

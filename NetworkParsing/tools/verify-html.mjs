@@ -80,9 +80,9 @@ async function main() {
   await page.click('[data-layer="network"]');
   await page.waitForFunction(() => document.querySelector("#layerDetail")?.textContent.includes("Network or fake JSON"));
   await page.click('[data-dto-lab="badtype"]');
-  await page.waitForFunction(() => document.querySelector("#dtoLabResult")?.textContent.includes("No Note is created"));
+  await page.waitForFunction(() => document.querySelector("#dtoLabResult")?.textContent.includes("No Weather is created"));
   await page.click('[data-state-demo="success"]');
-  await page.waitForFunction(() => document.querySelector("#stateDemoScreen")?.textContent.includes("Buy milk"));
+  await page.waitForFunction(() => document.querySelector("#stateDemoScreen")?.textContent.includes("Orlando"));
   await page.click("#stepNext");
   await page.waitForFunction(() => document.querySelector("#stepExplain")?.textContent.includes("Plain English for step 2"));
   await page.click('a[href="#exercises"]');
@@ -108,7 +108,7 @@ async function main() {
   await page.click("#slideToggleTop");
   await page.waitForFunction(() => document.documentElement.getAttribute("data-slide") === "off");
   await page.click("#simLoad");
-  await page.waitForFunction(() => document.querySelector("#simScreen")?.textContent.includes("Grocery reminder"), null, { timeout: 5000 });
+  await page.waitForFunction(() => document.querySelector("#simScreen")?.textContent.includes("Orlando"), null, { timeout: 5000 });
   await page.click('#outcomeSeg [data-out="offline"]');
   await page.click("#simLoad");
   await page.waitForFunction(() => document.querySelector("#simScreen")?.textContent.includes("Unable to resolve host"), null, { timeout: 5000 });
@@ -137,7 +137,7 @@ async function main() {
   await page.waitForSelector("#annotations");
   await assertNoWideElements(page, "walkthrough mobile");
   await page.click('[data-anno="mapper"]');
-  await page.waitForFunction(() => document.querySelector("#annotationDetail")?.textContent.includes("Converts one network-shaped DTO"));
+  await page.waitForFunction(() => document.querySelector("#annotationDetail")?.textContent.includes("Flattens the nested"));
 
   await page.goto(pages.explorer);
   await page.waitForSelector("#practice");

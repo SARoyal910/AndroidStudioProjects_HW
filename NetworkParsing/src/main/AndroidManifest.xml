@@ -3,11 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- INTERNET permission: REQUIRED for the REAL (Retrofit) repository to reach
-         https://jsonplaceholder.typicode.com/posts. We declare it ACTIVE so that
-         flipping useFake = false in NoteRepository.kt works immediately — no manifest
-         edit needed. INTERNET is a NORMAL (install-time, not "dangerous") permission, so
-         there is no runtime request to make; declaring it here is enough. It is harmless
-         when the app runs in its default offline FAKE mode, so we always declare it. -->
+         https://api.open-meteo.com/v1/forecast. The app runs in REAL mode by default
+         (Open-Meteo is free and needs no API key), so this permission is essential.
+         INTERNET is a NORMAL (install-time, not "dangerous") permission, so there is no
+         runtime request to make; declaring it here is enough. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- <application> holds app-wide settings (icon, label, theme, backup rules) and

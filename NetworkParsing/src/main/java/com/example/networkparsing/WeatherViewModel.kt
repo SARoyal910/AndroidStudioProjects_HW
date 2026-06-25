@@ -1,5 +1,5 @@
 // =============================================================================
-// NotesViewModel.kt  —  UI STATE: Loading / Success / Error via StateFlow
+// WeatherViewModel.kt  —  UI STATE: Loading / Success / Error via StateFlow
 //
 // CONCEPT THIS FILE TEACHES: a network screen is never just "the data". At any moment
 // it is in ONE of three states — still LOADING, loaded SUCCESS(with data), or failed
@@ -7,9 +7,9 @@
 // the current one as a StateFlow, and the UI becomes a pure function of that state.
 //
 // WHAT THE STUDENT SHOULD INSPECT HERE:
-//   1. NotesUiState — a sealed interface with exactly three cases.
+//   1. WeatherUiState — a sealed interface with exactly three cases.
 //   2. _uiState (MutableStateFlow, private) vs uiState (StateFlow, public, read-only).
-//   3. loadNotes() — launches in viewModelScope, sets Loading, then try/catch sets
+//   3. loadWeather() — launches in viewModelScope, sets Loading, then try/catch sets
 //      Success or Error. The try/catch is THE error-handling boundary.
 // =============================================================================
 
@@ -33,29 +33,29 @@ import kotlinx.coroutines.launch
 // STATE  —  the three things the screen can be, made into a closed type
 //
 // A SEALED interface means the compiler knows the COMPLETE set of subtypes. A `when`
-// over a NotesUiState can therefore be exhaustive (no `else` branch needed), so it is
+// over a WeatherUiState can therefore be exhaustive (no `else` branch needed), so it is
 // impossible to forget to render one of the states.
 // ===========================================================================
 
 /**
- * NotesUiState — the complete set of states the notes screen can be in.
+ * WeatherUiState — the complete set of states the weather screen can be in.
  * Exactly one of these is active at any time.
  */
-sealed interface NotesUiState {
+sealed interface WeatherUiState {
     /** The request is in flight; show a spinner. (A singleton — no data to carry.) */
-    data object Loading : NotesUiState
+    data object Loading : WeatherUiState
 
     /**
      * The request succeeded.
-     * @property notes the parsed notes to render in the list.
+     * @property weather the parsed weather to render.
      */
-    data class Success(val notes: List<Note>) : NotesUiState
+    data class Success(val weather: Weather) : WeatherUiState
 
     /**
      * The request failed.
      * @property message a human-readable reason to show alongside a Retry button.
      */
-    data class Error(val message: String) : NotesUiState
+    data class Error(val message: String) : WeatherUiState
 }
 
 // ===========================================================================
@@ -63,51 +63,58 @@ sealed interface NotesUiState {
 // ===========================================================================
 
 /**
- * NotesViewModel — loads notes from a [NoteRepository] and publishes the current
- * [NotesUiState] as a [StateFlow] the screen observes.
+ * WeatherViewModel — loads the current weather from a [WeatherRepository] and publishes
+ * the current [WeatherUiState] as a [StateFlow] the screen observes.
  *
- * The repository is injected (defaulting to the offline fake) so the ViewModel never
- * hard-codes WHERE notes come from — and so tests can pass a controlled fake.
+ * The repository is injected (defaulting to the real, keyless Open-Meteo one) so the
+ * ViewModel never hard-codes WHERE the weather comes from — and so tests can pass a
+ * controlled fake.
  *
- * @param repository the data source; defaults to the offline [provideNoteRepository].
+ * @param repository the data source; defaults to [provideWeatherRepository].
  */
-class NotesViewModel(
-    private val repository: NoteRepository = provideNoteRepository(),
+class WeatherViewModel(
+    private val repository: WeatherRepository = provideWeatherRepository(),
 ) : ViewModel() {
+
+    // The city currently shown. Public-read, private-write so the UI can highlight it but
+    // only loadWeather() changes it. Seeded with the first preset for the initial load.
+    var city: City = PRESET_CITIES.first()
+        private set
 
     // PRIVATE mutable state: only the ViewModel may change it. Seeded with Loading
     // because the screen begins fetching immediately (see init).
-    private val _uiState = MutableStateFlow<NotesUiState>(NotesUiState.Loading)
+    private val _uiState = MutableStateFlow<WeatherUiState>(WeatherUiState.Loading)
 
     // PUBLIC read-only state: the screen collects this but cannot mutate it. This
     // one-way exposure (private mutable -> public immutable) is the standard pattern.
-    val uiState: StateFlow<NotesUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
     // Kick off the first load as soon as the ViewModel is created.
     init {
-        loadNotes()
+        loadWeather()
     }
 
     /**
-     * (Re)load notes. Safe to call again — e.g. from the Retry button after an error.
+     * (Re)load the weather for [city] (defaults to the current city — used by Retry).
      *
-     * Flow: set Loading -> try the (suspending) repository call -> on success publish
-     * Success(notes); on ANY exception publish Error(message). This try/catch is the
-     * single place network failures are turned into a visible UI state.
+     * Flow: remember the city -> set Loading -> try the (suspending) repository call ->
+     * on success publish Success(weather); on ANY exception publish Error(message). This
+     * try/catch is the single place network failures are turned into a visible UI state.
      */
-    fun loadNotes() {
+    fun loadWeather(city: City = this.city) {
+        this.city = city
         // Launch on viewModelScope so the coroutine is cancelled if the VM is cleared,
-        // and so the suspending getNotes() never blocks the main thread.
+        // and so the suspending getWeather() never blocks the main thread.
         viewModelScope.launch {
-            _uiState.value = NotesUiState.Loading           // 1) show the spinner
+            _uiState.value = WeatherUiState.Loading             // 1) show the spinner
             try {
-                val notes = repository.getNotes()           // 2) suspend: network/parse
-                _uiState.value = NotesUiState.Success(notes) // 3a) publish the data
+                val weather = repository.getWeather(city)        // 2) suspend: network/parse
+                _uiState.value = WeatherUiState.Success(weather) // 3a) publish the data
             } catch (e: Exception) {
-                // 3b) ERROR HANDLING: any failure (no network, bad JSON, timeout, ...)
-                // becomes an Error state with a readable message instead of a crash.
-                _uiState.value = NotesUiState.Error(
-                    e.message ?: "Something went wrong while loading notes."
+                // 3b) ERROR HANDLING: any failure (no network, bad JSON, timeout) becomes
+                // an Error state with a readable message instead of a crash.
+                _uiState.value = WeatherUiState.Error(
+                    e.message ?: "Something went wrong while loading the weather."
                 )
             }
         }

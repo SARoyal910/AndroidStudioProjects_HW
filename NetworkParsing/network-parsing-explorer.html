@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Network Parsing — Interactive Explainer</title>
-<meta name="description" content="An interactive explainer for the Network Parsing Android app: run a live fetch simulator that walks a request through the ViewModel, Repository, Retrofit, and the network, then parses JSON into notes and renders Loading / Success / Error; explore DTO-to-domain mapping, the Real/Fake offline switch, the architecture and source, and a quiz.">
+<meta name="description" content="An interactive explainer for the Network Parsing Android app: run a live fetch simulator that walks a request through the ViewModel, Repository, Retrofit, and the network, then parses nested Open-Meteo JSON into a Weather object and renders Loading / Success / Error; explore DTO-to-domain mapping, the Real/Fake offline switch, the architecture and source, and a quiz.">
 <style>
 :root {
   color-scheme: light;
@@ -779,7 +779,7 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
     <button class="slide-toggle" id="slideToggle" type="button">Slide mode: off</button>
     <div class="rail-foot">
       The step-by-step code page:
-      <a href="how-a-note-is-fetched.html">How a note is fetched →</a>
+      <a href="how-a-note-is-fetched.html">How the weather is fetched →</a>
       <a href="../WebSocketLive/websocket-live-explorer.html">WebSocket Live explainer →</a>
     </div>
   </aside>
@@ -811,10 +811,10 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <p class="eyebrow">Interactive explainer</p>
         <h1>Network Parsing, hands-on</h1>
         <p class="lead">
-          This page turns one Android network request into something you can click through. Press <strong>Load notes</strong>
-          and watch the app ask for data, receive JSON, parse it into Kotlin objects, and draw either a spinner, a list,
-          or an error. The goal is simple: understand where the data goes, where errors are caught, and why the screen
-          only needs one state value.
+          This page turns one Android network request into something you can click through. Press <strong>Load weather</strong>
+          and watch the app ask Open-Meteo for data, receive nested JSON, flatten it into one clean Kotlin object, and draw
+          either a spinner, a weather card, or an error. The goal is simple: understand where the data goes, where errors are
+          caught, and why the screen only needs one state value.
         </p>
         <div class="tag-row">
           <span class="tag green">Retrofit</span>
@@ -824,19 +824,19 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           <span class="tag teal">runnable + this explainer</span>
         </div>
         <div class="grid3">
-          <div class="card"><div class="card-head"><span class="card-title">1. Ask</span></div><div class="card-body"><p class="dense">The screen calls <code>viewModel.loadNotes()</code> and immediately shows <code>Loading</code>.</p></div></div>
-          <div class="card"><div class="card-head"><span class="card-title">2. Fetch + parse</span></div><div class="card-body"><p class="dense">The Repository gets JSON from the fake data or the real API. Serialization turns it into <code>NoteDto</code>.</p></div></div>
-          <div class="card"><div class="card-head"><span class="card-title">3. Draw</span></div><div class="card-body"><p class="dense">The ViewModel publishes <code>Success(notes)</code> or <code>Error(message)</code>, and the screen redraws that state.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">1. Ask</span></div><div class="card-body"><p class="dense">The screen calls <code>viewModel.loadWeather()</code> and immediately shows <code>Loading</code>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">2. Fetch + parse</span></div><div class="card-body"><p class="dense">The Repository gets JSON from the fake data or the real Open-Meteo API. Serialization turns it into a nested <code>ForecastResponseDto</code>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">3. Draw</span></div><div class="card-body"><p class="dense">The ViewModel publishes <code>Success(weather)</code> or <code>Error(message)</code>, and the screen redraws that state.</p></div></div>
         </div>
         <div class="callout good">
           <span class="callout-label">One sentence to hold onto</span>
           The screen does not know about HTTP or JSON. It only renders one of three values:
-          <code>Loading</code>, <code>Success(notes)</code>, or <code>Error(message)</code>.
+          <code>Loading</code>, <code>Success(weather)</code>, or <code>Error(message)</code>.
         </div>
         <div class="callout">
           <span class="callout-label">If you get lost, trace these five nouns</span>
-          <strong>JSON</strong> is raw server text. <strong>NoteDto</strong> is the parsed network shape.
-          <strong>Note</strong> is the app shape. <strong>NotesUiState</strong> is what the screen renders.
+          <strong>JSON</strong> is raw server text. <strong>ForecastResponseDto</strong> is the parsed, nested network shape.
+          <strong>Weather</strong> is the flat app shape. <strong>WeatherUiState</strong> is what the screen renders.
           <strong>StateFlow</strong> is how the ViewModel publishes the current state to Compose.
         </div>
       </div>
@@ -848,15 +848,15 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <p class="eyebrow">The main event</p>
         <h2>Simple fetch simulator — one request, three endings</h2>
         <p class="dense">
-          Choose how the fetch should end, then press <strong>Load notes</strong>. Watch only one idea:
-          the screen asks for notes, the ViewModel shows <code>Loading</code>, the app gets data or an error, and the
+          Choose how the fetch should end, then press <strong>Load weather</strong>. Watch only one idea:
+          the screen asks for the weather, the ViewModel shows <code>Loading</code>, the app gets data or an error, and the
           screen redraws as <code>Success</code> or <code>Error</code>.
         </p>
 
         <div class="controls">
           <span class="hint">Choose the ending:</span>
           <span class="seg" id="outcomeSeg" aria-label="Choose simulator outcome">
-            <button data-out="success" class="on" type="button" aria-pressed="true">Notes load</button>
+            <button data-out="success" class="on" type="button" aria-pressed="true">Weather loads</button>
             <button data-out="offline" type="button" aria-pressed="false">No internet</button>
             <button data-out="badjson" type="button" aria-pressed="false">Bad JSON</button>
           </span>
@@ -872,10 +872,10 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           <div class="device">
             <div class="device-bar"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></div>
             <div class="device-body">
-              <div class="device-title">Network Parsing · Notes</div>
+              <div class="device-title">Network Parsing · Weather</div>
               <div class="device-sub">Teaching simulation — no real network needed.</div>
               <div style="margin:10px 0;">
-                <button class="btn primary" id="simLoad" type="button" style="width:100%; justify-content:center;">Load notes</button>
+                <button class="btn primary" id="simLoad" type="button" style="width:100%; justify-content:center;">Load weather</button>
               </div>
               <div id="simScreen" style="min-height:150px;" aria-live="polite"></div>
             </div>
@@ -886,8 +886,8 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
             <div class="pipe" id="pipe">
               <div class="pl ui" id="pl-ui">
                 <div class="pl-top"><span class="pl-name">① Screen asks</span><span class="carry" id="carry-ui"></span></div>
-                <div class="pl-sub">You tap Load notes. The screen calls the ViewModel.</div>
-                <div class="pl-file">NotesScreen → viewModel.loadNotes()</div>
+                <div class="pl-sub">You tap Load weather. The screen calls the ViewModel.</div>
+                <div class="pl-file">WeatherScreen → viewModel.loadWeather()</div>
               </div>
               <div class="pl-arrow" data-arrow>↓</div>
               <div class="pl vm" id="pl-vm">
@@ -897,21 +897,21 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
               </div>
               <div class="pl-arrow" data-arrow>↓</div>
               <div class="pl repo" id="pl-repo">
-                <div class="pl-top"><span class="pl-name">③ Repository gets notes</span><span class="carry" id="carry-repo"></span></div>
+                <div class="pl-top"><span class="pl-name">③ Repository gets weather</span><span class="carry" id="carry-repo"></span></div>
                 <div class="pl-sub">The data layer tries to get JSON.</div>
-                <div class="pl-file">repository.getNotes()</div>
+                <div class="pl-file">repository.getWeather(city)</div>
               </div>
               <div class="pl-arrow" data-arrow>↓</div>
               <div class="pl room" id="pl-api">
                 <div class="pl-top"><span class="pl-name">④ JSON is parsed</span><span class="carry" id="carry-api"></span></div>
-                <div class="pl-sub">Good JSON becomes <code>NoteDto</code>, then <code>Note</code>.</div>
-                <div class="pl-file">JSON → NoteDto → Note</div>
+                <div class="pl-sub">Nested JSON becomes <code>ForecastResponseDto</code>, then flat <code>Weather</code>.</div>
+                <div class="pl-file">JSON → ForecastResponseDto → Weather</div>
               </div>
               <div class="pl-arrow" data-arrow>↓</div>
               <div class="pl disk" id="pl-net">
                 <div class="pl-top"><span class="pl-name">⑤ State comes back</span><span class="carry" id="carry-net"></span></div>
                 <div class="pl-sub">The ViewModel publishes <code>Success</code> or <code>Error</code>.</div>
-                <div class="pl-file">Success(notes) or Error(message)</div>
+                <div class="pl-file">Success(weather) or Error(message)</div>
               </div>
               <div class="pl-return" id="pl-return">Compose sees the new state and redraws the phone screen.</div>
             </div>
@@ -921,7 +921,7 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <div class="sim-low">
           <div class="card">
             <div class="card-head"><span class="card-title">Plain-English story</span></div>
-            <div class="card-body"><div class="jl" id="simJourney" aria-live="polite"><div class="jl-empty">Press <strong>Load notes</strong> to record a trip.</div></div></div>
+            <div class="card-body"><div class="jl" id="simJourney" aria-live="polite"><div class="jl-empty">Press <strong>Load weather</strong> to record a trip.</div></div></div>
           </div>
           <div class="card dbcard">
             <div class="card-head"><span class="card-title">Data or error</span></div>
@@ -940,8 +940,8 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <p class="eyebrow">The key idea · one sealed type</p>
         <h2>The three UI states</h2>
         <p class="dense">
-          Because <code>NotesUiState</code> is a <strong>sealed interface</strong>, the screen has exactly three shapes and
-          the <code>when</code> that renders them is exhaustive. Tap each one to see what <code>NotesContent</code> draws.
+          Because <code>WeatherUiState</code> is a <strong>sealed interface</strong>, the screen has exactly three shapes and
+          the <code>when</code> that renders them is exhaustive. Tap each one to see what <code>WeatherContent</code> draws.
         </p>
         <div class="controls">
           <span class="seg" id="stateSeg">
@@ -954,7 +954,7 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           <div class="device" style="max-width:340px;">
             <div class="device-bar"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></div>
             <div class="device-body">
-              <div class="device-title">Network Parsing · Notes</div>
+              <div class="device-title">Network Parsing · Weather</div>
               <div id="stateScreen" style="min-height:170px; margin-top:8px;"></div>
             </div>
           </div>
@@ -974,10 +974,10 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <p class="dense">Five small files. Tap any one to see its job, the file it lives in, and what to look at. The colors match the simulator.</p>
         <div class="arch-grid" id="archGrid">
           <button class="arch-chip ui sel" data-layer="ui" type="button"><div class="ac-name">① UI · screen</div><div class="ac-file">MainActivity.kt</div></button>
-          <button class="arch-chip vm" data-layer="vm" type="button"><div class="ac-name">② ViewModel</div><div class="ac-file">NotesViewModel.kt</div></button>
-          <button class="arch-chip repo" data-layer="repo" type="button"><div class="ac-name">③ Repository</div><div class="ac-file">NoteRepository.kt</div></button>
-          <button class="arch-chip room" data-layer="api" type="button"><div class="ac-name">④ Retrofit API</div><div class="ac-file">NoteApi.kt</div></button>
-          <button class="arch-chip disk" data-layer="model" type="button"><div class="ac-name">⑤ DTO + domain</div><div class="ac-file">Note.kt</div></button>
+          <button class="arch-chip vm" data-layer="vm" type="button"><div class="ac-name">② ViewModel</div><div class="ac-file">WeatherViewModel.kt</div></button>
+          <button class="arch-chip repo" data-layer="repo" type="button"><div class="ac-name">③ Repository</div><div class="ac-file">WeatherRepository.kt</div></button>
+          <button class="arch-chip room" data-layer="api" type="button"><div class="ac-name">④ Retrofit API</div><div class="ac-file">WeatherApi.kt</div></button>
+          <button class="arch-chip disk" data-layer="model" type="button"><div class="ac-name">⑤ DTO + domain</div><div class="ac-file">Weather.kt</div></button>
         </div>
         <div class="arch-detail" id="archDetail"></div>
       </div>
@@ -990,87 +990,114 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <h2>Code explorer</h2>
         <p class="dense">Every file, lightly trimmed for focus. For the full, commented code open <a href="how-a-note-is-fetched.html">the step-by-step page</a> or the files themselves.</p>
         <div class="tabs" id="codeTabs">
-          <button class="tab on" data-tab="t-note" type="button">Note.kt</button>
-          <button class="tab" data-tab="t-api" type="button">NoteApi.kt</button>
-          <button class="tab" data-tab="t-repo" type="button">NoteRepository.kt</button>
-          <button class="tab" data-tab="t-vm" type="button">NotesViewModel.kt</button>
+          <button class="tab on" data-tab="t-note" type="button">Weather.kt</button>
+          <button class="tab" data-tab="t-api" type="button">WeatherApi.kt</button>
+          <button class="tab" data-tab="t-repo" type="button">WeatherRepository.kt</button>
+          <button class="tab" data-tab="t-vm" type="button">WeatherViewModel.kt</button>
           <button class="tab" data-tab="t-main" type="button">MainActivity.kt</button>
         </div>
 
         <div class="tabpane on" data-pane="t-note">
-          <div class="code-panel"><div class="code-head"><span class="code-file">Note.kt — DTO + domain + mapper</span><button class="copy-btn" type="button">Copy</button></div>
+          <div class="code-panel"><div class="code-head"><span class="code-file">Weather.kt — nested DTOs + flat domain + mapper</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">@Serializable                                  // makes this class JSON-decodable
-data class NoteDto(
-    val userId: Int,                           // matches JSON "userId" (parsed, then dropped)
-    val id: Int, val title: String, val body: String,
+data class ForecastResponseDto(
+    val current: CurrentDto,                   // matches JSON "current": { … } (a nested object)
 )
 
-// PLAIN data class: no @Serializable, no JSON knowledge, and NO userId.
-data class Note(val id: Int, val title: String, val body: String)
+@Serializable
+data class CurrentDto(
+    @SerialName("temperature_2m") val temperature: Double,      // snake_case JSON → camelCase Kotlin
+    @SerialName("apparent_temperature") val feelsLike: Double,
+    @SerialName("relative_humidity_2m") val humidity: Int,
+    @SerialName("weather_code") val weatherCode: Int,           // a NUMBER (WMO code), not text
+    @SerialName("wind_speed_10m") val windSpeed: Double,
+)
 
-// The SINGLE place network-shape becomes app-shape.
-fun NoteDto.toNote(): Note = Note(id = id, title = title, body = body)</pre></div>
-          <div class="tag-row"><span class="tag green">@Serializable</span><span class="tag">DTO vs domain</span><span class="tag">mapper</span></div>
+// PLAIN, FLAT data class: no @Serializable, no nesting, no cryptic weather_code.
+data class Weather(
+    val city: String, val country: String, val temperatureC: Int, val feelsLikeC: Int,
+    val description: String, val humidityPercent: Int, val windKmh: Int, val weatherCode: Int,
+)
+
+// The SINGLE place the nested network-shape becomes the flat app-shape.
+fun ForecastResponseDto.toWeather(city: City): Weather = Weather(
+    city = city.name, country = city.country,
+    temperatureC = current.temperature.roundToInt(),           // reach into "current", round
+    feelsLikeC = current.feelsLike.roundToInt(),
+    description = wmoDescription(current.weatherCode),          // 0 → "clear sky"
+    humidityPercent = current.humidity, windKmh = current.windSpeed.roundToInt(),
+    weatherCode = current.weatherCode,
+)</pre></div>
+          <div class="tag-row"><span class="tag green">@Serializable</span><span class="tag">@SerialName</span><span class="tag">nested DTO → flat domain</span><span class="tag">mapper</span></div>
         </div>
 
         <div class="tabpane" data-pane="t-api">
-          <div class="code-panel"><div class="code-head"><span class="code-file">NoteApi.kt — the Retrofit interface + assembly</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">interface NoteApi {
-    @GET("posts")                              // relative path -&gt; HTTP GET
-    suspend fun fetchNotes(): List&lt;NoteDto&gt;    // JSON array -&gt; List&lt;NoteDto&gt;, parsed for you
+          <div class="code-panel"><div class="code-head"><span class="code-file">WeatherApi.kt — the Retrofit interface + assembly</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface WeatherApi {
+    @GET("v1/forecast")                        // relative path -&gt; HTTP GET
+    suspend fun fetchForecast(
+        @Query("latitude") latitude: Double,   // becomes ?latitude=28.5384
+        @Query("longitude") longitude: Double, // becomes &amp;longitude=-81.3789
+        @Query("current") current: String = "temperature_2m,…,wind_speed_10m",
+    ): ForecastResponseDto                      // JSON object -&gt; DTO, parsed for you
 }
 
-private val json = Json { ignoreUnknownKeys = true }   // new server fields won't break parsing
+private val json = Json { ignoreUnknownKeys = true }   // drops the many fields we don't model
 
-fun provideNoteApi(): NoteApi =
+fun provideWeatherApi(): WeatherApi =
     Retrofit.Builder()
-        .baseUrl("https://jsonplaceholder.typicode.com/")          // MUST end in "/"
+        .baseUrl("https://api.open-meteo.com/")                    // MUST end in "/" · no API key
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
-        .create(NoteApi::class.java)           // Retrofit generates the implementation</pre></div>
-          <div class="tag-row"><span class="tag green">@GET</span><span class="tag">suspend</span><span class="tag">ignoreUnknownKeys</span></div>
+        .create(WeatherApi::class.java)        // Retrofit generates the implementation</pre></div>
+          <div class="tag-row"><span class="tag green">@GET</span><span class="tag">@Query</span><span class="tag">suspend</span><span class="tag">ignoreUnknownKeys</span></div>
         </div>
 
         <div class="tabpane" data-pane="t-repo">
-          <div class="code-panel"><div class="code-head"><span class="code-file">NoteRepository.kt — Real, Fake, switch</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">interface NoteRepository { suspend fun getNotes(): List&lt;Note&gt; }   // may THROW on failure
+          <div class="code-panel"><div class="code-head"><span class="code-file">WeatherRepository.kt — Real, Fake, switch</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">interface WeatherRepository { suspend fun getWeather(city: City): Weather }   // may THROW on failure
 
-class RealNoteRepository(private val api: NoteApi = provideNoteApi()) : NoteRepository {
-    override suspend fun getNotes() = api.fetchNotes().map { it.toNote() }   // network + parse + map
-}
-
-class FakeNoteRepository : NoteRepository {
-    private val json = Json { ignoreUnknownKeys = true }
-    override suspend fun getNotes(): List&lt;Note&gt; {
-        delay(600)                                              // imitate latency (see Loading)
-        return json.decodeFromString&lt;List&lt;NoteDto&gt;&gt;(FAKE_NOTES_JSON).map { it.toNote() }
+class RealWeatherRepository(private val api: WeatherApi = provideWeatherApi()) : WeatherRepository {
+    override suspend fun getWeather(city: City): Weather {
+        val dto = api.fetchForecast(city.latitude, city.longitude)   // network + parse
+        return dto.toWeather(city)                                   // nested DTO → flat domain
     }
 }
 
-// THE SWITCH — one argument toggles offline (default) vs live.
-fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
-    if (useFake) FakeNoteRepository() else RealNoteRepository()</pre></div>
+class FakeWeatherRepository : WeatherRepository {
+    private val json = Json { ignoreUnknownKeys = true }
+    override suspend fun getWeather(city: City): Weather {
+        delay(600)                                              // imitate latency (see Loading)
+        return json.decodeFromString&lt;ForecastResponseDto&gt;(FAKE_FORECAST_JSON).toWeather(city)
+    }
+}
+
+// THE SWITCH — one argument toggles live (default, free + keyless) vs offline.
+fun provideWeatherRepository(useFake: Boolean = false): WeatherRepository =
+    if (useFake) FakeWeatherRepository() else RealWeatherRepository()</pre></div>
           <div class="tag-row"><span class="tag teal">interface</span><span class="tag">Real</span><span class="tag">Fake</span><span class="tag">the switch</span></div>
         </div>
 
         <div class="tabpane" data-pane="t-vm">
-          <div class="code-panel"><div class="code-head"><span class="code-file">NotesViewModel.kt — sealed state + loadNotes()</span><button class="copy-btn" type="button">Copy</button></div>
-<pre data-lang="kotlin">sealed interface NotesUiState {
-    data object Loading : NotesUiState
-    data class Success(val notes: List&lt;Note&gt;) : NotesUiState
-    data class Error(val message: String) : NotesUiState
+          <div class="code-panel"><div class="code-head"><span class="code-file">WeatherViewModel.kt — sealed state + loadWeather()</span><button class="copy-btn" type="button">Copy</button></div>
+<pre data-lang="kotlin">sealed interface WeatherUiState {
+    data object Loading : WeatherUiState
+    data class Success(val weather: Weather) : WeatherUiState
+    data class Error(val message: String) : WeatherUiState
 }
 
-class NotesViewModel(private val repository: NoteRepository = provideNoteRepository()) : ViewModel() {
-    private val _uiState = MutableStateFlow&lt;NotesUiState&gt;(NotesUiState.Loading)
-    val uiState: StateFlow&lt;NotesUiState&gt; = _uiState.asStateFlow()
-    init { loadNotes() }
+class WeatherViewModel(private val repository: WeatherRepository = provideWeatherRepository()) : ViewModel() {
+    var city: City = PRESET_CITIES.first(); private set
+    private val _uiState = MutableStateFlow&lt;WeatherUiState&gt;(WeatherUiState.Loading)
+    val uiState: StateFlow&lt;WeatherUiState&gt; = _uiState.asStateFlow()
+    init { loadWeather() }
 
-    fun loadNotes() {
+    fun loadWeather(city: City = this.city) {
+        this.city = city
         viewModelScope.launch {
-            _uiState.value = NotesUiState.Loading
-            try { _uiState.value = NotesUiState.Success(repository.getNotes()) }
-            catch (e: Exception) { _uiState.value = NotesUiState.Error(e.message ?: "Something went wrong while loading notes.") }
+            _uiState.value = WeatherUiState.Loading
+            try { _uiState.value = WeatherUiState.Success(repository.getWeather(city)) }
+            catch (e: Exception) { _uiState.value = WeatherUiState.Error(e.message ?: "Something went wrong while loading the weather.") }
         }
     }
 }</pre></div>
@@ -1080,17 +1107,18 @@ class NotesViewModel(private val repository: NoteRepository = provideNoteReposit
         <div class="tabpane" data-pane="t-main">
           <div class="code-panel"><div class="code-head"><span class="code-file">MainActivity.kt — collect + exhaustive when</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">@Composable
-fun NotesScreen(modifier: Modifier = Modifier, viewModel: NotesViewModel = viewModel()) {
+fun WeatherScreen(modifier: Modifier = Modifier, viewModel: WeatherViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    NotesContent(uiState, onRetry = viewModel::loadNotes, modifier)
+    CityChips(selected = viewModel.city, onSelect = { viewModel.loadWeather(it) })
+    WeatherContent(uiState, onRetry = { viewModel.loadWeather() }, modifier)
 }
 
 @Composable
-fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifier = Modifier) {
+fun WeatherContent(uiState: WeatherUiState, onRetry: () -&gt; Unit, modifier: Modifier = Modifier) {
     when (uiState) {                                           // exhaustive: sealed type
-        is NotesUiState.Loading -&gt; LoadingState(modifier)
-        is NotesUiState.Success -&gt; NotesList(uiState.notes, modifier)
-        is NotesUiState.Error   -&gt; ErrorState(uiState.message, onRetry, modifier)
+        is WeatherUiState.Loading -&gt; LoadingState(modifier)
+        is WeatherUiState.Success -&gt; WeatherCard(uiState.weather, modifier)
+        is WeatherUiState.Error   -&gt; ErrorState(uiState.message, onRetry, modifier)
     }
 }</pre></div>
           <div class="tag-row"><span class="tag blue">Compose</span><span class="tag">collectAsStateWithLifecycle</span><span class="tag">stateless content</span></div>
@@ -1104,9 +1132,10 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <p class="eyebrow">Key idea · the parsing boundary</p>
         <h2>DTO → domain mapping</h2>
         <p class="dense">
-          JSON arrives in the <em>network's</em> shape (<code>NoteDto</code>); the app uses its own clean shape
-          (<code>Note</code>). The mapper <code>toNote()</code> is the single boundary — it copies the fields the UI needs
-          and drops the rest. Toggle the JSON to see what succeeds, what gets ignored, and what becomes an error.
+          JSON arrives in the <em>network's</em> nested shape (<code>ForecastResponseDto</code> wrapping a <code>CurrentDto</code>);
+          the app uses its own clean, flat shape (<code>Weather</code>). The mapper <code>toWeather()</code> is the single
+          boundary — it reaches into <code>current</code>, rounds the numbers, and decodes <code>weather_code</code> into text.
+          Toggle the JSON to see what succeeds, what gets ignored, and what becomes an error.
         </p>
         <div class="controls">
           <span class="hint">Server JSON:</span>
@@ -1119,11 +1148,11 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <div class="sim-low">
           <div class="card">
             <div class="card-head"><span class="card-title">① JSON in (network shape)</span></div>
-            <div class="card-body"><div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">one /posts object</span></div><pre id="dtoJson" style="white-space:pre-wrap;">—</pre></div></div>
+            <div class="card-body"><div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">one /v1/forecast object</span></div><pre id="dtoJson" style="white-space:pre-wrap;">—</pre></div></div>
           </div>
           <div class="card">
-            <div class="card-head"><span class="card-title">② Note out (app shape)</span></div>
-            <div class="card-body"><div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">after dto.toNote()</span></div><pre id="dtoNote" style="white-space:pre-wrap;">—</pre></div></div>
+            <div class="card-head"><span class="card-title">② Weather out (app shape)</span></div>
+            <div class="card-body"><div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">after dto.toWeather(city)</span></div><pre id="dtoNote" style="white-space:pre-wrap;">—</pre></div></div>
           </div>
         </div>
         <div class="callout violet" id="dtoMsg"></div>
@@ -1136,8 +1165,8 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <p class="eyebrow">Key idea · one-line offline switch</p>
         <h2>Real vs Fake — the same interface, two implementations</h2>
         <p class="dense">
-          Both implement <code>NoteRepository</code>, so the ViewModel can't tell them apart. <code>provideNoteRepository(useFake = …)</code>
-          picks one in a single place — which is why the app and its unit tests run with no network. Flip the switch:
+          Both implement <code>WeatherRepository</code>, so the ViewModel can't tell them apart. <code>provideWeatherRepository(useFake = …)</code>
+          picks one in a single place — which is why the app's unit tests can run with no network. Flip the switch:
         </p>
         <div class="controls">
           <span class="seg" id="rfSeg">
@@ -1176,33 +1205,33 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <div class="lesson-grid">
           <div class="lesson-card">
             <h3>Prompt 1: fake vs real</h3>
-            <p class="dense">If Fake and Real both implement <code>NoteRepository</code>, what code does the ViewModel need to change?</p>
-            <details><summary>Reveal</summary><p class="dense">None. It calls <code>repository.getNotes()</code> either way. The factory chooses the implementation.</p></details>
+            <p class="dense">If Fake and Real both implement <code>WeatherRepository</code>, what code does the ViewModel need to change?</p>
+            <details><summary>Reveal</summary><p class="dense">None. It calls <code>repository.getWeather(city)</code> either way. The factory chooses the implementation.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Prompt 2: extra field</h3>
-            <p class="dense">If the server adds <code>"reactions": 42</code>, should the UI show Error?</p>
-            <details><summary>Reveal</summary><p class="dense">No. <code>ignoreUnknownKeys = true</code> lets parsing succeed, and <code>toNote()</code> still outputs the same clean Note.</p></details>
+            <p class="dense">If the response adds <code>"current_units": {…}</code>, should the UI show Error?</p>
+            <details><summary>Reveal</summary><p class="dense">No. <code>ignoreUnknownKeys = true</code> lets parsing succeed, and <code>toWeather()</code> still outputs the same clean Weather.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Prompt 3: wrong type</h3>
-            <p class="dense">If <code>title</code> is a number instead of a String, which layer turns that into UI?</p>
+            <p class="dense">If <code>temperature_2m</code> arrives as a String instead of a number, which layer turns that into UI?</p>
             <details><summary>Reveal</summary><p class="dense">The parser throws, then the ViewModel's <code>catch</code> publishes <code>Error(message)</code>.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Prompt 4: no manual refresh</h3>
-            <p class="dense">Why does the list appear even though no code calls a list refresh method?</p>
+            <p class="dense">Why does the weather card appear even though no code calls a UI refresh method?</p>
             <details><summary>Reveal</summary><p class="dense">The ViewModel changes <code>uiState</code>. Compose observes it with <code>collectAsStateWithLifecycle()</code> and recomposes the Success branch.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Common mistake: DTOs in UI</h3>
-            <p class="dense">Symptom: screen code starts depending on server-only fields like <code>userId</code>.</p>
-            <details><summary>Fix</summary><p class="dense">Keep DTOs at the network boundary and map them to domain <code>Note</code> objects before UI state is published.</p></details>
+            <p class="dense">Symptom: screen code starts depending on wire-only fields like the nested <code>current.weather_code</code> number.</p>
+            <details><summary>Fix</summary><p class="dense">Keep DTOs at the network boundary and flatten them into domain <code>Weather</code> objects (with <code>weather_code</code> already decoded) before UI state is published.</p></details>
           </div>
           <div class="lesson-card">
             <h3>Common mistake: previewing a ViewModel</h3>
             <p class="dense">Symptom: previews become flaky because they try to run loading logic.</p>
-            <details><summary>Fix</summary><p class="dense">Preview the stateless <code>NotesContent()</code> with hand-made <code>Loading</code>, <code>Success</code>, and <code>Error</code> states.</p></details>
+            <details><summary>Fix</summary><p class="dense">Preview the stateless <code>WeatherContent()</code> with hand-made <code>Loading</code>, <code>Success</code>, and <code>Error</code> states.</p></details>
           </div>
         </div>
         <div class="teacher-only teacher-note">
@@ -1220,9 +1249,9 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <h2>Did it click?</h2>
         <div class="callout">
           <span class="callout-label">You understand this page when you can explain these without looking</span>
-          The screen renders <code>NotesUiState</code>; the ViewModel owns and changes that state; the Repository hides
-          fake vs real data; Retrofit fetches and parses JSON into <code>NoteDto</code>; <code>toNote()</code> converts
-          DTOs into clean <code>Note</code> objects; and <code>try/catch</code> turns failures into <code>Error(message)</code>.
+          The screen renders <code>WeatherUiState</code>; the ViewModel owns and changes that state; the Repository hides
+          fake vs real data; Retrofit fetches and parses nested JSON into <code>ForecastResponseDto</code>; <code>toWeather()</code>
+          flattens that DTO into a clean <code>Weather</code> object; and <code>try/catch</code> turns failures into <code>Error(message)</code>.
         </div>
         <p class="dense">Five questions. Pick an answer to see if it’s right and why. <span class="quiz-score" id="quizScore">0 / 5</span></p>
         <div class="progress-actions">
@@ -1230,6 +1259,7 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         </div>
         <div class="quiz" id="quizList"></div>
         <p class="foot">Network Parsing · one request, three states · part of the AndroidStudioProjects teaching set. See also <a href="how-a-note-is-fetched.html">the step-by-step code page</a>.</p>
+        <!-- domain-neutral page name "Network Parsing" retained; cross-link filename kept unchanged. -->
       </div>
     </section>
   </main>
@@ -1544,46 +1574,69 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
   var ORDER = ["ui", "vm", "repo", "api", "net"];
 
   // ---- sample data -------------------------------------------------------
-  var SAMPLE_NOTES = [
-    { id: 1, title: "Grocery reminder", body: "Pick up coffee, apples, and paper towels after class." },
-    { id: 2, title: "Course note", body: "Network data starts as JSON, then becomes Kotlin objects the UI can render." },
-    { id: 3, title: "Project idea", body: "Add a refresh button after the loading, success, and error states make sense." },
-  ];
-  function notesJson(notes, userIdEach) {
-    return "[\n" + notes.map(function (n, i) {
-      return '  { "userId": ' + (userIdEach[i] || 1) + ', "id": ' + n.id + ', "title": "' + n.title + '", "body": "' + n.body + '" }';
-    }).join(",\n") + "\n]";
+  // The parsed, flattened Weather the simulator's Success ending renders. One object
+  // (this app shows the current weather for one city), mirroring Weather.kt's flat shape.
+  var SAMPLE_WEATHER = {
+    city: "Orlando", country: "US", temperatureC: 27, feelsLikeC: 26,
+    description: "clear sky", humidityPercent: 41, windKmh: 8, weatherCode: 0,
+  };
+  // The raw, nested JSON Open-Meteo sends back — only the "current" block we model.
+  function forecastJson(w) {
+    return "{\n" +
+      '  "current": {\n' +
+      '    "time": "2026-06-25T12:30",\n' +
+      '    "temperature_2m": 26.8,\n' +
+      '    "relative_humidity_2m": ' + w.humidityPercent + ',\n' +
+      '    "apparent_temperature": 26.3,\n' +
+      '    "weather_code": ' + w.weatherCode + ',\n' +
+      '    "wind_speed_10m": 8.4\n' +
+      '  }\n}';
   }
-  var BAD_JSON = '[\n  { "userId": 1, "id": 1, "title": "sunt aut facere",\n    "body": 12345  <-- a number where a string is expected\n  } ,';
+  function weatherEmoji(code) {
+    if (code === 0 || code === 1) return "☀️";
+    if (code === 2) return "⛅";
+    if (code === 3) return "☁️";
+    if (code === 45 || code === 48) return "🌫️";
+    if (code >= 51 && code <= 67) return "🌧️";
+    if (code >= 71 && code <= 77) return "❄️";
+    if (code >= 80 && code <= 82) return "🌦️";
+    if (code >= 95 && code <= 99) return "⛈️";
+    return "🌡️";
+  }
+  var BAD_JSON = '{\n  "current": {\n    "temperature_2m": "warm",  <-- a string where a number is expected\n    "weather_code": 0\n  }\n}';
 
   // ======================= SIMPLE FETCH SIMULATOR =======================
   var sim = { outcome: "success", delay: 420, queue: [], qi: 0, journey: [], running: false, timer: null };
 
+  // Build the Success "weather card" DOM (city, big temp, condition, details row).
+  function weatherCard(w) {
+    var card = document.createElement("div"); card.className = "item-row"; card.style.display = "block"; card.style.textAlign = "center";
+    var emoji = document.createElement("div"); emoji.style.fontSize = "2.4rem"; emoji.style.lineHeight = "1"; emoji.textContent = weatherEmoji(w.weatherCode);
+    var temp = document.createElement("div"); temp.style.fontWeight = "800"; temp.style.fontSize = "1.6rem"; temp.textContent = w.temperatureC + "°C";
+    var place = document.createElement("div"); place.style.fontWeight = "750"; place.textContent = w.city + ", " + w.country;
+    var desc = document.createElement("div"); desc.className = "tiny"; desc.style.marginTop = "2px"; desc.textContent = w.description;
+    var details = document.createElement("div"); details.className = "tiny"; details.style.marginTop = "8px";
+    details.textContent = "Feels " + w.feelsLikeC + "° · Humidity " + w.humidityPercent + "% · Wind " + w.windKmh + " km/h";
+    card.appendChild(emoji); card.appendChild(temp); card.appendChild(place); card.appendChild(desc); card.appendChild(details);
+    return card;
+  }
+
   function renderScreen(kind, payload) {
     var el = $("#simScreen"); if (!el) return;
-    if (kind === "idle") { el.innerHTML = '<div class="empty-note">Tap <strong>Load notes</strong> to fetch.</div>'; return; }
+    if (kind === "idle") { el.innerHTML = '<div class="empty-note">Tap <strong>Load weather</strong> to fetch.</div>'; return; }
     if (kind === "loading") {
-      el.innerHTML = '<div style="text-align:center; padding:34px 0; color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div style="margin-top:8px;">Loading notes…</div></div>';
+      el.innerHTML = '<div style="text-align:center; padding:34px 0; color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div style="margin-top:8px;">Loading weather…</div></div>';
       return;
     }
     if (kind === "success") {
       el.innerHTML = "";
-      if (!payload.length) {
-        el.innerHTML = '<div style="text-align:center; padding:30px 4px;"><div style="font-weight:800;">No notes yet</div><div class="tiny" style="margin-top:8px;">The request succeeded, but the list was empty.</div></div>';
-        return;
-      }
-      payload.forEach(function (n) {
-        var row = document.createElement("div"); row.className = "item-row"; row.style.display = "block";
-        var t = document.createElement("div"); t.style.fontWeight = "800"; t.textContent = n.title;
-        var b = document.createElement("div"); b.className = "tiny"; b.style.marginTop = "2px"; b.textContent = n.body;
-        row.appendChild(t); row.appendChild(b); el.appendChild(row);
-      });
+      el.appendChild(weatherCard(payload));
       return;
     }
     if (kind === "error") {
       el.innerHTML = "";
       var wrap = document.createElement("div"); wrap.style.textAlign = "center"; wrap.style.padding = "20px 4px";
-      var h = document.createElement("div"); h.style.fontWeight = "800"; h.textContent = "❌ Couldn't load notes";
+      var h = document.createElement("div"); h.style.fontWeight = "800"; h.textContent = "❌ Couldn't load the weather";
       var m = document.createElement("div"); m.className = "tiny"; m.style.margin = "8px 0 14px"; m.style.color = "var(--red)"; m.textContent = payload;
       var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "Retry";
       btn.addEventListener("click", function () { if (!sim.running) startSim(); });
@@ -1599,7 +1652,7 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
 
   function renderJourney() {
     var el = $("#simJourney"); el.innerHTML = "";
-    if (!sim.journey.length) { el.innerHTML = '<div class="jl-empty">Press <strong>Load notes</strong> to record a trip.</div>'; return; }
+    if (!sim.journey.length) { el.innerHTML = '<div class="jl-empty">Press <strong>Load weather</strong> to record a trip.</div>'; return; }
     sim.journey.forEach(function (s, idx) {
       var meta = STAGE[s.stage];
       var row = document.createElement("div"); row.className = "jl-row";
@@ -1661,33 +1714,33 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
   }
 
   function buildSteps(outcome) {
-    var notes = SAMPLE_NOTES;
+    var w = SAMPLE_WEATHER;
     var steps = [
-      { stage: "UI", boxes: ["ui"], carry: "loadNotes()",
-        msg: "You tapped Load notes. The screen asks the ViewModel to start loading." },
+      { stage: "UI", boxes: ["ui"], carry: "loadWeather()",
+        msg: "You tapped Load weather. The screen asks the ViewModel to start loading." },
       { stage: "VIEWMODEL", boxes: ["vm"], carry: "Loading",
         msg: "The ViewModel immediately publishes Loading, so the phone shows a loading message.",
         apply: function () { renderScreen("loading"); } },
-      { stage: "REPOSITORY", boxes: ["repo"], carry: "getNotes()",
-        msg: "The Repository tries to get notes. In this simulator it uses safe offline sample JSON." },
+      { stage: "REPOSITORY", boxes: ["repo"], carry: "getWeather(city)",
+        msg: "The Repository asks Open-Meteo for " + w.city + "'s weather. In this simulator it uses safe offline sample JSON." },
       { stage: "API", boxes: ["api"], carry: "parse",
-        msg: "The app tries to parse JSON into NoteDto objects, then map them into clean Note objects." },
+        msg: "The app tries to parse the nested JSON into a ForecastResponseDto, then flatten it into a clean Weather object." },
     ];
 
     if (outcome === "offline") {
       steps.push({ stage: "NETWORK", boxes: ["net"], carry: "✕",
         msg: "No internet means the Repository cannot get JSON. It throws an exception.",
-        apply: function () { setResp("request failed", "exception", "java.net.UnknownHostException:\n  Unable to resolve host \"jsonplaceholder.typicode.com\":\n  No address associated with hostname"); } });
+        apply: function () { setResp("request failed", "exception", "java.net.UnknownHostException:\n  Unable to resolve host \"api.open-meteo.com\":\n  No address associated with hostname"); } });
       steps.push({ stage: "ERROR", boxes: ["return"],
         msg: "The ViewModel catches the exception and publishes Error(message). The phone shows the error and Retry.",
-        apply: function () { renderScreen("error", "Unable to resolve host \"jsonplaceholder.typicode.com\""); } });
+        apply: function () { renderScreen("error", "Unable to resolve host \"api.open-meteo.com\""); } });
       return steps;
     }
 
     if (outcome === "badjson") {
       steps.push({ stage: "NETWORK", boxes: ["net"], carry: "JSON",
-        msg: "JSON came back, but one field has the wrong type. The parser cannot safely create notes.",
-        apply: function () { setResp("malformed payload", "posts (bad)", BAD_JSON); } });
+        msg: "JSON came back, but one field has the wrong type. The parser cannot safely build the Weather.",
+        apply: function () { setResp("malformed payload", "forecast (bad)", BAD_JSON); } });
       steps.push({ stage: "ERROR", boxes: ["return"],
         msg: "The parser throws. The ViewModel catches that failure and publishes Error(message).",
         apply: function () { renderScreen("error", "Unexpected JSON token … (SerializationException)"); } });
@@ -1696,11 +1749,11 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
 
     // success
     steps.push({ stage: "NETWORK", boxes: ["net"], carry: "JSON",
-      msg: "Good JSON was parsed and mapped into " + notes.length + " clean Note objects.",
-      apply: function () { setResp("parsed sample JSON · " + notes.length + " posts", "sample posts", notesJson(notes, [1, 1, 2])); } });
+      msg: "Good nested JSON was parsed and flattened into one clean Weather object for " + w.city + ".",
+      apply: function () { setResp("parsed sample JSON · 1 forecast", "sample forecast", forecastJson(w)); } });
     steps.push({ stage: "STATE", boxes: ["return"],
-      msg: "The ViewModel publishes Success(notes). Compose sees that state and redraws the phone as a list.",
-      apply: function () { renderScreen("success", notes); } });
+      msg: "The ViewModel publishes Success(weather). Compose sees that state and redraws the phone as a weather card.",
+      apply: function () { renderScreen("success", w); } });
     return steps;
   }
 
@@ -1719,28 +1772,23 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
   // ======================= THREE UI STATES =======================
   var STATES = {
     loading: { render: function () { renderInto("#stateScreen", "loading"); },
-      info: "<strong>NotesUiState.Loading</strong> — a data object, meaning there is exactly one shared Loading value and it carries no fields. It needs no fields because the UI only needs to know that work is still in progress. <code>NotesContent</code> draws <code>LoadingState()</code>: a centered spinner plus text." },
-    success: { render: function () { renderInto("#stateScreen", "success", SAMPLE_NOTES); },
-      info: "<strong>NotesUiState.Success(val notes: List&lt;Note&gt;)</strong> — carries the clean domain notes, not raw JSON and not <code>NoteDto</code>. Parsing and mapping already finished before this state is published. <code>NotesContent</code> draws <code>NotesList(notes)</code>, which renders one row per note." },
+      info: "<strong>WeatherUiState.Loading</strong> — a data object, meaning there is exactly one shared Loading value and it carries no fields. It needs no fields because the UI only needs to know that work is still in progress. <code>WeatherContent</code> draws <code>LoadingState()</code>: a centered spinner plus text." },
+    success: { render: function () { renderInto("#stateScreen", "success", SAMPLE_WEATHER); },
+      info: "<strong>WeatherUiState.Success(val weather: Weather)</strong> — carries the clean, flat domain weather, not raw JSON and not <code>ForecastResponseDto</code>. Parsing and flattening already finished before this state is published. <code>WeatherContent</code> draws <code>WeatherCard(weather)</code>, which shows the city, temperature, and condition." },
     error:   { render: function () { renderInto("#stateScreen", "error", "No internet connection."); },
-      info: "<strong>NotesUiState.Error(val message: String)</strong> — carries the readable failure reason produced by the ViewModel's <code>catch</code> block. The UI does not need the exception object itself. <code>NotesContent</code> draws <code>ErrorState(message, onRetry)</code>, and Retry calls <code>loadNotes()</code> again." },
+      info: "<strong>WeatherUiState.Error(val message: String)</strong> — carries the readable failure reason produced by the ViewModel's <code>catch</code> block. The UI does not need the exception object itself. <code>WeatherContent</code> draws <code>ErrorState(message, onRetry)</code>, and Retry calls <code>loadWeather()</code> again." },
   };
   function renderInto(sel, kind, payload) {
     // a lightweight clone of renderScreen for the states device (no Retry wiring needed)
     var el = $(sel); if (!el) return;
-    if (kind === "loading") { el.innerHTML = '<div style="text-align:center; padding:40px 0; color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div style="margin-top:8px;">Loading notes…</div></div>'; return; }
+    if (kind === "loading") { el.innerHTML = '<div style="text-align:center; padding:40px 0; color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div style="margin-top:8px;">Loading weather…</div></div>'; return; }
     if (kind === "success") {
       el.innerHTML = "";
-      payload.forEach(function (n) {
-        var row = document.createElement("div"); row.className = "item-row"; row.style.display = "block";
-        var t = document.createElement("div"); t.style.fontWeight = "800"; t.textContent = n.title;
-        var b = document.createElement("div"); b.className = "tiny"; b.style.marginTop = "2px"; b.textContent = n.body;
-        row.appendChild(t); row.appendChild(b); el.appendChild(row);
-      });
+      el.appendChild(weatherCard(payload));
       return;
     }
     if (kind === "error") {
-      el.innerHTML = '<div style="text-align:center; padding:26px 4px;"><div style="font-weight:800;">❌ Couldn\'t load notes</div><div class="tiny" style="margin:8px 0 14px; color:var(--red);">' + payload + '</div><button class="btn" type="button">Retry</button></div>';
+      el.innerHTML = '<div style="text-align:center; padding:26px 4px;"><div style="font-weight:800;">❌ Couldn\'t load the weather</div><div class="tiny" style="margin:8px 0 14px; color:var(--red);">' + payload + '</div><button class="btn" type="button">Retry</button></div>';
     }
   }
   function showState(name) {
@@ -1754,20 +1802,20 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
   // ======================= ARCHITECTURE =======================
   var ARCH = {
     ui:    { name: "① UI — the screen", file: "MainActivity.kt", tab: "t-main",
-      what: "NotesScreen (stateful) obtains the ViewModel and collects its StateFlow with collectAsStateWithLifecycle(); NotesContent (stateless) renders the current state with one exhaustive when. Previews drive NotesContent with hand-made states.",
-      points: ["collectAsStateWithLifecycle() observes the state", "when over the sealed NotesUiState (exhaustive)", "stateless content = previewable without a ViewModel"] },
-    vm:    { name: "② ViewModel — the conductor", file: "NotesViewModel.kt", tab: "t-vm",
+      what: "WeatherScreen (stateful) obtains the ViewModel, shows a row of city chips, and collects its StateFlow with collectAsStateWithLifecycle(); WeatherContent (stateless) renders the current state with one exhaustive when. Previews drive WeatherContent with hand-made states.",
+      points: ["collectAsStateWithLifecycle() observes the state", "when over the sealed WeatherUiState (exhaustive)", "stateless content = previewable without a ViewModel"] },
+    vm:    { name: "② ViewModel — the conductor", file: "WeatherViewModel.kt", tab: "t-vm",
       what: "Exposes a private MutableStateFlow as a public read-only StateFlow, loads in init, and wraps the suspending call in a single try/catch that turns any failure into an Error state.",
-      points: ["_uiState (mutable) → uiState (read-only)", "loadNotes(): Loading → try Success / catch Error", "viewModelScope.launch keeps the work off the main thread"] },
-    repo:  { name: "③ Repository — source of truth", file: "NoteRepository.kt", tab: "t-repo",
-      what: "A NoteRepository interface with a Real (network) implementation and a Fake (offline) one. provideNoteRepository(useFake = …) picks one in a single place, which is what lets the app and tests run offline.",
-      points: ["interface getNotes(): List<Note> (may throw)", "Real: api.fetchNotes().map { toNote() }", "Fake: delay + decode hardcoded JSON"] },
-    api:   { name: "④ Retrofit — the HTTP client", file: "NoteApi.kt", tab: "t-api",
-      what: "Describe the endpoint as an annotated interface (@GET(\"posts\") suspend fun fetchNotes(): List<NoteDto>); Retrofit generates the HTTP code and decodes the JSON with the kotlinx.serialization converter. Json { ignoreUnknownKeys = true } keeps parsing robust.",
-      points: ["@GET(\"posts\") + suspend", "kotlinx.serialization converter factory", "ignoreUnknownKeys = true for forward-compatibility"] },
-    model: { name: "⑤ DTO + domain model", file: "Note.kt", tab: "t-note",
-      what: "NoteDto is the @Serializable network shape (its fields match the JSON keys); Note is the clean domain shape (no userId, no annotations). NoteDto.toNote() is the single mapping boundary.",
-      points: ["@Serializable NoteDto matches the JSON keys", "Note drops userId — the UI doesn't need it", "toNote() is the one testable parse→app seam"] },
+      points: ["_uiState (mutable) → uiState (read-only)", "loadWeather(city): Loading → try Success / catch Error", "viewModelScope.launch keeps the work off the main thread"] },
+    repo:  { name: "③ Repository — source of truth", file: "WeatherRepository.kt", tab: "t-repo",
+      what: "A WeatherRepository interface with a Real (network) implementation and a Fake (offline) one. provideWeatherRepository(useFake = …) picks one in a single place, which is what lets the unit tests run offline.",
+      points: ["interface getWeather(city): Weather (may throw)", "Real: api.fetchForecast(...).toWeather(city)", "Fake: delay + decode hardcoded JSON"] },
+    api:   { name: "④ Retrofit — the HTTP client", file: "WeatherApi.kt", tab: "t-api",
+      what: "Describe the endpoint as an annotated interface (@GET(\"v1/forecast\") suspend fun fetchForecast(@Query latitude, @Query longitude, …): ForecastResponseDto); Retrofit generates the HTTP code and decodes the JSON with the kotlinx.serialization converter. Json { ignoreUnknownKeys = true } keeps parsing robust.",
+      points: ["@GET(\"v1/forecast\") + @Query + suspend", "kotlinx.serialization converter factory", "ignoreUnknownKeys = true drops the fields we don't model"] },
+    model: { name: "⑤ DTO + domain model", file: "Weather.kt", tab: "t-note",
+      what: "ForecastResponseDto/CurrentDto are the @Serializable nested network shape (their keys use @SerialName to bridge snake_case JSON); Weather is the clean, flat domain shape (no annotations, no nesting, weather_code already decoded). ForecastResponseDto.toWeather(city) is the single mapping boundary.",
+      points: ["@Serializable + @SerialName bridge snake_case keys", "Weather is flat — the nested 'current' is flattened away", "toWeather() is the one testable parse→app seam"] },
   };
   function renderArch(layer) {
     var a = ARCH[layer]; var d = $("#archDetail");
@@ -1796,22 +1844,22 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
   // ======================= DTO → DOMAIN DEMO =======================
   var DTO = {
     normal: {
-      json: '{\n  "userId": 1,\n  "id": 1,\n  "title": "sunt aut facere",\n  "body": "quia et suscipit"\n}',
-      note: 'Note(\n  id = 1,\n  title = "sunt aut facere",\n  body = "quia et suscipit"\n)',
+      json: '{\n  "current": {\n    "temperature_2m": 26.8,\n    "relative_humidity_2m": 41,\n    "apparent_temperature": 26.3,\n    "weather_code": 0,\n    "wind_speed_10m": 8.4\n  }\n}',
+      note: 'Weather(\n  city = "Orlando", country = "US",\n  temperatureC = 27,   // 26.8 rounded\n  feelsLikeC = 26,\n  description = "clear sky",  // weather_code 0 decoded\n  humidityPercent = 41, windKmh = 8\n)',
       cls: "callout violet",
-      msg: "<strong>userId</strong> is parsed into NoteDto, then <strong>dropped</strong> by toNote() — the domain Note never carries it. That decoupling is the whole point of two shapes.",
+      msg: "The nested <strong>current</strong> object is parsed into <code>CurrentDto</code>, then <strong>flattened</strong> by <code>toWeather()</code> — the numeric <code>weather_code</code> becomes the text <code>\"clear sky\"</code> and the Doubles are rounded. The flat <code>Weather</code> never carries the nesting. That decoupling is the whole point of two shapes.",
     },
     extra: {
-      json: '{\n  "userId": 1,\n  "id": 1,\n  "title": "sunt aut facere",\n  "body": "quia et suscipit",\n  "reactions": 42\n}',
-      note: 'Note(\n  id = 1,\n  title = "sunt aut facere",\n  body = "quia et suscipit"\n)',
+      json: '{\n  "latitude": 28.5, "timezone": "GMT",\n  "current_units": { "temperature_2m": "°C" },\n  "current": {\n    "temperature_2m": 26.8,\n    "relative_humidity_2m": 41,\n    "apparent_temperature": 26.3,\n    "weather_code": 0,\n    "wind_speed_10m": 8.4\n  }\n}',
+      note: 'Weather(\n  city = "Orlando", country = "US",\n  temperatureC = 27, feelsLikeC = 26,\n  description = "clear sky",\n  humidityPercent = 41, windKmh = 8\n)',
       cls: "callout good",
-      msg: "The server added <code>\"reactions\": 42</code>, a field the app never modeled. Because <code>Json { ignoreUnknownKeys = true }</code>, decoding still succeeds — the unknown field is simply ignored (and userId is dropped, as always). That is the #1 real-world robustness setting.",
+      msg: "The server added <code>latitude</code>, <code>timezone</code>, and <code>current_units</code> — fields the app never modeled. Because <code>Json { ignoreUnknownKeys = true }</code>, decoding still succeeds — the unknown fields are simply ignored (and the nesting is flattened, as always). That is the #1 real-world robustness setting.",
     },
     badtype: {
-      json: '{\n  "userId": 1,\n  "id": 1,\n  "title": 404,\n  "body": "quia et suscipit"\n}',
-      note: 'No Note is created.\n\nSerializationException:\n"title" should be a String, but the JSON value is a number.',
+      json: '{\n  "current": {\n    "temperature_2m": "warm",\n    "relative_humidity_2m": 41,\n    "weather_code": 0,\n    "wind_speed_10m": 8.4\n  }\n}',
+      note: 'No Weather is created.\n\nSerializationException:\n"temperature_2m" should be a Double, but the JSON value is a string.',
       cls: "callout danger",
-      msg: "A wrong type is not ignored. The parser cannot safely decode <code>\"title\": 404</code> into <code>val title: String</code>, so it throws. The ViewModel catches that exception and publishes <code>Error(message)</code>.",
+      msg: "A wrong type is not ignored. The parser cannot safely decode <code>\"temperature_2m\": \"warm\"</code> into <code>val temperature: Double</code>, so it throws. The ViewModel catches that exception and publishes <code>Error(message)</code>.",
     },
   };
   function showDto(which) {
@@ -1826,12 +1874,12 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
 
   // ======================= REAL vs FAKE =======================
   var RF = {
-    fake: { name: "FakeNoteRepository — offline (the default)", path: "provideNoteRepository(useFake = true)",
-      what: "Returns the same parsed notes every time, after a short delay() to imitate latency so the Loading spinner is visible. It never touches the network — but it still decodeFromString()s a hardcoded JSON payload, so it exercises the real parse step.",
+    fake: { name: "FakeWeatherRepository — offline", path: "provideWeatherRepository(useFake = true)",
+      what: "Returns the same parsed weather every time, after a short delay() to imitate latency so the Loading spinner is visible. It never touches the network — but it still decodeFromString()s a hardcoded JSON payload, so it exercises the real parse step.",
       points: ["Works in airplane mode and in unit tests (no internet)", "delay(600) so you can see Loading", "Still parses JSON — the offline tests genuinely test parsing"] },
-    real: { name: "RealNoteRepository — live network", path: "provideNoteRepository(useFake = false)",
-      what: "Calls NoteApi.fetchNotes() over HTTP and maps each NoteDto to a Note. Requires the INTERNET permission (already declared) and a live connection; on no network it throws, which the ViewModel turns into an Error state.",
-      points: ["Hits https://jsonplaceholder.typicode.com/posts", "api.fetchNotes().map { it.toNote() }", "Throws offline → caught → Error UI state"] },
+    real: { name: "RealWeatherRepository — live network (the default)", path: "provideWeatherRepository(useFake = false)",
+      what: "Calls WeatherApi.fetchForecast(lat, lon) over HTTPS and flattens the ForecastResponseDto into a Weather. Requires the INTERNET permission (already declared) and a live connection, but NO API key; on no network it throws, which the ViewModel turns into an Error state.",
+      points: ["Hits https://api.open-meteo.com/v1/forecast — free, no key", "api.fetchForecast(lat, lon).toWeather(city)", "Throws offline → caught → Error UI state"] },
   };
   function renderRf(which) {
     $$("#rfSeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.rf === which); });
@@ -1849,38 +1897,42 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
 
   // ======================= GLOSSARY =======================
   var TERMS = [
-    ["Retrofit", "A type-safe HTTP client: you describe endpoints as an annotated interface and Retrofit generates the calls. Here it backs NoteApi.fetchNotes()."],
+    ["Retrofit", "A type-safe HTTP client: you describe endpoints as an annotated interface and Retrofit generates the calls. Here it backs WeatherApi.fetchForecast()."],
     ["OkHttp", "The lower-level HTTP engine Retrofit uses underneath. You normally do not call it directly in this app, but Retrofit relies on it to perform the actual network I/O."],
-    ["kotlinx.serialization", "Kotlin's JSON (de)serialization library. The compiler plugin generates a serializer for @Serializable NoteDto; the Retrofit converter uses it to decode response bodies."],
-    ["@Serializable", "Marks NoteDto so JSON text can be decoded into it. The DTO's field names match the JSON keys exactly (userId/id/title/body)."],
-    ["serialization compiler plugin", "The Gradle plugin that generates the serializer code for @Serializable classes. Without it, @Serializable NoteDto would not have generated JSON parsing support."],
-    ["DTO", "Data Transfer Object — the exact on-the-wire shape of a JSON object. It exists only to be (de)serialized. Here: NoteDto."],
-    ["domain model", "The clean shape the rest of the app uses (Note) — no serialization annotations, and it drops fields the UI doesn't need (userId)."],
-    ["toNote() mapper", "The single extension function that converts a network NoteDto into a domain Note. Centralizing it keeps parsing logic in one testable place."],
-    ["@GET", "Retrofit annotation marking a method as an HTTP GET. @GET(\"posts\") appends \"posts\" to the baseUrl."],
-    ["baseUrl", "The root URL Retrofit starts from. It must end in a slash here because relative paths like @GET(\"posts\") are appended to it."],
-    ["converter factory", "The Retrofit plug-in that turns response bodies into Kotlin objects. This app installs the kotlinx.serialization converter so JSON can become List<NoteDto>."],
+    ["kotlinx.serialization", "Kotlin's JSON (de)serialization library. The compiler plugin generates a serializer for @Serializable ForecastResponseDto/CurrentDto; the Retrofit converter uses it to decode response bodies."],
+    ["@Serializable", "Marks ForecastResponseDto and CurrentDto so JSON text can be decoded into them. It models the NESTED wire shape: the response holds a 'current' object."],
+    ["@SerialName", "Bridges a snake_case JSON key to a camelCase Kotlin property. The wire sends \"temperature_2m\"; @SerialName(\"temperature_2m\") maps it to val temperature."],
+    ["serialization compiler plugin", "The Gradle plugin that generates the serializer code for @Serializable classes. Without it, @Serializable ForecastResponseDto would not have generated JSON parsing support."],
+    ["DTO", "Data Transfer Object — the exact on-the-wire shape of a JSON object. It exists only to be (de)serialized. Here: ForecastResponseDto (which nests a CurrentDto)."],
+    ["nested DTO", "Real APIs return nested JSON, so the DTOs nest too: ForecastResponseDto holds a CurrentDto for the 'current' block. The mapper flattens that nesting away."],
+    ["domain model", "The clean, flat shape the rest of the app uses (Weather) — no serialization annotations, no nesting, and weather_code already decoded to text."],
+    ["toWeather() mapper", "The single extension function that flattens a nested ForecastResponseDto (plus the City) into a flat domain Weather. Centralizing it keeps parsing logic in one testable place."],
+    ["weather_code (WMO)", "A NUMBER the API returns for the condition (0 = clear, 3 = overcast, 95 = thunderstorm…). wmoDescription(code) decodes it into human text in the mapping layer."],
+    ["@GET", "Retrofit annotation marking a method as an HTTP GET. @GET(\"v1/forecast\") appends \"v1/forecast\" to the baseUrl."],
+    ["@Query", "Retrofit annotation that turns a function parameter into one ?name=value in the URL. latitude/longitude/current each become a query param."],
+    ["baseUrl", "The root URL Retrofit starts from. It must end in a slash here because relative paths like @GET(\"v1/forecast\") are appended to it."],
+    ["converter factory", "The Retrofit plug-in that turns response bodies into Kotlin objects. This app installs the kotlinx.serialization converter so JSON can become a ForecastResponseDto."],
     ["MediaType", "A label that says what kind of body is being parsed, here application/json. The converter uses it when registering itself with Retrofit."],
-    ["suspend", "Marks fetchNotes()/getNotes() as coroutine functions: Retrofit runs the network I/O off the main thread and resumes you with the result — no callbacks, no blocked threads."],
-    ["coroutine", "A lightweight unit of asynchronous work. loadNotes() launches one so the app can wait for network/parsing without freezing the main thread."],
+    ["suspend", "Marks fetchForecast()/getWeather() as coroutine functions: Retrofit runs the network I/O off the main thread and resumes you with the result — no callbacks, no blocked threads."],
+    ["coroutine", "A lightweight unit of asynchronous work. loadWeather() launches one so the app can wait for network/parsing without freezing the main thread."],
     ["delay(600)", "The fake repository's non-blocking pause. It makes Loading visible while still keeping fake mode deterministic and offline."],
-    ["ignoreUnknownKeys", "A Json setting: if the server adds fields you didn't model, decoding keeps working instead of throwing. The #1 real-world robustness setting."],
-    ["sealed interface", "A closed set of subtypes the compiler fully knows. NotesUiState is sealed, so a when over it is exhaustive — you can't forget a state."],
-    ["NotesUiState", "The three states the screen can be in: Loading, Success(notes), Error(message). Exactly one is active at a time."],
-    ["StateFlow", "A hot Flow that always holds a current value. The ViewModel exposes uiState: StateFlow<NotesUiState> for the screen to observe."],
+    ["ignoreUnknownKeys", "A Json setting: if the server sends fields you didn't model (latitude, timezone, current_units…), decoding keeps working instead of throwing. The #1 real-world robustness setting."],
+    ["sealed interface", "A closed set of subtypes the compiler fully knows. WeatherUiState is sealed, so a when over it is exhaustive — you can't forget a state."],
+    ["WeatherUiState", "The three states the screen can be in: Loading, Success(weather), Error(message). Exactly one is active at a time."],
+    ["StateFlow", "A hot Flow that always holds a current value. The ViewModel exposes uiState: StateFlow<WeatherUiState> for the screen to observe."],
     ["MutableStateFlow", "The private, writable backing flow (_uiState). Exposed read-only via asStateFlow() — the standard one-way encapsulation."],
-    ["viewModelScope", "A CoroutineScope tied to the ViewModel's lifetime. loadNotes() launches in it, so the work is cancelled if the ViewModel is cleared."],
+    ["viewModelScope", "A CoroutineScope tied to the ViewModel's lifetime. loadWeather() launches in it, so the work is cancelled if the ViewModel is cleared."],
     ["collectAsStateWithLifecycle()", "Subscribes a composable to a StateFlow, wraps the value in Compose State, recomposes on change, and pauses while off-screen."],
-    ["recomposition", "Compose rerunning composable functions after observed state changes. The list appears because uiState changes, not because code manually refreshes a widget."],
-    ["stateful composable", "A composable that obtains or observes state. NotesScreen is stateful because it gets the ViewModel and collects uiState."],
-    ["stateless composable", "A composable that only renders values passed into it. NotesContent is stateless because it receives uiState and onRetry as parameters."],
-    ["LazyColumn", "Compose's scrolling list component. It composes visible rows as needed, which is why Success(notes) can render a list efficiently."],
-    ["@Preview", "An Android Studio design-time render. The previews pass hand-made NotesUiState values into NotesContent instead of creating a real ViewModel."],
-    ["try/catch (the error boundary)", "The single try/catch in loadNotes() turns ANY failure — no network, bad JSON, timeout, HTTP error — into an Error state instead of a crash."],
-    ["Repository", "The abstraction the ViewModel depends on. It hides whether notes come from the network (Real) or memory (Fake)."],
-    ["Real / Fake switch", "provideNoteRepository(useFake = …) returns the offline fake (default) or the live network impl — a one-line toggle for offline runs and tests."],
+    ["recomposition", "Compose rerunning composable functions after observed state changes. The weather card appears because uiState changes, not because code manually refreshes a widget."],
+    ["stateful composable", "A composable that obtains or observes state. WeatherScreen is stateful because it gets the ViewModel and collects uiState."],
+    ["stateless composable", "A composable that only renders values passed into it. WeatherContent is stateless because it receives uiState and onRetry as parameters."],
+    ["FilterChip", "Compose's selectable chip. CityChips renders one per PRESET_CITIES entry; tapping one calls loadWeather(city) for that place."],
+    ["@Preview", "An Android Studio design-time render. The previews pass hand-made WeatherUiState values into WeatherContent instead of creating a real ViewModel."],
+    ["try/catch (the error boundary)", "The single try/catch in loadWeather() turns ANY failure — no network, bad JSON, timeout, HTTP error — into an Error state instead of a crash."],
+    ["Repository", "The abstraction the ViewModel depends on. It hides whether the weather comes from the network (Real) or memory (Fake)."],
+    ["Real / Fake switch", "provideWeatherRepository(useFake = …) returns the live network impl (default, free + keyless) or the offline fake — a one-line toggle for offline runs and tests."],
     ["INTERNET permission", "A normal (install-time) permission declared in the manifest. No runtime request; required for the Real repository to reach the network."],
-    ["runTest", "A coroutine testing helper used by the unit tests so suspend functions like FakeNoteRepository.getNotes() can be called from local JVM tests."],
+    ["runTest", "A coroutine testing helper used by the unit tests so suspend functions like FakeWeatherRepository.getWeather() can be called from local JVM tests."],
   ];
   (function () {
     var acc = $("#acc");
@@ -1898,26 +1950,26 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
 
   // ======================= QUIZ =======================
   var QUIZ = [
-    { q: "After a successful fetch, what makes the list appear on screen?",
-      opts: ["The repository pushes rows into the UI", "The ViewModel sets _uiState = Success(notes); the StateFlow emits and collectAsStateWithLifecycle recomposes", "onCreate runs again", "Retrofit updates the UI directly"],
+    { q: "After a successful fetch, what makes the weather card appear on screen?",
+      opts: ["The repository pushes views into the UI", "The ViewModel sets _uiState = Success(weather); the StateFlow emits and collectAsStateWithLifecycle recomposes", "onCreate runs again", "Retrofit updates the UI directly"],
       correct: 1,
-      exp: "The screen is a pure function of the StateFlow. loadNotes() publishes Success(notes); the new value flows to the screen and NotesContent's when redraws the list — no manual refresh." },
-    { q: "Why are NoteDto and Note two separate classes?",
-      opts: ["To use more memory", "So the UI/ViewModel never depend on the API's exact wire format — only NoteDto + toNote() change if the JSON changes", "Because Retrofit requires it", "To store userId twice"],
+      exp: "The screen is a pure function of the StateFlow. loadWeather() publishes Success(weather); the new value flows to the screen and WeatherContent's when redraws the card — no manual refresh." },
+    { q: "Why are ForecastResponseDto and Weather two separate classes?",
+      opts: ["To use more memory", "So the UI/ViewModel never depend on Open-Meteo's exact nested wire format — only the DTOs + toWeather() change if the JSON changes", "Because Retrofit requires it", "To store weather_code twice"],
       correct: 1,
-      exp: "NoteDto is the network shape (@Serializable, matches JSON keys); Note is the clean app shape (drops userId). toNote() is the single boundary, so API changes don't ripple into the screens." },
-    { q: "What does Json { ignoreUnknownKeys = true } do?",
-      opts: ["Speeds up parsing", "Lets decoding succeed when the server adds fields the app didn't model (they're ignored)", "Encrypts the JSON", "Removes userId"],
+      exp: "The DTOs are the nested network shape (@Serializable, @SerialName bridging snake_case keys); Weather is the clean, flat app shape. toWeather() is the single boundary, so API changes don't ripple into the screens." },
+    { q: "What does @SerialName(\"temperature_2m\") do on the temperature property?",
+      opts: ["Speeds up parsing", "Maps the snake_case JSON key temperature_2m onto the camelCase Kotlin property temperature", "Encrypts the JSON", "Rounds the temperature"],
       correct: 1,
-      exp: "It makes parsing forward-compatible: new server fields are ignored instead of throwing. A server merely adding fields therefore does NOT cause an Error state." },
+      exp: "Open-Meteo's keys are snake_case but Kotlin properties are camelCase. @SerialName bridges each one so decoding lines the JSON key up with the right field." },
     { q: "A device is offline and you're in Real mode. What does the user see?",
-      opts: ["A crash", "The Loading spinner forever", "An Error state with the message and a Retry button", "An empty list"],
+      opts: ["A crash", "The Loading spinner forever", "An Error state with the message and a Retry button", "An empty card"],
       correct: 2,
-      exp: "getNotes() throws (UnknownHostException); the single try/catch in loadNotes() turns it into Error(message). NotesContent draws the message + Retry, which just calls loadNotes() again." },
-    { q: "Why can the app build, run, and unit-test with no internet?",
-      opts: ["It caches responses", "provideNoteRepository(useFake = true) returns FakeNoteRepository, which parses a hardcoded JSON string offline", "It mocks Retrofit", "Tests are skipped offline"],
+      exp: "getWeather() throws (UnknownHostException); the single try/catch in loadWeather() turns it into Error(message). WeatherContent draws the message + Retry, which just calls loadWeather() again." },
+    { q: "How is the numeric weather_code turned into the text \"clear sky\" on screen?",
+      opts: ["The API sends the text", "toWeather() calls wmoDescription(current.weatherCode) during mapping, so the decode happens once at the parsing boundary", "Compose decodes it in the UI", "ignoreUnknownKeys converts it"],
       correct: 1,
-      exp: "The default is the offline fake. It still decodeFromString()s a hardcoded payload (so parsing is genuinely tested) after a small delay — no network required." },
+      exp: "Decoding the server's enum belongs in the mapping layer, not the UI. toWeather() runs wmoDescription(weatherCode) so the flat Weather already carries readable text like \"clear sky\"." },
   ];
   (function () {
     var wrap = $("#quizList");

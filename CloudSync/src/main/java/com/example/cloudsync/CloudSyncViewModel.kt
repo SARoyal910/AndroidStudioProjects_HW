@@ -31,15 +31,23 @@ class CloudSyncViewModel(app: Application) : AndroidViewModel(app) {
     // --- local data, surfaced as UI state (works offline) ---
     val notes: StateFlow<List<Note>> = repo.notes.stateIn(viewModelScope, started, emptyList())
     val pendingCount: StateFlow<Int> = repo.pendingCount.stateIn(viewModelScope, started, 0)
-    val isOnline: StateFlow<Boolean> = connectivity.isOnline.stateIn(viewModelScope, started, true)
+    val isOnline: StateFlow<Boolean> = connectivity.isOnline.stateIn(
+        viewModelScope,
+        started,
+        connectivity.currentlyOnline(),
+    )
+
+    init {
+        requestSync()
+    }
 
     // --- intents: write to Room, then ask for a sync ---
     fun addNote(title: String, body: String) = writeThenSync { repo.addNote(title, body) }
     fun editNote(id: String, title: String, body: String) = writeThenSync { repo.editNote(id, title, body) }
     fun deleteNote(id: String) = writeThenSync { repo.deleteNote(id) }
 
-    /** Manual "Sync now" — just enqueues the worker (subject to the same network constraint). */
-    fun syncNow() = SyncScheduler.requestSync(getApplication())
+    /** Manual "Sync now" — enqueue the worker and sync immediately when this foreground screen is online. */
+    fun syncNow() = requestSync()
 
     /** Demo: pretend another device added a note to the cloud, then pull it in. */
     fun simulateRemoteEdit() = writeThenSync { repo.simulateRemoteEdit() }
@@ -47,7 +55,16 @@ class CloudSyncViewModel(app: Application) : AndroidViewModel(app) {
     private fun writeThenSync(block: suspend () -> Unit) {
         viewModelScope.launch {
             block()                                     // 1) optimistic local write (Room updates the UI)
-            SyncScheduler.requestSync(getApplication()) // 2) push/pull when the network allows
+            requestSync()                               // 2) durable retry + immediate foreground sync when online
+        }
+    }
+
+    private fun requestSync() {
+        SyncScheduler.requestSync(getApplication())      // durable background retry path
+        if (connectivity.currentlyOnline()) {
+            viewModelScope.launch {
+                runCatching { repo.sync() }              // online emulator writes flip to Synced now
+            }
         }
     }
 

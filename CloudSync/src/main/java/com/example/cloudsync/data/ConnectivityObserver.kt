@@ -40,7 +40,7 @@ class ConnectivityObserver(context: Context) {
         awaitClose { cm?.unregisterNetworkCallback(callback) }   // clean up when no one collects
     }.distinctUntilChanged()
 
-    private fun currentlyOnline(): Boolean {
+    fun currentlyOnline(): Boolean {
         val caps = cm?.getNetworkCapabilities(cm.activeNetwork) ?: return false
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }

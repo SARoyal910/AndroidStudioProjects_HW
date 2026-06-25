@@ -69,6 +69,10 @@ body {
 }
 button, input, select, textarea { font: inherit; }
 a { color: var(--blue); }
+button:focus-visible, a:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
 code {
   font-family: var(--mono);
   font-size: 0.9em;
@@ -187,6 +191,7 @@ code {
 .topbar .brand-title { font-size: 0.9rem; }
 .topbar select {
   flex: 1;
+  min-width: 0;
   min-height: 36px;
   border: 1px solid var(--line);
   color: var(--ink);
@@ -348,6 +353,7 @@ p { overflow-wrap: anywhere; }
 /* ---------------- tables ---------------- */
 .tbl {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   border: 1px solid var(--line);
   border-radius: 9px;
@@ -363,6 +369,8 @@ p { overflow-wrap: anywhere; }
   padding: 9px 11px;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
 .tbl tr:last-child td { border-bottom: 0; }
@@ -446,11 +454,11 @@ p { overflow-wrap: anywhere; }
 @media (max-width: 980px) {
   .app { grid-template-columns: 1fr; }
   .rail { display: none; }
-  .topbar { display: flex; }
+  .topbar { display: flex; flex-wrap: wrap; }
   .band { padding: 26px 18px; }
   h1 { font-size: 2.1rem; }
   h2 { font-size: 1.5rem; }
-  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+  .grid2, .grid3, .statgrid, .lesson-grid { grid-template-columns: 1fr; }
 }
 </style>
 <style>
@@ -481,6 +489,111 @@ p { overflow-wrap: anywhere; }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button.on { background: var(--blue); color: #fff; }
 .hint { color: var(--muted); font-size: 0.84rem; }
+.teacher-only { display: none; }
+[data-teacher="on"] .teacher-only { display: block; }
+.teacher-toggle {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.topbar .teacher-toggle { width: auto; margin-top: 0; padding: 0 10px; }
+.slide-toggle {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.topbar .slide-toggle { width: auto; margin-top: 0; padding: 0 10px; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.teacher-note {
+  border-left: 4px solid var(--violet);
+  background: var(--violet-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 13px;
+  margin: 12px 0;
+}
+.teacher-note strong { display: block; margin-bottom: 3px; }
+.lesson-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; margin: 14px 0; }
+.lesson-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 14px 16px;
+}
+.band:nth-child(odd) .lesson-card { background: var(--bg); }
+.lesson-card h3 { margin-top: 0; }
+.lesson-card details { margin-top: 10px; }
+.lesson-card summary { cursor: pointer; font-weight: 800; color: var(--blue); }
+.progress-box {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+.band:nth-child(odd) .progress-box { background: var(--bg); }
+.progress-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.slide-controls {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+[data-slide="on"] .slide-controls { display: flex; }
+[data-slide="on"] .rail { display: none; }
+[data-slide="on"] .app { grid-template-columns: 1fr; }
+[data-slide="on"] .band { display: none; min-height: 100vh; }
+[data-slide="on"] .band.slide-current { display: block; }
+[data-slide="on"] .topbar { display: flex; flex-wrap: wrap; }
+
+@media (max-width: 560px) {
+  .seg { width: 100%; flex-wrap: wrap; }
+  .seg button { flex: 1 1 auto; }
+  .slide-controls { left: 12px; right: 12px; justify-content: center; }
+}
+
+@media print {
+  html { scroll-behavior: auto; }
+  body { background: #fff; color: #000; }
+  .app { display: block; }
+  .rail, .topbar, .theme-toggle, .teacher-toggle, .slide-toggle, .slide-controls, .copy-btn, .controls, .btn, .seg { display: none !important; }
+  .band { display: block !important; padding: 18px 0; border-bottom: 1px solid #bbb; break-inside: avoid; }
+  .band-inner { max-width: none; }
+  .teacher-only { display: block !important; }
+  .card, .tbl, .callout, .lesson-card, .progress-box { box-shadow: none; break-inside: avoid; }
+  .code-panel pre { white-space: pre-wrap; overflow: visible; }
+  a::after { content: " (" attr(href) ")"; font-size: 0.82em; }
+  a[href^="#"]::after { content: ""; }
+}
 
 /* simulator layout */
 .sim { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 16px; margin: 14px 0; }
@@ -650,7 +763,7 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
     <nav>
       <div class="nav-title">Explore</div>
       <a class="nav-link active" href="#overview"><span class="nav-num">1</span><span>What is this?</span></a>
-      <a class="nav-link" href="#simulator"><span class="nav-num">2</span><span>Live fetch simulator</span></a>
+      <a class="nav-link" href="#simulator"><span class="nav-num">2</span><span>Simple fetch simulator</span></a>
       <a class="nav-link" href="#states"><span class="nav-num">3</span><span>The three UI states</span></a>
       <a class="nav-link" href="#architecture"><span class="nav-num">4</span><span>Architecture</span></a>
       <a class="nav-link" href="#code"><span class="nav-num">5</span><span>Code explorer</span></a>
@@ -658,9 +771,12 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
       <a class="nav-link" href="#dto"><span class="nav-num">6</span><span>DTO → domain mapping</span></a>
       <a class="nav-link" href="#realfake"><span class="nav-num">7</span><span>Real vs Fake switch</span></a>
       <a class="nav-link" href="#glossary"><span class="nav-num">8</span><span>Glossary</span></a>
-      <a class="nav-link" href="#quiz"><span class="nav-num">9</span><span>Check yourself</span></a>
+      <a class="nav-link" href="#practice"><span class="nav-num">9</span><span>Practice prompts</span></a>
+      <a class="nav-link" href="#quiz"><span class="nav-num">10</span><span>Check yourself</span></a>
     </nav>
     <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <button class="teacher-toggle" id="teacherToggle" type="button">Teacher notes: off</button>
+    <button class="slide-toggle" id="slideToggle" type="button">Slide mode: off</button>
     <div class="rail-foot">
       The step-by-step code page:
       <a href="how-a-note-is-fetched.html">How a note is fetched →</a>
@@ -674,16 +790,19 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
       <div class="brand-mark" style="width:34px;height:34px;font-size:0.95rem;">NP</div>
       <select id="jump" aria-label="Jump to section">
         <option value="#overview">1 · What is this?</option>
-        <option value="#simulator">2 · Live fetch simulator</option>
+        <option value="#simulator">2 · Simple fetch simulator</option>
         <option value="#states">3 · The three UI states</option>
         <option value="#architecture">4 · Architecture</option>
         <option value="#code">5 · Code explorer</option>
         <option value="#dto">6 · DTO → domain mapping</option>
         <option value="#realfake">7 · Real vs Fake switch</option>
         <option value="#glossary">8 · Glossary</option>
-        <option value="#quiz">9 · Check yourself</option>
+        <option value="#practice">9 · Practice prompts</option>
+        <option value="#quiz">10 · Check yourself</option>
       </select>
       <button id="themeToggleTop" type="button">🌙</button>
+      <button class="teacher-toggle" id="teacherToggleTop" type="button">Teacher</button>
+      <button class="slide-toggle" id="slideToggleTop" type="button">Slides</button>
     </div>
 
     <!-- ============ 1. OVERVIEW ============ -->
@@ -692,12 +811,10 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
         <p class="eyebrow">Interactive explainer</p>
         <h1>Network Parsing, hands-on</h1>
         <p class="lead">
-          <strong>Network Parsing</strong> is a small Android app with one job: make it obvious <em>how an app talks to a
-          network, parses the JSON, and shows the result safely</em>. It fetches notes with <strong>Retrofit</strong> +
-          <strong>kotlinx.serialization</strong> and renders explicit <strong>Loading / Success / Error</strong> states.
-          This page lets you <strong>run that fetch yourself</strong> — choose the outcome, watch the request travel the
-          layers and come back as a UI state — then explore the DTO→domain mapping, the offline switch, the architecture,
-          and the source.
+          This page turns one Android network request into something you can click through. Press <strong>Load notes</strong>
+          and watch the app ask for data, receive JSON, parse it into Kotlin objects, and draw either a spinner, a list,
+          or an error. The goal is simple: understand where the data goes, where errors are caught, and why the screen
+          only needs one state value.
         </p>
         <div class="tag-row">
           <span class="tag green">Retrofit</span>
@@ -707,15 +824,20 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           <span class="tag teal">runnable + this explainer</span>
         </div>
         <div class="grid3">
-          <div class="card"><div class="card-head"><span class="card-title">▶ Run it</span></div><div class="card-body"><p class="dense">The <a href="#simulator">fetch simulator</a> walks a request through the ViewModel, Repository, Retrofit, and the network — and renders the resulting state.</p></div></div>
-          <div class="card"><div class="card-head"><span class="card-title">🧭 Explore it</span></div><div class="card-body"><p class="dense">Preview the <a href="#states">three UI states</a>, click the <a href="#architecture">architecture</a>, and browse the <a href="#code">source</a>.</p></div></div>
-          <div class="card"><div class="card-head"><span class="card-title">🧠 Get it</span></div><div class="card-body"><p class="dense">See <a href="#dto">DTO→domain mapping</a> and the <a href="#realfake">Real/Fake switch</a>, then <a href="#quiz">check yourself</a>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">1. Ask</span></div><div class="card-body"><p class="dense">The screen calls <code>viewModel.loadNotes()</code> and immediately shows <code>Loading</code>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">2. Fetch + parse</span></div><div class="card-body"><p class="dense">The Repository gets JSON from the fake data or the real API. Serialization turns it into <code>NoteDto</code>.</p></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">3. Draw</span></div><div class="card-body"><p class="dense">The ViewModel publishes <code>Success(notes)</code> or <code>Error(message)</code>, and the screen redraws that state.</p></div></div>
         </div>
         <div class="callout good">
           <span class="callout-label">One sentence to hold onto</span>
-          The screen is a <strong>pure function of one sealed state</strong>. A single <code>try/catch</code> turns any
-          failure into an <code>Error</code> state — never a crash — and a reactive <code>StateFlow</code> redraws the UI
-          for you.
+          The screen does not know about HTTP or JSON. It only renders one of three values:
+          <code>Loading</code>, <code>Success(notes)</code>, or <code>Error(message)</code>.
+        </div>
+        <div class="callout">
+          <span class="callout-label">If you get lost, trace these five nouns</span>
+          <strong>JSON</strong> is raw server text. <strong>NoteDto</strong> is the parsed network shape.
+          <strong>Note</strong> is the app shape. <strong>NotesUiState</strong> is what the screen renders.
+          <strong>StateFlow</strong> is how the ViewModel publishes the current state to Compose.
         </div>
       </div>
     </section>
@@ -724,32 +846,25 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
     <section class="band anchor" id="simulator">
       <div class="band-inner">
         <p class="eyebrow">The main event</p>
-        <h2>Live fetch simulator — watch a request travel</h2>
+        <h2>Simple fetch simulator — one request, three endings</h2>
         <p class="dense">
-          Pick a <strong>repository</strong> (offline Fake or live Real) and an <strong>outcome</strong>, then press
-          <strong>Load notes</strong>. The same pipeline the app runs lights up one layer at a time, the
-          <strong>Journey log</strong> records each leg, the <strong>response panel</strong> shows what came back, and the
-          device renders the matching <code>Loading → Success/Error</code> state.
+          Choose how the fetch should end, then press <strong>Load notes</strong>. Watch only one idea:
+          the screen asks for notes, the ViewModel shows <code>Loading</code>, the app gets data or an error, and the
+          screen redraws as <code>Success</code> or <code>Error</code>.
         </p>
 
         <div class="controls">
-          <span class="hint">Repository:</span>
-          <span class="seg" id="modeSeg">
-            <button data-mode="fake" class="on" type="button">Fake (offline)</button>
-            <button data-mode="real" type="button">Real (network)</button>
+          <span class="hint">Choose the ending:</span>
+          <span class="seg" id="outcomeSeg" aria-label="Choose simulator outcome">
+            <button data-out="success" class="on" type="button" aria-pressed="true">Notes load</button>
+            <button data-out="offline" type="button" aria-pressed="false">No internet</button>
+            <button data-out="badjson" type="button" aria-pressed="false">Bad JSON</button>
           </span>
-          <span class="hint">Outcome:</span>
-          <span class="seg" id="outcomeSeg">
-            <button data-out="success" class="on" type="button">Success</button>
-            <button data-out="offline" type="button">Offline error</button>
-            <button data-out="badjson" type="button">Bad JSON</button>
-          </span>
-          <span class="hint">Speed:</span>
-          <span class="seg" id="spdSeg">
-            <button data-ms="900" type="button">Slow</button>
-            <button data-ms="520" class="on" type="button">Normal</button>
-            <button data-ms="240" type="button">Fast</button>
-          </span>
+        </div>
+        <div class="callout">
+          <span class="callout-label">Read the simulator left to right</span>
+          The phone shows what the user sees. The boxes show who has the work right now. The story below explains the
+          same trip in plain English.
         </div>
 
         <div class="sim">
@@ -758,11 +873,11 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
             <div class="device-bar"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></div>
             <div class="device-body">
               <div class="device-title">Network Parsing · Notes</div>
-              <div class="device-sub" id="simModeNote">Offline fake — no network needed.</div>
+              <div class="device-sub">Teaching simulation — no real network needed.</div>
               <div style="margin:10px 0;">
                 <button class="btn primary" id="simLoad" type="button" style="width:100%; justify-content:center;">Load notes</button>
               </div>
-              <div id="simScreen" style="min-height:150px;"></div>
+              <div id="simScreen" style="min-height:150px;" aria-live="polite"></div>
             </div>
           </div>
 
@@ -770,49 +885,48 @@ table.db .nodata td { text-align: center; color: var(--muted); font-family: var(
           <div>
             <div class="pipe" id="pipe">
               <div class="pl ui" id="pl-ui">
-                <div class="pl-top"><span class="pl-name">① UI — the screen</span><span class="carry" id="carry-ui"></span></div>
-                <div class="pl-sub">Observes the StateFlow; the load/Retry tap calls the ViewModel.</div>
-                <div class="pl-file">MainActivity.kt · NotesScreen</div>
+                <div class="pl-top"><span class="pl-name">① Screen asks</span><span class="carry" id="carry-ui"></span></div>
+                <div class="pl-sub">You tap Load notes. The screen calls the ViewModel.</div>
+                <div class="pl-file">NotesScreen → viewModel.loadNotes()</div>
               </div>
               <div class="pl-arrow" data-arrow>↓</div>
               <div class="pl vm" id="pl-vm">
-                <div class="pl-top"><span class="pl-name">② ViewModel — the conductor</span><span class="carry" id="carry-vm"></span></div>
-                <div class="pl-sub">Sets Loading, launches a coroutine, wraps the call in try/catch.</div>
-                <div class="pl-file">NotesViewModel.kt · loadNotes()</div>
+                <div class="pl-top"><span class="pl-name">② ViewModel shows Loading</span><span class="carry" id="carry-vm"></span></div>
+                <div class="pl-sub">The ViewModel publishes <code>Loading</code> first.</div>
+                <div class="pl-file">_uiState = Loading</div>
               </div>
               <div class="pl-arrow" data-arrow>↓</div>
               <div class="pl repo" id="pl-repo">
-                <div class="pl-top"><span class="pl-name">③ Repository — source of truth</span><span class="carry" id="carry-repo"></span></div>
-                <div class="pl-sub">Real (network) or Fake (offline) — chosen by one flag.</div>
-                <div class="pl-file">NoteRepository.kt</div>
+                <div class="pl-top"><span class="pl-name">③ Repository gets notes</span><span class="carry" id="carry-repo"></span></div>
+                <div class="pl-sub">The data layer tries to get JSON.</div>
+                <div class="pl-file">repository.getNotes()</div>
               </div>
               <div class="pl-arrow" data-arrow>↓</div>
               <div class="pl room" id="pl-api">
-                <div class="pl-top"><span class="pl-name">④ Retrofit — the HTTP client</span><span class="carry" id="carry-api"></span></div>
-                <div class="pl-sub">@GET("posts") → a real HTTP GET; decodes JSON with the converter.</div>
-                <div class="pl-file">NoteApi.kt</div>
+                <div class="pl-top"><span class="pl-name">④ JSON is parsed</span><span class="carry" id="carry-api"></span></div>
+                <div class="pl-sub">Good JSON becomes <code>NoteDto</code>, then <code>Note</code>.</div>
+                <div class="pl-file">JSON → NoteDto → Note</div>
               </div>
               <div class="pl-arrow" data-arrow>↓</div>
               <div class="pl disk" id="pl-net">
-                <div class="pl-top"><span class="pl-name">⑤ The network — JSON API</span><span class="carry" id="carry-net"></span></div>
-                <div class="pl-sub">Returns a JSON array of posts (or fails).</div>
-                <div class="pl-file">jsonplaceholder.typicode.com/posts</div>
+                <div class="pl-top"><span class="pl-name">⑤ State comes back</span><span class="carry" id="carry-net"></span></div>
+                <div class="pl-sub">The ViewModel publishes <code>Success</code> or <code>Error</code>.</div>
+                <div class="pl-file">Success(notes) or Error(message)</div>
               </div>
-              <div class="pl-return" id="pl-return">↑ return trip: JSON → List&lt;NoteDto&gt; → .map { toNote() } → Success/Error → recompose</div>
+              <div class="pl-return" id="pl-return">Compose sees the new state and redraws the phone screen.</div>
             </div>
-            <p class="tiny">In <strong>Fake</strong> mode the request never leaves the device — step ⑤ parses a hardcoded JSON string instead of hitting the network. The <strong>Outcome</strong> control decides whether the trip succeeds or throws.</p>
           </div>
         </div>
 
         <div class="sim-low">
           <div class="card">
-            <div class="card-head"><span class="card-title">Journey of the request</span></div>
-            <div class="card-body"><div class="jl" id="simJourney"><div class="jl-empty">Press <strong>Load notes</strong> to record a trip.</div></div></div>
+            <div class="card-head"><span class="card-title">Plain-English story</span></div>
+            <div class="card-body"><div class="jl" id="simJourney" aria-live="polite"><div class="jl-empty">Press <strong>Load notes</strong> to record a trip.</div></div></div>
           </div>
           <div class="card dbcard">
-            <div class="card-head"><span class="card-title">What came back</span></div>
+            <div class="card-head"><span class="card-title">Data or error</span></div>
             <div class="card-body">
-              <div class="db-meta" id="simRespMeta">no response yet</div>
+              <div class="db-meta" id="simRespMeta" aria-live="polite">no response yet</div>
               <div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file" id="simRespFile">response</span></div><pre id="simResp" style="white-space:pre-wrap;">—</pre></div>
             </div>
           </div>
@@ -992,13 +1106,14 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
         <p class="dense">
           JSON arrives in the <em>network's</em> shape (<code>NoteDto</code>); the app uses its own clean shape
           (<code>Note</code>). The mapper <code>toNote()</code> is the single boundary — it copies the fields the UI needs
-          and drops the rest. Toggle the JSON to see two robustness behaviors.
+          and drops the rest. Toggle the JSON to see what succeeds, what gets ignored, and what becomes an error.
         </p>
         <div class="controls">
           <span class="hint">Server JSON:</span>
           <span class="seg" id="dtoSeg">
             <button data-dto="normal" class="on" type="button">Normal</button>
             <button data-dto="extra" type="button">+ extra server field</button>
+            <button data-dto="badtype" type="button">Wrong type</button>
           </span>
         </div>
         <div class="sim-low">
@@ -1043,17 +1158,86 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
       </div>
     </section>
 
-    <!-- ============ 9. QUIZ ============ -->
+    <!-- ============ 9. PRACTICE ============ -->
+    <section class="band anchor" id="practice">
+      <div class="band-inner">
+        <p class="eyebrow">Practice before the quiz</p>
+        <h2>Guided prompts and common mistakes</h2>
+        <p class="dense">
+          Use these prompts with the simulator. Predict the answer first, then reveal it and run the matching scenario.
+        </p>
+        <div class="progress-box" aria-live="polite">
+          <strong>Practice progress</strong>
+          <div class="dense" id="practiceProgress">0 / 6 reveals opened.</div>
+          <div class="progress-actions">
+            <button class="btn" id="resetPracticeProgress" type="button">Reset practice progress</button>
+          </div>
+        </div>
+        <div class="lesson-grid">
+          <div class="lesson-card">
+            <h3>Prompt 1: fake vs real</h3>
+            <p class="dense">If Fake and Real both implement <code>NoteRepository</code>, what code does the ViewModel need to change?</p>
+            <details><summary>Reveal</summary><p class="dense">None. It calls <code>repository.getNotes()</code> either way. The factory chooses the implementation.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Prompt 2: extra field</h3>
+            <p class="dense">If the server adds <code>"reactions": 42</code>, should the UI show Error?</p>
+            <details><summary>Reveal</summary><p class="dense">No. <code>ignoreUnknownKeys = true</code> lets parsing succeed, and <code>toNote()</code> still outputs the same clean Note.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Prompt 3: wrong type</h3>
+            <p class="dense">If <code>title</code> is a number instead of a String, which layer turns that into UI?</p>
+            <details><summary>Reveal</summary><p class="dense">The parser throws, then the ViewModel's <code>catch</code> publishes <code>Error(message)</code>.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Prompt 4: no manual refresh</h3>
+            <p class="dense">Why does the list appear even though no code calls a list refresh method?</p>
+            <details><summary>Reveal</summary><p class="dense">The ViewModel changes <code>uiState</code>. Compose observes it with <code>collectAsStateWithLifecycle()</code> and recomposes the Success branch.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Common mistake: DTOs in UI</h3>
+            <p class="dense">Symptom: screen code starts depending on server-only fields like <code>userId</code>.</p>
+            <details><summary>Fix</summary><p class="dense">Keep DTOs at the network boundary and map them to domain <code>Note</code> objects before UI state is published.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Common mistake: previewing a ViewModel</h3>
+            <p class="dense">Symptom: previews become flaky because they try to run loading logic.</p>
+            <details><summary>Fix</summary><p class="dense">Preview the stateless <code>NotesContent()</code> with hand-made <code>Loading</code>, <code>Success</code>, and <code>Error</code> states.</p></details>
+          </div>
+        </div>
+        <div class="teacher-only teacher-note">
+          <strong>Teacher note</strong>
+          Have students run the simulator after each reveal. The goal is to connect the answer to a visible state change,
+          not just read the explanation.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. QUIZ ============ -->
     <section class="band anchor" id="quiz">
       <div class="band-inner">
         <p class="eyebrow">Check yourself</p>
         <h2>Did it click?</h2>
+        <div class="callout">
+          <span class="callout-label">You understand this page when you can explain these without looking</span>
+          The screen renders <code>NotesUiState</code>; the ViewModel owns and changes that state; the Repository hides
+          fake vs real data; Retrofit fetches and parses JSON into <code>NoteDto</code>; <code>toNote()</code> converts
+          DTOs into clean <code>Note</code> objects; and <code>try/catch</code> turns failures into <code>Error(message)</code>.
+        </div>
         <p class="dense">Five questions. Pick an answer to see if it’s right and why. <span class="quiz-score" id="quizScore">0 / 5</span></p>
-        <div class="quiz" id="quiz"></div>
+        <div class="progress-actions">
+          <button class="btn" id="resetQuiz" type="button">Reset quiz</button>
+        </div>
+        <div class="quiz" id="quizList"></div>
         <p class="foot">Network Parsing · one request, three states · part of the AndroidStudioProjects teaching set. See also <a href="how-a-note-is-fetched.html">the step-by-step code page</a>.</p>
       </div>
     </section>
   </main>
+</div>
+<div class="slide-controls" aria-label="Slide mode controls">
+  <button class="btn" id="slidePrev" type="button">Prev</button>
+  <span class="tiny" id="slideCount">1 / 1</span>
+  <button class="btn" id="slideNext" type="button">Next</button>
 </div>
 <script>
 (function () {
@@ -1082,11 +1266,117 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     if (el) el.addEventListener("click", toggle);
   });
 
+  // ---------------- teacher notes toggle (persisted) ----------------
+  var TEACHER_KEY = "network-parsing-teacher-mode";
+  function applyTeacher(on) {
+    root.setAttribute("data-teacher", on ? "on" : "off");
+    var label = on ? "Teacher notes: on" : "Teacher notes: off";
+    var short = on ? "Teacher on" : "Teacher";
+    var b = document.getElementById("teacherToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("teacherToggleTop"); if (bt) bt.textContent = short;
+  }
+  var teacherSaved;
+  try { teacherSaved = localStorage.getItem(TEACHER_KEY); } catch (e) { teacherSaved = null; }
+  applyTeacher(teacherSaved === "on");
+  function toggleTeacher() {
+    var on = root.getAttribute("data-teacher") !== "on";
+    applyTeacher(on);
+    try { localStorage.setItem(TEACHER_KEY, on ? "on" : "off"); } catch (e) {}
+  }
+  ["teacherToggle", "teacherToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggleTeacher);
+  });
+
+  // ---------------- slide mode toggle (persisted) ----------------
+  var SLIDE_KEY = "network-parsing-slide-mode";
+  var slideSections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  var slideIndex = 0;
+  function setSlideButtons(on) {
+    var label = on ? "Slide mode: on" : "Slide mode: off";
+    var short = on ? "Slides on" : "Slides";
+    var b = document.getElementById("slideToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("slideToggleTop"); if (bt) bt.textContent = short;
+  }
+  function renderSlide() {
+    slideSections.forEach(function (s, idx) { s.classList.toggle("slide-current", idx === slideIndex); });
+    var count = document.getElementById("slideCount");
+    if (count) count.textContent = (slideIndex + 1) + " / " + slideSections.length;
+    var prev = document.getElementById("slidePrev"); if (prev) prev.disabled = slideIndex === 0;
+    var next = document.getElementById("slideNext"); if (next) next.disabled = slideIndex === slideSections.length - 1;
+    var sel = document.getElementById("jump"); if (sel && slideSections[slideIndex]) sel.value = "#" + slideSections[slideIndex].id;
+  }
+  function applySlide(on) {
+    root.setAttribute("data-slide", on ? "on" : "off");
+    setSlideButtons(on);
+    renderSlide();
+    if (on && slideSections[slideIndex]) slideSections[slideIndex].scrollIntoView({ behavior: "auto" });
+  }
+  var slideSaved;
+  try { slideSaved = localStorage.getItem(SLIDE_KEY); } catch (e) { slideSaved = null; }
+  applySlide(slideSaved === "on");
+  function toggleSlide() {
+    var on = root.getAttribute("data-slide") !== "on";
+    applySlide(on);
+    try { localStorage.setItem(SLIDE_KEY, on ? "on" : "off"); } catch (e) {}
+  }
+  ["slideToggle", "slideToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggleSlide);
+  });
+  var slidePrev = document.getElementById("slidePrev");
+  var slideNext = document.getElementById("slideNext");
+  if (slidePrev) slidePrev.addEventListener("click", function () { if (slideIndex > 0) { slideIndex--; renderSlide(); slideSections[slideIndex].scrollIntoView({ behavior: "auto" }); } });
+  if (slideNext) slideNext.addEventListener("click", function () { if (slideIndex < slideSections.length - 1) { slideIndex++; renderSlide(); slideSections[slideIndex].scrollIntoView({ behavior: "auto" }); } });
+
   // ---------------- mobile jump select ----------------
   var jump = document.getElementById("jump");
   if (jump) jump.addEventListener("change", function () {
     var t = document.querySelector(jump.value);
+    if (root.getAttribute("data-slide") === "on" && t) {
+      var idx = slideSections.indexOf(t);
+      if (idx >= 0) { slideIndex = idx; renderSlide(); }
+    }
     if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- practice progress ----------------
+  (function () {
+    var details = Array.prototype.slice.call(document.querySelectorAll("#practice details"));
+    var out = document.getElementById("practiceProgress");
+    var reset = document.getElementById("resetPracticeProgress");
+    if (!details.length || !out) return;
+    var key = "network-parsing-practice-progress";
+    var done = {};
+    try { done = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) { done = {}; }
+    function save() { try { localStorage.setItem(key, JSON.stringify(done)); } catch (e) {} }
+    function render() {
+      var count = details.filter(function (_d, idx) { return done[idx]; }).length;
+      out.textContent = count + " / " + details.length + " reveals opened.";
+    }
+    details.forEach(function (d, idx) {
+      if (done[idx]) d.open = true;
+      d.addEventListener("toggle", function () {
+        if (d.open) { done[idx] = true; save(); render(); }
+      });
+    });
+    if (reset) reset.addEventListener("click", function () {
+      done = {};
+      details.forEach(function (d) { d.open = false; });
+      save();
+      render();
+    });
+    render();
+  })();
+
+  // ---------------- nav links also control slide mode ----------------
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener("click", function () {
+      if (root.getAttribute("data-slide") !== "on") return;
+      var t = document.querySelector(a.getAttribute("href"));
+      var idx = slideSections.indexOf(t);
+      if (idx >= 0) { slideIndex = idx; renderSlide(); }
+    });
   });
 
   // ---------------- copy buttons ----------------
@@ -1246,22 +1536,18 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     UI:         { label: "UI",         color: "var(--ui)",   soft: "var(--blue-soft)" },
     VIEWMODEL:  { label: "ViewModel",  color: "var(--vm)",   soft: "var(--violet-soft)" },
     REPOSITORY: { label: "Repository", color: "var(--repo)", soft: "var(--teal-soft)" },
-    API:        { label: "Retrofit",   color: "var(--room)", soft: "var(--amber-soft)" },
-    NETWORK:    { label: "Network",    color: "var(--flow)", soft: "var(--green-soft)" },
+    API:        { label: "Parse",      color: "var(--room)", soft: "var(--amber-soft)" },
+    NETWORK:    { label: "Result",     color: "var(--flow)", soft: "var(--green-soft)" },
     STATE:      { label: "Success",    color: "var(--flow)", soft: "var(--green-soft)" },
     ERROR:      { label: "Error",      color: "var(--red)",  soft: "var(--red-soft)" },
   };
   var ORDER = ["ui", "vm", "repo", "api", "net"];
 
   // ---- sample data -------------------------------------------------------
-  var FAKE_NOTES = [
-    { id: 1, title: "Offline note one", body: "This note was parsed from a hardcoded JSON string, no network required." },
-    { id: 2, title: "Offline note two", body: "The FAKE repository lets the app and the unit tests run completely offline." },
-    { id: 3, title: "Offline note three", body: "Flip useFake to false in provideNoteRepository() to hit the real API instead." },
-  ];
-  var REAL_NOTES = [
-    { id: 1, title: "sunt aut facere repellat", body: "quia et suscipit suscipit recusandae…" },
-    { id: 2, title: "qui est esse", body: "est rerum tempore vitae sequi sint…" },
+  var SAMPLE_NOTES = [
+    { id: 1, title: "Grocery reminder", body: "Pick up coffee, apples, and paper towels after class." },
+    { id: 2, title: "Course note", body: "Network data starts as JSON, then becomes Kotlin objects the UI can render." },
+    { id: 3, title: "Project idea", body: "Add a refresh button after the loading, success, and error states make sense." },
   ];
   function notesJson(notes, userIdEach) {
     return "[\n" + notes.map(function (n, i) {
@@ -1270,8 +1556,8 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
   }
   var BAD_JSON = '[\n  { "userId": 1, "id": 1, "title": "sunt aut facere",\n    "body": 12345  <-- a number where a string is expected\n  } ,';
 
-  // ======================= LIVE FETCH SIMULATOR =======================
-  var sim = { mode: "fake", outcome: "success", delay: 520, queue: [], qi: 0, journey: [], running: false, timer: null };
+  // ======================= SIMPLE FETCH SIMULATOR =======================
+  var sim = { outcome: "success", delay: 420, queue: [], qi: 0, journey: [], running: false, timer: null };
 
   function renderScreen(kind, payload) {
     var el = $("#simScreen"); if (!el) return;
@@ -1282,6 +1568,10 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     }
     if (kind === "success") {
       el.innerHTML = "";
+      if (!payload.length) {
+        el.innerHTML = '<div style="text-align:center; padding:30px 4px;"><div style="font-weight:800;">No notes yet</div><div class="tiny" style="margin-top:8px;">The request succeeded, but the list was empty.</div></div>';
+        return;
+      }
       payload.forEach(function (n) {
         var row = document.createElement("div"); row.className = "item-row"; row.style.display = "block";
         var t = document.createElement("div"); t.style.fontWeight = "800"; t.textContent = n.title;
@@ -1364,85 +1654,76 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
 
   function startSim() {
     if (sim.running) return;
-    sim.queue = buildSteps(sim.mode, sim.outcome); sim.qi = 0; sim.journey = []; sim.running = true;
+    sim.queue = buildSteps(sim.outcome); sim.qi = 0; sim.journey = []; sim.running = true;
     renderJourney(); $("#simLoad").disabled = true;
     setResp("request in flight…", "response", "—");
     autoRun();
   }
 
-  function buildSteps(mode, outcome) {
-    var fake = mode === "fake";
-    var notes = fake ? FAKE_NOTES : REAL_NOTES;
+  function buildSteps(outcome) {
+    var notes = SAMPLE_NOTES;
     var steps = [
       { stage: "UI", boxes: ["ui"], carry: "loadNotes()",
-        msg: "NotesScreen is observing the StateFlow; the load (or Retry) tap calls viewModel.loadNotes()." },
+        msg: "You tapped Load notes. The screen asks the ViewModel to start loading." },
       { stage: "VIEWMODEL", boxes: ["vm"], carry: "Loading",
-        msg: "loadNotes() set _uiState = Loading and launched a coroutine on viewModelScope, entering the try block.",
+        msg: "The ViewModel immediately publishes Loading, so the phone shows a loading message.",
         apply: function () { renderScreen("loading"); } },
       { stage: "REPOSITORY", boxes: ["repo"], carry: "getNotes()",
-        msg: fake
-          ? "repository.getNotes() → FakeNoteRepository (offline). No network will be touched."
-          : "repository.getNotes() → RealNoteRepository (network). Requires INTERNET + a connection." },
-      { stage: "API", boxes: ["api"], carry: fake ? "decode" : "@GET posts",
-        msg: fake
-          ? "The fake skips Retrofit: delay(600) to imitate latency, then it will decode a hardcoded JSON string."
-          : "NoteApi.fetchNotes() → Retrofit issues HTTP GET /posts with the kotlinx.serialization converter installed." },
+        msg: "The Repository tries to get notes. In this simulator it uses safe offline sample JSON." },
+      { stage: "API", boxes: ["api"], carry: "parse",
+        msg: "The app tries to parse JSON into NoteDto objects, then map them into clean Note objects." },
     ];
 
     if (outcome === "offline") {
       steps.push({ stage: "NETWORK", boxes: ["net"], carry: "✕",
-        msg: fake
-          ? "(Fake mode has no network to fail — this is the failure the Real repository would throw when offline.)"
-          : "The GET failed before any response: java.net.UnknownHostException — Unable to resolve host.",
+        msg: "No internet means the Repository cannot get JSON. It throws an exception.",
         apply: function () { setResp("request failed", "exception", "java.net.UnknownHostException:\n  Unable to resolve host \"jsonplaceholder.typicode.com\":\n  No address associated with hostname"); } });
       steps.push({ stage: "ERROR", boxes: ["return"],
-        msg: "The try/catch caught the exception → _uiState = Error(\"Unable to resolve host …\"). The screen shows the error + a Retry button.",
+        msg: "The ViewModel catches the exception and publishes Error(message). The phone shows the error and Retry.",
         apply: function () { renderScreen("error", "Unable to resolve host \"jsonplaceholder.typicode.com\""); } });
       return steps;
     }
 
     if (outcome === "badjson") {
-      steps.push({ stage: "NETWORK", boxes: ["net"], carry: fake ? "JSON" : "200 OK",
-        msg: fake ? "Read the hardcoded JSON — but this payload is malformed (a number where a String is expected)."
-                  : "Server responded 200 with a body — but the JSON is malformed (a number where a String is expected).",
-        apply: function () { setResp(fake ? "malformed payload" : "200 OK · malformed body", "posts (bad)", BAD_JSON); } });
+      steps.push({ stage: "NETWORK", boxes: ["net"], carry: "JSON",
+        msg: "JSON came back, but one field has the wrong type. The parser cannot safely create notes.",
+        apply: function () { setResp("malformed payload", "posts (bad)", BAD_JSON); } });
       steps.push({ stage: "ERROR", boxes: ["return"],
-        msg: "Decoding threw kotlinx.serialization's SerializationException → caught → _uiState = Error(...). No crash; the error screen shows.",
+        msg: "The parser throws. The ViewModel catches that failure and publishes Error(message).",
         apply: function () { renderScreen("error", "Unexpected JSON token … (SerializationException)"); } });
       return steps;
     }
 
     // success
-    steps.push({ stage: "NETWORK", boxes: ["net"], carry: fake ? "JSON" : "200 OK",
-      msg: fake ? "Read the hardcoded JSON string (no network) — a JSON array of " + notes.length + " posts."
-                : "Server responded 200 OK with a JSON array of " + notes.length + " posts.",
-      apply: function () { setResp(fake ? "parsed hardcoded JSON · " + notes.length + " posts" : "200 OK · " + notes.length + " posts", "GET /posts", notesJson(notes, fake ? [1, 1, 2] : [1, 1])); } });
+    steps.push({ stage: "NETWORK", boxes: ["net"], carry: "JSON",
+      msg: "Good JSON was parsed and mapped into " + notes.length + " clean Note objects.",
+      apply: function () { setResp("parsed sample JSON · " + notes.length + " posts", "sample posts", notesJson(notes, [1, 1, 2])); } });
     steps.push({ stage: "STATE", boxes: ["return"],
-      msg: "JSON array → List<NoteDto> (parsed) → .map { toNote() } → _uiState = Success(" + notes.length + " notes). collectAsStateWithLifecycle recomposes the list.",
+      msg: "The ViewModel publishes Success(notes). Compose sees that state and redraws the phone as a list.",
       apply: function () { renderScreen("success", notes); } });
     return steps;
   }
 
   $("#simLoad").addEventListener("click", startSim);
-  $$("#modeSeg button").forEach(function (b) {
-    b.addEventListener("click", function () { if (sim.running) return; $$("#modeSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.mode = b.dataset.mode; $("#simModeNote").textContent = sim.mode === "fake" ? "Offline fake — no network needed." : "Live network — needs INTERNET + a connection."; });
-  });
   $$("#outcomeSeg button").forEach(function (b) {
-    b.addEventListener("click", function () { if (sim.running) return; $$("#outcomeSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.outcome = b.dataset.out; });
-  });
-  $$("#spdSeg button").forEach(function (b) {
-    b.addEventListener("click", function () { $$("#spdSeg button").forEach(function (x) { x.classList.remove("on"); }); b.classList.add("on"); sim.delay = parseInt(b.dataset.ms, 10); });
+    b.addEventListener("click", function () {
+      if (sim.running) return;
+      $$("#outcomeSeg button").forEach(function (x) { x.classList.remove("on"); x.setAttribute("aria-pressed", "false"); });
+      b.classList.add("on");
+      b.setAttribute("aria-pressed", "true");
+      sim.outcome = b.dataset.out;
+    });
   });
   renderScreen("idle"); renderJourney();
 
   // ======================= THREE UI STATES =======================
   var STATES = {
     loading: { render: function () { renderInto("#stateScreen", "loading"); },
-      info: "<strong>NotesUiState.Loading</strong> — a data object (a singleton; it carries no data). NotesContent draws a centered CircularProgressIndicator via LoadingState()." },
-    success: { render: function () { renderInto("#stateScreen", "success", FAKE_NOTES); },
-      info: "<strong>NotesUiState.Success(val notes: List&lt;Note&gt;)</strong> — carries the parsed notes. NotesContent draws them in a LazyColumn via NotesList(notes)." },
+      info: "<strong>NotesUiState.Loading</strong> — a data object, meaning there is exactly one shared Loading value and it carries no fields. It needs no fields because the UI only needs to know that work is still in progress. <code>NotesContent</code> draws <code>LoadingState()</code>: a centered spinner plus text." },
+    success: { render: function () { renderInto("#stateScreen", "success", SAMPLE_NOTES); },
+      info: "<strong>NotesUiState.Success(val notes: List&lt;Note&gt;)</strong> — carries the clean domain notes, not raw JSON and not <code>NoteDto</code>. Parsing and mapping already finished before this state is published. <code>NotesContent</code> draws <code>NotesList(notes)</code>, which renders one row per note." },
     error:   { render: function () { renderInto("#stateScreen", "error", "No internet connection."); },
-      info: "<strong>NotesUiState.Error(val message: String)</strong> — carries a human-readable reason. NotesContent draws the message + a Retry button via ErrorState(message, onRetry)." },
+      info: "<strong>NotesUiState.Error(val message: String)</strong> — carries the readable failure reason produced by the ViewModel's <code>catch</code> block. The UI does not need the exception object itself. <code>NotesContent</code> draws <code>ErrorState(message, onRetry)</code>, and Retry calls <code>loadNotes()</code> again." },
   };
   function renderInto(sel, kind, payload) {
     // a lightweight clone of renderScreen for the states device (no Retry wiring needed)
@@ -1517,18 +1798,27 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     normal: {
       json: '{\n  "userId": 1,\n  "id": 1,\n  "title": "sunt aut facere",\n  "body": "quia et suscipit"\n}',
       note: 'Note(\n  id = 1,\n  title = "sunt aut facere",\n  body = "quia et suscipit"\n)',
+      cls: "callout violet",
       msg: "<strong>userId</strong> is parsed into NoteDto, then <strong>dropped</strong> by toNote() — the domain Note never carries it. That decoupling is the whole point of two shapes.",
     },
     extra: {
       json: '{\n  "userId": 1,\n  "id": 1,\n  "title": "sunt aut facere",\n  "body": "quia et suscipit",\n  "reactions": 42\n}',
       note: 'Note(\n  id = 1,\n  title = "sunt aut facere",\n  body = "quia et suscipit"\n)',
+      cls: "callout good",
       msg: "The server added <code>\"reactions\": 42</code>, a field the app never modeled. Because <code>Json { ignoreUnknownKeys = true }</code>, decoding still succeeds — the unknown field is simply ignored (and userId is dropped, as always). That is the #1 real-world robustness setting.",
+    },
+    badtype: {
+      json: '{\n  "userId": 1,\n  "id": 1,\n  "title": 404,\n  "body": "quia et suscipit"\n}',
+      note: 'No Note is created.\n\nSerializationException:\n"title" should be a String, but the JSON value is a number.',
+      cls: "callout danger",
+      msg: "A wrong type is not ignored. The parser cannot safely decode <code>\"title\": 404</code> into <code>val title: String</code>, so it throws. The ViewModel catches that exception and publishes <code>Error(message)</code>.",
     },
   };
   function showDto(which) {
     $$("#dtoSeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.dto === which); });
     $("#dtoJson").textContent = DTO[which].json;
     $("#dtoNote").textContent = DTO[which].note;
+    $("#dtoMsg").className = DTO[which].cls;
     $("#dtoMsg").innerHTML = '<span class="callout-label">What happened</span>' + DTO[which].msg;
   }
   $$("#dtoSeg button").forEach(function (b) { b.addEventListener("click", function () { showDto(b.dataset.dto); }); });
@@ -1560,13 +1850,20 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
   // ======================= GLOSSARY =======================
   var TERMS = [
     ["Retrofit", "A type-safe HTTP client: you describe endpoints as an annotated interface and Retrofit generates the calls. Here it backs NoteApi.fetchNotes()."],
+    ["OkHttp", "The lower-level HTTP engine Retrofit uses underneath. You normally do not call it directly in this app, but Retrofit relies on it to perform the actual network I/O."],
     ["kotlinx.serialization", "Kotlin's JSON (de)serialization library. The compiler plugin generates a serializer for @Serializable NoteDto; the Retrofit converter uses it to decode response bodies."],
     ["@Serializable", "Marks NoteDto so JSON text can be decoded into it. The DTO's field names match the JSON keys exactly (userId/id/title/body)."],
+    ["serialization compiler plugin", "The Gradle plugin that generates the serializer code for @Serializable classes. Without it, @Serializable NoteDto would not have generated JSON parsing support."],
     ["DTO", "Data Transfer Object — the exact on-the-wire shape of a JSON object. It exists only to be (de)serialized. Here: NoteDto."],
     ["domain model", "The clean shape the rest of the app uses (Note) — no serialization annotations, and it drops fields the UI doesn't need (userId)."],
     ["toNote() mapper", "The single extension function that converts a network NoteDto into a domain Note. Centralizing it keeps parsing logic in one testable place."],
     ["@GET", "Retrofit annotation marking a method as an HTTP GET. @GET(\"posts\") appends \"posts\" to the baseUrl."],
+    ["baseUrl", "The root URL Retrofit starts from. It must end in a slash here because relative paths like @GET(\"posts\") are appended to it."],
+    ["converter factory", "The Retrofit plug-in that turns response bodies into Kotlin objects. This app installs the kotlinx.serialization converter so JSON can become List<NoteDto>."],
+    ["MediaType", "A label that says what kind of body is being parsed, here application/json. The converter uses it when registering itself with Retrofit."],
     ["suspend", "Marks fetchNotes()/getNotes() as coroutine functions: Retrofit runs the network I/O off the main thread and resumes you with the result — no callbacks, no blocked threads."],
+    ["coroutine", "A lightweight unit of asynchronous work. loadNotes() launches one so the app can wait for network/parsing without freezing the main thread."],
+    ["delay(600)", "The fake repository's non-blocking pause. It makes Loading visible while still keeping fake mode deterministic and offline."],
     ["ignoreUnknownKeys", "A Json setting: if the server adds fields you didn't model, decoding keeps working instead of throwing. The #1 real-world robustness setting."],
     ["sealed interface", "A closed set of subtypes the compiler fully knows. NotesUiState is sealed, so a when over it is exhaustive — you can't forget a state."],
     ["NotesUiState", "The three states the screen can be in: Loading, Success(notes), Error(message). Exactly one is active at a time."],
@@ -1574,10 +1871,16 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     ["MutableStateFlow", "The private, writable backing flow (_uiState). Exposed read-only via asStateFlow() — the standard one-way encapsulation."],
     ["viewModelScope", "A CoroutineScope tied to the ViewModel's lifetime. loadNotes() launches in it, so the work is cancelled if the ViewModel is cleared."],
     ["collectAsStateWithLifecycle()", "Subscribes a composable to a StateFlow, wraps the value in Compose State, recomposes on change, and pauses while off-screen."],
+    ["recomposition", "Compose rerunning composable functions after observed state changes. The list appears because uiState changes, not because code manually refreshes a widget."],
+    ["stateful composable", "A composable that obtains or observes state. NotesScreen is stateful because it gets the ViewModel and collects uiState."],
+    ["stateless composable", "A composable that only renders values passed into it. NotesContent is stateless because it receives uiState and onRetry as parameters."],
+    ["LazyColumn", "Compose's scrolling list component. It composes visible rows as needed, which is why Success(notes) can render a list efficiently."],
+    ["@Preview", "An Android Studio design-time render. The previews pass hand-made NotesUiState values into NotesContent instead of creating a real ViewModel."],
     ["try/catch (the error boundary)", "The single try/catch in loadNotes() turns ANY failure — no network, bad JSON, timeout, HTTP error — into an Error state instead of a crash."],
     ["Repository", "The abstraction the ViewModel depends on. It hides whether notes come from the network (Real) or memory (Fake)."],
     ["Real / Fake switch", "provideNoteRepository(useFake = …) returns the offline fake (default) or the live network impl — a one-line toggle for offline runs and tests."],
     ["INTERNET permission", "A normal (install-time) permission declared in the manifest. No runtime request; required for the Real repository to reach the network."],
+    ["runTest", "A coroutine testing helper used by the unit tests so suspend functions like FakeNoteRepository.getNotes() can be called from local JVM tests."],
   ];
   (function () {
     var acc = $("#acc");
@@ -1617,27 +1920,57 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
       exp: "The default is the offline fake. It still decodeFromString()s a hardcoded payload (so parsing is genuinely tested) after a small delay — no network required." },
   ];
   (function () {
-    var wrap = $("#quiz"); var answered = {}; var score = 0;
-    QUIZ.forEach(function (item, qi) {
-      var card = document.createElement("div"); card.className = "q";
-      var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
-      var opts = document.createElement("div"); opts.className = "q-opts";
-      item.opts.forEach(function (text, oi) {
-        var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
-        b.addEventListener("click", function () {
-          if (answered[qi]) return;
-          answered[qi] = true;
-          var buttons = $$(".opt", opts);
-          buttons.forEach(function (x, xi) { x.disabled = true; if (xi === item.correct) x.classList.add("correct"); });
-          if (oi !== item.correct) b.classList.add("wrong");
-          else score++;
-          card.classList.add("answered");
-          $("#quizScore").textContent = score + " / " + QUIZ.length;
-        });
-        opts.appendChild(b);
+    var wrap = $("#quizList");
+    var reset = $("#resetQuiz");
+    var key = "network-parsing-quiz-answers";
+    var answered = {};
+    try { answered = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) { answered = {}; }
+    function save() { try { localStorage.setItem(key, JSON.stringify(answered)); } catch (e) {} }
+    function scoreNow() {
+      return Object.keys(answered).filter(function (k) { return QUIZ[k] && answered[k] === QUIZ[k].correct; }).length;
+    }
+    function updateScore() {
+      var scoreEl = $("#quizScore");
+      if (scoreEl) scoreEl.textContent = scoreNow() + " / " + QUIZ.length;
+    }
+    function applyAnswer(card, opts, item, qi, chosen) {
+      var buttons = $$(".opt", opts);
+      buttons.forEach(function (x, xi) {
+        x.disabled = true;
+        x.setAttribute("aria-disabled", "true");
+        if (xi === item.correct) x.classList.add("correct");
+        if (xi === chosen && xi !== item.correct) x.classList.add("wrong");
       });
-      var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
-      card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
+      card.classList.add("answered");
+      answered[qi] = chosen;
+      save();
+      updateScore();
+    }
+    function renderQuiz() {
+      wrap.innerHTML = "";
+      QUIZ.forEach(function (item, qi) {
+        var card = document.createElement("div"); card.className = "q";
+        var prompt = document.createElement("div"); prompt.className = "q-prompt"; prompt.textContent = (qi + 1) + ". " + item.q;
+        var opts = document.createElement("div"); opts.className = "q-opts";
+        item.opts.forEach(function (text, oi) {
+          var b = document.createElement("button"); b.className = "opt"; b.type = "button"; b.textContent = text;
+          b.addEventListener("click", function () {
+            if (answered[qi] !== undefined) return;
+            applyAnswer(card, opts, item, qi, oi);
+          });
+          opts.appendChild(b);
+        });
+        var exp = document.createElement("div"); exp.className = "q-exp"; exp.textContent = "→ " + item.exp;
+        card.appendChild(prompt); card.appendChild(opts); card.appendChild(exp); wrap.appendChild(card);
+        if (answered[qi] !== undefined) applyAnswer(card, opts, item, qi, answered[qi]);
+      });
+      updateScore();
+    }
+    renderQuiz();
+    if (reset) reset.addEventListener("click", function () {
+      answered = {};
+      try { localStorage.removeItem(key); } catch (e) {}
+      renderQuiz();
     });
   })();
 })();

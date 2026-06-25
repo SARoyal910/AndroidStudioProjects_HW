@@ -69,6 +69,10 @@ body {
 }
 button, input, select, textarea { font: inherit; }
 a { color: var(--blue); }
+button:focus-visible, a:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
 code {
   font-family: var(--mono);
   font-size: 0.9em;
@@ -187,6 +191,7 @@ code {
 .topbar .brand-title { font-size: 0.9rem; }
 .topbar select {
   flex: 1;
+  min-width: 0;
   min-height: 36px;
   border: 1px solid var(--line);
   color: var(--ink);
@@ -348,6 +353,7 @@ p { overflow-wrap: anywhere; }
 /* ---------------- tables ---------------- */
 .tbl {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   border: 1px solid var(--line);
   border-radius: 9px;
@@ -363,6 +369,8 @@ p { overflow-wrap: anywhere; }
   padding: 9px 11px;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .tbl th { background: var(--surface-alt); color: var(--muted); font-size: 0.76rem; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; }
 .tbl tr:last-child td { border-bottom: 0; }
@@ -434,6 +442,198 @@ p { overflow-wrap: anywhere; }
 .kicker-list { padding-left: 18px; }
 .kicker-list li { margin-bottom: 6px; }
 .pillbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+.hint { color: var(--muted); font-size: 0.84rem; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--muted); min-height: 36px; padding: 0 13px; font-weight: 750; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--blue); color: #fff; }
+.btn {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.btn:hover, .seg button:hover { background: var(--surface-alt); }
+.seg button.on:hover { background: var(--blue); }
+button.layer {
+  width: 100%;
+  text-align: left;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+button.layer:hover, button.layer.sel {
+  box-shadow: 0 0 0 2px rgba(45, 100, 200, 0.24);
+}
+button.layer.layer-pick.sel { background: var(--blue-soft); }
+.plain-steps { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
+.plain-step { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 13px 14px; }
+.band:nth-child(odd) .plain-step { background: var(--bg); }
+.plain-step strong { display: block; margin-bottom: 4px; }
+.plain-step p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.mini-screen {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  overflow: hidden;
+  min-width: 0;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+}
+.mini-bar { height: 28px; background: var(--surface-strong); border-bottom: 1px solid var(--line); display: flex; justify-content: center; align-items: center; gap: 6px; }
+.mini-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.mini-body { padding: 14px; min-height: 180px; }
+.mini-title { font-weight: 850; margin-bottom: 10px; }
+.mini-note { border: 1px solid var(--line); border-radius: 9px; padding: 8px 9px; background: var(--bg); margin-bottom: 7px; }
+.mini-note strong { display: block; font-size: 0.9rem; }
+.mini-note span { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+.tiny { color: var(--muted); font-size: 0.82rem; }
+.faq-list { display: grid; gap: 8px; margin: 14px 0; }
+.faq-list details {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 0;
+  overflow: hidden;
+}
+.band:nth-child(odd) .faq-list details { background: var(--bg); }
+.faq-list summary {
+  cursor: pointer;
+  font-weight: 800;
+  padding: 11px 13px;
+}
+.faq-list details[open] summary { border-bottom: 1px solid var(--line); background: var(--surface-alt); }
+.faq-list details p { margin: 0; padding: 12px 13px; color: var(--muted); }
+.teacher-only { display: none; }
+[data-teacher="on"] .teacher-only { display: block; }
+.teacher-toggle {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.topbar .teacher-toggle {
+  width: auto;
+  margin-top: 0;
+  padding: 0 10px;
+}
+.slide-toggle {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  min-height: 38px;
+  cursor: pointer;
+  font-weight: 750;
+}
+.topbar .slide-toggle {
+  width: auto;
+  margin-top: 0;
+  padding: 0 10px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.teacher-note {
+  border-left: 4px solid var(--violet);
+  background: var(--violet-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 13px;
+  margin: 12px 0;
+}
+.teacher-note strong { display: block; margin-bottom: 3px; }
+.annotation-lab { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 16px; margin: 14px 0; }
+.annotation-list { display: grid; gap: 8px; }
+.line-pick {
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+.band:nth-child(odd) .line-pick { background: var(--bg); }
+.line-pick:hover, .line-pick.on { box-shadow: 0 0 0 2px rgba(45, 100, 200, 0.24); background: var(--blue-soft); }
+.annotation-detail { min-height: 240px; }
+.annotation-detail h3 { margin-top: 0; }
+.lesson-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; margin: 14px 0; }
+.lesson-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 14px 16px;
+}
+.band:nth-child(odd) .lesson-card { background: var(--bg); }
+.lesson-card h3 { margin-top: 0; }
+.lesson-card details { margin-top: 10px; }
+.lesson-card summary { cursor: pointer; font-weight: 800; color: var(--blue); }
+.worksheet {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+.band:nth-child(odd) .worksheet { background: var(--bg); }
+.worksheet ol { margin: 8px 0 0; padding-left: 22px; }
+.worksheet li { margin-bottom: 9px; }
+.answer-line {
+  border-bottom: 1px solid var(--line-strong);
+  min-height: 28px;
+  margin-top: 5px;
+}
+.progress-box {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+.band:nth-child(odd) .progress-box { background: var(--bg); }
+.progress-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.slide-controls {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+[data-slide="on"] .slide-controls { display: flex; }
+[data-slide="on"] .rail { display: none; }
+[data-slide="on"] .app { grid-template-columns: 1fr; }
+[data-slide="on"] .band { display: none; min-height: 100vh; }
+[data-slide="on"] .band.slide-current { display: block; }
+[data-slide="on"] .topbar { display: flex; flex-wrap: wrap; }
 .statgrid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 16px 0 4px; }
 .stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
 .band:nth-child(odd) .stat { background: var(--bg); }
@@ -446,11 +646,31 @@ p { overflow-wrap: anywhere; }
 @media (max-width: 980px) {
   .app { grid-template-columns: 1fr; }
   .rail { display: none; }
-  .topbar { display: flex; }
+  .topbar { display: flex; flex-wrap: wrap; }
   .band { padding: 26px 18px; }
   h1 { font-size: 2.1rem; }
   h2 { font-size: 1.5rem; }
-  .grid2, .grid3, .statgrid { grid-template-columns: 1fr; }
+  .grid2, .grid3, .statgrid, .plain-steps, .annotation-lab, .lesson-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .seg { width: 100%; flex-wrap: wrap; }
+  .seg button { flex: 1 1 auto; }
+  .slide-controls { left: 12px; right: 12px; justify-content: center; }
+}
+
+@media print {
+  html { scroll-behavior: auto; }
+  body { background: #fff; color: #000; }
+  .app { display: block; }
+  .rail, .topbar, .theme-toggle, .teacher-toggle, .slide-toggle, .slide-controls, .copy-btn, .controls, .btn, .seg { display: none !important; }
+  .band { display: block !important; padding: 18px 0; border-bottom: 1px solid #bbb; break-inside: avoid; }
+  .band-inner { max-width: none; }
+  .teacher-only { display: block !important; }
+  .card, .tbl, .callout, .worksheet, .lesson-card, .progress-box { box-shadow: none; break-inside: avoid; }
+  .code-panel pre { white-space: pre-wrap; overflow: visible; }
+  a::after { content: " (" attr(href) ")"; font-size: 0.82em; }
+  a[href^="#"]::after { content: ""; }
 }
 </style>
 </head>
@@ -482,9 +702,17 @@ p { overflow-wrap: anywhere; }
       <div class="nav-title">The round trip</div>
       <a class="nav-link" href="#trip"><span class="nav-num">11</span><span>The full trip</span></a>
       <a class="nav-link" href="#errors"><span class="nav-num">12</span><span>Error handling</span></a>
-      <a class="nav-link" href="#run"><span class="nav-num">13</span><span>Run &amp; inspect</span></a>
+      <a class="nav-link" href="#faq"><span class="nav-num">13</span><span>Common questions</span></a>
+      <div class="nav-title">Practice</div>
+      <a class="nav-link" href="#annotations"><span class="nav-num">14</span><span>Line annotations</span></a>
+      <a class="nav-link" href="#exercises"><span class="nav-num">15</span><span>Guided exercises</span></a>
+      <a class="nav-link" href="#mistakes"><span class="nav-num">16</span><span>Common mistakes</span></a>
+      <a class="nav-link" href="#worksheet"><span class="nav-num">17</span><span>Exit ticket</span></a>
+      <a class="nav-link" href="#run"><span class="nav-num">18</span><span>Run &amp; inspect</span></a>
     </nav>
     <button class="theme-toggle" id="themeToggle" type="button">🌙 Dark mode</button>
+    <button class="teacher-toggle" id="teacherToggle" type="button">Teacher notes: off</button>
+    <button class="slide-toggle" id="slideToggle" type="button">Slide mode: off</button>
     <div class="rail-foot">
       Prefer to play with it?
       <a href="network-parsing-explorer.html">Interactive explainer →</a>
@@ -510,9 +738,16 @@ p { overflow-wrap: anywhere; }
         <option value="#ui">10 · The screen</option>
         <option value="#trip">11 · The full trip</option>
         <option value="#errors">12 · Error handling</option>
-        <option value="#run">13 · Run &amp; inspect</option>
+        <option value="#faq">13 · Common questions</option>
+        <option value="#annotations">14 · Line annotations</option>
+        <option value="#exercises">15 · Guided exercises</option>
+        <option value="#mistakes">16 · Common mistakes</option>
+        <option value="#worksheet">17 · Exit ticket</option>
+        <option value="#run">18 · Run &amp; inspect</option>
       </select>
       <button id="themeToggleTop" type="button">🌙</button>
+      <button class="teacher-toggle" id="teacherToggleTop" type="button">Teacher</button>
+      <button class="slide-toggle" id="slideToggleTop" type="button">Slides</button>
     </div>
 
     <!-- ============ 1. OVERVIEW ============ -->
@@ -521,13 +756,24 @@ p { overflow-wrap: anywhere; }
         <p class="eyebrow">Networking, one request at a time</p>
         <h1>How a note is fetched</h1>
         <p class="lead">
-          <strong>Network Parsing</strong> answers one question in detail: <em>how does an Android app talk to a
-          network, turn the JSON it gets back into objects, and show the result safely?</em> It fetches a list of notes
-          from a public JSON API with <strong>Retrofit</strong> + <strong>kotlinx.serialization</strong>, and surfaces
-          the outcome as three explicit states — <strong>Loading</strong>, <strong>Success</strong>, or
-          <strong>Error</strong> — exposed through a <code>StateFlow</code>. This page is that round trip as
-          <strong>blocks of real code</strong>, in order.
+          <strong>Network Parsing</strong> is a small Android app that does one thing: it asks for notes, receives JSON,
+          turns that JSON into Kotlin objects, and shows either a spinner, a list, or an error. This page follows that
+          one fetch slowly. Each section says what the code does in plain English first, then shows the real Kotlin.
         </p>
+        <div class="plain-steps">
+          <div class="plain-step">
+            <strong>1. The screen asks</strong>
+            <p>The UI does not fetch by itself. It calls the ViewModel and watches one value: <code>uiState</code>.</p>
+          </div>
+          <div class="plain-step">
+            <strong>2. Data travels down</strong>
+            <p>The ViewModel asks the Repository. The Repository uses either the fake JSON or the real Retrofit API.</p>
+          </div>
+          <div class="plain-step">
+            <strong>3. State travels back up</strong>
+            <p>JSON becomes <code>NoteDto</code>, then <code>Note</code>, then <code>Success(notes)</code>. A failure becomes <code>Error(message)</code>.</p>
+          </div>
+        </div>
         <div class="tag-row">
           <span class="tag green">Retrofit</span>
           <span class="tag blue">kotlinx.serialization</span>
@@ -537,10 +783,9 @@ p { overflow-wrap: anywhere; }
         </div>
         <div class="callout good">
           <span class="callout-label">The one sentence to hold onto</span>
-          The screen is a <strong>pure function of one sealed state</strong>. You don't "show the data" — you render
-          whichever of <code>Loading</code>, <code>Success(notes)</code>, or <code>Error(message)</code> is current, and
-          a single <code>try/catch</code> in the ViewModel guarantees a failure becomes an <code>Error</code> state, never
-          a crash.
+          The screen only looks at <strong>one state value</strong>. If that value is <code>Loading</code>, it draws a
+          spinner. If it is <code>Success(notes)</code>, it draws the list. If it is <code>Error(message)</code>, it draws
+          the message and a Retry button.
         </div>
         <h3>Runs offline by default</h3>
         <p class="dense">
@@ -548,6 +793,56 @@ p { overflow-wrap: anywhere; }
           hardcoded JSON string after a short delay, so it builds, runs, and unit-tests with <em>no network</em>. One flag
           flips it to the live API at <code>https://jsonplaceholder.typicode.com/posts</code>.
         </p>
+        <h3>Vocabulary before the code</h3>
+        <p class="dense">
+          These words come up on almost every line. Read this table first, then the code sections will feel much less
+          mysterious.
+        </p>
+        <table class="tbl">
+          <thead><tr><th>Term</th><th>Plain meaning</th><th>Where it appears in this app</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>JSON</code></td>
+              <td>Plain text data from the server. It looks like objects with keys such as <code>"id"</code> and <code>"title"</code>.</td>
+              <td>The live API and <code>FAKE_NOTES_JSON</code> both provide JSON shaped like <code>/posts</code>.</td>
+            </tr>
+            <tr>
+              <td><code>NoteDto</code></td>
+              <td>The network-shaped Kotlin class. Its property names and types must match the JSON that is being decoded.</td>
+              <td><code>Note.kt</code>, marked with <code>@Serializable</code>.</td>
+            </tr>
+            <tr>
+              <td><code>Note</code></td>
+              <td>The app-shaped Kotlin class. It contains only what the UI actually needs.</td>
+              <td><code>Note.kt</code>, with <code>id</code>, <code>title</code>, and <code>body</code>, but no <code>userId</code>.</td>
+            </tr>
+            <tr>
+              <td><code>toNote()</code></td>
+              <td>The mapper. It converts one <code>NoteDto</code> into one <code>Note</code>.</td>
+              <td><code>NoteDto.toNote()</code> is called after Retrofit or the fake repository parses JSON.</td>
+            </tr>
+            <tr>
+              <td>Repository</td>
+              <td>A data-source wrapper. The ViewModel asks it for notes without caring whether they came from the network or the fake.</td>
+              <td><code>NoteRepository.kt</code>, with <code>RealNoteRepository</code> and <code>FakeNoteRepository</code>.</td>
+            </tr>
+            <tr>
+              <td>Retrofit</td>
+              <td>A library that turns an annotated Kotlin interface into real HTTP calls.</td>
+              <td><code>NoteApi.kt</code>, especially <code>@GET("posts")</code> and <code>provideNoteApi()</code>.</td>
+            </tr>
+            <tr>
+              <td><code>StateFlow</code></td>
+              <td>A stream-like state holder that always has a current value. The UI reads it and redraws when it changes.</td>
+              <td><code>NotesViewModel.uiState</code>, collected by <code>NotesScreen()</code>.</td>
+            </tr>
+            <tr>
+              <td>Recomposition</td>
+              <td>Compose running a composable again because state changed, so the screen can draw the new result.</td>
+              <td>When <code>_uiState</code> changes from <code>Loading</code> to <code>Success</code> or <code>Error</code>.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -562,37 +857,38 @@ p { overflow-wrap: anywhere; }
           <em>up</em> as a new <code>StateFlow</code> value (the <strong>return trip</strong>, in green).
         </p>
         <div class="layers">
-          <div class="layer ui">
+          <button class="layer ui layer-pick sel" data-layer="ui" type="button">
             <div class="l-name">① UI — the screen</div>
             <div class="l-desc">On first composition (or a Retry tap) the screen observes the ViewModel's <code>StateFlow</code>.</div>
             <div class="l-files"><code>MainActivity.kt · NotesScreen</code></div>
-          </div>
+          </button>
           <div class="arrow">↓ &nbsp;viewModel.loadNotes()</div>
-          <div class="layer vm">
+          <button class="layer vm layer-pick" data-layer="vm" type="button">
             <div class="l-name">② ViewModel — the conductor</div>
             <div class="l-desc">Sets <code>Loading</code>, launches a coroutine, and wraps the call in <code>try/catch</code>.</div>
             <div class="l-files"><code>NotesViewModel.kt · loadNotes()</code></div>
-          </div>
+          </button>
           <div class="arrow">↓ &nbsp;repository.getNotes() &nbsp;<em>(suspend)</em></div>
-          <div class="layer repo">
+          <button class="layer repo layer-pick" data-layer="repo" type="button">
             <div class="l-name">③ Repository — the source of truth</div>
             <div class="l-desc">Hides <em>where</em> notes come from: the real network impl, or the offline fake.</div>
             <div class="l-files"><code>NoteRepository.kt</code></div>
-          </div>
+          </button>
           <div class="arrow">↓ &nbsp;api.fetchNotes()</div>
-          <div class="layer engine">
+          <button class="layer engine layer-pick" data-layer="api" type="button">
             <div class="l-name">④ Retrofit — the HTTP client</div>
             <div class="l-desc">Turns <code>@GET("posts")</code> into a real HTTP GET and decodes the JSON array with kotlinx.serialization.</div>
             <div class="l-files"><code>NoteApi.kt</code></div>
-          </div>
+          </button>
           <div class="arrow">↓ &nbsp;HTTP GET /posts</div>
-          <div class="layer disk">
+          <button class="layer disk layer-pick" data-layer="network" type="button">
             <div class="l-name">⑤ The network — the JSON API</div>
             <div class="l-desc">The server returns a JSON array of posts.</div>
             <div class="l-files"><code>https://jsonplaceholder.typicode.com/posts</code></div>
-          </div>
+          </button>
           <div class="arrow" style="color:var(--green);font-weight:800;">↑ &nbsp;the return trip: JSON → <code>List&lt;NoteDto&gt;</code> → <code>.map { toNote() }</code> → <code>Success(notes)</code> → recompose</div>
         </div>
+        <div class="callout" id="layerDetail"></div>
       </div>
     </section>
 
@@ -649,6 +945,36 @@ dependencies {
     implementation(libs.okhttp)
 }</pre>
         </div>
+        <table class="tbl">
+          <thead><tr><th>Line / dependency</th><th>Why it is needed</th><th>What would break without it</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>kotlin.serialization</code> plugin</td>
+              <td>Generates the serializer code for <code>@Serializable NoteDto</code>.</td>
+              <td>The app could not automatically decode JSON into <code>NoteDto</code>.</td>
+            </tr>
+            <tr>
+              <td><code>kotlinx.serialization.json</code></td>
+              <td>Provides the <code>Json</code> parser and settings such as <code>ignoreUnknownKeys</code>.</td>
+              <td>There would be no JSON engine for the fake parser or Retrofit converter.</td>
+            </tr>
+            <tr>
+              <td><code>retrofit</code></td>
+              <td>Turns <code>NoteApi</code> into a working HTTP client.</td>
+              <td><code>@GET("posts")</code> would just be an annotation with no runtime implementation.</td>
+            </tr>
+            <tr>
+              <td><code>retrofit.converter.kotlinx.serialization</code></td>
+              <td>Connects Retrofit response bodies to the kotlinx.serialization parser.</td>
+              <td>Retrofit could fetch text, but it would not know how to produce <code>List&lt;NoteDto&gt;</code>.</td>
+            </tr>
+            <tr>
+              <td><code>okhttp</code></td>
+              <td>The HTTP engine Retrofit uses underneath.</td>
+              <td>The app would be missing the low-level client pieces Retrofit relies on.</td>
+            </tr>
+          </tbody>
+        </table>
         <div class="callout warn">
           <span class="callout-label">The INTERNET permission</span>
           <code>AndroidManifest.xml</code> declares <code>&lt;uses-permission android:name="android.permission.INTERNET" /&gt;</code>
@@ -669,6 +995,29 @@ dependencies {
           speaks (the <strong>domain model</strong>), and convert between them in exactly one place. JSON text arrives,
           kotlinx.serialization turns it into a <code>NoteDto</code>, and a mapper turns that into a clean <code>Note</code>.
         </p>
+        <div class="controls">
+          <span class="hint">Try a response:</span>
+          <span class="seg" id="dtoLabSeg">
+            <button data-dto-lab="normal" class="on" type="button">Normal JSON</button>
+            <button data-dto-lab="extra" type="button">Extra field</button>
+            <button data-dto-lab="badtype" type="button">Wrong type</button>
+          </span>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head"><span class="card-title">JSON from the server</span></div>
+            <div class="card-body">
+              <div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">one object from /posts</span></div><pre id="dtoLabJson" style="white-space:pre-wrap;">—</pre></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">What the app gets</span></div>
+            <div class="card-body">
+              <div class="code-panel" style="margin:0;"><div class="code-head"><span class="code-file">after parse + toNote()</span></div><pre id="dtoLabResult" style="white-space:pre-wrap;">—</pre></div>
+            </div>
+          </div>
+        </div>
+        <div class="callout violet" id="dtoLabMsg"></div>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">Note.kt · the DTO (network shape)</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">@Serializable                                  // &lt;-- makes this class JSON-decodable
@@ -698,6 +1047,36 @@ fun NoteDto.toNote(): Note =                   // extension fn: reads like dto.t
           more, only <code>NoteDto</code> and <code>toNote()</code> would change — not the screens or the ViewModel. The
           mapper is the one testable seam between "network shape" and "app shape".
         </div>
+        <table class="tbl">
+          <thead><tr><th>Piece</th><th>What the student should notice</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>@Serializable</code></td>
+              <td>It is on <code>NoteDto</code>, not on <code>Note</code>.</td>
+              <td>Only the network shape needs JSON decoding. The domain model can stay plain and UI-focused.</td>
+            </tr>
+            <tr>
+              <td><code>userId</code></td>
+              <td>It exists in <code>NoteDto</code> but not in <code>Note</code>.</td>
+              <td>The JSON includes it, so the DTO parses it. The UI does not display it, so the domain model drops it.</td>
+            </tr>
+            <tr>
+              <td><code>id</code>, <code>title</code>, <code>body</code></td>
+              <td>They exist in both classes with compatible types.</td>
+              <td>These are the fields the UI actually needs to show each row.</td>
+            </tr>
+            <tr>
+              <td><code>fun NoteDto.toNote()</code></td>
+              <td>This is an extension function, so it reads like <code>dto.toNote()</code>.</td>
+              <td>The mapping code lives in one named place instead of being repeated wherever notes are fetched.</td>
+            </tr>
+            <tr>
+              <td>No <code>@SerialName</code></td>
+              <td>The property names already match the JSON keys exactly.</td>
+              <td>If the server used a different key, such as <code>"user_id"</code>, then <code>@SerialName("user_id")</code> would be needed.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -738,6 +1117,36 @@ fun provideNoteApi(): NoteApi =
           The <code>baseUrl</code> must end in <code>/</code> (Retrofit appends the relative path), and
           <code>ignoreUnknownKeys = true</code> means a server that grows new fields won't break your parser.
         </div>
+        <table class="tbl">
+          <thead><tr><th>Code</th><th>Read it as</th><th>Important detail</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>interface NoteApi</code></td>
+              <td>A description of the server calls the app knows how to make.</td>
+              <td>There is no method body because Retrofit creates the implementation at runtime.</td>
+            </tr>
+            <tr>
+              <td><code>@GET("posts")</code></td>
+              <td>Make an HTTP GET request to <code>{baseUrl}/posts</code>.</td>
+              <td>The path is relative. It is appended to <code>https://jsonplaceholder.typicode.com/</code>.</td>
+            </tr>
+            <tr>
+              <td><code>suspend fun fetchNotes()</code></td>
+              <td>This function must be called from a coroutine and can pause while waiting for I/O.</td>
+              <td>Suspending is not blocking. The UI thread is not frozen while the request is in progress.</td>
+            </tr>
+            <tr>
+              <td><code>List&lt;NoteDto&gt;</code></td>
+              <td>The response body should be a JSON array, and each JSON object should decode into one <code>NoteDto</code>.</td>
+              <td>If the JSON is malformed or has the wrong type for a required field, decoding throws.</td>
+            </tr>
+            <tr>
+              <td><code>.create(NoteApi::class.java)</code></td>
+              <td>Ask Retrofit to generate an object that implements <code>NoteApi</code>.</td>
+              <td>This is the moment the interface becomes something callable.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -785,6 +1194,36 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
           JSON payload shaped exactly like the real response — so it exercises the same parse step, just without the
           network. That's why the offline tests genuinely test parsing.
         </div>
+        <table class="tbl">
+          <thead><tr><th>Repository piece</th><th>Job</th><th>What the ViewModel sees</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>NoteRepository</code></td>
+              <td>The contract: "I can return a <code>List&lt;Note&gt;</code>, and I may suspend while doing it."</td>
+              <td>Only the interface. The ViewModel does not know whether the implementation is fake or real.</td>
+            </tr>
+            <tr>
+              <td><code>RealNoteRepository</code></td>
+              <td>Calls <code>api.fetchNotes()</code>, receives <code>List&lt;NoteDto&gt;</code>, maps it to <code>List&lt;Note&gt;</code>.</td>
+              <td>A suspending call that either returns notes or throws.</td>
+            </tr>
+            <tr>
+              <td><code>FakeNoteRepository</code></td>
+              <td>Waits <code>delay(600)</code>, decodes <code>FAKE_NOTES_JSON</code>, maps it to <code>List&lt;Note&gt;</code>.</td>
+              <td>The same suspending call shape as real mode, but deterministic and offline.</td>
+            </tr>
+            <tr>
+              <td><code>provideNoteRepository(useFake = true)</code></td>
+              <td>The switch that chooses fake by default.</td>
+              <td>The ViewModel receives whichever implementation this factory returns.</td>
+            </tr>
+            <tr>
+              <td><code>delay(600)</code></td>
+              <td>A non-blocking pause in the fake repository.</td>
+              <td>The loading state is visible, but the main thread is not blocked.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -799,6 +1238,27 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
           message). Model those with a <strong>sealed interface</strong>, and the compiler knows the complete set, so a
           <code>when</code> over it is exhaustive — you physically cannot forget a case.
         </p>
+        <div class="controls">
+          <span class="hint">Preview a state:</span>
+          <span class="seg" id="stateDemoSeg">
+            <button data-state-demo="loading" class="on" type="button">Loading</button>
+            <button data-state-demo="success" type="button">Success</button>
+            <button data-state-demo="error" type="button">Error</button>
+          </span>
+        </div>
+        <div class="grid2">
+          <div class="mini-screen">
+            <div class="mini-bar"><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-dot"></span></div>
+            <div class="mini-body">
+              <div class="mini-title">Network Parsing · Notes</div>
+              <div id="stateDemoScreen" aria-live="polite"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Why this state exists</span></div>
+            <div class="card-body" id="stateDemoText" aria-live="polite"></div>
+          </div>
+        </div>
         <div class="code-panel">
           <div class="code-head"><span class="code-file">NotesViewModel.kt · NotesUiState</span><button class="copy-btn" type="button">Copy</button></div>
 <pre data-lang="kotlin">sealed interface NotesUiState {
@@ -812,6 +1272,29 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
     data class Error(val message: String) : NotesUiState
 }</pre>
         </div>
+        <table class="tbl">
+          <thead><tr><th>State</th><th>What it carries</th><th>What the screen must draw</th><th>When it happens</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>Loading</code></td>
+              <td>Nothing. It is a singleton object.</td>
+              <td>A spinner and loading text.</td>
+              <td>At startup and every time Retry calls <code>loadNotes()</code>.</td>
+            </tr>
+            <tr>
+              <td><code>Success(notes)</code></td>
+              <td>The parsed list of clean domain <code>Note</code> objects.</td>
+              <td>A scrolling list of note titles and bodies.</td>
+              <td>After the repository returns notes without throwing.</td>
+            </tr>
+            <tr>
+              <td><code>Error(message)</code></td>
+              <td>A human-readable message from the caught exception.</td>
+              <td>The error title, the message, and a Retry button.</td>
+              <td>After no network, timeout, malformed JSON, HTTP failure, or any other exception.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -858,6 +1341,41 @@ fun provideNoteRepository(useFake: Boolean = true): NoteRepository =
           suspending <code>getNotes()</code> never blocks the main thread. <code>loadNotes()</code> is safe to call again —
           that's exactly what the Retry button does.
         </div>
+        <table class="tbl">
+          <thead><tr><th>Line / pattern</th><th>Meaning</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>private val repository</code></td>
+              <td>The ViewModel receives a data source instead of creating one directly inside <code>loadNotes()</code>.</td>
+              <td>This keeps the ViewModel focused on state, and it makes tests or fake data easier.</td>
+            </tr>
+            <tr>
+              <td><code>MutableStateFlow(Loading)</code></td>
+              <td>The first state value is Loading.</td>
+              <td>The screen has a valid state immediately, before the repository finishes.</td>
+            </tr>
+            <tr>
+              <td><code>asStateFlow()</code></td>
+              <td>Expose read-only state to the UI.</td>
+              <td>The screen can observe state but cannot accidentally change it.</td>
+            </tr>
+            <tr>
+              <td><code>init { loadNotes() }</code></td>
+              <td>Start the first fetch when the ViewModel is created.</td>
+              <td>The user does not need to tap anything to see notes load on app launch.</td>
+            </tr>
+            <tr>
+              <td><code>_uiState.value = Loading</code></td>
+              <td>Publish the loading state before work starts.</td>
+              <td>Retry visibly resets the screen instead of leaving the old error or old list in place.</td>
+            </tr>
+            <tr>
+              <td><code>try { ... } catch (e: Exception)</code></td>
+              <td>One boundary converts thrown failures into UI state.</td>
+              <td>Network and parse failures become a controlled error screen, not an app crash.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -898,6 +1416,36 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
           <code>Error("No internet connection.")</code>) straight into <code>NotesContent</code> — never a real
           ViewModel, which would try to run a coroutine the design pane can't execute.
         </div>
+        <table class="tbl">
+          <thead><tr><th>UI piece</th><th>Responsibility</th><th>Why it is split this way</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>NotesScreen()</code></td>
+              <td>Gets the ViewModel, collects <code>uiState</code>, passes state and Retry callback down.</td>
+              <td>This is the stateful wrapper. It knows where state comes from.</td>
+            </tr>
+            <tr>
+              <td><code>NotesContent()</code></td>
+              <td>Receives a <code>NotesUiState</code> and draws it with an exhaustive <code>when</code>.</td>
+              <td>This is stateless and easy to preview because it does not create the ViewModel.</td>
+            </tr>
+            <tr>
+              <td><code>collectAsStateWithLifecycle()</code></td>
+              <td>Subscribes the composable to the ViewModel's <code>StateFlow</code>.</td>
+              <td>When the flow emits a new state, Compose recomposes the UI safely with lifecycle awareness.</td>
+            </tr>
+            <tr>
+              <td><code>onRetry = viewModel::loadNotes</code></td>
+              <td>Passes the ViewModel function itself as a callback.</td>
+              <td>The Error UI can retry without knowing how loading works internally.</td>
+            </tr>
+            <tr>
+              <td><code>when (uiState)</code></td>
+              <td>Chooses Loading, Success, or Error UI.</td>
+              <td>Because <code>NotesUiState</code> is sealed, missing a state becomes a compiler problem.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -926,6 +1474,7 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
             <li class="step" data-step><div class="s-num">7</div><div class="s-body"><strong>State → recompose.</strong> Back in the ViewModel, <code>_uiState = Success(notes)</code>. The <code>StateFlow</code> emits, <code>collectAsStateWithLifecycle()</code> flips Compose state, and <code>NotesContent</code> redraws the list.<span class="s-where">NotesViewModel.kt + MainActivity.kt</span></div></li>
           </ol>
         </div>
+        <div class="callout" id="stepExplain" aria-live="polite"></div>
         <div class="callout">
           <span class="callout-label">The point</span>
           Nobody "refreshed the UI". The ViewModel set a new state value; because the screen is a pure function of that
@@ -967,7 +1516,259 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
       </div>
     </section>
 
-    <!-- ============ 13. RUN ============ -->
+    <!-- ============ 13. FAQ ============ -->
+    <section class="band anchor" id="faq">
+      <div class="band-inner">
+        <p class="eyebrow">Clear up the likely questions</p>
+        <h2>Common questions, answered directly</h2>
+        <p class="dense">
+          These are the questions students usually ask after reading the code. Each answer points back to the exact
+          responsibility in the app.
+        </p>
+        <div class="faq-list">
+          <details open>
+            <summary>Why do we need both <code>NoteDto</code> and <code>Note</code>?</summary>
+            <p>
+              <code>NoteDto</code> belongs to the server shape; <code>Note</code> belongs to the app shape. Keeping them
+              separate means the UI and ViewModel do not depend on every server field. The mapper is the one controlled
+              place where network data becomes app data.
+            </p>
+          </details>
+          <details>
+            <summary>Why parse <code>userId</code> if the app drops it?</summary>
+            <p>
+              The JSON contains <code>userId</code>, so <code>NoteDto</code> models it honestly. The UI does not use it,
+              so <code>toNote()</code> leaves it behind. This shows that parsing the response and designing the UI model
+              are related but not identical.
+            </p>
+          </details>
+          <details>
+            <summary>Where is the real HTTP request code?</summary>
+            <p>
+              You do not write it by hand. <code>@GET("posts")</code> describes the request, and
+              <code>Retrofit.Builder().create(NoteApi::class.java)</code> generates an implementation of that interface.
+              Calling <code>api.fetchNotes()</code> is what triggers the generated HTTP GET.
+            </p>
+          </details>
+          <details>
+            <summary>Why is <code>fetchNotes()</code> marked <code>suspend</code>?</summary>
+            <p>
+              Network I/O takes time. <code>suspend</code> lets the coroutine pause until the response is ready without
+              blocking the main thread. The user can still see a responsive Loading UI while the work is in progress.
+            </p>
+          </details>
+          <details>
+            <summary>Why does fake mode still decode JSON?</summary>
+            <p>
+              The fake repository is offline, but it is not skipping the parsing lesson. It decodes
+              <code>FAKE_NOTES_JSON</code> into <code>List&lt;NoteDto&gt;</code> and maps those DTOs to
+              <code>Note</code>, so the same parse-and-map idea is exercised without depending on the internet.
+            </p>
+          </details>
+          <details>
+            <summary>What actually causes the screen to change from Loading to Success?</summary>
+            <p>
+              The ViewModel assigns <code>_uiState.value = NotesUiState.Success(notes)</code>. The public
+              <code>uiState</code> emits that new value, <code>collectAsStateWithLifecycle()</code> sees it, and Compose
+              recomposes <code>NotesContent()</code>, which now takes the Success branch.
+            </p>
+          </details>
+          <details>
+            <summary>Why is there no manual refresh call on the list?</summary>
+            <p>
+              Compose UI is declarative. The screen describes what to draw for each state. When the state value changes,
+              Compose reruns the relevant composables. You update the state, not the list widget.
+            </p>
+          </details>
+          <details>
+            <summary>What happens if the server adds a new field?</summary>
+            <p>
+              Because the JSON parser is configured with <code>ignoreUnknownKeys = true</code>, decoding still succeeds.
+              The unknown field is ignored unless you later add it to <code>NoteDto</code> and map it into the domain model.
+            </p>
+          </details>
+          <details>
+            <summary>What happens if the server sends the wrong type?</summary>
+            <p>
+              A wrong type, such as <code>"title": 404</code> when <code>title</code> must be a String, is not safe to
+              ignore. Decoding throws a serialization exception. The ViewModel catches that exception and publishes
+              <code>Error(message)</code>.
+            </p>
+          </details>
+          <details>
+            <summary>Why is <code>NotesUiState</code> sealed?</summary>
+            <p>
+              A sealed type gives the compiler the complete list of possible states. That makes the
+              <code>when (uiState)</code> in <code>NotesContent()</code> exhaustive, so adding or missing a state becomes
+              visible during development.
+            </p>
+          </details>
+          <details>
+            <summary>Why do previews pass fake states instead of creating a ViewModel?</summary>
+            <p>
+              Android Studio previews need quick, deterministic UI. A real ViewModel would start coroutines and use a
+              repository. Passing literal states like <code>Success(previewNotes)</code> previews the UI without network,
+              timers, or lifecycle complexity.
+            </p>
+          </details>
+          <details>
+            <summary>Where should new behavior go if the app grows?</summary>
+            <p>
+              New response fields start in <code>NoteDto</code> and <code>toNote()</code>. New endpoints go in
+              <code>NoteApi</code>. New data-source choices go behind <code>NoteRepository</code>. New screen states go
+              in <code>NotesUiState</code> and must be rendered in <code>NotesContent()</code>.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 14. ANNOTATIONS ============ -->
+    <section class="band anchor" id="annotations">
+      <div class="band-inner">
+        <p class="eyebrow">Click the code, explain the reason</p>
+        <h2>Line-click annotations</h2>
+        <p class="dense">
+          Pick a line. The right side explains what it does, why the app needs it, and what usually confuses students.
+          This is the fastest way to connect the Kotlin syntax to the network request story.
+        </p>
+        <div class="annotation-lab">
+          <div class="annotation-list" id="annotationList">
+            <button class="line-pick on" data-anno="serializable" type="button">@Serializable</button>
+            <button class="line-pick" data-anno="mapper" type="button">fun NoteDto.toNote(): Note</button>
+            <button class="line-pick" data-anno="get" type="button">@GET("posts") suspend fun fetchNotes()</button>
+            <button class="line-pick" data-anno="converter" type="button">addConverterFactory(json.asConverterFactory(...))</button>
+            <button class="line-pick" data-anno="repo" type="button">interface NoteRepository { suspend fun getNotes() }</button>
+            <button class="line-pick" data-anno="switch" type="button">provideNoteRepository(useFake = true)</button>
+            <button class="line-pick" data-anno="stateflow" type="button">MutableStateFlow&lt;NotesUiState&gt;(Loading)</button>
+            <button class="line-pick" data-anno="catch" type="button">catch (e: Exception) { Error(...) }</button>
+            <button class="line-pick" data-anno="collect" type="button">collectAsStateWithLifecycle()</button>
+            <button class="line-pick" data-anno="when" type="button">when (uiState) { Loading / Success / Error }</button>
+          </div>
+          <div class="card annotation-detail">
+            <div class="card-head"><span class="card-title">Annotation</span></div>
+            <div class="card-body" id="annotationDetail"></div>
+          </div>
+        </div>
+        <div class="teacher-only teacher-note">
+          <strong>Teacher note</strong>
+          Use this section as a cold-call map: ask one student to say what the line does, a second to say why it exists,
+          and a third to name the failure mode if it is removed or changed.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 15. EXERCISES ============ -->
+    <section class="band anchor" id="exercises">
+      <div class="band-inner">
+        <p class="eyebrow">Practice by changing one thing</p>
+        <h2>Guided student exercises</h2>
+        <p class="dense">
+          Each exercise has a prediction step, an edit or inspection step, and an answer reveal. The important habit is:
+          predict the state path before running the app.
+        </p>
+        <div class="progress-box" aria-live="polite">
+          <strong>Exercise progress</strong>
+          <div class="dense" id="exerciseProgress">0 / 6 reveals opened.</div>
+          <div class="progress-actions">
+            <button class="btn" id="resetExerciseProgress" type="button">Reset exercise progress</button>
+          </div>
+        </div>
+        <div class="lesson-grid">
+          <div class="lesson-card">
+            <h3>Exercise 1: switch from fake to real</h3>
+            <p class="dense"><strong>Predict:</strong> What changes if <code>provideNoteRepository(useFake = false)</code> is used?</p>
+            <p class="dense"><strong>Do:</strong> Change the flag, run on a connected emulator, and watch the same UI states.</p>
+            <details><summary>Reveal answer</summary><p class="dense">The ViewModel and UI do not change. Only the repository implementation changes. Success still publishes <code>Success(notes)</code>; offline failure becomes <code>Error(message)</code>.</p></details>
+            <div class="teacher-only teacher-note"><strong>Teacher note</strong>Ask students why the ViewModel does not need an if/else for fake vs real.</div>
+          </div>
+          <div class="lesson-card">
+            <h3>Exercise 2: add a harmless JSON field</h3>
+            <p class="dense"><strong>Predict:</strong> Will parsing fail if the JSON adds <code>"likes": 12</code>?</p>
+            <p class="dense"><strong>Do:</strong> Use the DTO mini-lab's Extra field option, then find <code>ignoreUnknownKeys</code> in <code>NoteApi.kt</code>.</p>
+            <details><summary>Reveal answer</summary><p class="dense">Parsing succeeds because unknown keys are ignored. The new field does not enter <code>Note</code> until the app explicitly models and maps it.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Exercise 3: break a required type</h3>
+            <p class="dense"><strong>Predict:</strong> What happens if <code>"title"</code> is a number instead of a String?</p>
+            <p class="dense"><strong>Do:</strong> Use Wrong type in the DTO mini-lab or simulator's Bad JSON outcome.</p>
+            <details><summary>Reveal answer</summary><p class="dense">Decoding throws. The ViewModel catches the exception and publishes <code>Error(message)</code>. The app should not crash.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Exercise 4: trace Retry</h3>
+            <p class="dense"><strong>Predict:</strong> Which function runs when the Retry button is tapped?</p>
+            <p class="dense"><strong>Do:</strong> Find <code>onRetry = viewModel::loadNotes</code>, then follow <code>loadNotes()</code>.</p>
+            <details><summary>Reveal answer</summary><p class="dense">Retry calls <code>loadNotes()</code>. That sets Loading again, tries the repository call again, then publishes Success or Error.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Exercise 5: add a new UI state on paper</h3>
+            <p class="dense"><strong>Predict:</strong> If you add <code>Empty</code> to <code>NotesUiState</code>, what else must change?</p>
+            <p class="dense"><strong>Do:</strong> Do not code it first. List every file and branch that needs a decision.</p>
+            <details><summary>Reveal answer</summary><p class="dense">At minimum, <code>NotesContent()</code> needs a new <code>when</code> branch. The ViewModel must decide when to publish Empty, usually after a successful fetch returns an empty list.</p></details>
+          </div>
+          <div class="lesson-card">
+            <h3>Exercise 6: explain the whole trip aloud</h3>
+            <p class="dense"><strong>Predict:</strong> Can you say the successful path in fewer than 45 seconds?</p>
+            <p class="dense"><strong>Do:</strong> Use the seven-step trip section, then try without looking.</p>
+            <details><summary>Reveal answer</summary><p class="dense">UI calls ViewModel. ViewModel sets Loading. Repository fetches. Retrofit or fake JSON parses into DTOs. Mapper creates Notes. ViewModel publishes Success. Compose redraws the list.</p></details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 16. MISTAKES ============ -->
+    <section class="band anchor" id="mistakes">
+      <div class="band-inner">
+        <p class="eyebrow">Debug faster</p>
+        <h2>Common mistakes and exactly what they look like</h2>
+        <p class="dense">
+          These are the failure patterns students are most likely to hit. Match the symptom to the cause, then inspect
+          the named file.
+        </p>
+        <div class="lesson-grid">
+          <div class="lesson-card"><h3>Missing <code>@Serializable</code></h3><p class="dense"><strong>Symptom:</strong> JSON decoding cannot find a serializer for <code>NoteDto</code>.</p><p class="dense"><strong>Fix:</strong> Keep <code>@Serializable</code> on DTO classes and keep the serialization plugin enabled.</p></div>
+          <div class="lesson-card"><h3>Wrong <code>baseUrl</code></h3><p class="dense"><strong>Symptom:</strong> Retrofit complains about the base URL or the request goes to the wrong path.</p><p class="dense"><strong>Fix:</strong> Use <code>https://jsonplaceholder.typicode.com/</code> with the trailing slash.</p></div>
+          <div class="lesson-card"><h3>No <code>INTERNET</code> permission</h3><p class="dense"><strong>Symptom:</strong> Real mode cannot reach the network even though the device has a connection.</p><p class="dense"><strong>Fix:</strong> Keep <code>&lt;uses-permission android:name="android.permission.INTERNET" /&gt;</code> in the manifest.</p></div>
+          <div class="lesson-card"><h3>DTO used directly in UI</h3><p class="dense"><strong>Symptom:</strong> Server-only fields leak into screen code, and API changes ripple everywhere.</p><p class="dense"><strong>Fix:</strong> Map <code>NoteDto</code> to <code>Note</code> in the repository boundary.</p></div>
+          <div class="lesson-card"><h3>Error handled in the UI only</h3><p class="dense"><strong>Symptom:</strong> The app can crash before Compose gets a chance to show a friendly state.</p><p class="dense"><strong>Fix:</strong> Keep the <code>try/catch</code> around <code>repository.getNotes()</code> in the ViewModel.</p></div>
+          <div class="lesson-card"><h3>Preview creates a real ViewModel</h3><p class="dense"><strong>Symptom:</strong> Android Studio preview is slow, flaky, or tries to run app logic.</p><p class="dense"><strong>Fix:</strong> Preview <code>NotesContent()</code> with hand-made <code>NotesUiState</code> values.</p></div>
+        </div>
+        <div class="teacher-only teacher-note">
+          <strong>Teacher note</strong>
+          Turn each mistake into a five-minute debug drill: show the symptom first, then ask which layer owns the fix.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 17. WORKSHEET ============ -->
+    <section class="band anchor" id="worksheet">
+      <div class="band-inner">
+        <p class="eyebrow">Exit ticket</p>
+        <h2>Worksheet: prove you can explain the app</h2>
+        <p class="dense">
+          Students should be able to answer these without copying code. The point is to explain the responsibilities,
+          not memorize line numbers.
+        </p>
+        <div class="worksheet">
+          <ol>
+            <li>Draw the request path from the screen to the network or fake JSON, then draw the return path back to the UI state.<div class="answer-line"></div></li>
+            <li>Explain the difference between <code>NoteDto</code> and <code>Note</code> in one sentence.<div class="answer-line"></div></li>
+            <li>Why does the fake repository still parse JSON instead of returning <code>Note</code> objects by hand?<div class="answer-line"></div></li>
+            <li>What exact line changes the screen from Loading to Success?<div class="answer-line"></div></li>
+            <li>What happens if the JSON contains an extra field? What happens if it contains the wrong type?<div class="answer-line"></div></li>
+            <li>Why does Retry not need a separate code path?<div class="answer-line"></div></li>
+          </ol>
+        </div>
+        <div class="teacher-only teacher-note">
+          <strong>Teacher answer key</strong>
+          Look for: UI to ViewModel to Repository to Retrofit/fake JSON; DTO is server shape and Note is app shape;
+          fake mode still teaches parsing; <code>_uiState.value = NotesUiState.Success(notes)</code>; extra fields are
+          ignored but wrong types throw; Retry calls the same <code>loadNotes()</code> path.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 18. RUN ============ -->
     <section class="band anchor" id="run">
       <div class="band-inner">
         <p class="eyebrow">Try it yourself</p>
@@ -994,6 +1795,11 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
       </div>
     </section>
   </main>
+</div>
+<div class="slide-controls" aria-label="Slide mode controls">
+  <button class="btn" id="slidePrev" type="button">Prev</button>
+  <span class="tiny" id="slideCount">1 / 1</span>
+  <button class="btn" id="slideNext" type="button">Next</button>
 </div>
 <script>
 (function () {
@@ -1022,11 +1828,117 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     if (el) el.addEventListener("click", toggle);
   });
 
+  // ---------------- teacher notes toggle (persisted) ----------------
+  var TEACHER_KEY = "network-parsing-teacher-mode";
+  function applyTeacher(on) {
+    root.setAttribute("data-teacher", on ? "on" : "off");
+    var label = on ? "Teacher notes: on" : "Teacher notes: off";
+    var short = on ? "Teacher on" : "Teacher";
+    var b = document.getElementById("teacherToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("teacherToggleTop"); if (bt) bt.textContent = short;
+  }
+  var teacherSaved;
+  try { teacherSaved = localStorage.getItem(TEACHER_KEY); } catch (e) { teacherSaved = null; }
+  applyTeacher(teacherSaved === "on");
+  function toggleTeacher() {
+    var on = root.getAttribute("data-teacher") !== "on";
+    applyTeacher(on);
+    try { localStorage.setItem(TEACHER_KEY, on ? "on" : "off"); } catch (e) {}
+  }
+  ["teacherToggle", "teacherToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggleTeacher);
+  });
+
+  // ---------------- slide mode toggle (persisted) ----------------
+  var SLIDE_KEY = "network-parsing-slide-mode";
+  var slideSections = Array.prototype.slice.call(document.querySelectorAll(".band[id]"));
+  var slideIndex = 0;
+  function setSlideButtons(on) {
+    var label = on ? "Slide mode: on" : "Slide mode: off";
+    var short = on ? "Slides on" : "Slides";
+    var b = document.getElementById("slideToggle"); if (b) b.textContent = label;
+    var bt = document.getElementById("slideToggleTop"); if (bt) bt.textContent = short;
+  }
+  function renderSlide() {
+    slideSections.forEach(function (s, idx) { s.classList.toggle("slide-current", idx === slideIndex); });
+    var count = document.getElementById("slideCount");
+    if (count) count.textContent = (slideIndex + 1) + " / " + slideSections.length;
+    var prev = document.getElementById("slidePrev"); if (prev) prev.disabled = slideIndex === 0;
+    var next = document.getElementById("slideNext"); if (next) next.disabled = slideIndex === slideSections.length - 1;
+    var sel = document.getElementById("jump"); if (sel && slideSections[slideIndex]) sel.value = "#" + slideSections[slideIndex].id;
+  }
+  function applySlide(on) {
+    root.setAttribute("data-slide", on ? "on" : "off");
+    setSlideButtons(on);
+    renderSlide();
+    if (on && slideSections[slideIndex]) slideSections[slideIndex].scrollIntoView({ behavior: "auto" });
+  }
+  var slideSaved;
+  try { slideSaved = localStorage.getItem(SLIDE_KEY); } catch (e) { slideSaved = null; }
+  applySlide(slideSaved === "on");
+  function toggleSlide() {
+    var on = root.getAttribute("data-slide") !== "on";
+    applySlide(on);
+    try { localStorage.setItem(SLIDE_KEY, on ? "on" : "off"); } catch (e) {}
+  }
+  ["slideToggle", "slideToggleTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", toggleSlide);
+  });
+  var slidePrev = document.getElementById("slidePrev");
+  var slideNext = document.getElementById("slideNext");
+  if (slidePrev) slidePrev.addEventListener("click", function () { if (slideIndex > 0) { slideIndex--; renderSlide(); slideSections[slideIndex].scrollIntoView({ behavior: "auto" }); } });
+  if (slideNext) slideNext.addEventListener("click", function () { if (slideIndex < slideSections.length - 1) { slideIndex++; renderSlide(); slideSections[slideIndex].scrollIntoView({ behavior: "auto" }); } });
+
   // ---------------- mobile jump select ----------------
   var jump = document.getElementById("jump");
   if (jump) jump.addEventListener("change", function () {
     var t = document.querySelector(jump.value);
+    if (root.getAttribute("data-slide") === "on" && t) {
+      var idx = slideSections.indexOf(t);
+      if (idx >= 0) { slideIndex = idx; renderSlide(); }
+    }
     if (t) t.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ---------------- lesson progress ----------------
+  (function () {
+    var details = Array.prototype.slice.call(document.querySelectorAll("#exercises details"));
+    var out = document.getElementById("exerciseProgress");
+    var reset = document.getElementById("resetExerciseProgress");
+    if (!details.length || !out) return;
+    var key = "network-parsing-exercise-progress";
+    var done = {};
+    try { done = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) { done = {}; }
+    function save() { try { localStorage.setItem(key, JSON.stringify(done)); } catch (e) {} }
+    function render() {
+      var count = details.filter(function (_d, idx) { return done[idx]; }).length;
+      out.textContent = count + " / " + details.length + " reveals opened.";
+    }
+    details.forEach(function (d, idx) {
+      if (done[idx]) d.open = true;
+      d.addEventListener("toggle", function () {
+        if (d.open) { done[idx] = true; save(); render(); }
+      });
+    });
+    if (reset) reset.addEventListener("click", function () {
+      done = {};
+      details.forEach(function (d) { d.open = false; });
+      save();
+      render();
+    });
+    render();
+  })();
+
+  // ---------------- nav links also control slide mode ----------------
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener("click", function () {
+      if (root.getAttribute("data-slide") !== "on") return;
+      var t = document.querySelector(a.getAttribute("href"));
+      var idx = slideSections.indexOf(t);
+      if (idx >= 0) { slideIndex = idx; renderSlide(); }
+    });
   });
 
   // ---------------- copy buttons ----------------
@@ -1072,13 +1984,214 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
     sections.forEach(function (s) { obs.observe(s); });
   }
 
-  // ---------------- sort-swap stepper ----------------
+  // ---------------- line-click annotations ----------------
+  (function () {
+    var detail = document.getElementById("annotationDetail");
+    var picks = Array.prototype.slice.call(document.querySelectorAll("#annotationList .line-pick"));
+    if (!detail || !picks.length) return;
+    var annotations = {
+      serializable: {
+        title: "@Serializable",
+        does: "Tells kotlinx.serialization to generate code that can decode JSON into NoteDto.",
+        why: "Retrofit's converter needs that generated serializer. Without it, the response body cannot become List<NoteDto> automatically.",
+        confusion: "It belongs on the DTO, not the domain model. The domain model does not need to know about JSON."
+      },
+      mapper: {
+        title: "fun NoteDto.toNote(): Note",
+        does: "Converts one network-shaped DTO into one app-shaped Note.",
+        why: "It keeps server details like userId from leaking into UI and ViewModel code.",
+        confusion: "This is not another network call. It is just local object conversion after parsing succeeds."
+      },
+      get: {
+        title: "@GET(\"posts\") suspend fun fetchNotes()",
+        does: "Describes an HTTP GET request to the posts endpoint and says the parsed result should be List<NoteDto>.",
+        why: "Retrofit generates the implementation, so the repository can call api.fetchNotes() like normal Kotlin.",
+        confusion: "suspend does not mean slow or blocking. It means the coroutine can pause while waiting."
+      },
+      converter: {
+        title: "addConverterFactory(json.asConverterFactory(...))",
+        does: "Installs the JSON converter Retrofit uses to decode response bodies.",
+        why: "Retrofit can perform HTTP, but it needs a converter to turn JSON text into Kotlin objects.",
+        confusion: "OkHttp gets bytes from the network; the converter turns those bytes into NoteDto objects."
+      },
+      repo: {
+        title: "interface NoteRepository { suspend fun getNotes() }",
+        does: "Defines the one data call the ViewModel depends on.",
+        why: "The ViewModel can work with fake data or real network data without changing its own code.",
+        confusion: "The interface does not fetch anything by itself. RealNoteRepository and FakeNoteRepository implement it."
+      },
+      switch: {
+        title: "provideNoteRepository(useFake = true)",
+        does: "Chooses the offline fake repository by default.",
+        why: "The project can build, run, and test without internet while still exercising JSON parsing.",
+        confusion: "Changing this flag should not require UI or ViewModel edits. That is the point of the repository abstraction."
+      },
+      stateflow: {
+        title: "MutableStateFlow<NotesUiState>(Loading)",
+        does: "Creates the writable state holder and starts it in Loading.",
+        why: "The screen has a valid first state immediately, before data arrives.",
+        confusion: "The ViewModel keeps the mutable version private and exposes only read-only uiState."
+      },
+      catch: {
+        title: "catch (e: Exception) { Error(...) }",
+        does: "Converts thrown failures into a visible Error state.",
+        why: "No network, timeout, bad JSON, and HTTP errors all become UI the user can recover from.",
+        confusion: "The UI should render errors; it should not be the first place that tries to catch network exceptions."
+      },
+      collect: {
+        title: "collectAsStateWithLifecycle()",
+        does: "Subscribes Compose to the StateFlow and gives the composable the latest value.",
+        why: "When uiState changes, Compose knows to recompose the screen safely with lifecycle awareness.",
+        confusion: "This is why there is no manual refresh call. State changes drive rendering."
+      },
+      when: {
+        title: "when (uiState) { Loading / Success / Error }",
+        does: "Selects exactly one UI branch for the current state.",
+        why: "The sealed interface lets the compiler know all possible cases, so the renderer stays complete.",
+        confusion: "The list is not shown by the repository. It is shown because the Success branch receives notes."
+      }
+    };
+    function render(key) {
+      picks.forEach(function (b) { b.classList.toggle("on", b.dataset.anno === key); });
+      var a = annotations[key];
+      var safe = function (s) {
+        return s.replace(/[&<>]/g, function (c) { return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;"; });
+      };
+      detail.innerHTML =
+        "<h3>" + safe(a.title) + "</h3>" +
+        "<p><strong>What it does:</strong> " + safe(a.does) + "</p>" +
+        "<p><strong>Why it exists:</strong> " + safe(a.why) + "</p>" +
+        "<p><strong>Common confusion:</strong> " + safe(a.confusion) + "</p>";
+    }
+    picks.forEach(function (b) { b.addEventListener("click", function () { render(b.dataset.anno); }); });
+    render("serializable");
+  })();
+
+  // ---------------- clickable layer guide ----------------
+  (function () {
+    var detail = document.getElementById("layerDetail");
+    var picks = Array.prototype.slice.call(document.querySelectorAll(".layer-pick"));
+    if (!detail || !picks.length) return;
+    var data = {
+      ui: {
+        title: "UI: asks for work, then draws the latest state",
+        body: "The screen calls loadNotes() through the ViewModel. After that, it does not manually push rows around. It watches uiState and redraws whenever that value changes.",
+        look: "Look for NotesScreen() collecting uiState, then NotesContent() rendering Loading / Success / Error."
+      },
+      vm: {
+        title: "ViewModel: turns a request into one clear state",
+        body: "The ViewModel sets Loading first, then calls the repository inside try/catch. Success becomes Success(notes). Any thrown failure becomes Error(message).",
+        look: "Look for MutableStateFlow, viewModelScope.launch, and the single try/catch in loadNotes()."
+      },
+      repo: {
+        title: "Repository: hides where the notes came from",
+        body: "The ViewModel asks for notes through one interface. The repository can be Real (network) or Fake (offline JSON), but the ViewModel code stays the same.",
+        look: "Look for NoteRepository, RealNoteRepository, FakeNoteRepository, and provideNoteRepository(useFake = true)."
+      },
+      api: {
+        title: "Retrofit API: describes the HTTP request",
+        body: "The API interface says: GET the posts endpoint and return List&lt;NoteDto&gt;. Retrofit performs the HTTP work and the converter parses the response body.",
+        look: "Look for @GET(\"posts\"), suspend fun fetchNotes(), baseUrl, and addConverterFactory(...)."
+      },
+      network: {
+        title: "Network or fake JSON: returns raw data",
+        body: "Real mode asks jsonplaceholder for JSON. Fake mode reads a hardcoded JSON string. Either way, the app still needs to parse that network-shaped data before the UI can use it.",
+        look: "Look for FAKE_NOTES_JSON in the fake repository and the live base URL in provideNoteApi()."
+      }
+    };
+    function render(key) {
+      picks.forEach(function (b) { b.classList.toggle("sel", b.dataset.layer === key); });
+      var item = data[key];
+      detail.innerHTML = '<span class="callout-label">' + item.title + '</span><p>' + item.body + '</p><p><strong>Source clue:</strong> ' + item.look + '</p>';
+    }
+    picks.forEach(function (b) { b.addEventListener("click", function () { render(b.dataset.layer); }); });
+    render("ui");
+  })();
+
+  // ---------------- DTO mapping mini-lab ----------------
+  (function () {
+    var jsonEl = document.getElementById("dtoLabJson");
+    var resultEl = document.getElementById("dtoLabResult");
+    var msgEl = document.getElementById("dtoLabMsg");
+    var buttons = Array.prototype.slice.call(document.querySelectorAll("#dtoLabSeg button"));
+    if (!jsonEl || !resultEl || !msgEl || !buttons.length) return;
+    var demos = {
+      normal: {
+        json: '{\n  "userId": 1,\n  "id": 7,\n  "title": "Buy milk",\n  "body": "Remember the list"\n}',
+        result: 'Note(\n  id = 7,\n  title = "Buy milk",\n  body = "Remember the list"\n)',
+        cls: "callout violet",
+        msg: "The JSON keys match NoteDto, so parsing succeeds. Then toNote() copies id/title/body and intentionally drops userId."
+      },
+      extra: {
+        json: '{\n  "userId": 1,\n  "id": 7,\n  "title": "Buy milk",\n  "body": "Remember the list",\n  "likes": 12\n}',
+        result: 'Note(\n  id = 7,\n  title = "Buy milk",\n  body = "Remember the list"\n)',
+        cls: "callout good",
+        msg: "The server added likes, but Json { ignoreUnknownKeys = true } ignores that new field. This is safe because the app does not need likes yet."
+      },
+      badtype: {
+        json: '{\n  "userId": 1,\n  "id": 7,\n  "title": 404,\n  "body": "Remember the list"\n}',
+        result: 'No Note is created.\n\nParsing throws SerializationException\nbecause title should be a String, not a number.',
+        cls: "callout danger",
+        msg: "A wrong type is different from an extra field. The parser cannot safely turn title = 404 into a String, so it throws. The ViewModel catches that and shows Error(message)."
+      }
+    };
+    function show(key) {
+      buttons.forEach(function (b) { b.classList.toggle("on", b.dataset.dtoLab === key); });
+      jsonEl.textContent = demos[key].json;
+      resultEl.textContent = demos[key].result;
+      msgEl.className = demos[key].cls;
+      msgEl.innerHTML = '<span class="callout-label">What happened</span>' + demos[key].msg;
+    }
+    buttons.forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.dtoLab); }); });
+    show("normal");
+  })();
+
+  // ---------------- UI state mini-preview ----------------
+  (function () {
+    var screen = document.getElementById("stateDemoScreen");
+    var text = document.getElementById("stateDemoText");
+    var buttons = Array.prototype.slice.call(document.querySelectorAll("#stateDemoSeg button"));
+    if (!screen || !text || !buttons.length) return;
+    var states = {
+      loading: {
+        screen: '<div style="text-align:center;padding:34px 0;color:var(--muted);"><div style="font-size:1.8rem;">⏳</div><div>Loading notes...</div></div>',
+        text: '<p><strong>Loading</strong> means the request is still running.</p><p class="dense">It carries no data because the only thing the UI needs to know is: show the spinner.</p>'
+      },
+      success: {
+        screen: '<div class="mini-note"><strong>Buy milk</strong><span>Remember the list</span></div><div class="mini-note"><strong>Call Sam</strong><span>Ask about the trip</span></div>',
+        text: '<p><strong>Success(notes)</strong> means parsing and mapping finished.</p><p class="dense">This state carries the list, so NotesContent can draw a row for each Note.</p>'
+      },
+      error: {
+        screen: '<div style="text-align:center;padding:26px 4px;"><div style="font-weight:850;">Could not load notes</div><div class="tiny" style="margin:8px 0 12px;color:var(--red);">No internet connection.</div><button class="btn" type="button">Retry</button></div>',
+        text: '<p><strong>Error(message)</strong> means something threw: no network, timeout, bad JSON, or an HTTP problem.</p><p class="dense">The Retry button just calls loadNotes() again.</p>'
+      }
+    };
+    function show(key) {
+      buttons.forEach(function (b) { b.classList.toggle("on", b.dataset.stateDemo === key); });
+      screen.innerHTML = states[key].screen;
+      text.innerHTML = states[key].text;
+    }
+    buttons.forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.stateDemo); }); });
+    show("loading");
+  })();
+
+  // ---------------- request-trip stepper ----------------
   (function () {
     var steps = Array.prototype.slice.call(document.querySelectorAll("#stepList .step"));
     if (!steps.length) return;
     var prev = document.getElementById("stepPrev");
     var next = document.getElementById("stepNext");
     var count = document.getElementById("stepCount");
+    var explain = document.getElementById("stepExplain");
+    var notes = [
+      "Start at the screen. The user sees Loading because the screen observes uiState, and uiState begins as Loading.",
+      "The ViewModel is the error boundary. It starts work in a coroutine and promises to publish either Success or Error.",
+      "The Repository keeps the source flexible. Fake and Real both satisfy the same getNotes() contract.",
+      "Retrofit converts the Kotlin function call into HTTP. The app says fetchNotes(); Retrofit performs GET /posts.",
+      "Parsing turns text into typed Kotlin data. This is where JSON becomes List&lt;NoteDto&gt; or throws if the shape is wrong.",
+      "Mapping protects the rest of the app from the server shape. NoteDto is the wire shape; Note is the app shape.",
+      "The result is just another state value. Compose sees the new StateFlow value and redraws the right branch of the when."
+    ];
     var i = 0;
     function render() {
       steps.forEach(function (s, idx) {
@@ -1088,6 +2201,7 @@ fun NotesContent(uiState: NotesUiState, onRetry: () -&gt; Unit, modifier: Modifi
       count.textContent = (i + 1) + " / " + steps.length;
       prev.disabled = i === 0;
       next.disabled = i === steps.length - 1;
+      if (explain) explain.innerHTML = '<span class="callout-label">Plain English for step ' + (i + 1) + '</span>' + notes[i];
     }
     prev.addEventListener("click", function () { if (i > 0) { i--; render(); } });
     next.addEventListener("click", function () { if (i < steps.length - 1) { i++; render(); } });

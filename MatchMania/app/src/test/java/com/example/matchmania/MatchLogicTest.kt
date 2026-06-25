@@ -2,6 +2,7 @@ package com.example.matchmania
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.random.Random
@@ -22,7 +23,7 @@ class MatchLogicTest {
 
     // ── PROVIDED example #1: a fresh board has the right number of tiles. ──────
     @Test
-    fun newBoard_has16Tiles() {
+    fun newBoard_hasCorrectTileCount() {
         assertEquals(CELL_COUNT, newBoard(DEFAULT_SYMBOLS).tiles.size)
     }
 
@@ -51,6 +52,108 @@ class MatchLogicTest {
     //                      tile FaceDown, moves == 0, same faces in the same order.
     //
     //   You'll need to seed Random for repeatable boards, and find a tile's TWIN
-    //   (the other tile sharing its face) to force a guaranteed match — figure it out.
+    //   (the other tile sharing its face) so you can force a guaranteed match — figure it out.
     // ═══════════════════════════════════════════════════════════════════════════
+
+    // Makes sure every symbol appears exactly twice.
+    @Test
+    fun newBoard_hasEachSymbolTwice() {
+        val board = newBoard(DEFAULT_SYMBOLS, Random(1))
+        val counts = board.tiles.groupingBy { it.face }.eachCount()
+        assertEquals(PAIR_COUNT, counts.size)
+        assertTrue(counts.values.all { it == 2 })
+    }
+
+    // Using the same seed should build the same board every time.
+    @Test
+    fun sameSeed_makesSameBoard() {
+        val board1 = newBoard(DEFAULT_SYMBOLS, Random(5))
+        val board2 = newBoard(DEFAULT_SYMBOLS, Random(5))
+        assertEquals(board1.tiles, board2.tiles)
+    }
+
+    // Flipping one tile should only reveal that tile.
+    @Test
+    fun flip_firstTile_revealsOnlyThatTile() {
+        val board = newBoard(DEFAULT_SYMBOLS, Random(2))
+        val flipped = board.flip(0)
+        assertEquals(TileState.FaceUp, flipped.tiles[0].state)
+        assertEquals(1, flipped.faceUpIndices().size)
+        assertEquals(0, flipped.moves)
+    }
+
+    // Flipping two matching tiles should mark them as matched.
+    @Test
+    fun flip_matchingPair_becomesMatchedAndAddsMove() {
+        val board0 = newBoard(DEFAULT_SYMBOLS, Random(3))
+        val firstIndex = 0
+        val face = board0.tiles[firstIndex].face
+        val secondIndex = board0.tiles.indices.find { it != firstIndex && board0.tiles[it].face == face }!!
+
+        val board1 = board0.flip(firstIndex)
+        val board2 = board1.flip(secondIndex)
+
+        assertEquals(TileState.Matched, board2.tiles[firstIndex].state)
+        assertEquals(TileState.Matched, board2.tiles[secondIndex].state)
+        assertEquals(1, board2.moves)
+    }
+
+    // A mismatch stays face up until the next tap clears it.
+    @Test
+    fun flip_mismatch_staysFaceUpThenNextTapClears() {
+        val board0 = newBoard(DEFAULT_SYMBOLS, Random(4))
+        val firstIndex = 0
+        val face = board0.tiles[firstIndex].face
+        val mismatchIndex = board0.tiles.indices.find { board0.tiles[it].face != face }!!
+        val thirdIndex = board0.tiles.indices.first { it != firstIndex && it != mismatchIndex }
+
+        val board1 = board0.flip(firstIndex)
+        val board2 = board1.flip(mismatchIndex)
+
+        assertEquals(TileState.FaceUp, board2.tiles[firstIndex].state)
+        assertEquals(TileState.FaceUp, board2.tiles[mismatchIndex].state)
+        assertEquals(1, board2.moves)
+
+        val board3 = board2.flip(thirdIndex)
+        assertEquals(TileState.FaceDown, board3.tiles[firstIndex].state)
+        assertEquals(TileState.FaceDown, board3.tiles[mismatchIndex].state)
+        assertEquals(TileState.FaceDown, board3.tiles[thirdIndex].state)
+        assertEquals(1, board3.moves)
+    }
+
+    // flip() should return a new board without changing the old one.
+    @Test
+    fun flip_doesNotMutateOriginalBoard() {
+        val board = newBoard(DEFAULT_SYMBOLS, Random(6))
+        val flipped = board.flip(0)
+        assertNotSame(board, flipped)
+        assertEquals(TileState.FaceDown, board.tiles[0].state)
+        assertEquals(TileState.FaceUp, flipped.tiles[0].state)
+    }
+
+    // Matching every pair should solve the game.
+    @Test
+    fun matchingEveryPair_solvesBoard() {
+        var board = newBoard(DEFAULT_SYMBOLS, Random(7))
+        val faces = board.tiles.map { it.face }.distinct()
+        for (face in faces) {
+            val indices = board.tiles.indices.filter { board.tiles[it].face == face }
+            board = board.flip(indices[0]).flip(indices[1])
+        }
+        assertTrue(board.isSolved())
+        assertEquals(PAIR_COUNT, board.pairsFound())
+    }
+
+    // Reset should keep the same board layout but clear everything.
+    @Test
+    fun reset_keepsFacesButClearsStatesAndMoves() {
+        val board0 = newBoard(DEFAULT_SYMBOLS, Random(8))
+        val originalFaces = board0.tiles.map { it.face }
+        val board1 = board0.flip(0).flip(1)
+        val reset = board1.reset()
+
+        assertEquals(originalFaces, reset.tiles.map { it.face })
+        assertTrue(reset.tiles.all { it.state == TileState.FaceDown })
+        assertEquals(0, reset.moves)
+    }
 }

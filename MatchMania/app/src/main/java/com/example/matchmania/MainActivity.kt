@@ -25,26 +25,31 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +61,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.matchmania.ui.theme.MatchManiaTheme
+import kotlinx.coroutines.delay
 
 // ── The Android entry point (PROVIDED) ───────────────────────────────────────
 class MainActivity : ComponentActivity() {
@@ -80,6 +86,20 @@ fun MatchManiaScreen() {
 
     // A message the "Check" button updates (a simple bit of extra state).
     var message by remember { mutableStateOf("") }
+
+    LaunchedEffect(board) {
+        val faceUp = board.faceUpIndices()
+
+        if (faceUp.size == 2) {
+            val first = board.tiles[faceUp[0]]
+            val second = board.tiles[faceUp[1]]
+
+            if (first.face != second.face) {
+                delay(800)
+                board = board.flip(0)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -117,15 +137,41 @@ fun MatchManiaScreen() {
             //   cell must look different per tile.state, and a tap must produce a
             //   new board (board = board.flip(index)). Design the rest yourself.
             // ════════════════════════════════════════════════════════════════
-            BoardPlaceholder(board)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(GRID_SIZE),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                itemsIndexed(board.tiles) { index, tile ->
+                    MatchTile(
+                        tile = tile,
+                        onClick = {
+                            board = board.flip(index)
+                            message = ""
+                        }
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
             // C3 — TODO: when the board is solved, show a celebratory "You win"
             //   banner here (include the move count). For now we only show the
             //   Check button's message, if any.
-            if (message.isNotEmpty()) {
-                Text(message, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+            if (board.isSolved()) {
+                Text(
+                    text = "🎉 You win in ${board.moves} moves!",
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else if (message.isNotEmpty()) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
             }
 
             Spacer(Modifier.weight(1f)) // push the buttons to the bottom.
@@ -164,22 +210,46 @@ fun MatchManiaScreen() {
     }
 }
 
-// ── Temporary placeholder for the board (DELETE once C2 is done) ──────────────
-// A bordered card with a message, just so the starter shows *something* and runs.
+// ── Individual Tile (C2) ─────────────────────────────────────────────────────
 @Composable
-private fun BoardPlaceholder(board: Board) {
-    OutlinedCard(
+private fun MatchTile(
+    tile: Tile,
+    onClick: () -> Unit
+) {
+    val text = when (tile.state) {
+        TileState.FaceDown -> "?"
+        TileState.FaceUp -> tile.face
+        TileState.Matched -> tile.face
+    }
+
+    val colors = when (tile.state) {
+        TileState.FaceDown -> CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+        TileState.FaceUp -> CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+        TileState.Matched -> CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    }
+
+    Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp),
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline),
+            .aspectRatio(1f),
+        colors = colors,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
-                text = "TODO (C2): build the ${GRID_SIZE}×${GRID_SIZE} board grid here.\n" +
-                       "The board already holds ${board.tiles.size} tiles, ready to draw.",
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = text,
+                fontSize = 32.sp,
+                textAlign = TextAlign.Center
             )
         }
     }

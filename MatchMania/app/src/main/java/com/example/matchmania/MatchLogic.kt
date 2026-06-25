@@ -74,9 +74,11 @@ data class Board(val tiles: List<Tile>, val moves: Int) {
 // TODO (B2): the stub returns the pairs UNSHUFFLED so the app still runs and the
 //            grid renders 16 tiles. Replace it with the real, shuffled version.
 fun newBoard(symbols: List<String>, random: Random = Random.Default): Board {
-    val placeholder = (symbols.take(PAIR_COUNT) + symbols.take(PAIR_COUNT))
+    val chosenSymbols = symbols.take(PAIR_COUNT)
+    val tiles = (chosenSymbols + chosenSymbols)
+        .shuffled(random)
         .map { Tile(it, TileState.FaceDown) }
-    return Board(tiles = placeholder, moves = 0)
+    return Board(tiles = tiles, moves = 0)
 }
 
 // ── B3 (assignment Part B): flip a tile — THE HEART OF THE GAME ──────────────
@@ -87,7 +89,60 @@ fun newBoard(symbols: List<String>, random: Random = Random.Default): Board {
 //
 // TODO (B3): the stub below is a no-op so tapping doesn't crash. Implement it.
 fun Board.flip(index: Int): Board {
-    return this
+    if (index !in tiles.indices) return this
+    
+    val faceUp = faceUpIndices()
+
+    // Rule 3 branch 3: 2 face-up and mismatch. ANY tap clears them.
+    if (faceUp.size == 2) {
+        val newTiles = tiles.map { tile ->
+            if (tile.state == TileState.FaceUp) tile.copy(state = TileState.FaceDown) else tile
+        }
+        return Board(newTiles, moves)
+    }
+
+    val tappedTile = tiles[index]
+    
+    // Rule: Tapping a Matched tile, or the same tile that is already FaceUp, does nothing.
+    if (tappedTile.state != TileState.FaceDown) return this
+
+    return when (faceUp.size) {
+        0 -> {
+            // 0 face-up: the tapped FaceDown tile flips to FaceUp.
+            val newTiles = tiles.mapIndexed { i, tile ->
+                if (i == index) tile.copy(state = TileState.FaceUp) else tile
+            }
+            Board(newTiles, moves)
+        }
+        1 -> {
+            // 1 face-up: the tapped FaceDown tile flips to FaceUp, making two.
+            // Immediately compare them: if match -> Matched; if not -> leave both FaceUp.
+            // moves increments by 1.
+            val firstIndex = faceUp[0]
+            val firstTile = tiles[firstIndex]
+            val isMatch = firstTile.face == tappedTile.face
+            
+            val newState = if (isMatch) TileState.Matched else TileState.FaceUp
+            
+            val newTiles = tiles.mapIndexed { i, tile ->
+                when (i) {
+                    index -> tile.copy(state = newState)
+                    firstIndex -> tile.copy(state = newState)
+                    else -> tile
+                }
+            }
+            Board(newTiles, moves + 1)
+        }
+        2 -> {
+            // 2 face-up and they did NOT match: the next tap first flips those two back to FaceDown
+            // and reveals nothing else.
+            val newTiles = tiles.map { tile ->
+                if (tile.state == TileState.FaceUp) tile.copy(state = TileState.FaceDown) else tile
+            }
+            Board(newTiles, moves)
+        }
+        else -> this
+    }
 }
 
 // ── B4 (assignment Part B): reset (clear) the board ─────────────────────────
@@ -96,5 +151,6 @@ fun Board.flip(index: Int): Board {
 //
 // TODO (B4): the stub returns the board unchanged. Implement the real reset.
 fun Board.reset(): Board {
-    return this
+    val newTiles = tiles.map { it.copy(state = TileState.FaceDown) }
+    return Board(newTiles, 0)
 }

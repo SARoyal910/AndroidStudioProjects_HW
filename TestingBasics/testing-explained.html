@@ -116,7 +116,7 @@
     <div class="meta">
       <span><b>Project:</b> TestingBasics</span>
       <span><b>Under test:</b> TipCalculator.kt</span>
-      <span><b>Tests:</b> 10 unit + 1 UI</span>
+      <span><b>Tests:</b> 11 unit + 1 UI</span>
     </div>
   </div>
 </header>
@@ -174,7 +174,7 @@
 
   <!-- 3 — LIVE RUNNER -->
   <h2><span class="num">3.</span> Try it: a live test runner</h2>
-  <p class="lead">Below is the tip-calculator logic (in JavaScript so it runs right here) and the <b>same 10 tests</b>
+  <p class="lead">Below is the tip-calculator logic (in JavaScript so it runs right here) and the <b>same 11 tests</b>
      from <code>TipCalculatorTest.kt</code>. Press <b>Run tests</b>. Then <b>break the code</b> and run again —
      watch the tests turn red and tell you exactly what's wrong. That red-to-green loop is the heart of testing.</p>
 
@@ -258,7 +258,7 @@
 
   <footer>
     TestingBasics · an interactive intro to writing tests · the code under test is
-    <code>TipCalculator.kt</code>; the tests are <code>TipCalculatorTest.kt</code> (10 unit) and
+    <code>TipCalculator.kt</code>; the tests are <code>TipCalculatorTest.kt</code> (11 unit) and
     <code>TipUiTest.kt</code> (1 UI). The runner above re-implements the calculator in JavaScript so the same tests
     can run in your browser. Run the real thing with <code>./gradlew testDebugUnitTest</code>.
   </footer>
@@ -323,6 +323,7 @@
   // --- the tests: one entry per @Test in TipCalculatorTest.kt ---------------
   var TESTS = [
     { name: "tipAmount of 100 at 20 percent is 20", run: function (c) { assertEquals(20, c.tipAmount(100, 20)); } },
+    { name: "tipAmount of 100 at 10 percent is 10", run: function (c) { assertEquals(10, c.tipAmount(100, 10)); } },
     { name: "tipAmount of 50 at 10 percent is 5",   run: function (c) { assertEquals(5,  c.tipAmount(50, 10)); } },
     { name: "tipAmount of 80 at 15 percent is 12",  run: function (c) { assertEquals(12, c.tipAmount(80, 15)); } },
     { name: "tipAmount is 0 when the bill is 0",    run: function (c) { assertEquals(0,  c.tipAmount(0, 20)); } },

@@ -65,6 +65,24 @@ class TipCalculatorTest {
         assertEquals(20.0, tip, 0.001)
     }
 
+    @Test
+    fun `tipAmount of 100 at 10 percent is 10`() {
+        // ARRANGE — the inputs.
+        val bill = 100.0
+        val tipPercent = 10
+
+        // ACT — call the real function.
+        val tip = TipCalculator.tipAmount(bill, tipPercent)
+
+        // ASSERT — state what we expect. assertEquals(EXPECTED, ACTUAL, DELTA).
+        //
+        // Why the third number (the "delta")? `tip` is a Double, and computers
+        // can't store most decimals EXACTLY (e.g. 0.1 + 0.2 is 0.30000000000000004).
+        // So for Doubles we don't demand an exact match — we allow a tiny tolerance.
+        // 0.001 means "within a tenth of a cent", which is plenty for money.
+        assertEquals(10.0, tip, 0.001)
+    }
+
     // -------------------------------------------------------------------------
     // 2) A few more cases. ONE behaviour per test keeps failures easy to read:
     //    if "10 percent" breaks but "15 percent" passes, you instantly know which.

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homework 8 — Capstone: PokéDex (Live API · Navigation · State · Room · Tests)</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84;        /* Android green */
+    --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:0 22px 80px;}
+
+  /* Header */
+  header.hero{
+    background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:40px 0 34px; margin-bottom:34px;
+    border-bottom:4px solid var(--accent);
+  }
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px;
+    color:var(--accent); font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:64ch;}
+  header.hero p.sub a{color:#9be7c4; text-decoration:underline;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+  .herolinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .herolinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700;
+    border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .herolinks a:hover{background:rgba(255,255,255,.10);}
+  .herolinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:10px; border-top:1px solid var(--line);}
+  h2 .part{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:16px; margin:24px 0 6px;}
+  h3 code{font-size:.95em;}
+
+  p{margin:12px 0;}
+  ul,ol{margin:10px 0 10px; padding-left:22px;}
+  li{margin:6px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.92em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:16px 18px; border-radius:10px;
+    overflow:auto; font-size:13.5px; line-height:1.55; margin:14px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre .c{color:#7d8aa0;}          /* comment */
+  pre .k{color:#c792ea;}          /* keyword */
+  pre .s{color:#a5e8a0;}          /* string  */
+  pre .f{color:#82aaff;}          /* fn/type */
+
+  /* Where-to-work tag on each task */
+  .where{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.04em;
+    text-transform:uppercase; padding:2px 8px; border-radius:999px; margin-left:8px; vertical-align:middle;}
+  .where.pg{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}     /* playground */
+  .where.as{background:#fff3e6; color:#b4530a; border:1px solid #fde2c0;}     /* Android Studio */
+  .where.both{background:#eafaf1; color:var(--accent-deep); border:1px solid #c5ebd3;}
+  .where.new{background:#eef4ff; color:#2454c9; border:1px solid #d3e0ff;}        /* "NEW" / info */
+
+  /* Project / problem blocks */
+  .q{background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+     border-radius:10px; padding:16px 18px 6px; margin:16px 0;
+     box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .q > .qhead{display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
+  .q .qid{font-weight:800; color:var(--ink);}
+  .deliver{margin:10px 0 4px; font-size:14px; color:var(--accent-deep); font-weight:700;}
+  .deliver span{color:var(--muted); font-weight:500;}
+
+  /* Project facts strip at the top of each project card */
+  .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin:8px 0 14px;}
+  .facts div{background:var(--pill); border:1px solid var(--line); border-radius:8px; padding:8px 11px;
+    font-size:12.5px;}
+  .facts div b{display:block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+    color:#9aa8b8; margin-bottom:2px;}
+  .facts code{background:#f1f7f3; color:var(--accent-deep); font-weight:600; font-size:11.5px;}
+
+  /* Per-step block inside a part */
+  .todo{border:1px solid var(--line); border-radius:10px; padding:12px 14px 4px; margin:14px 0; background:#fff;}
+  .todo .th{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .todo .tn{flex:none; width:auto; min-width:30px; height:24px; padding:0 9px; border-radius:999px;
+    background:var(--accent); color:#063; font-weight:800; display:inline-grid; place-items:center; font-size:12px;}
+  .todo .ttl{font-weight:800; font-size:15px;}
+  .todo .builds{font-size:11.5px; font-weight:700; letter-spacing:.03em; color:#2454c9;
+    background:#eef4ff; border:1px solid #d3e0ff; border-radius:999px; padding:2px 9px;}
+  .todo .file{font-size:11.5px; font-weight:700; letter-spacing:.02em; color:#7c4a12;
+    background:#fff3e6; border:1px solid #fde2c0; border-radius:999px; padding:2px 9px;}
+  .todo p{margin:8px 0;}
+  .hint{font-size:13.5px; color:#7c4a12; background:var(--warn-soft); border:1px solid #fde2c0;
+    border-radius:8px; padding:8px 11px; margin:8px 0;}
+  .hint b{color:#7c4a12;}
+  .hint code{background:#fff3e6; color:#b4530a;}
+
+  .callout{border-radius:10px; padding:13px 16px; margin:16px 0; font-size:15px;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.tip{background:#ecfdf3; border:1px solid #c5ebd3;}
+  .callout.warn{background:var(--warn-soft); border:1px solid #fde2c0; color:#7c4a12;}
+  .callout b{color:inherit;}
+
+  .progression{display:grid; grid-template-columns:1fr; gap:10px; margin:18px 0;}
+  .step{display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid var(--line);
+    border-radius:10px; padding:12px 14px;}
+  .step .n{flex:none; width:26px; height:26px; border-radius:50%; background:var(--accent);
+    color:#063; font-weight:800; display:grid; place-items:center; font-size:13px;}
+  .step h4{margin:0 0 2px; font-size:15px;}
+  .step p{margin:0; color:var(--muted); font-size:14px;}
+  .step code{font-size:.85em;}
+
+  /* Action / spec table */
+  table.map{width:100%; border-collapse:collapse; font-size:14.5px; margin:14px 0;}
+  table.map th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.map td{padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.map td b{color:var(--accent-deep);}
+  table.map code{font-size:.86em;}
+
+  /* "Done when" checklist */
+  ul.check{list-style:none; padding-left:0; margin:8px 0;}
+  ul.check li{position:relative; padding-left:26px; margin:5px 0; font-size:14.5px;}
+  ul.check li::before{content:"☐"; position:absolute; left:0; top:0; color:var(--accent-deep);
+    font-weight:800; font-size:15px;}
+
+  /* Reference grid */
+  .refgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; margin:16px 0;}
+  .refcard{border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:#fff;}
+  .refcard h4{margin:0 0 6px; font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:#9aa8b8;}
+  .refcard code{display:inline-block; margin:2px 4px 2px 0; font-size:11.5px; color:var(--accent-deep);
+    background:#f1f7f3; font-weight:600;}
+
+  table.grade{width:100%; border-collapse:collapse; font-size:14.5px; margin-top:8px;}
+  table.grade th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.grade td{padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.grade code{font-size:.86em;}
+
+  footer{margin-top:46px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:13.5px;}
+
+  @media print{
+    body{background:#fff;}
+    header.hero{background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .herolinks{display:none;}
+    .q,.step,.callout,.refcard,.todo{break-inside:avoid;}
+    pre{break-inside:avoid; background:#0f172a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--ink); text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Capstone · Compose · Navigation 3 · ViewModel · Networking · Room · Tests</p>
+    <h1>Homework 8 — PokéDex: a live-API app that ties the whole course together</h1>
+    <p class="sub">This is the <b>capstone</b>. You'll build a complete Android app that fetches <b>real, live data
+       from a free public API</b> — the <a href="https://pokeapi.co/">PokéAPI</a>, which needs
+       <b>no API key and no account</b> — then combines <em>every</em> skill from the course around it: a <b>Compose</b>
+       UI, <b>Navigation 3</b> for a list&nbsp;→&nbsp;detail flow, a <b>ViewModel</b> exposing <b>Loading / Success /
+       Error</b> state, <b>Retrofit + kotlinx.serialization</b> for the network calls, and a <b>Room</b> cache so the
+       app still works <b>offline</b> — all proven by <b>unit tests</b>. You build it from a fresh project; this
+       assignment is the spec.</p>
+    <div class="meta">
+      <span><b>Project:</b> PokeDex (you create it)</span>
+      <span><b>Live API:</b> PokéAPI — free, no key, no account</span>
+      <span><b>Tools:</b> Android Studio + emulator/device + internet</span>
+    </div>
+    <div class="herolinks">
+      <a class="primary" href="../projects.html">▶ Projects, Explained</a>
+      <a href="./hw7.html">← Homework 7</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ CONTEXT ============ -->
+  <section>
+    <p>Up to now each assignment isolated <em>one</em> idea — a navigation pattern, some Compose layout, a pure game
+       rules layer, a storage API. A real app is all of them at once. In this capstone you assemble the same pieces
+       you've already practised into one coherent app, and you add the one big skill the course saves for last:
+       <b>talking to a server over the network</b>. The data is <b>real and live</b> — actual Pokémon served by
+       <a href="https://pokeapi.co/">PokéAPI</a>, a large, free, keyless public API used in thousands of tutorials.</p>
+
+    <div class="callout proj"><b>The app — "PokéDex".</b> A <b>list</b> screen shows the first 151 Pokémon (name +
+      Pokédex number), fetched live from the API. Tap any row to <b>navigate</b> to a <b>detail</b> screen that fetches
+      that one Pokémon and shows its number, its <b>types</b> (as emoji), its height (m) and weight (kg). Every fetched
+      result is <b>cached in a Room database</b>, so when you reopen the app — or open it with the network off — the
+      list and any Pokémon you've already viewed are <b>still there</b>. Each screen explicitly renders
+      <b>Loading</b>, <b>Success</b>, and <b>Error</b>.</div>
+
+    <h3>Why this API (and the rule it must obey)</h3>
+    <p>The course's hard rule for network homework: the API must be <b>free, need no API key, and need no account</b>.
+       PokéAPI satisfies all three — you just send a plain HTTPS <code>GET</code> and parse the JSON. (It's the same
+       kind of open, keyless endpoint you already met in <a href="../../NetworkParsing/">NetworkParsing</a>, which used
+       <a href="https://open-meteo.com/">Open-Meteo</a>.) PokéAPI <b>asks every app to cache responses locally</b>
+       rather than re-fetch — which is exactly why the Room cache below isn't just bonus polish, it's part of using the
+       API correctly.</p>
+
+    <h3>It combines everything you've already built</h3>
+    <p>You are not learning six new things. You're learning <b>one</b> new thing (network calls) and <b>wiring it to
+       five you already know</b>. Each layer below has a reference project in this repo you can open side-by-side:</p>
+    <table class="map">
+      <thead><tr><th style="width:38%">Layer in PokéDex</th><th>You already built this in…</th></tr></thead>
+      <tbody>
+        <tr><td><b>Compose UI + Material 3</b> — list rows, a detail card, type chips</td>
+            <td><code>ComposeModernUI</code>, <code>ComposeCatalog</code> · Homeworks 4–5, 7</td></tr>
+        <tr><td><b>Navigation 3</b> — list → detail, a back stack, an argument key</td>
+            <td><code>NavListDetail</code>, <code>Intent</code> · Homeworks 1, 3</td></tr>
+        <tr><td><b>ViewModel + StateFlow + sealed <code>UiState</code></b> — Loading/Success/Error</td>
+            <td><code>MvvmState</code>, <code>NavDataLayer</code>, <code>NavViewModelState</code></td></tr>
+        <tr><td><b>Retrofit + kotlinx.serialization</b> — the network calls <span class="where new">NEW</span></td>
+            <td><code>NetworkParsing</code> (weather) — your template for this</td></tr>
+        <tr><td><b>Room cache (offline-first)</b> — the on-device source of truth</td>
+            <td><code>RoomAndPreferences</code>, <code>StorageJourney</code>; offline idea from <code>CloudSync</code></td></tr>
+        <tr><td><b>Repository (real / fake switch) + unit tests</b></td>
+            <td><code>NetworkParsing</code>, <code>CloudSync</code> · Homework 7 (pure-logic tests)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>The architecture — data flows one way</h3>
+    <p>The shape is the same unidirectional flow you used in MVVM, now with a network source <em>and</em> a database
+       behind one repository. Read it top-to-bottom for a fetch, bottom-to-top for a tap:</p>
+<pre><span class="c">            ┌─────────────────────────────────────────────────────────┐</span>
+<span class="c">  UI  ◀──── │  ListScreen / DetailScreen  (Compose + Navigation 3)     │</span>
+<span class="c">            │     collects uiState ; a tap adds a key to the back stack│</span>
+<span class="c">            └───────────────▲───────────────────────┬─────────────────┘</span>
+<span class="c">                  uiState:   │ StateFlow             │ events (load, retry, open)</span>
+<span class="c">            ┌───────────────┴───────────────────────▼─────────────────┐</span>
+<span class="c">  STATE ◀── │  PokemonListViewModel / PokemonDetailViewModel           │</span>
+<span class="c">            │     sealed UiState = Loading | Success(data) | Error(msg) │</span>
+<span class="c">            └───────────────▲───────────────────────┬─────────────────┘</span>
+<span class="c">                            │ domain models         │ suspend calls</span>
+<span class="c">            ┌───────────────┴───────────────────────▼─────────────────┐</span>
+<span class="c">  DATA  ◀── │  PokemonRepository   (one source of truth)               │</span>
+<span class="c">            │     reads Room first  →  refreshes from network  →  caches│</span>
+<span class="c">            └──────▲───────────────────────────────────▲──────────────┘</span>
+<span class="c">                   │ Room (cache, offline)              │ Retrofit (live)</span>
+<span class="c">          ┌────────┴─────────┐                ┌─────────┴──────────────┐</span>
+<span class="c">          │ PokemonDao / DB  │                │ PokemonApi  →  PokéAPI │</span>
+<span class="c">          │ (SQLite on disk) │                │ (DTOs ⇄ JSON over HTTP)│</span>
+<span class="c">          └──────────────────┘                └────────────────────────┘</span></pre>
+
+    <h3>How to work this assignment</h3>
+    <div class="progression">
+      <div class="step"><div class="n">1</div><div>
+        <h4>Build bottom-up, one layer at a time</h4>
+        <p>Network (B) → cache (C) → repository (D) → ViewModels (E) → UI (F). Each layer is small and testable on its
+           own. Do <b>not</b> try to wire the whole thing before any one layer works.</p>
+      </div></div>
+      <div class="step"><div class="n">2</div><div>
+        <h4>Lean on your reference projects</h4>
+        <p>Open the project named in each part beside your code. You've written ~90% of every layer before — only the
+           domain (Pokémon instead of weather/notes/planets) changes. Copy the <em>pattern</em>, not the data.</p>
+      </div></div>
+      <div class="step"><div class="n">3</div><div>
+        <h4>Run early; use the fake when offline</h4>
+        <p>Like NetworkParsing, build a <code>FakeRepository</code> first so the UI and the tests run with <b>no
+           internet</b>. Flip to the real one once the screens draw. The emulator and a green test run are the truth.</p>
+      </div></div>
+    </div>
+
+    <div class="callout warn"><b>One honest scope note.</b> This is bigger than Homeworks 5–7 — it's the capstone, so
+      it's meant to be. Get the <b>list screen showing live data</b> first (Parts A, B, the real repository, E, F for
+      the list only). That alone is a complete, demonstrable app. Then add the detail screen, the Room cache, the fake,
+      and the tests. Ship the core, then deepen it.</div>
+  </section>
+
+  <!-- ============ THE API CONTRACT ============ -->
+  <h2>The API you'll call <span class="where new">read this first</span></h2>
+  <p class="lead">Two endpoints, both plain <code>GET</code>, both keyless. Model your DTOs from the JSON shown here —
+     this is your "wire contract," exactly like the Open-Meteo sample in NetworkParsing.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Endpoint 1 — the list</span></div>
+    <p><code>GET https://pokeapi.co/api/v2/pokemon?limit=151&amp;offset=0</code></p>
+    <p>Returns one object with a <code>results</code> array. Each entry has only a <b>name</b> and a <b>url</b> — the
+       Pokédex number is the trailing number in that url (<code>.../pokemon/<b>1</b>/</code>). Trimmed sample:</p>
+<pre><span class="f">{</span>
+  <span class="s">"count"</span>: 1302,
+  <span class="s">"next"</span>: <span class="s">"https://pokeapi.co/api/v2/pokemon?offset=151&amp;limit=151"</span>,
+  <span class="s">"results"</span>: [
+    <span class="f">{</span> <span class="s">"name"</span>: <span class="s">"bulbasaur"</span>,  <span class="s">"url"</span>: <span class="s">"https://pokeapi.co/api/v2/pokemon/1/"</span> <span class="f">}</span>,
+    <span class="f">{</span> <span class="s">"name"</span>: <span class="s">"ivysaur"</span>,    <span class="s">"url"</span>: <span class="s">"https://pokeapi.co/api/v2/pokemon/2/"</span> <span class="f">}</span>,
+    <span class="f">{</span> <span class="s">"name"</span>: <span class="s">"venusaur"</span>,   <span class="s">"url"</span>: <span class="s">"https://pokeapi.co/api/v2/pokemon/3/"</span> <span class="f">}</span>
+    <span class="c">// … 148 more</span>
+  ]
+<span class="f">}</span></pre>
+  </div>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Endpoint 2 — one Pokémon's detail</span></div>
+    <p><code>GET https://pokeapi.co/api/v2/pokemon/{name}</code> &nbsp;(e.g. <code>.../pokemon/bulbasaur</code>)</p>
+    <p>Returns a large object; you only model the fields you show. Note the <b>units</b>: <code>height</code> is in
+       <b>decimetres</b> (divide by 10 → metres) and <code>weight</code> is in <b>hectograms</b> (divide by 10 → kg).
+       <code>types</code> is a nested array. Trimmed sample:</p>
+<pre><span class="f">{</span>
+  <span class="s">"id"</span>: 1,
+  <span class="s">"name"</span>: <span class="s">"bulbasaur"</span>,
+  <span class="s">"height"</span>: 7,            <span class="c">// decimetres -> 0.7 m</span>
+  <span class="s">"weight"</span>: 69,           <span class="c">// hectograms -> 6.9 kg</span>
+  <span class="s">"types"</span>: [
+    <span class="f">{</span> <span class="s">"slot"</span>: 1, <span class="s">"type"</span>: <span class="f">{</span> <span class="s">"name"</span>: <span class="s">"grass"</span>  <span class="f">}</span> <span class="f">}</span>,
+    <span class="f">{</span> <span class="s">"slot"</span>: 2, <span class="s">"type"</span>: <span class="f">{</span> <span class="s">"name"</span>: <span class="s">"poison"</span> <span class="f">}</span> <span class="f">}</span>
+  ]
+  <span class="c">// … sprites, stats, abilities, moves, … (ignored)</span>
+<span class="f">}</span></pre>
+    <div class="hint"><b>Robustness:</b> the real response has <em>dozens</em> of fields you don't model. Configure the
+      JSON parser with <code>Json { ignoreUnknownKeys = true }</code> — exactly as NetworkParsing does — or decoding
+      will throw on the first unmodelled key. This is the single most important network-robustness setting.</div>
+  </div>
+
+  <!-- ============ PART A — SET UP THE PROJECT ============ -->
+  <h2><span class="part">Part A.</span> Create the project &amp; add the dependencies <span class="where as">Android Studio</span></h2>
+  <p class="lead">Start a new <b>Empty Activity (Compose)</b> project, then add only what this app needs on top of the
+     Compose baseline. These versions match the rest of the course's projects.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">New project + Gradle wiring</span></div>
+    <div class="facts">
+      <div><b>Project folder</b> <code>PokeDex</code></div>
+      <div><b>Package</b> <code>com.example.pokedex</code></div>
+      <div><b>Theme wrapper</b> <code>PokeDexTheme</code></div>
+      <div><b>Compose BOM</b> <code>2026.02.01</code></div>
+      <div><b>Min SDK</b> <code>24+</code> · compileSdk <code>37</code></div>
+      <div><b>Language</b> <code>Kotlin 2.2.10</code></div>
+    </div>
+    <p><b>A1 — Plugins.</b> In the app <code>build.gradle.kts</code> apply the three plugins this app adds beyond
+       Compose. (kotlin-serialization does <em>double duty</em> here: it generates the DTO decoders <b>and</b> lets
+       Navigation 3 keys be <code>@Serializable</code>.)</p>
+<pre><span class="c">// app/build.gradle.kts — plugins {}</span>
+<span class="f">alias</span>(libs.plugins.android.application)
+<span class="f">alias</span>(libs.plugins.kotlin.compose)
+<span class="f">alias</span>(libs.plugins.kotlin.serialization)   <span class="c">// @Serializable DTOs + Nav3 keys</span>
+<span class="f">alias</span>(libs.plugins.ksp)                     <span class="c">// Room's annotation processor</span></pre>
+    <p><b>A2 — Dependencies.</b> Add these to <code>dependencies {}</code> (declare the versions in
+       <code>libs.versions.toml</code> just like NetworkParsing and RoomAndPreferences do):</p>
+<pre><span class="c">// --- Networking + JSON (from NetworkParsing) ---------------------------</span>
+implementation(libs.retrofit)                              <span class="c">// 2.11.0</span>
+implementation(libs.retrofit.converter.kotlinx.serialization)
+implementation(libs.okhttp)                                <span class="c">// 4.12.0</span>
+implementation(libs.kotlinx.serialization.json)            <span class="c">// 1.11.0</span>
+
+<span class="c">// --- Room cache via KSP (from RoomAndPreferences) ----------------------</span>
+implementation(libs.androidx.room.runtime)                 <span class="c">// 2.7.2</span>
+implementation(libs.androidx.room.ktx)                     <span class="c">// suspend DAO + Flow returns</span>
+ksp(libs.androidx.room.compiler)
+
+<span class="c">// --- Navigation 3 (from NavListDetail) ---------------------------------</span>
+implementation(libs.androidx.navigation3.runtime)          <span class="c">// 1.0.1</span>
+implementation(libs.androidx.navigation3.ui)
+
+<span class="c">// --- ViewModel + StateFlow wired into Compose --------------------------</span>
+implementation(libs.androidx.lifecycle.viewmodel.compose)
+implementation(libs.androidx.lifecycle.runtime.compose)    <span class="c">// collectAsStateWithLifecycle()</span>
+
+<span class="c">// --- Test-only: run suspend repository/VM code in unit tests -----------</span>
+testImplementation(libs.junit)
+testImplementation(libs.kotlinx.coroutines.test)           <span class="c">// runTest { }</span></pre>
+    <p><b>A3 — The INTERNET permission.</b> A live app that has no internet permission fails silently. Add to
+       <code>AndroidManifest.xml</code>, above <code>&lt;application&gt;</code>:</p>
+<pre><span class="f">&lt;uses-permission</span> android:name=<span class="s">"android.permission.INTERNET"</span> <span class="f">/&gt;</span></pre>
+    <div class="deliver">Deliver: <span>a fresh <code>PokeDex</code> project that Gradle-syncs and launches the empty
+      template on your emulator before you write any app code.</span></div>
+  </div>
+
+  <!-- ============ PART B — NETWORK LAYER ============ -->
+  <h2><span class="part">Part B.</span> The network layer — DTOs, API, domain, mapper <span class="where as">Android Studio</span></h2>
+  <p class="lead">This is the one genuinely new layer. It's the same four-piece shape as NetworkParsing's
+     <code>Weather.kt</code> + <code>WeatherApi.kt</code>: <b>DTOs</b> (the wire shape) → a Retrofit <b>API interface</b>
+     → a clean <b>domain model</b> → a <b>mapper</b> that converts and decodes the server's values. Open
+     <code>NetworkParsing</code> beside you and follow it field-for-field.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Model the wire, the domain, and the bridge between them</span></div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">B1</span><span class="ttl">DTOs — the exact JSON shape</span><span class="file">Pokemon.kt</span></div>
+      <p>Write <code>@Serializable</code> data classes mirroring the two JSON samples above: a list response holding a
+         list of summaries (<code>name</code>, <code>url</code>), and a detail object (<code>id</code>,
+         <code>height</code>, <code>weight</code>, and a nested <code>types</code> list whose entries each wrap a
+         <code>type { name }</code>). Use <code>@SerialName</code> only where a Kotlin name must differ from the JSON
+         key. DTOs carry the network's shape and nothing else.</p>
+      <p style="color:var(--muted)"><b>Think about:</b> how many classes does the <em>nested</em> <code>types</code>
+         array force you to declare? Which fields can you simply leave out of the DTO (and what setting lets you)?</p>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">B2</span><span class="ttl">Retrofit API — two suspend GETs</span><span class="file">PokemonApi.kt</span></div>
+      <p>Declare an <code>interface PokemonApi</code> with two <code>suspend</code> functions: one for the list
+         (<code>@GET("pokemon")</code> with <code>@Query</code> params <code>limit</code> and <code>offset</code>) and
+         one for the detail (<code>@GET("pokemon/{name}")</code> with an <code>@Path</code> for the name). Then a
+         <code>providePokemonApi()</code> that builds Retrofit with <code>baseUrl("https://pokeapi.co/api/v2/")</code>
+         and the kotlinx.serialization converter. This is a near-verbatim copy of <code>provideWeatherApi()</code>.</p>
+      <div class="hint"><b>Two annotations, two jobs:</b> <code>@Query</code> appends <code>?limit=151</code> to the URL;
+        <code>@Path("name")</code> substitutes into the <code>{name}</code> slot in the path. The base URL <b>must end
+        in <code>/</code></b>.</div>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">B3</span><span class="ttl">Domain models — the flat shape your UI wants</span><span class="file">Pokemon.kt</span></div>
+      <p>Plain data classes, <b>no</b> serialization annotations: a <code>PokemonSummary(dexNumber, name)</code> for the
+         list and a <code>PokemonDetail(dexNumber, name, heightMeters, weightKg, types)</code> for the screen. The UI
+         and ViewModel depend only on these, never on the DTOs — so if PokéAPI restructured its JSON, only B1 and B4
+         would change.</p>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">B4</span><span class="ttl">Mapper — decode the server's values</span><span class="file">Pokemon.kt</span></div>
+      <p>The single place wire-shape becomes app-shape — and the only place the API's quirks get translated:</p>
+      <ul>
+        <li><b>Dex number from the url</b> — parse the trailing integer out of <code>.../pokemon/25/</code> for each
+            list summary (or off the detail's <code>id</code>).</li>
+        <li><b>Units</b> — <code>height / 10.0</code> → metres; <code>weight / 10.0</code> → kilograms.</li>
+        <li><b>Types → emoji</b> — map each type <em>name</em> to a glyph for the UI (the course's no-icon-library
+            convention; see the reference card). e.g. <code>grass→🌿</code>, <code>fire→🔥</code>, <code>water→💧</code>,
+            <code>electric→⚡</code>, <code>poison→☠️</code>.</li>
+      </ul>
+      <p style="color:var(--muted)"><b>Think about:</b> why is parsing the id from the url <em>mapper</em> work and not
+         <em>UI</em> work? Which of these three conversions are you about to write a unit test for in Part&nbsp;G?</p>
+    </div>
+  </div>
+
+  <!-- ============ PART C — ROOM CACHE ============ -->
+  <h2><span class="part">Part C.</span> The offline cache — Room <span class="where as">Android Studio</span></h2>
+  <p class="lead">Same Room you built in <code>RoomAndPreferences</code> / <code>StorageJourney</code>: an
+     <code>@Entity</code>, a <code>@Dao</code>, and a singleton <code>@Database</code>. The cache is what makes the app
+     work offline and what makes you a good PokéAPI citizen (it asks apps to cache rather than re-fetch).</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Persist what you fetch so it survives going offline</span></div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">C1</span><span class="ttl">Entity + DAO</span><span class="file">data/CachedPokemon.kt · PokemonDao.kt</span></div>
+      <p>An <code>@Entity</code> table keyed by Pokémon <b>name</b> (the natural primary key). Store the summary fields
+         (dex number, name) always; store the detail fields (height, weight, types) too, <b>nullable</b> — they stay
+         null until that Pokémon's detail has been fetched. The DAO needs: a reactive
+         <code>observeAll(): Flow&lt;List&lt;CachedPokemon&gt;&gt;</code> ordered by dex number, a
+         <code>suspend</code> read of one row by name, and <code>@Insert(onConflict = REPLACE)</code> upserts for one
+         row and for a whole list.</p>
+      <div class="hint"><b>Why a <code>Flow</code> read?</b> Exactly as in RoomAndPreferences: a <code>Flow</code> query
+        is <em>live</em> — when you upsert fresh data, Room re-emits and the list redraws itself with zero manual
+        refresh. Store the type list as a single <code>String</code> (e.g. comma-joined) to avoid a
+        <code>@TypeConverter</code> for this first cut.</div>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">C2</span><span class="ttl">Database singleton</span><span class="file">data/PokemonDatabase.kt</span></div>
+      <p>An <code>abstract class PokemonDatabase : RoomDatabase()</code> annotated <code>@Database(entities =
+         [CachedPokemon::class], version = 1)</code>, exposing <code>abstract fun pokemonDao()</code>, with the same
+         double-checked-locking <code>getInstance(context)</code> singleton as <code>NoteDatabase</code>.</p>
+    </div>
+  </div>
+
+  <!-- ============ PART D — REPOSITORY ============ -->
+  <h2><span class="part">Part D.</span> The repository — offline-first, real &amp; fake <span class="where as">Android Studio</span></h2>
+  <p class="lead">One source of truth that hides <em>where</em> data comes from. It reads the cache, refreshes from the
+     network, writes results back, and degrades gracefully when offline. The real/fake split is the same one that lets
+     NetworkParsing run with no internet.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Combine network + cache behind one interface</span></div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">D1</span><span class="ttl">The contract</span><span class="file">PokemonRepository.kt</span></div>
+      <p>An <code>interface PokemonRepository</code> with: <code>fun observePokemon(): Flow&lt;List&lt;PokemonSummary&gt;&gt;</code>
+         (the cached list the list screen reads), a <code>suspend fun refreshList()</code> (fetch endpoint 1, upsert all),
+         and a <code>suspend fun getDetail(name): PokemonDetail</code> (return cached detail if present, else fetch
+         endpoint 2, upsert, return it). <code>suspend</code> functions may <b>throw</b> — the ViewModel turns that into
+         an <code>Error</code> state.</p>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">D2</span><span class="ttl">RealPokemonRepository — offline-first</span><span class="file">PokemonRepository.kt</span></div>
+      <p>Holds the <code>PokemonApi</code> and the <code>PokemonDao</code>. <code>observePokemon()</code> just maps the
+         DAO's <code>Flow</code> of entities to domain summaries — the UI always reads the <b>cache</b>, so it shows
+         instantly and works offline. <code>refreshList()</code> calls the API and upserts; if it throws (no network),
+         the already-cached <code>Flow</code> keeps feeding the UI. <code>getDetail()</code> is cache-then-network.</p>
+      <p style="color:var(--muted)"><b>Think about:</b> "offline-first" means the UI never waits on the network to show
+         <em>something</em>. Which method reads the cache, and which one fills it? What should happen on the very first
+         launch with the cache empty <em>and</em> no network — and which state does the user see then?</p>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">D3</span><span class="ttl">FakePokemonRepository — no network, for tests &amp; offline demo</span><span class="file">PokemonRepository.kt</span></div>
+      <p>Returns a few hardcoded Pokémon after a small <code>delay()</code> (so you can see the spinner) — no Retrofit,
+         no Room. It must implement the <b>whole</b> <code>PokemonRepository</code> contract — in particular
+         <code>observePokemon()</code> must actually <b>emit</b> its hardcoded summaries (e.g. <code>flowOf(list)</code>),
+         because the list ViewModel (E1) and its test (G5) reach <code>Success</code> by collecting that
+         <code>Flow</code>. Provide <code>providePokemonRepository(context, useFake = false)</code> as the one-line
+         switch, default real (the API is free + keyless, so the app just works live), <code>useFake = true</code> for
+         fully-offline runs and unit tests. This mirrors <code>provideWeatherRepository()</code>.</p>
+    </div>
+  </div>
+
+  <!-- ============ PART E — VIEWMODELS ============ -->
+  <h2><span class="part">Part E.</span> ViewModels &amp; sealed UI state <span class="where as">Android Studio</span></h2>
+  <p class="lead">Two screens, two ViewModels, the <b>same</b> Loading/Success/Error pattern you wrote in
+     <code>WeatherViewModel</code> and <code>MvvmState</code>. The sealed type makes the <code>when</code> in the UI
+     exhaustive, so you can't forget to render a state.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Expose each screen's state as a StateFlow</span></div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">E1</span><span class="ttl">PokemonListViewModel</span><span class="builds">StateFlow + sealed UiState</span><span class="file">PokemonListViewModel.kt</span></div>
+      <p>Define <code>sealed interface ListUiState { Loading; data class Success(val pokemon: List&lt;PokemonSummary&gt;);
+         data class Error(val message: String) }</code>. In <code>init</code>, set <code>Loading</code>, then collect the
+         repository's <code>observePokemon()</code> <code>Flow</code> into <code>Success</code>; also call
+         <code>refreshList()</code> in a <code>try/catch</code> that publishes <code>Error</code> only when the cache is
+         empty. Expose a private <code>MutableStateFlow</code> as a public read-only <code>StateFlow</code> and a
+         <code>retry()</code>.</p>
+      <div class="hint"><b>Cache + network, one state:</b> if the cached <code>Flow</code> has rows, show
+        <code>Success</code> even when the refresh fails — the user sees data, not an error. Reserve <code>Error</code>
+        for "nothing cached <em>and</em> the fetch failed."</div>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">E2</span><span class="ttl">PokemonDetailViewModel</span><span class="builds">load-by-key + retry</span><span class="file">PokemonDetailViewModel.kt</span></div>
+      <p>Takes the tapped Pokémon's <b>name</b> (passed from navigation). <code>loadDetail()</code> sets
+         <code>Loading</code>, calls <code>repository.getDetail(name)</code> in <code>viewModelScope.launch</code> inside
+         <code>try/catch</code>, and publishes <code>Success(detail)</code> or <code>Error(message)</code>. A
+         <code>retry()</code> just calls it again. Identical control flow to <code>WeatherViewModel.loadWeather()</code>.</p>
+    </div>
+  </div>
+
+  <!-- ============ PART F — UI + NAV ============ -->
+  <h2><span class="part">Part F.</span> The Compose UI + Navigation 3 <span class="where as">Android Studio</span></h2>
+  <p class="lead">Two screens joined by a Nav3 back stack — the <code>NavListDetail</code> pattern with a different
+     domain. Each screen is a pure function of its <code>uiState</code>, with an explicit branch for each of the three
+     states.</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Render the states; wire the back stack</span></div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">F1</span><span class="ttl">Navigation keys + NavDisplay</span><span class="file">MainActivity.kt</span></div>
+      <p>Two <code>@Serializable</code> keys implementing <code>NavKey</code> (as in NavListDetail):
+         <code>data object ListKey</code> and <code>data class DetailKey(val name: String)</code>. In
+         <code>setContent</code>: <code>val backStack = rememberNavBackStack(ListKey)</code>, then a
+         <code>NavDisplay</code> whose <code>entryProvider</code> has one <code>entry&lt;ListKey&gt;</code> and one
+         <code>entry&lt;DetailKey&gt;</code>. Tapping a list row does <code>backStack.add(DetailKey(name))</code>; Back
+         pops automatically.</p>
+      <div class="hint"><b>Passing the name:</b> the tapped Pokémon's name rides <em>in the key</em>
+        (<code>DetailKey(name)</code>) — that's the Nav3 replacement for an <code>Intent</code> extra. Read it back inside
+        the <code>entry&lt;DetailKey&gt; { key -&gt; … }</code> block and hand it to the detail ViewModel.</div>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">F2</span><span class="ttl">ListScreen</span><span class="builds">LazyColumn · 3 states</span><span class="file">ui/ListScreen.kt</span></div>
+      <p>Collect the list ViewModel's state with <code>collectAsStateWithLifecycle()</code> and <code>when</code> over it:
+         <b>Loading</b> → a centred spinner; <b>Error</b> → the message + a <b>Retry</b> button; <b>Success</b> → a
+         <code>LazyColumn</code> of rows (use <code>items(..., key = { it.name })</code>) showing the dex number + name,
+         each row clickable to open the detail. A <code>Scaffold</code> + <code>TopAppBar</code> titled "PokéDex" frames
+         it.</p>
+    </div>
+
+    <div class="todo">
+      <div class="th"><span class="tn">F3</span><span class="ttl">DetailScreen</span><span class="builds">type chips · 3 states · Back</span><span class="file">ui/DetailScreen.kt</span></div>
+      <p>Same three-state <code>when</code> on the detail ViewModel. <b>Success</b> shows a card: <code>#NNN name</code>,
+         a row of <b>type chips</b> (emoji + label), and height (m) / weight (kg). The top bar shows a Back arrow that
+         pops the stack. <b>Error</b> shows the reason + Retry.</p>
+      <div class="hint"><b>Icons = emoji.</b> As in Homework 7, use emoji inside a <code>Text</code> for the type glyphs,
+        <b>not</b> <code>Icons.Filled.*</code> — the material-icons artifact isn't reliably available in this course's
+        setup, and emoji keep the build green.</div>
+    </div>
+
+    <p class="deliver" style="margin-top:14px;">Done when…</p>
+    <ul class="check">
+      <li>the app launches to a live list of 151 Pokémon fetched from PokéAPI;</li>
+      <li>tapping a row navigates to that Pokémon's detail (number, types as emoji, height, weight);</li>
+      <li>both screens show a spinner while loading and a Retry on error;</li>
+      <li>killing the network (airplane mode) and reopening still shows the cached list and any Pokémon you'd viewed;</li>
+      <li>the system Back button returns from detail to list, and no template/placeholder text remains.</li>
+    </ul>
+  </div>
+
+  <!-- ============ PART G — TESTS ============ -->
+  <h2><span class="part">Part G.</span> Unit tests <span class="where as">Android Studio</span></h2>
+  <p class="lead">Prove the <b>pure</b> parts on the plain JVM — no emulator, no network. Test the mapper directly, and
+     test the ViewModels against the <b>fake</b> repository with <code>runTest</code> (the same
+     <code>kotlinx-coroutines-test</code> you added in Part A).</p>
+
+  <div class="q">
+    <div class="qhead"><span class="qid">Verify the logic that doesn't need a device (JUnit 4)</span></div>
+    <p>At least <b>six</b> tests covering, at minimum:</p>
+    <ul>
+      <li><b>Mapper · units</b> — a DTO with <code>height = 7</code> maps to <code>0.7</code> m; <code>weight = 69</code> → <code>6.9</code> kg.</li>
+      <li><b>Mapper · dex number</b> — the url <code>.../pokemon/25/</code> parses to dex number <code>25</code>.</li>
+      <li><b>Mapper · types → emoji</b> — <code>"grass"</code> maps to your grass glyph; an unknown type falls back, not crash.</li>
+      <li><b>Decoding</b> — feeding the trimmed JSON sample to <code>Json { ignoreUnknownKeys = true }</code> decodes without throwing.</li>
+      <li><b>List ViewModel</b> — with the fake repo and <code>runTest</code>, state ends in <code>Success</code> with the expected Pokémon.</li>
+      <li><b>Detail ViewModel</b> — a fake that throws drives the state to <code>Error</code>; a normal fake drives it to <code>Success</code>.</li>
+    </ul>
+    <div class="hint"><b>One extra step for the ViewModel tests:</b> a ViewModel launches work in
+      <code>viewModelScope</code>, which dispatches on <code>Dispatchers.Main</code> — and there is <em>no</em> Main
+      dispatcher on a plain JVM test, so a naïve ViewModel test throws <i>"Module with the Main dispatcher had failed to
+      initialize."</i> Swap in a test dispatcher around each test: <code>Dispatchers.setMain(StandardTestDispatcher())</code>
+      in an <code>@Before</code> and <code>Dispatchers.resetMain()</code> in <code>@After</code> (the small
+      "MainDispatcherRule" pattern), using the <code>kotlinx-coroutines-test</code> you already added in Part&nbsp;A. The
+      mapper and decoding tests (the first four) need none of this — they're pure.</div>
+    <div class="callout tip"><b>Run them:</b> right-click the test file ▸ <b>Run</b>, or
+      <code>./gradlew testDebugUnitTest</code>. All green is the deliverable.</div>
+    <div class="deliver">Deliver: <span>a passing JUnit run (panel screenshot or <code>BUILD SUCCESSFUL</code>).</span></div>
+  </div>
+
+  <!-- ============ PART H — STRETCH ============ -->
+  <h2><span class="part">Part H.</span> Stretch goals <span class="where both">optional</span></h2>
+  <p class="lead">Bonus credit, each one real Android skill beyond the core app. Attempt them only after the five
+     "Done when" boxes are all true.</p>
+  <div class="q">
+    <div class="todo">
+      <div class="th"><span class="tn">H1</span><span class="ttl">Real sprite images</span><span class="builds">Coil · AsyncImage</span></div>
+      <p>Add Coil 3 — <b>both</b> <code>io.coil-kt.coil3:coil-compose</code> <b>and</b> a network module
+         <code>io.coil-kt.coil3:coil-network-okhttp</code> (Coil&nbsp;3 split HTTP loading into its own artifact, so
+         without it remote <code>https</code> URLs silently fail to load) — then show each Pokémon's official artwork
+         (<code>https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/{id}.png</code>)
+         with <code>AsyncImage</code>. This is the one library the course hadn't needed yet — a clean first taste of
+         remote image loading.</p>
+    </div>
+    <div class="todo">
+      <div class="th"><span class="tn">H2</span><span class="ttl">Search / filter the list</span><span class="builds">state + derivedStateOf</span></div>
+      <p>A <code>TextField</code> at the top of the list that filters by name as you type, over the cached list (so it
+         works offline).</p>
+    </div>
+    <div class="todo">
+      <div class="th"><span class="tn">H3</span><span class="ttl">Pull-to-refresh</span><span class="builds">PullToRefreshBox</span></div>
+      <p>Let the user swipe down to call <code>refreshList()</code> again, with the spinner shown only during the
+         in-flight refresh (not when cached data is already on screen).</p>
+    </div>
+    <div class="todo">
+      <div class="th"><span class="tn">H4</span><span class="ttl">A "favourites" toggle that persists</span><span class="builds">DataStore / Room flag</span></div>
+      <p>Star a Pokémon; persist the set (a Room boolean column, or Preferences DataStore as in RoomAndPreferences) so
+         it survives restarts. Optionally sort favourites first.</p>
+    </div>
+  </div>
+
+  <!-- ============ REFERENCE ============ -->
+  <h2>Quick reference</h2>
+  <p class="lead">The APIs this capstone leans on — every one already appeared in a course project. Diff that project
+     beside your code when you're stuck.</p>
+
+  <div class="refgrid">
+    <div class="refcard">
+      <h4>Retrofit</h4>
+      <code>@GET</code><code>@Query</code><code>@Path</code><code>suspend fun</code><code>Retrofit.Builder()</code><code>baseUrl("…/")</code><code>.create()</code>
+    </div>
+    <div class="refcard">
+      <h4>kotlinx.serialization</h4>
+      <code>@Serializable</code><code>@SerialName</code><code>Json { ignoreUnknownKeys = true }</code><code>asConverterFactory</code>
+    </div>
+    <div class="refcard">
+      <h4>Room (via KSP)</h4>
+      <code>@Entity</code><code>@PrimaryKey</code><code>@Dao</code><code>@Query</code><code>@Insert(onConflict=REPLACE)</code><code>Flow&lt;List&lt;…&gt;&gt;</code><code>@Database</code>
+    </div>
+    <div class="refcard">
+      <h4>Navigation 3</h4>
+      <code>NavKey</code><code>@Serializable</code><code>rememberNavBackStack</code><code>NavDisplay</code><code>entryProvider</code><code>entry&lt;Key&gt;</code><code>backStack.add(…)</code>
+    </div>
+    <div class="refcard">
+      <h4>ViewModel + state</h4>
+      <code>ViewModel</code><code>viewModelScope</code><code>MutableStateFlow</code><code>asStateFlow</code><code>sealed interface</code><code>collectAsStateWithLifecycle</code>
+    </div>
+    <div class="refcard">
+      <h4>Coroutines</h4>
+      <code>launch</code><code>try/catch</code><code>delay</code><code>Flow.map</code><code>runTest</code>
+    </div>
+    <div class="refcard">
+      <h4>Compose UI</h4>
+      <code>Scaffold</code><code>TopAppBar</code><code>LazyColumn</code><code>items(key=)</code><code>Card(onClick=)</code><code>CircularProgressIndicator</code><code>Button</code>
+    </div>
+    <div class="refcard">
+      <h4>Type → emoji (start it)</h4>
+      <code>normal ⚪</code><code>fire 🔥</code><code>water 💧</code><code>grass 🌿</code><code>electric ⚡</code><code>ice 🧊</code><code>fighting 🥊</code><code>poison ☠️</code><code>ground ⛰️</code><code>flying 🕊️</code><code>psychic 🔮</code><code>bug 🐛</code><code>rock 🪨</code><code>ghost 👻</code><code>dragon 🐉</code><code>dark 🌑</code><code>steel ⚙️</code><code>fairy 🧚</code>
+    </div>
+  </div>
+
+  <!-- ============ OVERVIEW ============ -->
+  <h2>Overview &amp; checklist</h2>
+  <table class="grade">
+    <thead><tr><th>Part</th><th>File(s)</th><th>What you deliver</th></tr></thead>
+    <tbody>
+      <tr><td><b>A · Setup</b></td><td>build.gradle.kts · manifest</td><td>New <code>PokeDex</code> project; Retrofit + Room(KSP) + Nav3 + lifecycle deps; INTERNET permission</td></tr>
+      <tr><td><b>B · Network</b></td><td><code>Pokemon.kt</code> · <code>PokemonApi.kt</code></td><td>DTOs · Retrofit interface (list + detail) · domain models · mapper (url→id, units, type→emoji)</td></tr>
+      <tr><td><b>C · Cache</b></td><td><code>data/…</code></td><td>Room <code>@Entity</code> + <code>@Dao</code> (reactive <code>Flow</code> + upserts) + <code>@Database</code> singleton</td></tr>
+      <tr><td><b>D · Repository</b></td><td><code>PokemonRepository.kt</code></td><td>Offline-first real repo + fake + the <code>provide…(useFake)</code> switch</td></tr>
+      <tr><td><b>E · State</b></td><td>two <code>…ViewModel.kt</code></td><td>sealed Loading/Success/Error · StateFlow · retry — list &amp; detail</td></tr>
+      <tr><td><b>F · UI + Nav</b></td><td><code>MainActivity.kt</code> · <code>ui/…</code></td><td>Nav3 back stack (ListKey/DetailKey) · ListScreen · DetailScreen, each rendering all 3 states</td></tr>
+      <tr><td><b>G · Tests</b></td><td><code>test/…</code></td><td>≥ 6 passing JUnit tests: mapper + decoding + both ViewModels (fake repo, <code>runTest</code>)</td></tr>
+      <tr><td><b>H · Stretch</b></td><td>optional</td><td>Coil sprites · search · pull-to-refresh · persisted favourites (bonus)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn" style="margin-top:18px;">
+    <b>What to submit.</b> Push your finished <code>PokeDex</code> project to a <b>GitHub repository</b> and submit the
+    repo link. It must build and run against the live PokéAPI, work offline from its Room cache, and have a green unit
+    test run. <b>No API keys or secrets</b> should appear anywhere in the project — that's the point of choosing a
+    keyless API.
+  </div>
+
+  <div class="callout tip" style="margin-top:14px;">
+    <b>You're done when</b> PokéDex opens to a live list of Pokémon, drills into a detail screen with types-as-emoji,
+    keeps working with the network switched off, navigates with Back, and your unit tests are all green — a single app
+    that uses <em>every</em> layer the course taught, fed by a real, free, keyless API.
+  </div>
+
+  <footer>
+    Homework 8 · Capstone — Compose + Navigation 3 + ViewModel/StateFlow + Retrofit/kotlinx.serialization + Room +
+    unit tests, against the free keyless <a href="https://pokeapi.co/">PokéAPI</a> — project <code>PokeDex</code>
+    (you build it). Reference projects: <code>NetworkParsing</code>, <code>RoomAndPreferences</code>,
+    <code>NavListDetail</code>, <code>MvvmState</code>. See also <a href="./hw7.html">Homework 7</a> and
+    <a href="../projects.html">Projects, Explained</a>. The emulator and a green test run are the source of truth.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -44,10 +44,22 @@ comments, so you can diff any two projects to see exactly what a feature adds.
 > ✅ Prefer to **practice**? **[`labs/`](./labs)** is a set of guided, browser-based
 > **hands-on exercises** with instant checking — a task, starter code, and success
 > checks that turn green as you edit (with hints + solutions). Open
-> **[`labs/index.html`](./labs/index.html)**: ten Compose labs (layout, modifier
-> order, text styling, a profile card, state, Row cross-axis, arrangement, weight
-> to push, weight to split, and Box layering) and three Navigation labs (drill-down,
-> key arguments, deep-link seeding).
+> **[`labs/index.html`](./labs/index.html)**: **33 labs across six tracks** — ten
+> **Compose** labs (layout, modifier order, text styling, a profile card, state, Row
+> cross-axis, arrangement, weight to push, weight to split, and Box layering), three
+> **Navigation 3** labs (drill-down, key arguments, deep-link seeding), and the
+> **data-layer** tracks that each pair a code editor with a live domain simulator:
+> five **Networking** labs (the `@Serializable` DTO, a Retrofit `@GET` endpoint, the
+> DTO→domain mapper, a sealed `Loading/Success/Error` state, and `try/catch` +
+> `collectAsStateWithLifecycle`), five **Firebase** labs and five **Supabase** labs
+> (offline-first sync over Firestore / Postgres — sync bookkeeping, optimistic
+> writes, tombstone deletes, last-write-wins, push/pull, `@SerialName`, the Postgrest
+> `select`/`upsert`, and Row-Level Security), and five **Cumulative** capstones drawn
+> from the homework (`stateIn`, insert-vs-update routing, a pure immutable game rule,
+> a shared `StateFlow` toggled with `update {}`, and the full offline-first loop). The
+> data-layer labs are driven by **[`code-lab.js`](./labs/code-lab.js)**; run
+> `node labs/verify-code-labs.mjs` to headlessly check that every solution turns all
+> checks green and every starter does not.
 
 ---
 
@@ -101,7 +113,7 @@ Same Kotlin / Compose / Material 3 / Gradle-KTS stack; each has its own README.
 | [`ComposeCatalog`](./ComposeCatalog) | A guided tour of **every common Material 3 component** on one screen: Text, the button family, selection controls, sliders, text fields, cards, icons/images, progress, chips/badges, dialog, Scaffold + TopAppBar + FAB + Snackbar. |
 | [`ComposeModifiers`](./ComposeModifiers) | **Modifiers & layout** deep dive: the ordered modifier chain (**order matters** — `padding` vs `background`), sizing, `Arrangement`/`Alignment`, `weight`, `Box` + `align`, clip/border/shadow, transforms. |
 | [`ComposeLists`](./ComposeLists) | `LazyColumn` + `LazyVerticalGrid`, stable item keys, multi-selection, empty states, filtering. |
-| [`NetworkParsing`](./NetworkParsing) | Retrofit + kotlinx.serialization against a no-auth API (JSONPlaceholder) — loading / success / error states, with an offline fake. |
+| [`NetworkParsing`](./NetworkParsing) | Retrofit + kotlinx.serialization against a real, free, keyless weather API ([Open-Meteo](https://open-meteo.com/)) — loading / success / error states, with an offline fake. Includes an interactive [API how-to guide](./NetworkParsing/using-the-weather-api.html). |
 | [`WebSocketLive`](./WebSocketLive) | A **second network protocol**: full-duplex **WebSocket** (OkHttp) streaming live messages — connection status + transcript, with an offline echo fake. |
 | [`LocationServices`](./LocationServices) | Integrating a **device API**: runtime location permission + **FusedLocationProviderClient**, surfaced as idle / loading / success / error, with an offline fake. |
 | [`MvvmState`](./MvvmState) | MVVM: `ViewModel`, `StateFlow`, immutable `UiState`, UI events, unidirectional data flow (fake data). |

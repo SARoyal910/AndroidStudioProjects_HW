@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deploy an app to the Google Play Store — an interactive guide</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f8fa;
+    --accent:#3ddc84; --accent-deep:#0f9d58;
+    --blue:#2563eb; --blue-soft:#eff4ff;
+    --warn:#b45309; --warn-soft:#fff7ed;
+    --done:#0f9d58; --done-soft:#eafaf1;
+    --code-bg:#0f172a; --code-ink:#e2e8f0; --pill:#eef2f7;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 22px 90px;}
+
+  header.hero{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f9d58 160%);
+    color:#fff; padding:42px 0 34px; margin-bottom:30px; border-bottom:4px solid var(--accent);}
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{letter-spacing:.14em; text-transform:uppercase; font-size:12.5px; color:var(--accent); font-weight:700; margin:0 0 6px;}
+  header.hero h1{margin:0 0 8px; font-size:30px; line-height:1.2; font-weight:800;}
+  header.hero p.sub{margin:0 0 18px; color:#cbd5e1; font-size:16px; max-width:66ch;}
+  header.hero p.sub a{color:#9be7c4; text-decoration:underline;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px;}
+  .meta span{background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    color:#e2e8f0; font-size:13px; padding:5px 11px; border-radius:999px;}
+  .meta b{color:#fff;}
+
+  h2{font-size:22px; margin:42px 0 6px; padding-top:10px; border-top:1px solid var(--line); scroll-margin-top:14px;}
+  h2 .num{color:var(--accent-deep); font-weight:800;}
+  h2 + .lead{margin-top:0; color:var(--muted);}
+  h3{font-size:16px; margin:22px 0 6px;}
+  p{margin:12px 0;} ul,ol{margin:10px 0; padding-left:22px;} li{margin:6px 0;}
+  a{color:var(--blue);}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.9em;
+    background:#eef2f7; padding:1px 6px; border-radius:5px;}
+  pre{background:var(--code-bg); color:var(--code-ink); padding:15px 16px; border-radius:10px;
+    overflow:auto; font-size:13px; line-height:1.55; margin:12px 0;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; tab-size:4;}
+  pre .c{color:#7d8aa0;} pre .k{color:#c792ea;} pre .s{color:#a5e8a0;} pre .f{color:#82aaff;} pre .n{color:#f78c6c;}
+
+  .callout{border-radius:10px; padding:13px 16px; margin:16px 0; font-size:15px;}
+  .callout.tip{background:#ecfdf3; border:1px solid #c5ebd3;}
+  .callout.proj{background:var(--blue-soft); border:1px solid #d3e0ff;}
+  .callout.warn{background:var(--warn-soft); border:1px solid #fde2c0; color:#7c4a12;}
+  .callout b{color:inherit;}
+
+  .card{background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin:18px 0;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);}
+
+  /* Pipeline */
+  .pipe{display:flex; flex-wrap:wrap; gap:8px; margin:18px 0;}
+  .pipe a{flex:1 1 120px; text-decoration:none; color:var(--ink); background:#fff; border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px; font-size:13px; position:relative;}
+  .pipe a:hover{border-color:var(--accent); background:#f6fdf9;}
+  .pipe a .s{display:block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:#9aa8b8; font-weight:700;}
+  .pipe a b{font-size:13.5px;}
+
+  /* Interactive checklist */
+  .checklist{border:1px solid var(--line); border-radius:12px; background:#fff; overflow:hidden; margin:18px 0;}
+  .checklist .head{padding:14px 16px; border-bottom:1px solid var(--line); background:#f8fafc;}
+  .progressbar{height:10px; border-radius:999px; background:#e7edf3; overflow:hidden; margin-top:10px;}
+  .progressbar > span{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--accent-deep)); transition:width .25s ease;}
+  .checklist .group{padding:6px 16px 10px;}
+  .checklist .group h4{margin:14px 0 6px; font-size:12.5px; letter-spacing:.05em; text-transform:uppercase; color:#9aa8b8;}
+  .checklist label{display:flex; gap:10px; align-items:flex-start; padding:6px 0; cursor:pointer; font-size:14.5px;}
+  .checklist label input{margin-top:3px; width:17px; height:17px; flex:none; accent-color:var(--accent-deep);}
+  .checklist label .opt{color:var(--muted); font-size:12px; border:1px solid var(--line); border-radius:6px; padding:0 6px; margin-left:6px;}
+  .checklist label.checked span.txt{color:#9aa8b8; text-decoration:line-through;}
+  .ready{padding:12px 16px; font-weight:800; text-align:center; font-size:15px; border-top:1px solid var(--line);
+    background:var(--done-soft); color:var(--done); display:none;}
+  .ready.show{display:block;}
+  .bar2{display:flex; gap:10px; align-items:center; padding:10px 16px; border-top:1px solid var(--line); font-size:13px; color:var(--muted);}
+  .bar2 .count{font-weight:700; color:var(--ink);}
+
+  /* Buttons */
+  .btn{appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink);
+    font:600 13px/1 inherit; padding:8px 13px; border-radius:8px; cursor:pointer;}
+  .btn:hover{background:#f1f5f9;}
+  .btn.primary{background:var(--accent-deep); color:#fff; border-color:var(--accent-deep);}
+  .btn.primary:hover{background:#0c7d46;}
+  .btn.small{padding:5px 10px; font-size:12px;}
+  .btnrow{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0;}
+
+  /* Generic widget shell */
+  .widget{border:1px solid var(--line); border-radius:12px; background:#fff; margin:18px 0; overflow:hidden;}
+  .widget .wbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:12px 14px; border-bottom:1px solid var(--line); background:#f8fafc;}
+  .widget .wbar h3{margin:0; font-size:14px; flex:1 1 auto;}
+  .widget .wbody{padding:14px 16px;}
+  .field{display:flex; flex-wrap:wrap; gap:10px; margin:8px 0;}
+  .field label{flex:1 1 200px; font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:4px;}
+  .field input, .field select{border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:14px inherit; color:var(--ink); background:#fff;}
+  .codeout{position:relative;}
+  .copybtn{position:absolute; top:10px; right:10px; z-index:2;}
+
+  /* Tabs */
+  .tabs{display:flex; gap:6px; flex-wrap:wrap;}
+  .tab{appearance:none; border:1px solid var(--line); background:#fff; border-radius:999px; padding:6px 14px; font:600 13px/1 inherit; cursor:pointer; color:var(--muted);}
+  .tab.active{background:#0f172a; color:#fff; border-color:#0f172a;}
+  .tabpane{display:none;} .tabpane.active{display:block;}
+
+  /* Decision picker */
+  .choices{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px;}
+  .choice{border:1px solid var(--line); border-radius:10px; background:#fff; padding:12px; cursor:pointer; text-align:left; font:inherit;}
+  .choice:hover{border-color:var(--accent);}
+  .choice.active{border-color:var(--accent-deep); background:#f6fdf9;}
+  .choice b{display:block; font-size:14px;} .choice span{font-size:12.5px; color:var(--muted);}
+  .verdict{margin-top:12px; padding:12px 14px; border-radius:10px; background:var(--blue-soft); border:1px solid #d3e0ff; font-size:14px; display:none;}
+  .verdict.show{display:block;}
+
+  table.ref{width:100%; border-collapse:collapse; font-size:14px; margin:14px 0;}
+  table.ref th{text-align:left; color:var(--muted); font-size:12px; letter-spacing:.04em; text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.ref td{padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.ref code{font-size:.86em;}
+
+  /* Ladder */
+  .ladder{display:grid; gap:8px; margin:14px 0;}
+  .rung{display:flex; gap:12px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:11px 14px; background:#fff;}
+  .rung .b{flex:none; width:30px; height:30px; border-radius:8px; display:grid; place-items:center; font-weight:800; color:#fff; font-size:13px;}
+  .rung.r1 .b{background:#64748b;} .rung.r2 .b{background:#7c3aed;} .rung.r3 .b{background:#2563eb;} .rung.r4 .b{background:var(--accent-deep);}
+  .rung h4{margin:0 0 2px; font-size:14.5px;} .rung p{margin:0; font-size:13.5px; color:var(--muted);}
+
+  /* Accordion */
+  .acc{border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:10px 0; background:#fff;}
+  .acc > button{width:100%; text-align:left; border:0; background:#fff; padding:13px 15px; font:700 14.5px/1.3 inherit; cursor:pointer; display:flex; justify-content:space-between; gap:10px; color:var(--ink);}
+  .acc > button:hover{background:#f8fafc;}
+  .acc > button .chev{color:var(--accent-deep); transition:transform .2s;}
+  .acc.open > button .chev{transform:rotate(90deg);}
+  .acc .panel{display:none; padding:0 15px 14px; font-size:14px; color:#334155;}
+  .acc.open .panel{display:block;}
+
+  footer{margin-top:46px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13.5px;}
+  .toplinks{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .toplinks a{color:#dbe7ff; text-decoration:none; font-size:13.5px; font-weight:700; border:1px solid rgba(255,255,255,.25); padding:7px 13px; border-radius:8px;}
+  .toplinks a:hover{background:rgba(255,255,255,.10);}
+  .toplinks a.primary{background:var(--accent); color:#063a22; border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Android · Release engineering · Google Play</p>
+    <h1>Deploy your app to the Google Play Store</h1>
+    <p class="sub">An interactive, end-to-end guide: take a working app from "it runs on my emulator" to "anyone can
+      install it from Google Play." Tick off a <b>live readiness checklist</b>, generate your <b>signing
+      config</b>, plan your <b>version bumps</b>, and pick the right <b>testing track</b> — all on this page. The
+      examples are grounded in this repo's <a href="./README.md">AppReleaseBasics</a> project
+      (<code>com.example.appreleasebasics</code>).</p>
+    <div class="meta">
+      <span><b>Artifact:</b> Android App Bundle (.aab)</span>
+      <span><b>Account:</b> Play Console ($25, one-time)</span>
+      <span><b>You'll need:</b> an upload keystore</span>
+    </div>
+    <div class="toplinks">
+      <a class="primary" href="#checklist">▶ Jump to the readiness checklist</a>
+      <a href="./README.md">← AppReleaseBasics</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout warn"><b>One honest note up front.</b> Google Play's exact requirements (target API level,
+    testing rules, store-listing forms) change a few times a year. The <em>shape</em> of the process below is stable,
+    but always confirm specifics against the official
+    <a href="https://play.google.com/console/about/guides/">Play Console guides</a> and the
+    <a href="https://developer.android.com/distribute/best-practices/launch/launch-checklist">launch checklist</a>
+    before you publish. This page reflects the process as of 2026.</div>
+
+  <!-- BIG PICTURE -->
+  <h2><span class="num">1.</span> The big picture</h2>
+  <p class="lead">Eight stages turn your build into a published app. Click any stage to jump to it.</p>
+  <div class="pipe">
+    <a href="#prepare"><span class="s">Stage 1</span><b>Prepare the build</b></a>
+    <a href="#sign"><span class="s">Stage 2</span><b>Sign it</b></a>
+    <a href="#build"><span class="s">Stage 3</span><b>Build the .aab</b></a>
+    <a href="#console"><span class="s">Stage 4</span><b>Create the app</b></a>
+    <a href="#listing"><span class="s">Stage 5</span><b>Store listing</b></a>
+    <a href="#tracks"><span class="s">Stage 6</span><b>Testing tracks</b></a>
+    <a href="#submit"><span class="s">Stage 7</span><b>Review &amp; roll out</b></a>
+    <a href="#update"><span class="s">Stage 8</span><b>Ship updates</b></a>
+  </div>
+  <p>Stages 1–3 happen in <b>Android Studio / Gradle</b> on your machine. Stages 4–7 happen in the
+     <b><a href="https://play.google.com/console/">Google Play Console</a></b> in your browser. Stage 8 is the loop you
+     repeat for every release.</p>
+
+  <!-- CHECKLIST -->
+  <h2 id="checklist"><span class="num">2.</span> Your live release-readiness checklist</h2>
+  <p class="lead">Tick these off as you go — progress is saved in your browser. When every <b>required</b> item is
+     checked, you're ready to submit for review. (Items marked <span class="opt" style="font-size:11px">optional</span>
+     are recommended but won't block a first release.)</p>
+
+  <div class="checklist" id="checklist-widget">
+    <div class="head">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
+        <strong>Release readiness</strong>
+        <span class="count"><span id="ck-done">0</span> / <span id="ck-total">0</span> done</span>
+      </div>
+      <div class="progressbar"><span id="ck-bar"></span></div>
+    </div>
+    <!-- groups injected by JS -->
+    <div id="ck-groups"></div>
+    <div class="ready" id="ck-ready">🚀 All required items done — you're ready to submit for review!</div>
+    <div class="bar2">
+      <span>Required: <span class="count"><span id="ck-reqdone">0</span>/<span id="ck-reqtotal">0</span></span></span>
+      <button class="btn small" id="ck-reset" style="margin-left:auto;">Reset checklist</button>
+    </div>
+  </div>
+
+  <!-- STAGE 1 — PREPARE -->
+  <h2 id="prepare"><span class="num">3.</span> Stage 1 — Prepare the build</h2>
+  <p class="lead">A release build is not just a debug build with a different name. Before you sign anything, set these
+     in your app's <code>build.gradle.kts</code>.</p>
+
+  <h3>Versioning — the two numbers every release sets</h3>
+  <ul>
+    <li><code>versionCode</code> — an <b>integer</b> Google Play uses to decide which build is newer. It <b>must
+      increase</b> on every upload. Users never see it.</li>
+    <li><code>versionName</code> — a <b>string</b> users see (e.g. <code>"1.0"</code>, <code>"1.2.3"</code>). Not used
+      for ordering; bump it however you like (semver is common).</li>
+  </ul>
+
+  <!-- Version helper -->
+  <div class="widget" id="ver-widget">
+    <div class="wbar"><h3>🔢 Version bump helper</h3></div>
+    <div class="wbody">
+      <div class="field">
+        <label>Current versionCode
+          <input type="number" id="ver-code" value="1" min="1" step="1">
+        </label>
+        <label>Current versionName
+          <input type="text" id="ver-name" value="1.0">
+        </label>
+      </div>
+      <div class="btnrow">
+        <button class="btn" data-bump="patch">Patch release (bug fix)</button>
+        <button class="btn" data-bump="minor">Minor release (new feature)</button>
+        <button class="btn primary" data-bump="major">Major release</button>
+      </div>
+      <div class="codeout">
+        <button class="btn small copybtn" data-copy="ver-out">Copy</button>
+        <pre id="ver-out"><span class="c">// press a button above</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>The release build type</h3>
+  <p>Turn on code shrinking/obfuscation (R8) and resource shrinking so your app is smaller and harder to
+     reverse-engineer. In <code>buildTypes.release</code>:</p>
+<pre><span class="k">buildTypes</span> {
+    release {
+        isMinifyEnabled = <span class="k">true</span>          <span class="c">// R8: shrink + obfuscate the code</span>
+        isShrinkResources = <span class="k">true</span>        <span class="c">// strip unused resources</span>
+        proguardFiles(
+            getDefaultProguardFile(<span class="s">"proguard-android-optimize.txt"</span>),
+            <span class="s">"proguard-rules.pro"</span>
+        )
+        <span class="c">// signingConfig = signingConfigs.getByName("release")   // wired up in Stage 2</span>
+    }
+}</pre>
+  <div class="callout tip"><b>Also before you ship:</b> remove noisy debug logging, make sure
+     <code>applicationId</code> is the <em>permanent</em> identity you want (you can <b>never</b> change it after
+     publishing), confirm your <code>targetSdk</code> meets Play's current minimum (Play requires new apps and updates
+     to target a recent API level — within ~a year of the latest Android release), and test a release build on a real
+     device.</div>
+
+  <!-- STAGE 2 — SIGN -->
+  <h2 id="sign"><span class="num">4.</span> Stage 2 — Sign your app</h2>
+  <p class="lead">Every APK/AAB must be cryptographically signed. Debug builds use a throwaway debug key; a release
+     must be signed with <b>your own key</b> so Google can verify every future update really comes from you.</p>
+
+  <div class="callout proj"><b>Upload key vs app signing key (Play App Signing).</b> Today Google recommends
+    <b>Play App Signing</b>: <b>Google</b> holds the real <em>app signing key</em> and signs what users download; you
+    sign your uploads with an <em>upload key</em> you control. The big win: if you ever <b>lose your upload key</b>,
+    you can ask Google to reset it — whereas losing the app signing key (in the old model) meant you could never update
+    the app again. Generate the keystore below and keep it (plus its passwords) somewhere safe and backed up.</div>
+
+  <!-- Keystore generator -->
+  <div class="widget" id="key-widget">
+    <div class="wbar"><h3>🔐 Keystore &amp; signing-config generator</h3></div>
+    <div class="wbody">
+      <div class="field">
+        <label>Keystore file name
+          <input type="text" id="k-file" value="upload-keystore.jks">
+        </label>
+        <label>Key alias
+          <input type="text" id="k-alias" value="upload">
+        </label>
+      </div>
+      <div class="field">
+        <label>Validity (years)
+          <input type="number" id="k-years" value="27" min="25" step="1">
+        </label>
+        <label>Your name / org (CN)
+          <input type="text" id="k-name" value="Your Name">
+        </label>
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin:6px 0 2px;">1) Run this once to create your keystore:</p>
+      <div class="codeout">
+        <button class="btn small copybtn" data-copy="k-cmd">Copy</button>
+        <pre id="k-cmd"></pre>
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin:10px 0 2px;">2) Wire it into <code>build.gradle.kts</code>
+        (read the secrets from the environment — <b>never</b> hard-code passwords or commit the <code>.jks</code>):</p>
+      <div class="codeout">
+        <button class="btn small copybtn" data-copy="k-gradle">Copy</button>
+        <pre id="k-gradle"></pre>
+      </div>
+      <div class="callout warn" style="margin-top:12px;"><b>Keep out of version control.</b> Add
+        <code>*.jks</code> and <code>keystore.properties</code> to <code>.gitignore</code>, and store the passwords in
+        <code>~/.gradle/gradle.properties</code> or CI secrets. If you lose the keystore <em>and</em> haven't enrolled
+        in Play App Signing, you cannot update your app — ever.</div>
+    </div>
+  </div>
+
+  <!-- STAGE 3 — BUILD -->
+  <h2 id="build"><span class="num">5.</span> Stage 3 — Build the release artifact</h2>
+  <p class="lead">New apps on Google Play must be published as an <b>Android App Bundle (.aab)</b>, not an APK. Google
+     generates optimized, per-device APKs from your bundle.</p>
+
+  <div class="widget">
+    <div class="wbar"><h3>What do I build?</h3>
+      <div class="tabs" id="art-tabs">
+        <button class="tab active" data-tab="aab">App Bundle (.aab)</button>
+        <button class="tab" data-tab="apk">APK</button>
+      </div>
+    </div>
+    <div class="wbody">
+      <div class="tabpane active" data-pane="aab">
+        <p><b>Android App Bundle</b> — the <b>required</b> format for publishing new apps to Play. You upload one
+          <code>.aab</code>; Google builds and signs the smaller APKs each device actually needs.</p>
+<pre><span class="c"># Command line — produces app/build/outputs/bundle/release/app-release.aab</span>
+./gradlew bundleRelease</pre>
+        <p style="font-size:13.5px; color:var(--muted)">Android Studio: <b>Build ▸ Generate Signed Bundle / APK ▸
+          Android App Bundle</b>, pick your keystore, choose the <b>release</b> build variant.</p>
+      </div>
+      <div class="tabpane" data-pane="apk">
+        <p><b>APK</b> — still fine for <em>sideloading</em>, testing on a device, or distributing outside Play. You
+          <b>cannot</b> publish a brand-new app to Google Play as an APK.</p>
+<pre><span class="c"># Command line — produces a single installable APK</span>
+./gradlew assembleRelease</pre>
+        <p style="font-size:13.5px; color:var(--muted)">Android Studio: <b>Build ▸ Generate Signed Bundle / APK ▸
+          APK</b>. Useful to hand someone a build without Play.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout tip"><b>Sanity check the bundle</b> before uploading: install it on a device with Google's
+    <code>bundletool</code> (<code>bundletool build-apks --mode=universal</code> then install the universal APK), or
+    just upload it to the Play Console's <b>internal testing</b> track (Stage 6) and install from there — the fastest
+    real-device check.</div>
+
+  <!-- STAGE 4 — CONSOLE -->
+  <h2 id="console"><span class="num">6.</span> Stage 4 — Create the app in Play Console</h2>
+  <p class="lead">This is a one-time setup in your browser.</p>
+  <div class="steps card">
+    <ol>
+      <li><b>Register a developer account</b> at <a href="https://play.google.com/console/">play.google.com/console</a>
+        — a <b>one-time $25</b> fee. Personal accounts must verify identity (and, for newer accounts, complete some
+        testing before production — see Stage 6).</li>
+      <li><b>Create app</b> — give it a name, default language, app-or-game, free-or-paid. (You can switch a
+        <b>paid app to free</b> later, but a <b>free app can never become paid</b> — choose carefully.)</li>
+      <li>Work through the <b>"Set up your app"</b> dashboard tasks (the next section lists them).</li>
+    </ol>
+  </div>
+
+  <!-- STAGE 5 — LISTING -->
+  <h2 id="listing"><span class="num">7.</span> Stage 5 — Store listing, content &amp; policy</h2>
+  <p class="lead">Play won't let you publish until these are complete. Gather the assets first — the image sizes are
+     strict.</p>
+
+  <h3>Store listing assets &amp; limits</h3>
+  <table class="ref">
+    <thead><tr><th style="width:34%">Asset</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr><td><b>App name</b></td><td>up to 30 characters</td></tr>
+      <tr><td><b>Short description</b></td><td>up to 80 characters</td></tr>
+      <tr><td><b>Full description</b></td><td>up to 4,000 characters</td></tr>
+      <tr><td><b>App icon</b></td><td>512 × 512 px, 32-bit PNG</td></tr>
+      <tr><td><b>Feature graphic</b></td><td>1024 × 500 px, JPEG or 24-bit PNG (no transparency)</td></tr>
+      <tr><td><b>Phone screenshots</b></td><td>at least 2 (up to 8), 16:9 or 9:16</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Required declarations (the forms that trip people up)</h3>
+  <ul>
+    <li><b>Content rating</b> — fill the questionnaire; you get an official rating (IARC).</li>
+    <li><b>Data safety</b> — declare what data your app collects/shares and why. Must match what the app actually does.</li>
+    <li><b>Privacy policy</b> — a URL is required for most apps (and always if you collect personal/sensitive data).</li>
+    <li><b>Target audience &amp; content</b> — age groups; extra rules apply if children are in scope.</li>
+    <li><b>Ads</b> — declare whether the app contains ads.</li>
+    <li><b>App access</b> — if parts need a login, provide test credentials so reviewers can get in.</li>
+    <li><b>Pricing &amp; distribution</b> — free/paid and the countries you'll release in.</li>
+  </ul>
+  <div class="callout warn"><b>Be truthful on Data safety and permissions.</b> Mismatches between your declarations,
+    your privacy policy, and what the app actually does are a leading cause of rejections and takedowns.</div>
+
+  <!-- STAGE 6 — TRACKS -->
+  <h2 id="tracks"><span class="num">8.</span> Stage 6 — Testing tracks</h2>
+  <p class="lead">You don't go straight to "everyone." Play gives you four release tracks; promote a build up the
+     ladder as your confidence grows.</p>
+  <div class="ladder">
+    <div class="rung r1"><div class="b">1</div><div><h4>Internal testing</h4><p>Up to 100 testers by email; available in minutes. The fastest way to install your signed build on a real device.</p></div></div>
+    <div class="rung r2"><div class="b">2</div><div><h4>Closed testing</h4><p>A larger invited group (email lists or Google Groups). Where you run a real beta — and where new personal accounts earn production access.</p></div></div>
+    <div class="rung r3"><div class="b">3</div><div><h4>Open testing</h4><p>Anyone with the link can join the beta from your store listing. Good for broad feedback before launch.</p></div></div>
+    <div class="rung r4"><div class="b">4</div><div><h4>Production</h4><p>Live on Google Play for everyone in your chosen countries. Supports staged % rollouts.</p></div></div>
+  </div>
+
+  <div class="callout warn"><b>New personal developer accounts:</b> accounts created from late 2023 onward generally
+    must run a <b>closed test with at least 12 testers, opted in for at least 14 days</b>, before they can apply for
+    production access. Plan for this — start your closed test early. (Organization accounts and older accounts may
+    differ; check your console.)</div>
+
+  <!-- Track picker -->
+  <div class="widget" id="track-widget">
+    <div class="wbar"><h3>🎯 Which track should I use right now?</h3></div>
+    <div class="wbody">
+      <div class="choices" id="track-choices">
+        <button class="choice" data-track="me"><b>Just me / my device</b><span>I want to install my signed build to check it.</span></button>
+        <button class="choice" data-track="team"><b>My small team</b><span>A handful of trusted people, fast.</span></button>
+        <button class="choice" data-track="beta"><b>A wider beta</b><span>Lots of testers / public feedback before launch.</span></button>
+        <button class="choice" data-track="launch"><b>Launch to everyone</b><span>I'm ready to go live.</span></button>
+      </div>
+      <div class="verdict" id="track-verdict"></div>
+    </div>
+  </div>
+
+  <!-- STAGE 7 — SUBMIT -->
+  <h2 id="submit"><span class="num">9.</span> Stage 7 — Submit, review &amp; roll out</h2>
+  <p class="lead">Create a release on your chosen track, attach the bundle, and send it for review.</p>
+  <ol>
+    <li>Open the track (e.g. <b>Production</b> or <b>Closed testing</b>) ▸ <b>Create new release</b>.</li>
+    <li><b>Upload</b> your <code>app-release.aab</code>. (First time, accept enrolment in <b>Play App Signing</b>.)</li>
+    <li>Set the <b>release name</b> (often the <code>versionName</code>) and write <b>release notes</b>.</li>
+    <li><b>Review release</b> ▸ fix any errors/warnings ▸ <b>Start rollout</b>.</li>
+    <li><b>Google reviews</b> the app. First reviews can take anywhere from a few hours to several days.</li>
+    <li>In production, use a <b>staged rollout</b> (e.g. 10% → 50% → 100%) so you can halt if something's wrong.</li>
+  </ol>
+  <div class="callout tip"><b>It's normal to fail a check the first time</b> — Play is strict about the Data safety
+    form, target API level, and policy declarations. Read the rejection reason, fix it, and re-submit; you don't start
+    over.</div>
+
+  <!-- STAGE 8 — UPDATES -->
+  <h2 id="update"><span class="num">10.</span> Stage 8 — Ship updates</h2>
+  <p class="lead">Every subsequent release is the same short loop:</p>
+  <ol>
+    <li><b>Bump <code>versionCode</code></b> (must increase) and usually <code>versionName</code> — use the
+      <a href="#prepare">version helper</a> above.</li>
+    <li>Rebuild the signed bundle: <code>./gradlew bundleRelease</code>.</li>
+    <li>Create a new release on a track, upload, add release notes, roll out.</li>
+  </ol>
+  <div class="callout proj"><b>The cardinal rule of updates:</b> sign every update with the <b>same upload key</b> and
+    always give it a <b>higher <code>versionCode</code></b> than anything you've uploaded before. Those two facts are
+    what let Google recognize the update as genuinely yours and newer.</div>
+
+  <!-- PITFALLS -->
+  <h2><span class="num">11.</span> Common pitfalls &amp; FAQ</h2>
+  <p class="lead">Click to expand.</p>
+  <div id="faq">
+    <div class="acc"><button>I lost my keystore — can I still update my app? <span class="chev">›</span></button>
+      <div class="panel">If you enrolled in <b>Play App Signing</b> (the default for new apps), yes: request an
+        <b>upload key reset</b> in the Play Console and start signing with a new upload key. If you did <b>not</b> use
+        Play App Signing and lost the original app signing key, you cannot update that app — you'd have to publish a new
+        listing with a new <code>applicationId</code>. This is exactly why Play App Signing exists.</div></div>
+    <div class="acc"><button>"Version code N has already been used." <span class="chev">›</span></button>
+      <div class="panel">Every uploaded build needs a strictly higher <code>versionCode</code>. Bump it in
+        <code>build.gradle.kts</code> and rebuild. You can't re-use or lower it, even for a failed upload.</div></div>
+    <div class="acc"><button>"You need to use the Android App Bundle." <span class="chev">›</span></button>
+      <div class="panel">New apps can't be published as a raw APK. Build with <code>./gradlew bundleRelease</code> and
+        upload the <code>.aab</code> instead of the <code>.apk</code>.</div></div>
+    <div class="acc"><button>"Your app must target API level …" <span class="chev">›</span></button>
+      <div class="panel">Play requires new apps and updates to target a recent API level (within about a year of the
+        latest Android release). Raise <code>targetSdk</code> (and <code>compileSdk</code>) in
+        <code>build.gradle.kts</code>, then re-test for behavior changes the new target opts you into.</div></div>
+    <div class="acc"><button>My testers can't find / install the app. <span class="chev">›</span></button>
+      <div class="panel">They must (1) be added to the track's tester list, (2) <b>accept the opt-in link</b> the
+        console gives you, and (3) install via that link or the Play Store while opted in. Internal testing is the
+        quickest track to get a build onto a device.</div></div>
+    <div class="acc"><button>My release is "In review" for a long time. <span class="chev">›</span></button>
+      <div class="panel">First-time reviews and apps touching sensitive areas take longer. Make sure App access (test
+        login), Data safety, and content rating are complete and accurate — incomplete declarations stall reviews.
+        Don't upload duplicate releases while waiting.</div></div>
+    <div class="acc"><button>Is my release build debuggable? <span class="chev">›</span></button>
+      <div class="panel">By default the <code>release</code> build type is <b>not</b> debuggable, which is what you
+        want. Don't set <code>isDebuggable = true</code> on release, and don't ship test/debug-only code or logging.</div></div>
+  </div>
+
+  <footer>
+    Interactive guide to publishing an Android app on Google Play · companion to this repo's
+    <a href="./README.md">AppReleaseBasics</a> project (the build types, versioning, and a commented
+    <code>signingConfigs</code> example live in its <code>build.gradle.kts</code>). Authoritative references:
+    <a href="https://developer.android.com/studio/publish">Publish overview</a> ·
+    <a href="https://developer.android.com/studio/publish/app-signing">App signing</a> ·
+    <a href="https://play.google.com/console/about/guides/">Play Console guides</a>. Play's exact requirements change
+    over time — verify before you ship.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- safe localStorage (file:// can disable it) -------------------------
+  var store = (function () {
+    try { var k = "__t"; localStorage.setItem(k, "1"); localStorage.removeItem(k);
+      return { get: function (k) { return localStorage.getItem(k); }, set: function (k, v) { localStorage.setItem(k, v); } };
+    } catch (e) { var mem = {}; return { get: function (k) { return mem[k] || null; }, set: function (k, v) { mem[k] = v; } }; }
+  })();
+
+  // ========================================================================
+  // 1) Release-readiness checklist
+  // ========================================================================
+  var GROUPS = [
+    { name: "Prepare the build", items: [
+      { id: "ver", req: true, t: "Bumped versionCode (and versionName) for this release" },
+      { id: "min", req: false, t: "Enabled R8 (isMinifyEnabled) + isShrinkResources on release" },
+      { id: "appid", req: true, t: "applicationId is the permanent one I want (can never change it)" },
+      { id: "target", req: true, t: "targetSdk meets Play's current minimum API level" },
+      { id: "log", req: false, t: "Removed debug logging / test-only code" },
+    ]},
+    { name: "Sign it", items: [
+      { id: "ks", req: true, t: "Created an upload keystore and backed it up safely" },
+      { id: "cfg", req: true, t: "Wired signingConfigs into the release build (secrets out of git)" },
+    ]},
+    { name: "Build", items: [
+      { id: "aab", req: true, t: "Built a signed Android App Bundle (./gradlew bundleRelease)" },
+      { id: "smoke", req: false, t: "Installed the release build on a real device and smoke-tested it" },
+    ]},
+    { name: "Play Console — account & app", items: [
+      { id: "acct", req: true, t: "Registered a Play Console developer account ($25)" },
+      { id: "create", req: true, t: "Created the app (name, language, free/paid)" },
+    ]},
+    { name: "Store listing & policy", items: [
+      { id: "assets", req: true, t: "Icon (512²), feature graphic (1024×500), ≥2 screenshots, descriptions" },
+      { id: "rating", req: true, t: "Completed the content-rating questionnaire" },
+      { id: "safety", req: true, t: "Completed the Data safety form (matches the app)" },
+      { id: "privacy", req: true, t: "Added a privacy policy URL" },
+      { id: "audience", req: true, t: "Set target audience, ads declaration, app access" },
+    ]},
+    { name: "Release", items: [
+      { id: "track", req: true, t: "Chose a track and created a release with the .aab + release notes" },
+      { id: "rollout", req: true, t: "Reviewed the release and started rollout" },
+    ]},
+  ];
+  var CK_KEY = "playstore-deploy-checklist-v1";
+
+  var groupsEl = document.getElementById("ck-groups");
+  var saved = {};
+  try { saved = JSON.parse(store.get(CK_KEY) || "{}") || {}; } catch (e) { saved = {}; }
+
+  var allItems = [];
+  GROUPS.forEach(function (g) {
+    var wrap = document.createElement("div"); wrap.className = "group";
+    var h = document.createElement("h4"); h.textContent = g.name; wrap.appendChild(h);
+    g.items.forEach(function (it) {
+      allItems.push(it);
+      var lab = document.createElement("label");
+      var cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = !!saved[it.id];
+      cb.addEventListener("change", function () { saved[it.id] = cb.checked; lab.classList.toggle("checked", cb.checked); persist(); refresh(); });
+      var txt = document.createElement("span"); txt.className = "txt"; txt.textContent = it.t;
+      lab.appendChild(cb); lab.appendChild(txt);
+      if (!it.req) { var o = document.createElement("span"); o.className = "opt"; o.textContent = "optional"; lab.appendChild(o); }
+      if (cb.checked) lab.classList.add("checked");
+      wrap.appendChild(lab);
+    });
+    groupsEl.appendChild(wrap);
+  });
+
+  function persist() { store.set(CK_KEY, JSON.stringify(saved)); }
+  function refresh() {
+    var total = allItems.length, done = 0, reqTotal = 0, reqDone = 0;
+    allItems.forEach(function (it) {
+      if (saved[it.id]) done++;
+      if (it.req) { reqTotal++; if (saved[it.id]) reqDone++; }
+    });
+    document.getElementById("ck-done").textContent = done;
+    document.getElementById("ck-total").textContent = total;
+    document.getElementById("ck-reqdone").textContent = reqDone;
+    document.getElementById("ck-reqtotal").textContent = reqTotal;
+    document.getElementById("ck-bar").style.width = Math.round(done / total * 100) + "%";
+    document.getElementById("ck-ready").classList.toggle("show", reqDone === reqTotal);
+  }
+  document.getElementById("ck-reset").addEventListener("click", function () {
+    saved = {}; persist();
+    var boxes = groupsEl.querySelectorAll("input[type=checkbox]");
+    for (var i = 0; i < boxes.length; i++) { boxes[i].checked = false; boxes[i].closest("label").classList.remove("checked"); }
+    refresh();
+  });
+  refresh();
+
+  // ========================================================================
+  // 2) Version bump helper
+  // ========================================================================
+  var verOut = document.getElementById("ver-out");
+  function bump(kind) {
+    var code = parseInt(document.getElementById("ver-code").value, 10);
+    if (isNaN(code) || code < 0) code = 0;
+    var name = (document.getElementById("ver-name").value || "1.0").trim();
+    var parts = name.split(".").map(function (n) { return parseInt(n, 10); });
+    while (parts.length < 3) parts.push(0);
+    if (parts.some(isNaN)) parts = [1, 0, 0];
+    if (kind === "major") { parts[0]++; parts[1] = 0; parts[2] = 0; }
+    else if (kind === "minor") { parts[1]++; parts[2] = 0; }
+    else { parts[2]++; }
+    var newName = parts.join(".");
+    var newCode = code + 1;
+    verOut.innerHTML =
+      '<span class="c">// build.gradle.kts → defaultConfig {</span>\n' +
+      '<span class="c">//   was: versionCode = ' + code + '   versionName = "' + esc(name) + '"</span>\n' +
+      'versionCode = <span class="n">' + newCode + '</span>        <span class="c">// must increase on every upload</span>\n' +
+      'versionName = <span class="s">"' + newName + '"</span>     <span class="c">// the ' + kind + ' bump</span>';
+  }
+  var verBtns = document.querySelectorAll('#ver-widget [data-bump]');
+  for (var i = 0; i < verBtns.length; i++) verBtns[i].addEventListener("click", function () { bump(this.getAttribute("data-bump")); });
+
+  // ========================================================================
+  // 3) Keystore + signing-config generator
+  // ========================================================================
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+  function genKeystore() {
+    var file = document.getElementById("k-file").value.trim() || "upload-keystore.jks";
+    var alias = document.getElementById("k-alias").value.trim() || "upload";
+    var years = parseInt(document.getElementById("k-years").value, 10); if (isNaN(years) || years < 25) years = 27;
+    var days = years * 365;
+    var cn = document.getElementById("k-name").value.trim() || "Your Name";
+
+    document.getElementById("k-cmd").innerHTML =
+      '<span class="c"># Creates ' + esc(file) + ' with one key aliased "' + esc(alias) + '".</span>\n' +
+      '<span class="c"># You\'ll be prompted for a keystore password — store it safely.</span>\n' +
+      'keytool -genkeypair -v \\\n' +
+      '  -keystore ' + esc(file) + ' \\\n' +
+      '  -alias ' + esc(alias) + ' \\\n' +
+      '  -keyalg RSA -keysize 2048 \\\n' +
+      '  -validity ' + days + ' \\\n' +
+      '  -dname <span class="s">"CN=' + esc(cn) + '"</span>';
+
+    document.getElementById("k-gradle").innerHTML =
+      '<span class="c">// android { ... }</span>\n' +
+      '<span class="k">signingConfigs</span> {\n' +
+      '    create(<span class="s">"release"</span>) {\n' +
+      '        storeFile = file(System.getenv(<span class="s">"RELEASE_STORE_FILE"</span>) ?: <span class="s">"' + esc(file) + '"</span>)\n' +
+      '        storePassword = System.getenv(<span class="s">"RELEASE_STORE_PASSWORD"</span>)\n' +
+      '        keyAlias = System.getenv(<span class="s">"RELEASE_KEY_ALIAS"</span>) ?: <span class="s">"' + esc(alias) + '"</span>\n' +
+      '        keyPassword = System.getenv(<span class="s">"RELEASE_KEY_PASSWORD"</span>)\n' +
+      '    }\n' +
+      '}\n' +
+      '<span class="k">buildTypes</span> {\n' +
+      '    release {\n' +
+      '        signingConfig = signingConfigs.getByName(<span class="s">"release"</span>)\n' +
+      '    }\n' +
+      '}';
+  }
+  var keyInputs = document.querySelectorAll('#key-widget input');
+  for (var j = 0; j < keyInputs.length; j++) keyInputs[j].addEventListener("input", genKeystore);
+  genKeystore();
+
+  // ========================================================================
+  // 4) Copy buttons
+  // ========================================================================
+  var copyBtns = document.querySelectorAll(".copybtn");
+  for (var c = 0; c < copyBtns.length; c++) {
+    copyBtns[c].addEventListener("click", function () {
+      var el = document.getElementById(this.getAttribute("data-copy"));
+      var text = el ? el.innerText : "";
+      var btn = this;
+      var done = function () { var old = btn.textContent; btn.textContent = "Copied ✓"; setTimeout(function () { btn.textContent = old; }, 1200); };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fallback); }
+        else fallback();
+      } catch (e) { fallback(); }
+      function fallback() {
+        var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); done(); } catch (e2) {} document.body.removeChild(ta);
+      }
+    });
+  }
+
+  // ========================================================================
+  // 5) AAB / APK and other tab groups
+  // ========================================================================
+  var tabBars = document.querySelectorAll(".tabs");
+  for (var t = 0; t < tabBars.length; t++) {
+    (function (bar) {
+      var widget = bar.closest(".widget");
+      bar.addEventListener("click", function (e) {
+        var b = e.target.closest(".tab"); if (!b) return;
+        var key = b.getAttribute("data-tab");
+        bar.querySelectorAll(".tab").forEach(function (x) { x.classList.toggle("active", x === b); });
+        widget.querySelectorAll(".tabpane").forEach(function (p) { p.classList.toggle("active", p.getAttribute("data-pane") === key); });
+      });
+    })(tabBars[t]);
+  }
+
+  // ========================================================================
+  // 6) Track decision picker
+  // ========================================================================
+  var TRACKS = {
+    me:     { h: "Internal testing", b: "Fastest path to your own device. Add yourself as a tester, upload the .aab, install via the opt-in link in minutes. No review wait for the build itself." },
+    team:   { h: "Internal testing (up to 100 testers)", b: "Add your teammates' emails to the Internal testing track. It's the quickest track and needs no broad review — ideal for a trusted handful." },
+    beta:   { h: "Closed → Open testing", b: "Run a Closed test with invited testers first; promote to Open testing when you want anyone-with-the-link feedback. Note: new personal accounts must run a closed test with ≥12 testers for ≥14 days before they can go to Production." },
+    launch: { h: "Production (with a staged rollout)", b: "Create a Production release and start a staged rollout (e.g. 10% → 100%). Make sure all store-listing and policy forms are complete first — and remember the closed-testing prerequisite if your account is new." },
+  };
+  var verdict = document.getElementById("track-verdict");
+  var choices = document.querySelectorAll("#track-choices .choice");
+  for (var ci = 0; ci < choices.length; ci++) {
+    choices[ci].addEventListener("click", function () {
+      for (var x = 0; x < choices.length; x++) choices[x].classList.toggle("active", choices[x] === this);
+      var v = TRACKS[this.getAttribute("data-track")];
+      verdict.innerHTML = "<b>Recommended: " + v.h + "</b><br>" + v.b;
+      verdict.classList.add("show");
+    });
+  }
+
+  // ========================================================================
+  // 7) FAQ accordion
+  // ========================================================================
+  var accs = document.querySelectorAll("#faq .acc");
+  for (var a = 0; a < accs.length; a++) {
+    (function (acc) {
+      acc.querySelector("button").addEventListener("click", function () { acc.classList.toggle("open"); });
+    })(accs[a]);
+  }
+})();
+</script>
+</body>
+</html>

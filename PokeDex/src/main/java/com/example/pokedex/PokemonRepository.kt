@@ -20,11 +20,13 @@
 package com.example.pokedex
 
 import android.content.Context
+import com.example.pokedex.data.CachedPokemon
 import com.example.pokedex.data.PokemonDao
 import com.example.pokedex.data.PokemonDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 // ===========================================================================
 // REPOSITORY CONTRACT  —  what the ViewModels depend on
@@ -66,21 +68,60 @@ class RealPokemonRepository(
         //           Flow<List<PokemonSummary>> — e.g. dao.observeAll().map { rows ->
         //           rows.map { PokemonSummary(it.dexNumber, it.name) } }.
         //           The UI reads the CACHE, so it shows instantly and works offline.
-        TODO("Part D2a: expose the cached list as a Flow<List<PokemonSummary>>")
+        // UI reads the cache Flow. Because Room flows are "live", this re-emits
+        // whenever the database is updated (like after a network refresh).
+        return dao.observeAll().map { rows ->
+            rows.map { PokemonSummary(it.dexNumber, it.name) }
+        }
     }
 
     override suspend fun refreshList() {
         // TODO D2b: api.listPokemon() -> map each NamedResourceDto.toSummary() ->
         //           dao.upsertAll(...) as CachedPokemon rows. If this throws (no
         //           network), the already-cached Flow keeps feeding the UI.
-        TODO("Part D2b: fetch the list and upsert it into the cache")
+        // Fetch the Gen-1 list (151) from the network, map them to summary DTOs,
+        // then convert those to Room entities and save them all at once.
+        val response = api.listPokemon()
+        val entities = response.results.map { dto ->
+            val summary = dto.toSummary()
+            CachedPokemon(name = summary.name, dexNumber = summary.dexNumber)
+        }
+        dao.upsertAll(entities)
     }
 
     override suspend fun getDetail(name: String): PokemonDetail {
         // TODO D2c: cache-then-network. If dao.getByName(name) already has the
         //           detail columns filled, return it. Otherwise api.getPokemon(name)
         //           -> toDetail(), upsert the hydrated row, and return it.
-        TODO("Part D2c: return cached detail if present, else fetch + cache + return")
+        // First check if we already have the detail data in our local cache.
+        val cached = dao.getByName(name)
+        
+        // If the row exists and has its detail columns filled (not null), return it.
+        if (cached != null && cached.heightMeters != null && cached.weightKg != null && cached.typesCsv != null) {
+            return PokemonDetail(
+                dexNumber = cached.dexNumber,
+                name = cached.name,
+                heightMeters = cached.heightMeters,
+                weightKg = cached.weightKg,
+                types = cached.typesCsv.split(",")
+                    .filter { it.isNotEmpty() }
+                    .map { typeName -> PokemonType(typeName, typeEmoji(typeName)) }
+            )
+        }
+
+        // Otherwise, fetch live from PokéAPI, convert to domain model, 
+        // update the cached row with the new details, and return it.
+        val detail = api.getPokemon(name).toDetail()
+        dao.upsert(
+            CachedPokemon(
+                name = detail.name,
+                dexNumber = detail.dexNumber,
+                heightMeters = detail.heightMeters,
+                weightKg = detail.weightKg,
+                typesCsv = detail.types.joinToString(",") { it.name }
+            )
+        )
+        return detail
     }
 }
 
@@ -122,6 +163,11 @@ private val SAMPLE_DETAILS: List<PokemonDetail> = listOf(
 // ===========================================================================
 
 /**
+ * For unit tests ONLY: set this to a fake repository to override the default.
+ */
+var repoOverride: PokemonRepository? = null
+
+/**
  * Factory that returns the repository the app should use.
  *
  * @param useFake DEFAULT true for the starter: the app runs offline on sample data
@@ -129,8 +175,8 @@ private val SAMPLE_DETAILS: List<PokemonDetail> = listOf(
  *   `useFake = false` (or change this default) to fetch LIVE from PokéAPI and cache
  *   into Room. PokéAPI is free + keyless, so the real path needs no secrets.
  */
-fun providePokemonRepository(context: Context, useFake: Boolean = true): PokemonRepository =
-    if (useFake) {
+fun providePokemonRepository(context: Context, useFake: Boolean = false): PokemonRepository =
+    repoOverride ?: if (useFake) {
         FakePokemonRepository()                 // offline: works with no internet (DEFAULT for the starter)
     } else {
         RealPokemonRepository(                   // live: PokéAPI over the network + Room cache

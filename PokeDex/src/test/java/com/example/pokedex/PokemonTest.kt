@@ -12,11 +12,17 @@
 
 package com.example.pokedex
 
-import kotlinx.coroutines.test.runTest          // drives suspend functions in a unit test
-import kotlinx.serialization.decodeFromString
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 class PokemonTest {
@@ -75,6 +81,54 @@ class PokemonTest {
     //   NOTE: testing the ViewModels needs one extra step — they launch work in
     //   viewModelScope (Dispatchers.Main), which doesn't exist on a plain JVM test.
     //   Swap in a test dispatcher: Dispatchers.setMain(StandardTestDispatcher()) in
-    //   an @Before and Dispatchers.resetMain() in an @After (a "MainDispatcherRule").
+    //   an @Before and Dispatchers.resetMain() in @After (a "MainDispatcherRule").
     // =========================================================================
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val testDispatcher = StandardTestDispatcher()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun mapper_testAllConversions() {
+        // Test URL parsing for dex number
+        assertEquals(25, dexNumberFromUrl("https://pokeapi.co/api/v2/pokemon/25/"))
+        assertEquals(1, dexNumberFromUrl("https://pokeapi.co/api/v2/pokemon/1"))
+
+        // Test unit conversion (height dm -> m, weight hg -> kg)
+        val dto = PokemonDetailDto(1, "bulbasaur", 7, 69, emptyList())
+        val detail = dto.toDetail()
+        assertEquals(0.7, detail.heightMeters, 0.001)
+        assertEquals(6.9, detail.weightKg, 0.001)
+
+        // Test type emoji mapping
+        assertEquals("🌿", typeEmoji("grass"))
+        assertEquals("🔥", typeEmoji("fire"))
+        assertEquals("❓", typeEmoji("unknown"))
+    }
+
+    @Test
+    fun toSummary_mapsDtoCorrectly() {
+        val dto = NamedResourceDto("pikachu", "https://pokeapi.co/api/v2/pokemon/25/")
+        val summary = dto.toSummary()
+        assertEquals("pikachu", summary.name)
+        assertEquals(25, summary.dexNumber)
+    }
+
+
+    @Test
+    fun listViewModel_loadsDataFromFake() = runTest {
+
+    }
 }

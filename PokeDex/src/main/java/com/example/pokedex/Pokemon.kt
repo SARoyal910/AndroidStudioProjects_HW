@@ -131,7 +131,13 @@ data class PokemonType(
  * about the trailing slash. Returning 0 here is just a placeholder.
  */
 fun dexNumberFromUrl(url: String): Int {
-    return 0 // TODO B4a — replace with the real parse
+    // TODO B4a — replace with the real parse
+    // Split the URL by slashes, remove any empty strings (like the one after a trailing slash),
+    // and take the last piece of the path which is the ID.
+    return url.split("/")
+        .filter { it.isNotEmpty() }
+        .lastOrNull()
+        ?.toIntOrNull() ?: 0
 }
 
 /**
@@ -141,7 +147,30 @@ fun dexNumberFromUrl(url: String): Int {
  *   "grass" -> "🌿", "fire" -> "🔥", "water" -> "💧", "electric" -> "⚡", …
  */
 fun typeEmoji(typeName: String): String {
-    return "❓" // TODO B4b — replace with a `when (typeName) { … }`
+    // TODO B4b — replace with a `when (typeName) { … }`
+    // Map each official type name to a specific emoji glyph.
+    // If the API returns a type we don't know, we return a fallback emoji.
+    return when (typeName.lowercase()) {
+        "normal" -> "⚪"
+        "fire" -> "🔥"
+        "water" -> "💧"
+        "grass" -> "🌿"
+        "electric" -> "⚡"
+        "ice" -> "🧊"
+        "fighting" -> "🥊"
+        "poison" -> "☠️"
+        "ground" -> "⛰️"
+        "flying" -> "🕊️"
+        "psychic" -> "🔮"
+        "bug" -> "🐛"
+        "rock" -> "🪨"
+        "ghost" -> "👻"
+        "dragon" -> "🐉"
+        "dark" -> "🌑"
+        "steel" -> "⚙️"
+        "fairy" -> "🧚"
+        else -> "❓"
+    }
 }
 
 /**
@@ -149,7 +178,12 @@ fun typeEmoji(typeName: String): String {
  * The name is right here; the dex number comes from [dexNumberFromUrl] on the url.
  */
 fun NamedResourceDto.toSummary(): PokemonSummary {
-    return PokemonSummary(dexNumber = 0, name = name) // TODO B4c — use dexNumberFromUrl(url)
+    // TODO B4c — use dexNumberFromUrl(url)
+    // Convert the "NamedResource" (name + url) into our flat Summary domain model.
+    return PokemonSummary(
+        dexNumber = dexNumberFromUrl(url),
+        name = name
+    )
 }
 
 /**
@@ -159,11 +193,17 @@ fun NamedResourceDto.toSummary(): PokemonSummary {
  *   • height/10.0 -> metres,  weight/10.0 -> kilograms
  */
 fun PokemonDetailDto.toDetail(): PokemonDetail {
-    return PokemonDetail(                       // TODO B4d — replace the placeholders below
+    // TODO B4d — replace the placeholders below
+    // Flatten the nested detail JSON into the UI-ready domain model.
+    // This is where we convert decimetres/hectograms to meters/kilograms.
+    return PokemonDetail(
         dexNumber = id,
         name = name,
-        types = emptyList(),
-        heightMeters = 0.0,
-        weightKg = 0.0,
+        types = types.map { slot ->
+            val typeName = slot.type.name
+            PokemonType(name = typeName, emoji = typeEmoji(typeName))
+        },
+        heightMeters = height / 10.0,
+        weightKg = weight / 10.0,
     )
 }
